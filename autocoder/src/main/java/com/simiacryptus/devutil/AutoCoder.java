@@ -27,12 +27,13 @@ import java.util.stream.Collectors;
 
 public abstract class AutoCoder extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
+  @NotNull
   protected final SimpleMavenProject project;
 
-  public AutoCoder(String pathname) {
+  public AutoCoder(@NotNull String pathname) {
     try {
       this.project = SimpleMavenProject.load(new File(pathname).getCanonicalPath());
-    } catch (IOException | PlexusContainerException | DependencyResolutionException | ProjectBuildingException | ComponentLookupException e) {
+    } catch (@NotNull IOException | PlexusContainerException | DependencyResolutionException | ProjectBuildingException | ComponentLookupException e) {
       throw new RuntimeException(e);
     }
 
@@ -41,7 +42,7 @@ public abstract class AutoCoder extends ASTVisitor {
   @Nonnull
   public abstract void apply();
 
-  public int apply(BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+  public int apply(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
     return project.parse().entrySet().stream().mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
@@ -65,7 +66,7 @@ public abstract class AutoCoder extends ASTVisitor {
     }).sum();
   }
 
-  public String format(String finalSrc) {
+  public String format(@NotNull String finalSrc) {
     final Document document = new Document();
     document.set(finalSrc);
     try {
@@ -84,7 +85,7 @@ public abstract class AutoCoder extends ASTVisitor {
     return document.get();
   }
 
-  protected void removeMethods(TypeDeclaration node, String methodName) {
+  protected void removeMethods(@NotNull TypeDeclaration node, String methodName) {
     for (final Iterator iterator = node.bodyDeclarations().iterator(); iterator.hasNext(); ) {
       final Object next = iterator.next();
       if (next instanceof MethodDeclaration) {
@@ -96,7 +97,8 @@ public abstract class AutoCoder extends ASTVisitor {
     }
   }
 
-  public <T> T setField(T astNode, String name, Object value) {
+  @NotNull
+  public <T> T setField(@NotNull T astNode, String name, Object value) {
     try {
       getField(astNode.getClass(), name).set(astNode, value);
       return astNode;
@@ -105,7 +107,8 @@ public abstract class AutoCoder extends ASTVisitor {
     }
   }
 
-  public Field getField(Class<?> nodeClass, String name) {
+  @NotNull
+  public Field getField(@NotNull Class<?> nodeClass, String name) {
     final Field[] fields = nodeClass.getDeclaredFields();
     final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
     if (!parent.isPresent()) {
@@ -130,7 +133,7 @@ public abstract class AutoCoder extends ASTVisitor {
     return javaConventionsSettings;
   }
 
-  protected boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<ReferenceCountingBase> baseClass) {
+  protected boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
     if (typeBinding.getBinaryName().equals(baseClass.getCanonicalName())) return true;
     if (typeBinding.getSuperclass() != null) return derives(typeBinding.getSuperclass(), baseClass);
     if(typeBinding.isArray()) return derives(typeBinding.getElementType(), baseClass);
@@ -143,28 +146,31 @@ public abstract class AutoCoder extends ASTVisitor {
   }
 
   @NotNull
-  public Name newQualifiedName(AST ast, String... path) {
+  public Name newQualifiedName(@NotNull AST ast, @NotNull String... path) {
     final SimpleName simpleName = ast.newSimpleName(path[path.length - 1]);
     if (path.length == 1) return simpleName;
     return ast.newQualifiedName(newQualifiedName(ast, Arrays.stream(path).limit(path.length - 1).toArray(i -> new String[i])), simpleName);
   }
 
-  public ArrayType arrayType(AST ast, String fqTypeName) {
+  @NotNull
+  public ArrayType arrayType(@NotNull AST ast, @NotNull String fqTypeName) {
     return ast.newArrayType(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
   }
 
   @NotNull
-  public MarkerAnnotation annotation_override(AST ast) {
+  public MarkerAnnotation annotation_override(@NotNull AST ast) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
     annotation.setTypeName(ast.newSimpleName("Override"));
     return annotation;
   }
 
-  public ExpressionStatement newLocalVariable(String identifier, Expression expression) {
+  @NotNull
+  public ExpressionStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression) {
     return newLocalVariable(identifier, expression, getType(expression));
   }
 
-  public ExpressionStatement newLocalVariable(String identifier, Expression expression, Type simpleType) {
+  @NotNull
+  public ExpressionStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression, @NotNull Type simpleType) {
     AST ast = expression.getAST();
     final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
     variableDeclarationFragment.setName(ast.newSimpleName(identifier));
@@ -177,11 +183,12 @@ public abstract class AutoCoder extends ASTVisitor {
     return ast.newExpressionStatement(assignment);
   }
 
-  public Type getType(Expression expression) {
+  @NotNull
+  public Type getType(@NotNull Expression expression) {
     return getType(expression.getAST(), expression.resolveTypeBinding().getName());
   }
 
-  public Optional<MethodDeclaration> findMethod(TypeDeclaration typeDeclaration, String name) {
+  public Optional<MethodDeclaration> findMethod(@NotNull TypeDeclaration typeDeclaration, String name) {
     return Arrays.stream(typeDeclaration.getMethods()).filter(methodDeclaration -> methodDeclaration.getName().toString().equals(name)).findFirst();
   }
 
@@ -207,7 +214,8 @@ public abstract class AutoCoder extends ASTVisitor {
 
   }
 
-  public List<Mention> lastMentions(Block block, IBinding variable) {
+  @NotNull
+  public List<Mention> lastMentions(@NotNull Block block, IBinding variable) {
     final List statements = block.statements();
     final ArrayList<Mention> mentions = new ArrayList<>();
     Mention lastMention = null;
@@ -236,7 +244,7 @@ public abstract class AutoCoder extends ASTVisitor {
         lastMention = new Mention(block, j, statement);
       }
     }
-    mentions.add(lastMention);
+    if(null != lastMention) mentions.add(lastMention);
     return mentions;
   }
 
@@ -244,7 +252,7 @@ public abstract class AutoCoder extends ASTVisitor {
     final AtomicBoolean found = new AtomicBoolean(false);
     expression.accept(new ASTVisitor() {
       @Override
-      public void endVisit(SimpleName node) {
+      public void endVisit(@NotNull SimpleName node) {
         final IBinding binding = node.resolveBinding();
         if (null != binding && binding.equals(variableBinding)) found.set(true);
       }
@@ -252,17 +260,23 @@ public abstract class AutoCoder extends ASTVisitor {
     return found.get();
   }
 
-  public Type getType(@Nonnull AST ast, String name) {
+  @NotNull
+  public Type getType(@Nonnull AST ast, @NotNull String name) {
     if(name.endsWith("[]")) {
       return ast.newArrayType(getType(ast, name.substring(0,name.length()-2)));
     } else if(name.contains("\\.")) {
       return ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
     } else {
-      return ast.newSimpleType(ast.newSimpleName(name));
+      final PrimitiveType.Code typeCode = PrimitiveType.toCode(name);
+      if(null != typeCode) {
+        return ast.newPrimitiveType(typeCode);
+      } else {
+        return ast.newSimpleType(ast.newSimpleName(name));
+      }
     }
   }
 
-  public void delete(Statement parent) {
+  public void delete(@NotNull Statement parent) {
     final ASTNode parent1 = parent.getParent();
     if (parent1 instanceof Block) {
       final Block block = (Block) parent1;
@@ -289,7 +303,7 @@ public abstract class AutoCoder extends ASTVisitor {
       this.file = file;
     }
 
-    public String location(ASTNode node) {
+    public String location(@NotNull ASTNode node) {
       return String.format("(%s:%s)", file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));
     }
 

@@ -59,7 +59,9 @@ import java.util.stream.Stream;
 public class SimpleMavenProject {
   private static final File repositoryLocation = new File(System.getProperty("user.home"), ".m2/repository");
   private static final Logger logger = LoggerFactory.getLogger(SimpleMavenProject.class);
+  @NotNull
   public final DefaultPlexusContainer container;
+  @NotNull
   public final DefaultRepositorySystemSession session;
   public final MavenProject project;
   public final String projectRoot;
@@ -85,6 +87,7 @@ public class SimpleMavenProject {
   }
 
 
+  @NotNull
   public final HashMap<File, CompilationUnit> parse() {
     HashMap<File, CompilationUnit> results = new HashMap<>();
     HashMap<String, File> fileMap = new HashMap<>();
