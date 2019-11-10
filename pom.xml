@@ -1,0 +1,60 @@
+<!--
+  ~ Copyright (c) 2019 by Andrew Charneski.
+  ~
+  ~ The author licenses this file to you under the
+  ~ Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy
+  ~ of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.simiacryptus</groupId>
+        <artifactId>java-parent</artifactId>
+        <version>1.8.1</version>
+        <relativePath>java-parent</relativePath>
+    </parent>
+
+    <groupId>com.simiacryptus</groupId>
+    <artifactId>java-reference-counter</artifactId>
+    <version>1.8.1</version>
+    <packaging>pom</packaging>
+
+    <url>https://simiacryptus.github.io/${github.project}/</url>
+    <scm>
+        <connection>scm:git:git@github.com:SimiaCryptus/${github.project}.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/SimiaCryptus/${github.project}.git</developerConnection>
+        <url>https://github.com/SimiaCryptus/${github.project}/tree/master</url>
+    </scm>
+
+    <properties>
+        <github.project>java-reference-counter</github.project>
+        <github.global.userName></github.global.userName>
+        <github.global.oauth2Token></github.global.oauth2Token>
+    </properties>
+    <distributionManagement>
+        <site>
+            <id>github</id>
+            <url>https://simiacryptus.github.io/${github.project}/</url>
+        </site>
+    </distributionManagement>
+
+    <modules>
+        <module>core</module>
+        <module>autocoder</module>
+        <module>demo</module>
+    </modules>
+</project>
