@@ -31,14 +31,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class RefAutoCoder extends AutoCoder {
 
   private boolean verbose = true;
   private boolean addRefcounting = true;
+  @NotNull
   private Random random = new Random();
 
-  public RefAutoCoder(String pathname) {
+  public RefAutoCoder(@NotNull String pathname) {
     super(pathname);
   }
 
@@ -55,6 +60,9 @@ public class RefAutoCoder extends AutoCoder {
       apply((cu, file) -> new InsertAddRefs(cu, file));
       apply((cu, file) -> new ModifyFieldSets(cu, file));
       apply((cu, file) -> new InsertFreeRefs(cu, file));
+      // Identify closures - warn on lambda, handle anonymous classes
+      // Wrap collections and streams in Ref-Aware support classes
+      // Optimize adjacent addRef / freeRef
     }
   }
 
@@ -62,6 +70,7 @@ public class RefAutoCoder extends AutoCoder {
     return verbose;
   }
 
+  @NotNull
   public RefAutoCoder setVerbose(boolean verbose) {
     this.verbose = verbose;
     return this;
@@ -71,12 +80,13 @@ public class RefAutoCoder extends AutoCoder {
     return addRefcounting;
   }
 
+  @NotNull
   public RefAutoCoder setAddRefcounting(boolean addRefcounting) {
     this.addRefcounting = addRefcounting;
     return this;
   }
 
-  public boolean isRefCounted(ITypeBinding resolveTypeBinding) {
+  public boolean isRefCounted(@NotNull ITypeBinding resolveTypeBinding) {
     final ITypeBinding type;
     if (resolveTypeBinding.isArray()) {
       type = resolveTypeBinding.getElementType();
@@ -93,7 +103,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void preVisit(ASTNode node) {
+    public void preVisit(@NotNull ASTNode node) {
       logger.info(String.format("Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition())));
     }
   }
@@ -105,13 +115,13 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(Assignment node) {
+    public void endVisit(@NotNull Assignment node) {
       if (node.getLeftHandSide() instanceof FieldAccess) {
         final FieldAccess fieldAccess = (FieldAccess) node.getLeftHandSide();
         final ASTNode parent = node.getParent();
         if (parent instanceof ExpressionStatement) {
           final ASTNode parent2 = parent.getParent();
-          final ITypeBinding typeBinding = fieldAccess.resolveFieldBinding().getType();
+          final ITypeBinding typeBinding = fieldAccess.resolveTypeBinding();
           if (parent2 instanceof Block) {
             final Block block = (Block) parent2;
             final int lineNumber = block.statements().indexOf(parent);
@@ -124,7 +134,7 @@ public class RefAutoCoder extends AutoCoder {
             } else {
               final Block exchangeBlock = ast.newBlock();
 
-              final String identifier = randomIdentifier();
+              final String identifier = randomIdentifier(location(node));
               exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(ast, typeBinding.getName())));
               exchangeBlock.statements().add(freeRefStatement(fieldAccess));
 
@@ -147,7 +157,8 @@ public class RefAutoCoder extends AutoCoder {
       super.endVisit(node);
     }
 
-    public IfStatement freeRefStatement(FieldAccess fieldAccess) {
+    @NotNull
+    public IfStatement freeRefStatement(@NotNull FieldAccess fieldAccess) {
       AST ast = fieldAccess.getAST();
       final IfStatement ifStatement = ast.newIfStatement();
       final InfixExpression infixExpression = ast.newInfixExpression();
@@ -155,11 +166,19 @@ public class RefAutoCoder extends AutoCoder {
       infixExpression.setRightOperand((Expression) ASTNode.copySubtree(ast, fieldAccess));
       infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
       ifStatement.setExpression(infixExpression);
-      ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(fieldAccess, fieldAccess.resolveTypeBinding())));
-      logger.info(String.format("Added freeRef for field access %s at %s",
-          fieldAccess.getName(),
-          location(fieldAccess)
-      ));
+      final ITypeBinding typeBinding = fieldAccess.resolveTypeBinding();
+      if(null == typeBinding) {
+        logger.info(String.format("Cannot add freeRef for field access %s at %s (binding not resolved)",
+            fieldAccess.getName(),
+            location(fieldAccess)
+        ));
+      } else {
+        ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(fieldAccess, typeBinding)));
+        logger.info(String.format("Added freeRef for field access %s at %s",
+            fieldAccess.getName(),
+            location(fieldAccess)
+        ));
+      }
       return ifStatement;
     }
   }
@@ -171,7 +190,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(TypeDeclaration node) {
+    public void endVisit(@NotNull TypeDeclaration node) {
       final ITypeBinding typeBinding = node.resolveBinding();
       if (derives(typeBinding, ReferenceCountingBase.class)) {
         removeMethods(node, "addRef");
@@ -184,7 +203,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(MethodInvocation node) {
+    public void endVisit(@NotNull MethodInvocation node) {
       final String methodName = node.getName().toString();
 
       if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs").contains(methodName)) {
@@ -235,7 +254,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(Block node) {
+    public void endVisit(@NotNull Block node) {
       if (node.statements().size() == 1 && node.getParent() instanceof Block) {
         final Block parent = (Block) node.getParent();
         parent.statements().set(parent.statements().indexOf(node),
@@ -244,7 +263,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(Assignment node) {
+    public void endVisit(@NotNull Assignment node) {
       Statement previousStatement = previousStatement(node);
       if (previousStatement != null) {
         if (previousStatement instanceof VariableDeclarationStatement) {
@@ -296,7 +315,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(ReturnStatement node) {
+    public void endVisit(@NotNull ReturnStatement node) {
       if (node.getExpression() instanceof Name) {
         Statement previousStatement = previousStatement(node);
         if (previousStatement != null) {
@@ -327,23 +346,20 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(VariableDeclarationFragment declaration) {
+    public void endVisit(@NotNull VariableDeclarationFragment declaration) {
       final ASTNode parent = declaration.getParent();
       if (parent instanceof VariableDeclarationStatement) {
         final ITypeBinding typeBinding = ((VariableDeclarationStatement) parent).getType().resolveBinding();
         if (null != typeBinding) {
           addFreeRef(declaration, typeBinding);
-          logger.info(String.format("Added freeRef to %s at %s (within %s; type %s)",
-              declaration, location(declaration), parent.getClass().getSimpleName(), typeBinding.getQualifiedName()));
         } else {
           logger.warn(String.format("%s - Cannot resolve type of %s", location(parent), parent));
         }
       } else if (parent instanceof VariableDeclarationExpression) {
-        final ITypeBinding typeBinding = ((VariableDeclarationExpression) parent).getType().resolveBinding();
+        final Type type = ((VariableDeclarationExpression) parent).getType();
+        final ITypeBinding typeBinding = type.resolveBinding();
         if (null != typeBinding) {
           addFreeRef(declaration, typeBinding);
-          logger.info(String.format("Added freeRef to %s at %s (within %s; type %s)",
-              declaration, location(declaration), parent.getClass().getSimpleName(), typeBinding.getQualifiedName()));
         } else {
           logger.warn(String.format("%s - Cannot resolve type of %s", location(parent), parent));
         }
@@ -359,8 +375,7 @@ public class RefAutoCoder extends AutoCoder {
         final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
         final int paramNumber = lambdaExpression.parameters().indexOf(declaration);
         if (methodBinding != null) {
-          final ITypeBinding typeBinding = methodBinding.getParameterTypes()[paramNumber];
-          addFreeRef(declaration, typeBinding);
+          addFreeRef(declaration, methodBinding.getParameterTypes()[paramNumber]);
         }
       } else {
         logger.warn("Cannot handle " + parent);
@@ -368,8 +383,16 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(SingleVariableDeclaration declaration) {
-      addFreeRef(declaration, declaration.resolveBinding().getType());
+    public void endVisit(@NotNull SingleVariableDeclaration declaration) {
+      ITypeBinding typeBinding = declaration.resolveBinding().getType();
+      if(null == typeBinding) {
+        logger.info(String.format("Cannot add freeRef for field access %s at %s (binding not resolved)",
+            declaration.getName(),
+            location(declaration)
+        ));
+      } else {
+        addFreeRef(declaration, typeBinding);
+      }
     }
 
     public void addFreeRef(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding) {
@@ -379,32 +402,32 @@ public class RefAutoCoder extends AutoCoder {
         if (parent instanceof MethodDeclaration) {
           final MethodDeclaration node = (MethodDeclaration) parent;
           addFreeRef(typeBinding, name, node.getBody());
-          logger.info(String.format("Added freeRef to %s at %s (within %s)",
-              name, location(name), parent.getClass().getSimpleName()));
         } else if (parent instanceof LambdaExpression) {
           final LambdaExpression node = (LambdaExpression) parent;
           final ASTNode lambdaParent = node.getParent();
-          if (!isStream(lambdaParent)) {
+          //if (!isStream(lambdaParent))
+          {
             final ASTNode body = node.getBody();
             if (body instanceof Block) {
-              final Block block = (Block) body;
-              addFreeRef(typeBinding, name, block);
-              logger.info(String.format("Added freeRef to %s at %s (within %s)",
-                  name, location(name), parent.getClass().getSimpleName()));
+              addFreeRef(typeBinding, name, (Block) body);
             } else {
-              logger.warn(String.format("%s - Cannot add freeRef for %s in %s : %s",
-                  location(declaration),
-                  name,
-                  body.getClass(), body.toString().trim()
-              ));
+              final AST ast = node.getAST();
+              final Block block = ast.newBlock();
+              if(hasReturnValue(lambdaParent, node)) {
+                final ReturnStatement returnStatement = ast.newReturnStatement();
+                returnStatement.setExpression((Expression) ASTNode.copySubtree(ast, body));
+                block.statements().add(returnStatement);
+              } else {
+                block.statements().add(ast.newExpressionStatement((Expression) ASTNode.copySubtree(ast, body)));
+              }
+              node.setBody(block);
+              addFreeRef(typeBinding, name, block);
             }
           }
         } else if (parent instanceof VariableDeclarationStatement) {
           parent = parent.getParent();
           if (parent instanceof Block) {
             addFreeRef(typeBinding, name, (Block) parent);
-            logger.info(String.format("Added freeRef to %s at %s (within %s)",
-                name, location(name), parent.getClass().getSimpleName()));
           } else {
             logger.warn(String.format("%s - Cannot add freeRef for %s (VariableDeclarationStatement) in %s : %s",
                 location(declaration),
@@ -450,18 +473,30 @@ public class RefAutoCoder extends AutoCoder {
       }
     }
 
-    public boolean isStream(ASTNode lambdaParent) {
-      final boolean isStream;
+    public boolean hasReturnValue(ASTNode lambdaParent, LambdaExpression node) {
       if (lambdaParent instanceof MethodInvocation) {
-        final ITypeBinding targetClass = ((MethodInvocation) lambdaParent).getExpression().resolveTypeBinding();
-        isStream = targetClass.getQualifiedName().startsWith("java.util.stream.Stream");
-      } else {
-        isStream = false;
+        final MethodInvocation methodInvocation = (MethodInvocation) lambdaParent;
+        final int argIndex = methodInvocation.arguments().indexOf(node);
+        final ITypeBinding targetClass = methodInvocation.resolveMethodBinding().getParameterTypes()[argIndex];
+        if(derives(targetClass, Consumer.class)) {
+          return false;
+        } else if(derives(targetClass, Function.class)) {
+          return true;
+        } else if(derives(targetClass, Predicate.class)) {
+          return true;
+        } else {
+          final List<IMethodBinding> methods = Arrays.stream(targetClass.getDeclaredMethods()).filter(x->x.getDefaultValue() != null).collect(Collectors.toList());
+          if(methods.size() == 1 && (methods.get(0).getReturnType()).equals(PrimitiveType.VOID)) {
+            return false;
+          } else {
+            logger.warn(String.format("Cannot determine if %s returns a value", targetClass.getQualifiedName()));
+          }
+        }
       }
-      return isStream;
+      return false;
     }
 
-    public void addFreeRef(ITypeBinding typeBinding, SimpleName name, Block body) {
+    public void addFreeRef(@NotNull ITypeBinding typeBinding, @NotNull SimpleName name, @NotNull Block body) {
       final List<Mention> lastMentions = lastMentions(body, name.resolveBinding());
       lastMentions.stream().filter(x -> !x.isReturn())
           .forEach(insertFreeRef(typeBinding, name, body));
@@ -469,11 +504,12 @@ public class RefAutoCoder extends AutoCoder {
           .forEach(insertAddRef_ComplexReturn(name, typeBinding));
     }
 
-    public Consumer<Mention> insertAddRef_ComplexReturn(SimpleName name, ITypeBinding typeBinding) {
+    @NotNull
+    public Consumer<Mention> insertAddRef_ComplexReturn(@NotNull SimpleName name, @NotNull ITypeBinding typeBinding) {
       AST ast = name.getAST();
       return mention -> {
         final ReturnStatement returnStatement = (ReturnStatement) mention.statement;
-        final String identifier = randomIdentifier();
+        final String identifier = randomIdentifier(location(name));
         final List statements = mention.block.statements();
         statements.add(mention.line, newLocalVariable(identifier, returnStatement.getExpression()));
         ASTNode name1 = ast.newSimpleName(name.getIdentifier());
@@ -488,18 +524,20 @@ public class RefAutoCoder extends AutoCoder {
       };
     }
 
-    public Consumer<Mention> insertFreeRef(ITypeBinding typeBinding, SimpleName name, Block body) {
+    @NotNull
+    public Consumer<Mention> insertFreeRef(@NotNull ITypeBinding typeBinding, @NotNull SimpleName name, @NotNull Block body) {
       return lastMention -> {
         body.statements().add(lastMention.line + 1, name.getAST().newExpressionStatement(newFreeRef(name, typeBinding)));
-        logger.info(String.format("Added freeRef for value %s at %s",
+        logger.info(String.format("Added freeRef for value %s (%s) at %s",
             name,
+            typeBinding.getQualifiedName(),
             location(name)
         ));
       };
     }
 
     @Override
-    public void endVisit(MethodInvocation node) {
+    public void endVisit(@NotNull MethodInvocation node) {
       final IMethodBinding methodBinding = node.resolveMethodBinding();
       if (null != methodBinding) {
         if (modifyArg(methodBinding.getDeclaringClass()) && !node.getName().toString().equals("addRefs")) {
@@ -521,7 +559,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(ArrayInitializer node) {
+    public void endVisit(@NotNull ArrayInitializer node) {
       final ITypeBinding typeBinding = node.resolveTypeBinding();
       if (null != typeBinding) {
         if (modifyArg(typeBinding.getElementType())) {
@@ -540,6 +578,7 @@ public class RefAutoCoder extends AutoCoder {
       }
     }
 
+    @Nullable
     public MethodInvocation wrapAddRef(ASTNode node) {
       if (node instanceof SimpleName) {
         final SimpleName name = (SimpleName) node;
@@ -550,7 +589,7 @@ public class RefAutoCoder extends AutoCoder {
       return null;
     }
 
-    public boolean modifyArg(ITypeBinding declaringClass) {
+    public boolean modifyArg(@NotNull ITypeBinding declaringClass) {
       return AutoCoder.toString(declaringClass.getPackage()).startsWith("com.simiacryptus");
     }
 
@@ -563,7 +602,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(ConstructorInvocation node) {
+    public void endVisit(@NotNull ConstructorInvocation node) {
       final IMethodBinding methodBinding = node.resolveConstructorBinding();
       if (null != methodBinding) {
         ITypeBinding declaringClass = methodBinding.getDeclaringClass();
@@ -576,7 +615,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(ClassInstanceCreation node) {
+    public void endVisit(@NotNull ClassInstanceCreation node) {
       final IMethodBinding methodBinding = node.resolveConstructorBinding();
       if (null != methodBinding) {
         if (methodsConsumeRefs(methodBinding.getDeclaringClass())) {
@@ -594,7 +633,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(MethodInvocation node) {
+    public void endVisit(@NotNull MethodInvocation node) {
       final IMethodBinding methodBinding = node.resolveMethodBinding();
       if (null != methodBinding) {
         if (methodsConsumeRefs(methodBinding.getDeclaringClass())) {
@@ -603,7 +642,7 @@ public class RefAutoCoder extends AutoCoder {
       }
     }
 
-    public void apply(ASTNode node, List<ASTNode> arguments) {
+    public void apply(@NotNull ASTNode node, @NotNull List<ASTNode> arguments) {
       for (int i = 0; i < arguments.size(); i++) {
         ASTNode next = arguments.get(i);
         if (next instanceof SimpleName) {
@@ -619,7 +658,8 @@ public class RefAutoCoder extends AutoCoder {
       }
     }
 
-    public MethodInvocation addAddRef(SimpleName name, ITypeBinding type) {
+    @NotNull
+    public MethodInvocation addAddRef(@NotNull SimpleName name, @NotNull ITypeBinding type) {
       AST ast = name.getAST();
       if (type.isArray()) {
         final String qualifiedName = type.getElementType().getQualifiedName();
@@ -636,7 +676,7 @@ public class RefAutoCoder extends AutoCoder {
       }
     }
 
-    public boolean methodsConsumeRefs(ITypeBinding declaringClass) {
+    public boolean methodsConsumeRefs(@NotNull ITypeBinding declaringClass) {
       return AutoCoder.toString(declaringClass.getPackage()).startsWith("com.simiacryptus");
     }
 
@@ -649,7 +689,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @Override
-    public void endVisit(TypeDeclaration node) {
+    public void endVisit(@NotNull TypeDeclaration node) {
       if (derives(node.resolveBinding(), ReferenceCountingBase.class)) {
         final AST ast = node.getAST();
         final List declarations = node.bodyDeclarations();
@@ -662,7 +702,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @NotNull
-    public MethodDeclaration method_free(AST ast) {
+    public MethodDeclaration method_free(@NotNull AST ast) {
       final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
       methodDeclaration.setName(ast.newSimpleName("_free"));
       methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
@@ -672,7 +712,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @NotNull
-    public MethodDeclaration method_addRef(AST ast, SimpleName name) {
+    public MethodDeclaration method_addRef(@NotNull AST ast, @NotNull SimpleName name) {
       final String fqTypeName = name.getFullyQualifiedName();
       final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
       methodDeclaration.setName(ast.newSimpleName("addRef"));
@@ -693,7 +733,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @NotNull
-    public MethodDeclaration method_freeRefs(AST ast, SimpleName name) {
+    public MethodDeclaration method_freeRefs(@NotNull AST ast, @NotNull SimpleName name) {
       final String fqTypeName = name.getFullyQualifiedName();
       final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
       methodDeclaration.setName(ast.newSimpleName("freeRefs"));
@@ -744,7 +784,7 @@ public class RefAutoCoder extends AutoCoder {
     }
 
     @NotNull
-    public MethodDeclaration method_addRefs(AST ast, SimpleName name) {
+    public MethodDeclaration method_addRefs(@NotNull AST ast, @NotNull SimpleName name) {
       final String fqTypeName = name.getFullyQualifiedName();
       final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
       methodDeclaration.setName(ast.newSimpleName("addRefs"));
@@ -817,11 +857,14 @@ public class RefAutoCoder extends AutoCoder {
   }
 
   @NotNull
-  public String randomIdentifier() {
-    return "temp" + Long.toString(Math.abs(random.nextLong())).substring(0, 4);
+  public String randomIdentifier(String location) {
+    final String id = "temp" + Long.toString(Math.abs(random.nextLong())).substring(0, 4);
+    logger.info(String.format("Creating %s at %s", id, location));
+    return id;
   }
 
-  public MethodInvocation newFreeRef(ASTNode name, ITypeBinding typeBinding) {
+  @NotNull
+  public MethodInvocation newFreeRef(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
     AST ast = name.getAST();
     if (typeBinding.isArray()) {
       final String qualifiedName = typeBinding.getElementType().getQualifiedName();
@@ -839,7 +882,7 @@ public class RefAutoCoder extends AutoCoder {
   }
 
   @NotNull
-  public Expression wrapAddRef(Expression expression, ITypeBinding typeBinding) {
+  public Expression wrapAddRef(@NotNull Expression expression, @Nullable ITypeBinding typeBinding) {
     AST ast = expression.getAST();
     if (null == typeBinding) {
       return expression;
