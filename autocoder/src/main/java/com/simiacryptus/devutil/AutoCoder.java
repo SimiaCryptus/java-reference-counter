@@ -47,10 +47,11 @@ public abstract class AutoCoder extends ASTVisitor {
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
       final String prevSrc = compilationUnit.toString();
-      compilationUnit.accept(visitor.apply(compilationUnit, file));
+      final ASTVisitor astVisitor = visitor.apply(compilationUnit, file);
+      compilationUnit.accept(astVisitor);
       final String finalSrc = compilationUnit.toString();
       if (!prevSrc.equals(finalSrc)) {
-        logger.info("Changed: " + file);
+        logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
         try {
           FileUtils.write(file, format(finalSrc), "UTF-8");
           return 1;
@@ -132,6 +133,7 @@ public abstract class AutoCoder extends ASTVisitor {
   protected boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<ReferenceCountingBase> baseClass) {
     if (typeBinding.getBinaryName().equals(baseClass.getCanonicalName())) return true;
     if (typeBinding.getSuperclass() != null) return derives(typeBinding.getSuperclass(), baseClass);
+    if(typeBinding.isArray()) return derives(typeBinding.getElementType(), baseClass);
     return false;
   }
 
