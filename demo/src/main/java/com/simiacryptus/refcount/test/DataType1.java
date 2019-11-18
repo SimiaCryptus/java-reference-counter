@@ -22,10 +22,10 @@ public class DataType1 extends ReferenceCountingBase {
   }
 
   public static DataType1[] addRefs(DataType1[] array) {
-    DataType1[] temp3362 = java.util.Arrays.stream(array).filter((x) -> x == null).map(DataType1::addRef)
+    DataType1[] temp9039 = java.util.Arrays.stream(array).filter((x) -> x == null).map(DataType1::addRef)
         .toArray((x) -> new DataType1[x]);
     com.simiacryptus.refcount.test.DataType1.freeRefs(array);
-    return temp3362;
+    return temp9039;
   }
 
   public static void freeRefs(DataType1[] array) {

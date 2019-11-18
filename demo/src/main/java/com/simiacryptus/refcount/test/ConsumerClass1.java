@@ -1,5 +1,6 @@
 package com.simiacryptus.refcount.test;
 
+import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
@@ -28,11 +29,11 @@ public class ConsumerClass1 {
 
   private void test3(DataType1[] values) {
     {
-      DataType3 temp7383 = new DataType3(com.simiacryptus.refcount.test.DataType1.addRefs(values));
+      DataType3 temp1574 = new DataType3(com.simiacryptus.refcount.test.DataType1.addRefs(values));
       if (null != this.datum3)
         this.datum3.freeRef();
-      this.datum3 = temp7383.addRef();
-      temp7383.freeRef();
+      this.datum3 = temp1574.addRef();
+      temp1574.freeRef();
     }
     com.simiacryptus.refcount.test.DataType1.freeRefs(values);
     System.out.println(String.format("Instantiated %s", datum3));
@@ -43,11 +44,11 @@ public class ConsumerClass1 {
 
   private void test2() {
     {
-      DataType2 temp2866 = new DataType2();
+      DataType2 temp4883 = new DataType2();
       if (null != this.datum2)
         this.datum2.freeRef();
-      this.datum2 = temp2866.addRef();
-      temp2866.freeRef();
+      this.datum2 = temp4883.addRef();
+      temp4883.freeRef();
     }
     System.out.println(String.format("Instantiated %s", datum2));
     for (int i = 0; i < 10; i++) {
@@ -58,9 +59,9 @@ public class ConsumerClass1 {
   @NotNull
   private DataType1 test1() {
     DataType1 datum1 = new DataType1();
-    DataType1 temp6392 = test1a(datum1.addRef());
+    DataType1 temp4304 = test1a(datum1.addRef());
     datum1.freeRef();
-    return temp6392;
+    return temp4304;
   }
 
   private DataType1 test1a(DataType1 datum1) {
@@ -90,5 +91,25 @@ public class ConsumerClass1 {
       x.freeRef();
     });
     obj.freeRef();
+  }
+
+  private static void useClosures(DataType3 left, DataType1 right) {
+    System.out.println(String.format("Increment %s", left));
+    Arrays.stream(left.values).forEach(ReferenceCounting.wrapInterface(x -> {
+      x.value += right.value;
+      x.freeRef();
+    }, right.addRef()));
+    right.freeRef();
+    left.freeRef();
+  }
+
+  private static void useClosures2(DataType3 left, DataType1 right) {
+    System.out.println(String.format("Increment %s", left));
+    Arrays.stream(left.values).forEach(ReferenceCounting.wrapInterface(x -> {
+      x.value += right.value;
+      x.freeRef();
+    }, right.addRef()));
+    right.freeRef();
+    left.freeRef();
   }
 }

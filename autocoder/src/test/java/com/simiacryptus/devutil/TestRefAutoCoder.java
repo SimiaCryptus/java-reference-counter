@@ -5,10 +5,10 @@ import org.junit.Test;
 public class TestRefAutoCoder {
   @Test
   public void add() {
-    new RefAutoCoder("../demo").setAddRefcounting(true).apply();
+    new RefAutoCoder("../demo").setAddRefcounting(true).rewrite();
   }
   @Test
   public void remove() {
-    new RefAutoCoder("../demo").setAddRefcounting(false).apply();
+    new RefAutoCoder("../demo").setAddRefcounting(false).rewrite();
   }
 }

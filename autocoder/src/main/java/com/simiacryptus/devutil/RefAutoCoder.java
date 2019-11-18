@@ -23,18 +23,16 @@ import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import scala.Tuple2;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RefAutoCoder extends AutoCoder {
 
@@ -49,17 +47,21 @@ public class RefAutoCoder extends AutoCoder {
 
   @Override
   @Nonnull
-  public void apply() {
-    if (isVerbose()) apply((cu, file) -> new LogNodes(cu, file));
-    apply((cu, file) -> new RemoveRefs(cu, file));
-    while (apply((cu, file) -> new InlineRefs(cu, file)) > 0) {
+  public void rewrite() {
+    if (isVerbose()) rewrite((cu, file) -> new LogNodes(cu, file));
+    rewrite((cu, file) -> new RemoveRefs(cu, file));
+    while (rewrite((cu, file) -> new InlineRefs(cu, file)) > 0) {
       logger.info("Re-running InlineRefs");
     }
     if (isAddRefcounting()) {
-      apply((cu, file) -> new InsertMethods(cu, file));
-      apply((cu, file) -> new InsertAddRefs(cu, file));
-      apply((cu, file) -> new ModifyFieldSets(cu, file));
-      apply((cu, file) -> new InsertFreeRefs(cu, file));
+      rewrite((cu, file) -> new InsertMethods(cu, file));
+      rewrite((cu, file) -> new InsertAddRefs(cu, file));
+      rewrite((cu, file) -> new ModifyFieldSets(cu, file));
+      rewrite((cu, file) -> new InsertFreeRefs(cu, file));
+
+      final SymbolIndex index = new SymbolIndex();
+      scan((cu, file) -> new IndexSymbols(cu, file, index));
+      rewrite((cu, file) -> new InstrumentClosures(cu, file, index));
       // Identify closures - warn on lambda, handle anonymous classes
       // Wrap collections and streams in Ref-Aware support classes
       // Optimize adjacent addRef / freeRef
@@ -134,7 +136,7 @@ public class RefAutoCoder extends AutoCoder {
             } else {
               final Block exchangeBlock = ast.newBlock();
 
-              final String identifier = randomIdentifier(location(node));
+              final String identifier = randomIdentifier("(" + getLocation(node) + ")");
               exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(ast, typeBinding.getName())));
               exchangeBlock.statements().add(freeRefStatement(fieldAccess));
 
@@ -167,16 +169,16 @@ public class RefAutoCoder extends AutoCoder {
       infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
       ifStatement.setExpression(infixExpression);
       final ITypeBinding typeBinding = fieldAccess.resolveTypeBinding();
-      if(null == typeBinding) {
+      if (null == typeBinding) {
         logger.info(String.format("Cannot add freeRef for field access %s at %s (binding not resolved)",
             fieldAccess.getName(),
-            location(fieldAccess)
+            "(" + getLocation(fieldAccess) + ")"
         ));
       } else {
         ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(fieldAccess, typeBinding)));
         logger.info(String.format("Added freeRef for field access %s at %s",
             fieldAccess.getName(),
-            location(fieldAccess)
+            "(" + getLocation(fieldAccess) + ")"
         ));
       }
       return ifStatement;
@@ -206,15 +208,16 @@ public class RefAutoCoder extends AutoCoder {
     public void endVisit(@NotNull MethodInvocation node) {
       final String methodName = node.getName().toString();
 
-      if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs").contains(methodName)) {
-        final ASTNode parent = node.getParent();
+      if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
         final AST ast = node.getAST();
         final Expression subject;
-        if (Arrays.asList("addRefs", "freeRefs").contains(methodName)) {
+        if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
           subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
         } else {
           subject = (Expression) ASTNode.copySubtree(ast, node.getExpression());
         }
+//        replace(node, subject);
+        final ASTNode parent = node.getParent();
         if (parent instanceof MethodInvocation) {
           final List arguments = ((MethodInvocation) parent).arguments();
           final int index = arguments.indexOf(node);
@@ -230,17 +233,17 @@ public class RefAutoCoder extends AutoCoder {
           logger.info(String.format("%s removed as argument %s of %s", methodName, index, parent));
         } else if (parent instanceof VariableDeclarationFragment) {
           ((VariableDeclarationFragment) parent).setInitializer(subject);
-          logger.info(String.format("%s removed at %s", methodName, location(parent)));
+          logger.info(String.format("%s removed at %s", methodName, "(" + getLocation(parent) + ")"));
         } else if (parent instanceof Assignment) {
           ((Assignment) parent).setRightHandSide(subject);
-          logger.info(String.format("%s removed at %s", methodName, location(parent)));
+          logger.info(String.format("%s removed at %s", methodName, "(" + getLocation(parent) + ")"));
         } else if (parent instanceof ArrayInitializer) {
           final List arguments = ((ArrayInitializer) parent).expressions();
           final int index = arguments.indexOf(node);
           arguments.set(index, subject);
           logger.info(String.format("%s removed as argument %s of %s", methodName, index, parent));
         } else {
-          logger.warn(String.format("%s - Cannot remove %s called in %s: %s", location(parent), methodName, parent.getClass(), parent));
+          logger.warn(String.format("%s - Cannot remove %s called in %s: %s", "(" + getLocation(parent) + ")", methodName, parent.getClass(), parent));
         }
       }
     }
@@ -271,17 +274,17 @@ public class RefAutoCoder extends AutoCoder {
           if (1 == fragments.size()) {
             final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
             if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
-              logger.info(String.format("Inlining %s at %s", fragment.getName(), location(node)));
+              logger.info(String.format("Inlining %s at %s", fragment.getName(), "(" + getLocation(node) + ")"));
               node.setRightHandSide((Expression) ASTNode.copySubtree(node.getAST(), fragment.getInitializer()));
               previousStatement.delete();
             } else {
-              logger.warn(String.format("%s previous variable %s is not used in %s", location(node), fragment.getName(), node.getRightHandSide()));
+              logger.warn(String.format("%s previous variable %s is not used in %s", "(" + getLocation(node) + ")", fragment.getName(), node.getRightHandSide()));
             }
           } else {
-            logger.warn(String.format("%s previous variable has multiple fragments", location(node)));
+            logger.warn(String.format("%s previous variable has multiple fragments", "(" + getLocation(node) + ")"));
           }
         } else {
-          logger.warn(String.format("%s previous statement is %s", location(node), previousStatement.getClass().getSimpleName()));
+          logger.warn(String.format("%s previous statement is %s", "(" + getLocation(node) + ")", previousStatement.getClass().getSimpleName()));
         }
       }
     }
@@ -300,13 +303,13 @@ public class RefAutoCoder extends AutoCoder {
             return null;
           }
         } else {
-          logger.info(String.format("No previous statement for %s at %s", node.getClass().getSimpleName(), location(node)));
+          logger.info(String.format("No previous statement for %s at %s", node.getClass().getSimpleName(), "(" + getLocation(node) + ")"));
           return null;
         }
       } else {
         final ASTNode parent = node.getParent();
         if (null == parent) {
-          logger.info("No previous statement for %s at %s", node.getClass().getSimpleName(), location(node));
+          logger.info("No previous statement for %s at %s", node.getClass().getSimpleName(), "(" + getLocation(node) + ")");
           return null;
         } else {
           return previousStatement(parent);
@@ -324,18 +327,114 @@ public class RefAutoCoder extends AutoCoder {
             if (1 == fragments.size()) {
               final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
               if (fragment.getName().toString().equals(node.getExpression().toString())) {
-                logger.info(String.format("Inlining %s at %s", fragment.getName(), location(node)));
+                logger.info(String.format("Inlining %s at %s", fragment.getName(), "(" + getLocation(node) + ")"));
                 node.setExpression((Expression) ASTNode.copySubtree(node.getAST(), fragment.getInitializer()));
                 previousStatement.delete();
               }
             }
           } else {
-            logger.info(String.format("Cannot inline - Previous statement is %s at %s", previousStatement.getClass().getSimpleName(), location(node)));
+            logger.info(String.format("Cannot inline - Previous statement is %s at %s", previousStatement.getClass().getSimpleName(), "(" + getLocation(node) + ")"));
           }
         } else {
-          logger.info(String.format("Cannot inline - No previous statement at %s", location(node)));
+          logger.info(String.format("Cannot inline - No previous statement at %s", "(" + getLocation(node) + ")"));
         }
       }
+    }
+  }
+
+  protected class InstrumentClosures extends FileAstVisitor {
+
+    private final SymbolIndex index;
+
+    private InstrumentClosures(CompilationUnit compilationUnit, File file, SymbolIndex index) {
+      super(compilationUnit, file);
+      this.index = index;
+    }
+
+    @Override
+    public void endVisit(LambdaExpression node) {
+      final IMethodBinding methodBinding = node.resolveMethodBinding();
+      if (null == methodBinding) return;
+      final BindingId bindingId = index.describe(methodBinding).setType("Lambda");
+      final Span lambdaLocation = getSpan(node);
+      final SymbolIndex symbolIndex = getSymbolIndex(node);
+      final Map<BindingId, List<Span>> closures = getClosures(lambdaLocation, symbolIndex);
+      if (closures.size() > 0) {
+        logger.info(String.format("Closures in %s at %s\n\t%s",
+            bindingId,
+            lambdaLocation,
+            closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + "\n\t" + b).get()));
+
+        final AST ast = node.getAST();
+        final MethodInvocation methodInvocation = ast.newMethodInvocation();
+        methodInvocation.setExpression(ast.newSimpleName("ReferenceCounting"));
+        methodInvocation.setName(ast.newSimpleName("wrapInterface"));
+        methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
+        closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
+          if (closureNode instanceof SingleVariableDeclaration) {
+            final MethodInvocation addRefInvoke = ast.newMethodInvocation();
+            final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
+            final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
+            if (isRefCounted(type)) {
+              addRefInvoke.setExpression((Name) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()));
+              addRefInvoke.setName(ast.newSimpleName("addRef"));
+              methodInvocation.arguments().add(addRefInvoke);
+            }
+          } else {
+            logger.warn("Cannot handle " + closureNode.getClass().getSimpleName());
+          }
+        });
+        if (methodInvocation.arguments().size() > 1) {
+          replace(node, methodInvocation);
+        }
+      }
+    }
+
+    @Override
+    public void endVisit(AnonymousClassDeclaration node) {
+      final Span lambdaLocation = getSpan(node);
+      final Map<BindingId, List<Span>> closures = getClosures(lambdaLocation, getSymbolIndex(node));
+
+      if (closures.size() > 0) {
+        logger.warn(String.format("Closures in %s at %s: %s",
+            index.describe(node.resolveBinding()).setType("Anonymous Class"),
+            lambdaLocation,
+            closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+      }
+    }
+
+    private Map<BindingId, List<Span>> getClosures(Span lambdaLocation, SymbolIndex lambdaIndex) {
+      return lambdaIndex.references.entrySet().stream().flatMap(e -> {
+        final BindingId bindingId = e.getKey();
+        final ContextLocation definition = index.definitionLocations.get(bindingId);
+        if (bindingId.type.equals("Type")) {
+        } else if (definition == null) {
+          logger.debug(String.format("Unresolved ref %s in %s", bindingId, lambdaLocation));
+        } else if (!lambdaLocation.contains(definition.location)) {
+          logger.debug(String.format("Closure %s in %s defined by %s", bindingId, e.getValue().stream().map(x -> x.location.toString()).reduce((a, b) -> a + ", " + b).get(), definition.location));
+          return e.getValue().stream().map(x -> new Tuple2<>(bindingId, x.location));
+        }
+        return Stream.empty();
+      }).filter(x -> x != null).collect(Collectors.groupingBy(x -> x._1, Collectors.mapping(x -> x._2, Collectors.toList())));
+    }
+
+    @NotNull
+    private AutoCoder.SymbolIndex getSymbolIndex(ASTNode node) {
+      final SymbolIndex lambdaIndex = new SymbolIndex();
+      node.accept(new IndexSymbols(compilationUnit, file, lambdaIndex) {
+        @Override
+        public void endVisit(QualifiedName node) {
+          Name root = node;
+          while (root instanceof QualifiedName) {
+            root = ((QualifiedName) root).getQualifier();
+          }
+          final IBinding binding = root.resolveBinding();
+          if (null != binding) {
+            indexReference(root, binding);
+          }
+        }
+      }.setVerbose(false));
+      return lambdaIndex;
     }
   }
 
@@ -353,7 +452,7 @@ public class RefAutoCoder extends AutoCoder {
         if (null != typeBinding) {
           addFreeRef(declaration, typeBinding);
         } else {
-          logger.warn(String.format("%s - Cannot resolve type of %s", location(parent), parent));
+          logger.warn(String.format("%s - Cannot resolve type of %s", "(" + getLocation(parent) + ")", parent));
         }
       } else if (parent instanceof VariableDeclarationExpression) {
         final Type type = ((VariableDeclarationExpression) parent).getType();
@@ -361,14 +460,14 @@ public class RefAutoCoder extends AutoCoder {
         if (null != typeBinding) {
           addFreeRef(declaration, typeBinding);
         } else {
-          logger.warn(String.format("%s - Cannot resolve type of %s", location(parent), parent));
+          logger.warn(String.format("%s - Cannot resolve type of %s", "(" + getLocation(parent) + ")", parent));
         }
       } else if (parent instanceof FieldDeclaration) {
         final ITypeBinding typeBinding = ((FieldDeclaration) parent).getType().resolveBinding();
         if (null != typeBinding) {
           addFreeRef(declaration, typeBinding);
         } else {
-          logger.warn(String.format("%s - Cannot resolve type of %s", location(parent), parent));
+          logger.warn(String.format("%s - Cannot resolve type of %s", "(" + getLocation(parent) + ")", parent));
         }
       } else if (parent instanceof LambdaExpression) {
         final LambdaExpression lambdaExpression = (LambdaExpression) parent;
@@ -385,10 +484,10 @@ public class RefAutoCoder extends AutoCoder {
     @Override
     public void endVisit(@NotNull SingleVariableDeclaration declaration) {
       ITypeBinding typeBinding = declaration.resolveBinding().getType();
-      if(null == typeBinding) {
+      if (null == typeBinding) {
         logger.info(String.format("Cannot add freeRef for field access %s at %s (binding not resolved)",
             declaration.getName(),
-            location(declaration)
+            "(" + getLocation(declaration) + ")"
         ));
       } else {
         addFreeRef(declaration, typeBinding);
@@ -413,7 +512,7 @@ public class RefAutoCoder extends AutoCoder {
             } else {
               final AST ast = node.getAST();
               final Block block = ast.newBlock();
-              if(hasReturnValue(lambdaParent, node)) {
+              if (hasReturnValue(lambdaParent, node)) {
                 final ReturnStatement returnStatement = ast.newReturnStatement();
                 returnStatement.setExpression((Expression) ASTNode.copySubtree(ast, body));
                 block.statements().add(returnStatement);
@@ -430,7 +529,7 @@ public class RefAutoCoder extends AutoCoder {
             addFreeRef(typeBinding, name, (Block) parent);
           } else {
             logger.warn(String.format("%s - Cannot add freeRef for %s (VariableDeclarationStatement) in %s : %s",
-                location(declaration),
+                "(" + getLocation(declaration) + ")",
                 name,
                 parent.getClass(), parent.toString().trim()
             ));
@@ -443,29 +542,29 @@ public class RefAutoCoder extends AutoCoder {
             if (freeMethodOpt.isPresent()) {
               final ExpressionStatement expressionStatement = name.getAST().newExpressionStatement(newFreeRef(name, typeBinding));
               logger.info(String.format("%s - Adding freeRef for %s::%s to %s",
-                  location(declaration),
+                  "(" + getLocation(declaration) + ")",
                   typeDeclaration.getName(),
                   declaration.getName(),
-                  location(name)
+                  "(" + getLocation(name) + ")"
               ));
               freeMethodOpt.get().getBody().statements().add(0, expressionStatement);
             } else {
               logger.warn(String.format("%s - Cannot add freeRef for %s::%s - no _free method",
-                  location(declaration),
+                  "(" + getLocation(declaration) + ")",
                   typeDeclaration.getName(),
                   declaration.getName()
               ));
             }
           } else {
             logger.warn(String.format("%s - Cannot add freeRef for %s (FieldDeclaration) in %s : %s",
-                location(declaration),
+                "(" + getLocation(declaration) + ")",
                 name,
                 fieldParent.getClass(), fieldParent.toString().trim()
             ));
           }
         } else {
           logger.warn(String.format("%s - Cannot add freeRef for %s in %s : %s",
-              location(declaration),
+              "(" + getLocation(declaration) + ")",
               name,
               parent.getClass(), parent.toString().trim()
           ));
@@ -478,15 +577,15 @@ public class RefAutoCoder extends AutoCoder {
         final MethodInvocation methodInvocation = (MethodInvocation) lambdaParent;
         final int argIndex = methodInvocation.arguments().indexOf(node);
         final ITypeBinding targetClass = methodInvocation.resolveMethodBinding().getParameterTypes()[argIndex];
-        if(derives(targetClass, Consumer.class)) {
+        if (derives(targetClass, Consumer.class)) {
           return false;
-        } else if(derives(targetClass, Function.class)) {
+        } else if (derives(targetClass, Function.class)) {
           return true;
-        } else if(derives(targetClass, Predicate.class)) {
+        } else if (derives(targetClass, Predicate.class)) {
           return true;
         } else {
-          final List<IMethodBinding> methods = Arrays.stream(targetClass.getDeclaredMethods()).filter(x->x.getDefaultValue() != null).collect(Collectors.toList());
-          if(methods.size() == 1 && (methods.get(0).getReturnType()).equals(PrimitiveType.VOID)) {
+          final List<IMethodBinding> methods = Arrays.stream(targetClass.getDeclaredMethods()).filter(x -> x.getDefaultValue() != null).collect(Collectors.toList());
+          if (methods.size() == 1 && (methods.get(0).getReturnType()).equals(PrimitiveType.VOID)) {
             return false;
           } else {
             logger.warn(String.format("Cannot determine if %s returns a value", targetClass.getQualifiedName()));
@@ -509,7 +608,7 @@ public class RefAutoCoder extends AutoCoder {
       AST ast = name.getAST();
       return mention -> {
         final ReturnStatement returnStatement = (ReturnStatement) mention.statement;
-        final String identifier = randomIdentifier(location(name));
+        final String identifier = randomIdentifier("(" + getLocation(name) + ")");
         final List statements = mention.block.statements();
         statements.add(mention.line, newLocalVariable(identifier, returnStatement.getExpression()));
         ASTNode name1 = ast.newSimpleName(name.getIdentifier());
@@ -519,7 +618,7 @@ public class RefAutoCoder extends AutoCoder {
         statements.set(mention.line + 2, newReturnStatement);
         logger.info(String.format("Added freeRef for return value %s at %s",
             name,
-            location(name)
+            "(" + getLocation(name) + ")"
         ));
       };
     }
@@ -531,7 +630,7 @@ public class RefAutoCoder extends AutoCoder {
         logger.info(String.format("Added freeRef for value %s (%s) at %s",
             name,
             typeBinding.getQualifiedName(),
-            location(name)
+            "(" + getLocation(name) + ")"
         ));
       };
     }
@@ -550,7 +649,7 @@ public class RefAutoCoder extends AutoCoder {
               logger.info(String.format("Argument addRef for %s: %s at %s",
                   nodeName,
                   nodeName.resolveTypeBinding().getQualifiedName(),
-                  location(nodeName)));
+                  "(" + getLocation(nodeName) + ")"));
               arguments.set(i, methodInvocation);
             }
           }
@@ -570,7 +669,7 @@ public class RefAutoCoder extends AutoCoder {
             if (null != methodInvocation) {
               logger.info(String.format("Argument addRef for %s at %s",
                   next,
-                  location(node)));
+                  "(" + getLocation(node) + ")"));
               expressions.set(i, methodInvocation);
             }
           }
@@ -622,13 +721,13 @@ public class RefAutoCoder extends AutoCoder {
           if (node.arguments().size() > 0) {
             apply(node.getType(), node.arguments());
           } else {
-            logger.info(String.format("No args %s at %s", node, location(node)));
+            logger.info(String.format("No args %s at %s", node, "(" + getLocation(node) + ")"));
           }
         } else {
-          logger.info(String.format("Non-refcounted arg %s at %s", node, location(node)));
+          logger.info(String.format("Non-refcounted arg %s at %s", node, "(" + getLocation(node) + ")"));
         }
       } else {
-        logger.warn(String.format("Cannot resolve %s at %s", node, location(node)));
+        logger.warn(String.format("Cannot resolve %s at %s", node, "(" + getLocation(node) + ")"));
       }
     }
 
@@ -650,9 +749,9 @@ public class RefAutoCoder extends AutoCoder {
           final ITypeBinding resolveTypeBinding = simpleName.resolveTypeBinding();
           if (isRefCounted(resolveTypeBinding)) {
             arguments.set(i, addAddRef(simpleName, resolveTypeBinding));
-            logger.info(String.format("Argument addRef for %s: %s (%s) defined by %s", node, resolveTypeBinding.getQualifiedName(), simpleName, location(node)));
+            logger.info(String.format("Argument addRef for %s: %s (%s) defined by %s", node, resolveTypeBinding.getQualifiedName(), simpleName, "(" + getLocation(node) + ")"));
           } else {
-            logger.info(String.format("Non-refcounted arg %s at %s", simpleName, location(simpleName)));
+            logger.info(String.format("Non-refcounted arg %s at %s", simpleName, "(" + getLocation(simpleName) + ")"));
           }
         }
       }

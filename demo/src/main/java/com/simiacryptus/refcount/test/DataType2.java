@@ -34,10 +34,10 @@ public class DataType2 extends ReferenceCountingBase {
   }
 
   public static DataType2[] addRefs(DataType2[] array) {
-    DataType2[] temp2408 = java.util.Arrays.stream(array).filter((x) -> x == null).map(DataType2::addRef)
+    DataType2[] temp2459 = java.util.Arrays.stream(array).filter((x) -> x == null).map(DataType2::addRef)
         .toArray((x) -> new DataType2[x]);
     com.simiacryptus.refcount.test.DataType2.freeRefs(array);
-    return temp2408;
+    return temp2459;
   }
 
   public static void freeRefs(DataType2[] array) {

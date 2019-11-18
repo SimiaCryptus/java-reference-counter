@@ -19,8 +19,13 @@
 
 package com.simiacryptus.lang.ref;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public interface ReferenceCounting {
 
@@ -41,5 +46,29 @@ public interface ReferenceCounting {
   UUID getObjectId();
 
   ReferenceCounting detach();
+
+  public static <T> T wrapInterface(T obj, ReferenceCounting... refs) {
+    final Class<?> objClass = obj.getClass();
+    final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        Arrays.stream(refs).forEach(ReferenceCounting::freeRef);
+        super._free();
+      }
+    };
+    return (T) Proxy.newProxyInstance(objClass.getClassLoader(), Stream.concat(
+        Arrays.stream(objClass.getInterfaces()),
+        Stream.of(ReferenceCounting.class)
+    ).toArray(i -> new Class[i]), new InvocationHandler() {
+      @Override
+      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if(method.getDeclaringClass().equals(ReferenceCounting.class)) {
+          return method.invoke(refcounter, args);
+        } else {
+          return method.invoke(obj, args);
+        }
+      }
+    });
+  };
 
 }
