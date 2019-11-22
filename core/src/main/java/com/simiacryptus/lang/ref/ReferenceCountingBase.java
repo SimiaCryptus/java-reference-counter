@@ -269,4 +269,8 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   public UUID getObjectId() {
     return objectId;
   }
+
+  public static <T> void free(T value) {
+    if (null != value && value instanceof ReferenceCounting) ((ReferenceCounting) value).freeRef();
+  }
 }

@@ -43,7 +43,10 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +56,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class SimpleMavenProject {
