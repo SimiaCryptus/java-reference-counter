@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 abstract class RefFileAstVisitor extends FileAstVisitor {
@@ -42,7 +43,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     return AutoCoder.derives(type, ReferenceCounting.class);
   }
 
-  public boolean methodConsumesRefs(IMethodBinding methodBinding, ASTNode node) {
+  public boolean methodConsumesRefs(@Nonnull IMethodBinding methodBinding, ASTNode node) {
     final String qualifiedName = methodBinding.getDeclaringClass().getQualifiedName();
     final String methodName = methodBinding.getName();
     if (qualifiedName.equals(String.class.getCanonicalName())) {

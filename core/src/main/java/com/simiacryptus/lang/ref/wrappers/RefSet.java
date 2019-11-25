@@ -6,6 +6,7 @@ import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
 
@@ -29,10 +30,7 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
 
   public RefSet(Collection<T> values) {
     this();
-    for (T value : values) {
-      add(value);
-    }
-    RefUtil.freeRef(values);
+    addAll(values);
   }
 
   @Override
@@ -40,20 +38,20 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
     final T replaced = inner.put(o, o);
     if (null != replaced) {
       RefUtil.freeRef(replaced);
-      return true;
-    } else {
       return false;
+    } else {
+      return true;
     }
   }
 
   @Override
   public final boolean addAll(@NotNull Collection<? extends T> c) {
     if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().map(this::add).reduce((a, b) -> a || b).orElse(false);
+      final boolean returnValue = c.stream().map(o -> add(o)).reduce((a, b) -> a || b).orElse(false);
       ((ReferenceCounting) c).freeRef();
       return returnValue;
     } else {
-      return c.stream().map(this::add).reduce((a, b) -> a || b).orElse(false);
+      return c.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
     }
 
   }
@@ -115,11 +113,22 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
   @Override
   public synchronized final boolean removeAll(@NotNull Collection<?> c) {
     if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().map(this::remove).reduce((a, b) -> a || b).orElse(false);
+      final boolean returnValue = ((RefStream<?>) c.stream()).map(o -> {
+        final T remove = inner.remove(o);
+        RefUtil.freeRef(o);
+        final boolean b = remove != null;
+        if(b) RefUtil.freeRef(o);
+        return b;
+      }).reduce((a, b) -> a || b).orElse(false);
       ((ReferenceCounting) c).freeRef();
       return returnValue;
     } else {
-      return c.stream().map(this::remove).reduce((a, b) -> a || b).orElse(false);
+      return c.stream().map(o -> {
+        final T remove = inner.remove(o);
+        final boolean b = remove != null;
+        if(b) RefUtil.freeRef(o);
+        return b;
+      }).reduce((a, b) -> a || b).orElse(false);
     }
   }
 
@@ -130,10 +139,11 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
       toRemove = inner.keySet().stream().filter(o -> !c.contains(RefUtil.addRef(o))).toArray();
       ((ReferenceCounting) c).freeRef();
     } else {
-      toRemove = inner.keySet().stream().filter(o -> !c.contains(o)).toArray();
+      toRemove = inner.keySet().stream().filter(o -> !c.contains(o)).map(RefUtil::addRef).toArray();
     }
     for (Object o : toRemove) {
       inner.remove(o);
+      RefUtil.freeRef(o);
     }
     return 0 < toRemove.length;
   }

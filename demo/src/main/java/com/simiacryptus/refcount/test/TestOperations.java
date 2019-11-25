@@ -2,8 +2,6 @@ package com.simiacryptus.refcount.test;
 
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.function.Consumer;
 
 public class TestOperations extends ReferenceCountingBase {
@@ -118,13 +116,30 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void use(ListContainer listContainer) {
     System.out.println(String.format("Increment %s", listContainer));
-    final java.util.ArrayList<BasicType> listCopy = new java.util.ArrayList<>(listContainer.values);
-    if (listContainer.values.size() != listCopy.size())
+    if (listContainer.values.size() != new java.util.HashSet<>(listContainer.values).size())
       throw new RuntimeException();
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < count; i++) {
+      if (!listContainer.values.add(listContainer.values.iterator().next()))
+        throw new RuntimeException();
+      final java.util.List<BasicType> list = java.util.Arrays.asList(new BasicType());
+      listContainer.values.addAll(list);
+      if (!listContainer.values.containsAll(list))
+        throw new RuntimeException();
+      if (!listContainer.values.retainAll(list))
+        throw new RuntimeException();
+      if (!listContainer.values.addAll(list))
+        throw new RuntimeException();
+      listContainer.values.removeAll(list);
+      if (false) {
+        if (listContainer.values.size() != listContainer.values.toArray().length)
+          throw new RuntimeException();
+        if (listContainer.values.size() != listContainer.values.toArray(new BasicType[] {}).length)
+          throw new RuntimeException();
+      }
       listContainer.values.stream().forEach(x -> {
         x.value++;
       });
+    }
   }
 
   private void use(SetContainer setContainer) {
@@ -132,6 +147,25 @@ public class TestOperations extends ReferenceCountingBase {
     if (setContainer.values.size() != new java.util.HashSet<>(setContainer.values).size())
       throw new RuntimeException();
     for (int i = 0; i < count; i++) {
+      if (setContainer.values.add(setContainer.values.iterator().next()))
+        throw new RuntimeException();
+      final java.util.List<BasicType> list = java.util.Arrays.asList(new BasicType());
+      setContainer.values.addAll(list);
+      if (!setContainer.values.containsAll(list))
+        throw new RuntimeException();
+      if (!setContainer.values.retainAll(list))
+        throw new RuntimeException();
+      setContainer.values.removeAll(list);
+      if (!setContainer.values.addAll(list))
+        throw new RuntimeException();
+      if (0 == setContainer.values.size())
+        throw new RuntimeException();
+      if (false) {
+        if (setContainer.values.size() != setContainer.values.toArray().length)
+          throw new RuntimeException();
+        if (setContainer.values.size() != setContainer.values.toArray(new BasicType[] {}).length)
+          throw new RuntimeException();
+      }
       setContainer.values.stream().forEach(x -> {
         x.value++;
       });

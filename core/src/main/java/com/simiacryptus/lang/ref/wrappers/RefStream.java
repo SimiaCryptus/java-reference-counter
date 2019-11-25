@@ -157,7 +157,7 @@ public class RefStream<T> implements Stream<T> {
   @Override
   public <R> RefStream<R> map(Function<? super T, ? extends R> mapper) {
     track(mapper);
-    return new RefStream<>(inner.map(mapper), lambdas);
+    return new RefStream<>(inner.map(t -> mapper.apply(addRef(t))), lambdas);
   }
 
   @Override

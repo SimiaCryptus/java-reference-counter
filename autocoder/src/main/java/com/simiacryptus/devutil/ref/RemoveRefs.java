@@ -1,7 +1,7 @@
 package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.devutil.AutoCoder;
-import com.simiacryptus.lang.ref.ReferenceCountingBase;
+import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
-    if (AutoCoder.derives(typeBinding, ReferenceCountingBase.class)) {
+    if (AutoCoder.derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "addRef");
       removeMethods(node, "freeRef");
       removeMethods(node, "_free");
@@ -86,7 +86,7 @@ class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
-    if (AutoCoder.derives(typeBinding, ReferenceCountingBase.class)) {
+    if (AutoCoder.derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "_free");
     }
   }

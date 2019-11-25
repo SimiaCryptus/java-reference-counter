@@ -96,10 +96,12 @@ public class IndexSymbols extends FileAstVisitor {
   public void indexReference(Name node, IBinding binding) {
     if (null != binding) {
       BindingId bindingId = index.describe(binding);
-      final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
-      final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
-      if (isVerbose()) info(node, "Reference to %s at %s within:\n\t%s", bindingId, contextLocation.location, contextPath);
-      index.references.computeIfAbsent(bindingId, x -> new ArrayList<>()).add(contextLocation);
+      if(null != bindingId) {
+        final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
+        final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
+        if (isVerbose()) info(node, "Reference to %s at %s within:\n\t%s", bindingId, contextLocation.location, contextPath);
+        index.references.computeIfAbsent(bindingId, x -> new ArrayList<>()).add(contextLocation);
+      }
     } else {
       if (isVerbose()) info(node, "Unresolved element for %s", binding.getName());
     }
@@ -198,6 +200,7 @@ public class IndexSymbols extends FileAstVisitor {
 
     public BindingId describe(@Nonnull IBinding binding) {
       final String path = getPath(binding);
+      if(null==path) return null;
       if (path.contains("::lambda$")) return new BindingId(path, "Lambda");
       else return new BindingId(path, getType(binding));
     }
@@ -232,7 +235,9 @@ public class IndexSymbols extends FileAstVisitor {
           final FieldBinding fieldBinding = AutoCoder.getField(variableBinding, "binding");
           if (fieldBinding != null) {
             final ReferenceBinding declaringClass = fieldBinding.declaringClass;
-            if (null == declaringClass) throw new IllegalArgumentException(fieldBinding + " has no declaring class");
+            if (null == declaringClass) {
+              return null;
+            }
             final String className = Arrays.stream(declaringClass.compoundName).map(String::new).reduce((a, b) -> a + "." + b).get();
             return String.format("%s::%s",
                 className,
