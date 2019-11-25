@@ -1,5 +1,6 @@
 package com.simiacryptus.devutil;
 
+import com.simiacryptus.devutil.ref.RefAutoCoder;
 import org.junit.Test;
 
 public class TestRefAutoCoder {

@@ -91,6 +91,55 @@ public class SimpleMavenProject {
     return mavenProject;
   }
 
+  private MavenProject getMavenProject(final DefaultPlexusContainer container, final DefaultRepositorySystemSession session) throws ProjectBuildingException, org.codehaus.plexus.component.repository.exception.ComponentLookupException {
+    DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();
+    request.setRepositorySession(session);
+    return container.lookup(ProjectBuilder.class).build(new File(projectRoot, "pom.xml"), request).getProject();
+  }
+
+  @NotNull
+  public ASTParser getParser() {
+    ASTParser astParser = ASTParser.newParser(AST.JLS11);
+    astParser.setKind(ASTParser.K_COMPILATION_UNIT);
+    astParser.setResolveBindings(true);
+    HashMap<String, String> compilerOptions = new HashMap<>();
+    compilerOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8));
+    compilerOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
+    astParser.setCompilerOptions(compilerOptions);
+    String[] classpathEntries = resolve().getDependencies().stream().map(x -> x.getArtifact().getFile().getAbsolutePath()).toArray(i -> new String[i]);
+    String[] sourcepathEntries = Stream.concat(
+        project.getTestCompileSourceRoots().stream(),
+        project.getCompileSourceRoots().stream()
+    ).toArray(i -> new String[i]);
+    astParser.setEnvironment(classpathEntries, sourcepathEntries, null, true);
+    return astParser;
+  }
+
+  @Nonnull
+  private DefaultPlexusContainer getPlexusContainer(final File repositoryLocation) throws IOException, PlexusContainerException {
+    DefaultRepositoryLayout defaultRepositoryLayout = new DefaultRepositoryLayout();
+    ArtifactRepositoryPolicy repositoryPolicy = new ArtifactRepositoryPolicy(true, ArtifactRepositoryPolicy.UPDATE_POLICY_NEVER, ArtifactRepositoryPolicy.CHECKSUM_POLICY_WARN);
+    String url = "file://" + repositoryLocation.getCanonicalPath();
+    ArtifactRepository repository = new MavenArtifactRepository("central", url, defaultRepositoryLayout, repositoryPolicy, repositoryPolicy);
+    ClassWorld classWorld = new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
+    ContainerConfiguration configuration = new DefaultContainerConfiguration()
+        .setClassWorld(classWorld).setRealm(classWorld.getClassRealm(null))
+        .setClassPathScanning("index").setAutoWiring(true).setJSR250Lifecycle(true).setName("maven");
+    return new DefaultPlexusContainer(configuration, new BasicModule(repository));
+  }
+
+  @Nonnull
+  private DefaultRepositorySystemSession getSession(final File repositoryLocation, final boolean isOffline, final Map<Object, Object> configProps, final DefaultPlexusContainer container) throws org.codehaus.plexus.component.repository.exception.ComponentLookupException {
+    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+    session.setConfigProperties(configProps);
+    session.setCache(new DefaultRepositoryCache());
+    session.setOffline(isOffline);
+    session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+    session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(ResolutionErrorPolicy.CACHE_NOT_FOUND, ResolutionErrorPolicy.CACHE_NOT_FOUND));
+    session.setArtifactTypeRegistry(RepositoryUtils.newArtifactTypeRegistry(container.lookup(ArtifactHandlerManager.class)));
+    session.setLocalRepositoryManager(container.lookup(DefaultRepositorySystem.class).newLocalRepositoryManager(session, new LocalRepository(repositoryLocation)));
+    return session;
+  }
 
   @NotNull
   public final HashMap<File, CompilationUnit> parse() {
@@ -116,62 +165,12 @@ public class SimpleMavenProject {
     return results;
   }
 
-  @NotNull
-  public ASTParser getParser() {
-    ASTParser astParser = ASTParser.newParser(AST.JLS11);
-    astParser.setKind(ASTParser.K_EXPRESSION);
-    astParser.setResolveBindings(true);
-    HashMap<String, String> compilerOptions = new HashMap<>();
-    compilerOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8));
-    compilerOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
-    astParser.setCompilerOptions(compilerOptions);
-    String[] classpathEntries = resolve().getDependencies().stream().map(x -> x.getArtifact().getFile().getAbsolutePath()).toArray(i -> new String[i]);
-    String[] sourcepathEntries = Stream.concat(
-        project.getTestCompileSourceRoots().stream(),
-        project.getCompileSourceRoots().stream()
-    ).toArray(i -> new String[i]);
-    astParser.setEnvironment(classpathEntries, sourcepathEntries, null, true);
-    return astParser;
-  }
-
   public DependencyResolutionResult resolve() {
     try {
       return container.lookup(ProjectDependenciesResolver.class).resolve(new DefaultDependencyResolutionRequest().setRepositorySession(session).setMavenProject(project));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private MavenProject getMavenProject(final DefaultPlexusContainer container, final DefaultRepositorySystemSession session) throws ProjectBuildingException, org.codehaus.plexus.component.repository.exception.ComponentLookupException {
-    DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();
-    request.setRepositorySession(session);
-    return container.lookup(ProjectBuilder.class).build(new File(projectRoot, "pom.xml"), request).getProject();
-  }
-
-  @Nonnull
-  private DefaultRepositorySystemSession getSession(final File repositoryLocation, final boolean isOffline, final Map<Object, Object> configProps, final DefaultPlexusContainer container) throws org.codehaus.plexus.component.repository.exception.ComponentLookupException {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-    session.setConfigProperties(configProps);
-    session.setCache(new DefaultRepositoryCache());
-    session.setOffline(isOffline);
-    session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
-    session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(ResolutionErrorPolicy.CACHE_NOT_FOUND, ResolutionErrorPolicy.CACHE_NOT_FOUND));
-    session.setArtifactTypeRegistry(RepositoryUtils.newArtifactTypeRegistry(container.lookup(ArtifactHandlerManager.class)));
-    session.setLocalRepositoryManager(container.lookup(DefaultRepositorySystem.class).newLocalRepositoryManager(session, new LocalRepository(repositoryLocation)));
-    return session;
-  }
-
-  @Nonnull
-  private DefaultPlexusContainer getPlexusContainer(final File repositoryLocation) throws IOException, PlexusContainerException {
-    DefaultRepositoryLayout defaultRepositoryLayout = new DefaultRepositoryLayout();
-    ArtifactRepositoryPolicy repositoryPolicy = new ArtifactRepositoryPolicy(true, ArtifactRepositoryPolicy.UPDATE_POLICY_NEVER, ArtifactRepositoryPolicy.CHECKSUM_POLICY_WARN);
-    String url = "file://" + repositoryLocation.getCanonicalPath();
-    ArtifactRepository repository = new MavenArtifactRepository("central", url, defaultRepositoryLayout, repositoryPolicy, repositoryPolicy);
-    ClassWorld classWorld = new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
-    ContainerConfiguration configuration = new DefaultContainerConfiguration()
-        .setClassWorld(classWorld).setRealm(classWorld.getClassRealm(null))
-        .setClassPathScanning("index").setAutoWiring(true).setJSR250Lifecycle(true).setName("maven");
-    return new DefaultPlexusContainer(configuration, new BasicModule(repository));
   }
 
 }

@@ -6,7 +6,7 @@ public class SimpleContainer extends ReferenceCountingBase {
   public BasicType value;
 
   public SimpleContainer() {
-    this(new BasicType());
+    value = new BasicType();
   }
 
   public SimpleContainer(BasicType value) {

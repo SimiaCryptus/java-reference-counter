@@ -3,9 +3,8 @@ package com.simiacryptus.devutil.ops;
 import com.simiacryptus.devutil.AutoCoder;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -20,17 +19,6 @@ public class IndexSymbols extends FileAstVisitor {
   public IndexSymbols(CompilationUnit compilationUnit, File file, SymbolIndex index) {
     super(compilationUnit, file);
     this.index = index;
-  }
-
-  private void indexDef(ASTNode node, IBinding binding) {
-    if (null == binding) return;
-    final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
-    final BindingId bindingId = index.describe(binding);
-    final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
-    if (isVerbose()) info(node, "Declaration of %s at %s within: \n\t%s", bindingId, getSpan(node), contextPath);
-    final ContextLocation replaced = index.definitionLocations.put(bindingId, contextLocation);
-    if (null != replaced) throw new RuntimeException(String.format("Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location));
-    index.definitionNodes.put(bindingId, node);
   }
 
   @Override
@@ -67,7 +55,7 @@ public class IndexSymbols extends FileAstVisitor {
       if (fragment instanceof VariableDeclarationFragment) {
         indexDef(node, ((VariableDeclarationFragment) fragment).resolveBinding());
       } else {
-        if (isVerbose()) info(node,"Other fragment type %s", fragment.getClass().getSimpleName());
+        if (isVerbose()) info(node, "Other fragment type %s", fragment.getClass().getSimpleName());
       }
     }
   }
@@ -75,24 +63,12 @@ public class IndexSymbols extends FileAstVisitor {
   @Override
   public void endVisit(QualifiedName node) {
     final ITypeBinding qualifierType = node.getQualifier().resolveTypeBinding();
-    if(null != qualifierType && qualifierType.isArray()) return;
+    if (null != qualifierType && qualifierType.isArray()) return;
     final IBinding binding = node.resolveBinding();
     if (null != binding) {
       indexReference(node, binding);
     }
     super.endVisit(node);
-  }
-
-  public void indexReference(Name node, IBinding binding) {
-    if (null != binding) {
-      BindingId bindingId = index.describe(binding);
-      final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
-      final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
-      if (isVerbose()) info(node,"Reference to %s at %s within:\n\t%s", bindingId, contextLocation.location, contextPath);
-      index.references.computeIfAbsent(bindingId, x -> new ArrayList<>()).add(contextLocation);
-    } else {
-      if (isVerbose()) info(node, "Unresolved element for %s", binding.getName());
-    }
   }
 
   @Override
@@ -104,6 +80,29 @@ public class IndexSymbols extends FileAstVisitor {
       }
     }
     super.endVisit(node);
+  }
+
+  private void indexDef(ASTNode node, IBinding binding) {
+    if (null == binding) return;
+    final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
+    final BindingId bindingId = index.describe(binding);
+    final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
+    if (isVerbose()) info(node, "Declaration of %s at %s within: \n\t%s", bindingId, getSpan(node), contextPath);
+    final ContextLocation replaced = index.definitionLocations.put(bindingId, contextLocation);
+    if (null != replaced) throw new RuntimeException(String.format("Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location));
+    index.definitionNodes.put(bindingId, node);
+  }
+
+  public void indexReference(Name node, IBinding binding) {
+    if (null != binding) {
+      BindingId bindingId = index.describe(binding);
+      final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
+      final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
+      if (isVerbose()) info(node, "Reference to %s at %s within:\n\t%s", bindingId, contextLocation.location, contextPath);
+      index.references.computeIfAbsent(bindingId, x -> new ArrayList<>()).add(contextLocation);
+    } else {
+      if (isVerbose()) info(node, "Unresolved element for %s", binding.getName());
+    }
   }
 
   public boolean isVerbose() {
@@ -126,13 +125,13 @@ public class IndexSymbols extends FileAstVisitor {
       this.statement = statement;
     }
 
-    public boolean isReturn() {
-      return statement instanceof ReturnStatement;
-    }
-
     public boolean isComplexReturn() {
       if (!isReturn()) return false;
       return !(((ReturnStatement) statement).getExpression() instanceof Name);
+    }
+
+    public boolean isReturn() {
+      return statement instanceof ReturnStatement;
     }
 
   }
@@ -152,17 +151,17 @@ public class IndexSymbols extends FileAstVisitor {
       this.colEnd = colEnd;
     }
 
-    @Override
-    public String toString() {
-      return String.format("%s:{%d:%d-%d:%d}", file.getName(), lineStart, colStart, lineEnd, colEnd);
-    }
-
     public boolean contains(Span location) {
       if (location.lineStart < lineStart) return false;
       if (location.lineStart == lineStart && location.colStart < colStart) return false;
       if (location.lineEnd > lineEnd) return false;
       if (location.lineEnd == lineEnd && location.colEnd > colEnd) return false;
       return true;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s:{%d:%d-%d:%d}", file.getName(), lineStart, colStart, lineEnd, colEnd);
     }
   }
 
@@ -180,6 +179,51 @@ public class IndexSymbols extends FileAstVisitor {
     public final HashMap<BindingId, ContextLocation> definitionLocations = new HashMap<>();
     public final HashMap<BindingId, ASTNode> definitionNodes = new HashMap<>();
     public final HashMap<BindingId, List<ContextLocation>> references = new HashMap<>();
+
+    public LinkedHashMap<BindingId, Span> context(ASTNode node, Function<ASTNode, Span> locator) {
+      final LinkedHashMap<BindingId, Span> list = new LinkedHashMap<>();
+      final ASTNode parent = node.getParent();
+      if (parent != null) list.putAll(context(parent, locator));
+      if (node instanceof MethodDeclaration) {
+        list.put(describe(((MethodDeclaration) node).resolveBinding()), locator.apply(node));
+      } else if (node instanceof LambdaExpression) {
+        final LambdaExpression lambdaExpression = (LambdaExpression) node;
+        final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
+        list.put(describe(methodBinding).setType("Lambda"), locator.apply(node));
+      } else if (node instanceof TypeDeclaration) {
+        list.put(describe(((TypeDeclaration) node).resolveBinding()), locator.apply(node));
+      }
+      return list;
+    }
+
+    public BindingId describe(@Nonnull IBinding binding) {
+      final String path = getPath(binding);
+      if (path.contains("::lambda$")) return new BindingId(path, "Lambda");
+      else return new BindingId(path, getType(binding));
+    }
+
+    @NotNull
+    public ContextLocation getContextLocation(ASTNode node, Function<ASTNode, Span> locator) {
+      final LinkedHashMap<BindingId, Span> context = context(node, locator);
+      return new ContextLocation(locator.apply(node), context);
+    }
+
+    public IMethodBinding getImplementation(IMethodBinding methodBinding) {
+      while (true) {
+        IMethodBinding impl = AutoCoder.getField(methodBinding, "implementation");
+        if (null != impl && methodBinding != impl) {
+          methodBinding = impl;
+        } else break;
+      }
+      return methodBinding;
+    }
+
+    @NotNull
+    public String getPath(MethodBinding methodBinding) {
+      return Arrays.stream(methodBinding.declaringClass.compoundName)
+          .map(x -> new String(x)).reduce((a, b) -> a + "." + b).get()
+          + "::" + new String(methodBinding.selector);
+    }
 
     public String getPath(IBinding binding) {
       if (binding instanceof IVariableBinding) {
@@ -227,59 +271,6 @@ public class IndexSymbols extends FileAstVisitor {
       }
     }
 
-    public IMethodBinding getImplementation(IMethodBinding methodBinding) {
-      while (true) {
-        IMethodBinding impl = AutoCoder.getField(methodBinding, "implementation");
-        if (null != impl && methodBinding != impl) {
-          methodBinding = impl;
-        } else break;
-      }
-      return methodBinding;
-    }
-
-    @NotNull
-    public String getPath(MethodBinding methodBinding) {
-      return Arrays.stream(methodBinding.declaringClass.compoundName)
-          .map(x -> new String(x)).reduce((a, b) -> a + "." + b).get()
-          + "::" + new String(methodBinding.selector);
-    }
-
-    public String methodName(IMethodBinding methodBinding) {
-      if (null == methodBinding) return "null";
-      return String.format("%s(%s)",
-          methodBinding.getName(),
-          Arrays.stream(methodBinding.getParameterTypes()).map(x -> x.getQualifiedName()).reduce((a, b) -> a + "," + b).orElse("")
-      );
-    }
-
-    public BindingId describe(@Nonnull IBinding binding) {
-      final String path = getPath(binding);
-      if (path.contains("::lambda$")) return new BindingId(path, "Lambda");
-      else return new BindingId(path, getType(binding));
-    }
-
-    public LinkedHashMap<BindingId, Span> context(ASTNode node, Function<ASTNode, Span> locator) {
-      final LinkedHashMap<BindingId, Span> list = new LinkedHashMap<>();
-      final ASTNode parent = node.getParent();
-      if (parent != null) list.putAll(context(parent, locator));
-      if (node instanceof MethodDeclaration) {
-        list.put(describe(((MethodDeclaration) node).resolveBinding()), locator.apply(node));
-      } else if (node instanceof LambdaExpression) {
-        final LambdaExpression lambdaExpression = (LambdaExpression) node;
-        final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
-        list.put(describe(methodBinding).setType("Lambda"), locator.apply(node));
-      } else if (node instanceof TypeDeclaration) {
-        list.put(describe(((TypeDeclaration) node).resolveBinding()), locator.apply(node));
-      }
-      return list;
-    }
-
-    @NotNull
-    public ContextLocation getContextLocation(ASTNode node, Function<ASTNode, Span> locator) {
-      final LinkedHashMap<BindingId, Span> context = context(node, locator);
-      return new ContextLocation(locator.apply(node), context);
-    }
-
     public String getType(IBinding binding) {
       String type;
       if (binding instanceof IVariableBinding) {
@@ -304,6 +295,14 @@ public class IndexSymbols extends FileAstVisitor {
       }
       return type;
     }
+
+    public String methodName(IMethodBinding methodBinding) {
+      if (null == methodBinding) return "null";
+      return String.format("%s(%s)",
+          methodBinding.getName(),
+          Arrays.stream(methodBinding.getParameterTypes()).map(x -> x.getQualifiedName()).reduce((a, b) -> a + "," + b).orElse("")
+      );
+    }
   }
 
   public static class BindingId {
@@ -313,11 +312,6 @@ public class IndexSymbols extends FileAstVisitor {
     public BindingId(String path, String type) {
       this.path = path;
       this.type = type;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("%s %s", type, path);
     }
 
     @Override
@@ -336,6 +330,11 @@ public class IndexSymbols extends FileAstVisitor {
 
     public BindingId setType(String type) {
       return new BindingId(path, type);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s %s", type, path);
     }
   }
 }

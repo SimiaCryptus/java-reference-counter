@@ -54,6 +54,11 @@ class BasicModule extends AbstractModule {
   protected void configure() {
     this.bind(ILoggerFactory.class).toInstance(LoggerFactory.getILoggerFactory());
     this.bind(RepositorySystem.class).toInstance(new RepositorySystem() {
+      @Override
+      public ArtifactRepository buildArtifactRepository(final Repository r) {
+        return repository;
+      }
+
       @Nullable
       @Override
       public Artifact createArtifact(final String groupId, final String artifactId, final String version, final String packaging) {
@@ -70,7 +75,7 @@ class BasicModule extends AbstractModule {
 
       @Nullable
       @Override
-      public Artifact createProjectArtifact(final String groupId, final String artifactId, final String version) {
+      public ArtifactRepository createArtifactRepository(final String id, final String url1, final ArtifactRepositoryLayout repositoryLayout, final ArtifactRepositoryPolicy snapshots, final ArtifactRepositoryPolicy releases) {
         if (0 < 1) throw new RuntimeException("Not Implemented");
         return null;
       }
@@ -84,21 +89,9 @@ class BasicModule extends AbstractModule {
 
       @Nullable
       @Override
-      public Artifact createPluginArtifact(final Plugin plugin) {
+      public ArtifactRepository createDefaultLocalRepository() {
         if (0 < 1) throw new RuntimeException("Not Implemented");
         return null;
-      }
-
-      @Nullable
-      @Override
-      public Artifact createDependencyArtifact(final Dependency dependency) {
-        if (0 < 1) throw new RuntimeException("Not Implemented");
-        return null;
-      }
-
-      @Override
-      public ArtifactRepository buildArtifactRepository(final Repository r) {
-        return repository;
       }
 
       @Nullable
@@ -110,7 +103,7 @@ class BasicModule extends AbstractModule {
 
       @Nullable
       @Override
-      public ArtifactRepository createDefaultLocalRepository() {
+      public Artifact createDependencyArtifact(final Dependency dependency) {
         if (0 < 1) throw new RuntimeException("Not Implemented");
         return null;
       }
@@ -124,7 +117,14 @@ class BasicModule extends AbstractModule {
 
       @Nullable
       @Override
-      public ArtifactRepository createArtifactRepository(final String id, final String url1, final ArtifactRepositoryLayout repositoryLayout, final ArtifactRepositoryPolicy snapshots, final ArtifactRepositoryPolicy releases) {
+      public Artifact createPluginArtifact(final Plugin plugin) {
+        if (0 < 1) throw new RuntimeException("Not Implemented");
+        return null;
+      }
+
+      @Nullable
+      @Override
+      public Artifact createProjectArtifact(final String groupId, final String artifactId, final String version) {
         if (0 < 1) throw new RuntimeException("Not Implemented");
         return null;
       }
@@ -143,21 +143,26 @@ class BasicModule extends AbstractModule {
       }
 
       @Override
-      public void injectMirror(final List<ArtifactRepository> repositories, final List<Mirror> mirrors) {
-      }
-
-      @Override
-      public void injectProxy(final List<ArtifactRepository> repositories, final List<Proxy> proxies) {
-
-      }
-
-      @Override
       public void injectAuthentication(final List<ArtifactRepository> repositories, final List<Server> servers) {
 
       }
 
       @Override
+      public void injectAuthentication(final RepositorySystemSession session, final List<ArtifactRepository> repositories) {
+
+      }
+
+      @Override
+      public void injectMirror(final List<ArtifactRepository> repositories, final List<Mirror> mirrors) {
+      }
+
+      @Override
       public void injectMirror(final RepositorySystemSession session, final List<ArtifactRepository> repositories) {
+
+      }
+
+      @Override
+      public void injectProxy(final List<ArtifactRepository> repositories, final List<Proxy> proxies) {
 
       }
 
@@ -167,7 +172,7 @@ class BasicModule extends AbstractModule {
       }
 
       @Override
-      public void injectAuthentication(final RepositorySystemSession session, final List<ArtifactRepository> repositories) {
+      public void publish(final ArtifactRepository repository1, final File source, final String remotePath, final ArtifactTransferListener transferListener) {
 
       }
 
@@ -176,11 +181,6 @@ class BasicModule extends AbstractModule {
       public ArtifactResolutionResult resolve(final ArtifactResolutionRequest request) {
         if (0 < 1) throw new RuntimeException("Not Implemented");
         return null;
-      }
-
-      @Override
-      public void publish(final ArtifactRepository repository1, final File source, final String remotePath, final ArtifactTransferListener transferListener) {
-
       }
 
       @Override
