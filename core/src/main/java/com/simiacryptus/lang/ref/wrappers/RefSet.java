@@ -5,8 +5,10 @@ import com.simiacryptus.lang.ref.ReferenceCounting;
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
 
@@ -80,11 +82,7 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
       ((ReferenceCounting) c).freeRef();
       return returnValue;
     } else {
-      return c.stream().filter(o -> {
-        final boolean b = !inner.containsKey(o);
-        RefUtil.freeRef(o);
-        return b;
-      }).count() == 0;
+      return c.stream().filter(o -> !inner.containsKey(o)).count() == 0;
     }
   }
 
@@ -106,6 +104,7 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
       RefUtil.freeRef(removed);
       return true;
     } else {
+      RefUtil.freeRef(o);
       return false;
     }
   }
@@ -125,9 +124,9 @@ public class RefSet<T> extends ReferenceCountingBase implements Set<T> {
     } else {
       return c.stream().map(o -> {
         final T remove = inner.remove(o);
-        final boolean b = remove != null;
-        if(b) RefUtil.freeRef(o);
-        return b;
+        final boolean found = remove != null;
+        if(found) RefUtil.freeRef(o);
+        return found;
       }).reduce((a, b) -> a || b).orElse(false);
     }
   }
