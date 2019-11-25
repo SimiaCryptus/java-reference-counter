@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -97,7 +98,7 @@ public class FileAstVisitor extends ASTVisitor {
   public void info(ASTNode node, String formatString, Object... args) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2];
-    logger.info(String.format(getFormatString(node, formatString, caller), args));
+    logger.info(String.format(getFormatString(node, formatString, caller), Arrays.stream(args).map(o -> o==null?null:o.toString().trim()).toArray()));
   }
 
   public String randomIdentifier(ASTNode node) {
@@ -133,11 +134,24 @@ public class FileAstVisitor extends ASTVisitor {
   }
 
   public void replace(ASTNode child, ASTNode newChild) {
+    final ASTNode parent = child.getParent();
+    if(parent instanceof QualifiedName) {
+      final QualifiedName qualifiedName = (QualifiedName) parent;
+      if(qualifiedName.getQualifier().equals(child)) {
+        if(!(newChild instanceof Name) && (newChild instanceof Expression)) {
+          final AST ast = child.getAST();
+          final FieldAccess fieldAccess = ast.newFieldAccess();
+          fieldAccess.setExpression((Expression) ASTNode.copySubtree(ast, newChild));
+          fieldAccess.setName((SimpleName) ASTNode.copySubtree(ast, qualifiedName.getName()));
+          replace(parent, fieldAccess);
+          return;
+        }
+      }
+    }
     StructuralPropertyDescriptor location = child.getLocationInParent();
     if (location != null) {
-      final ASTNode parent = child.getParent();
       if (location.isChildProperty()) {
-        info(child, "Replace %s with %s", child, newChild);
+        info(child, "Replace %s with %s within %s (%s)", child, newChild, parent, parent.getClass().getSimpleName());
         parent.setStructuralProperty(location, newChild);
       } else {
         if (location.isChildListProperty()) {

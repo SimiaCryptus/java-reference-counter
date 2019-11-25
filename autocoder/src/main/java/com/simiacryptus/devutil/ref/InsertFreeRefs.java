@@ -111,39 +111,18 @@ class InsertFreeRefs extends RefFileAstVisitor {
           warn(methodInvocation, "Unresolved Binding: %s", methodInvocation);
         }
         if (AutoCoder.contains(methodInvocation.getExpression(), node) || !methodConsumesRefs(methodBinding, node)) {
-          Statement statement = getStatement(node);
-          final ASTNode statementParent = statement.getParent();
-          AST ast = node.getAST();
-          if (!(statementParent instanceof Block)) {
-            //warn(node, "Non-block statement %s", statementParent.getClass().getSimpleName());
-            Block block = ast.newBlock();
-            final List statements = block.statements();
-            final String identifier = randomIdentifier(node);
-            final ExpressionStatement localVariable = AutoCoder.newLocalVariable(identifier, node, AutoCoder.getType(ast, typeBinding.getQualifiedName()));
-            final ExpressionStatement freeStatement = ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding));
-            replace(node, ast.newSimpleName(identifier));
-            statements.add(localVariable);
-            statements.add(ASTNode.copySubtree(ast, statement));
-            statements.add(freeStatement);
-            replace(node, ast.newSimpleName(identifier));
-            replace(statement, block);
-            info(node, "Wrapped method call with freeref and new block");
-          } else {
-            Block block = (Block) statementParent;
-            final List statements = block.statements();
-            final int lineNumber = statements.indexOf(statement);
-            final String identifier = randomIdentifier(node);
-            final ExpressionStatement localVariable = AutoCoder.newLocalVariable(identifier, node, AutoCoder.getType(ast, typeBinding.getQualifiedName()));
-            final ExpressionStatement freeStatement = ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding));
-            replace(node, ast.newSimpleName(identifier));
-            if (lineNumber + 1 < statements.size()) {
-              statements.add(lineNumber + 1, freeStatement);
-            } else {
-              statements.add(lineNumber + 1, freeStatement);
-            }
-            statements.add(lineNumber, localVariable);
-            info(node, "Wrapped method call with freeref at line %s", lineNumber);
-          }
+          freeRefs(node, typeBinding);
+        } else {
+          info(node, "Result consumed by method");
+        }
+      } else if (parent instanceof FieldAccess) {
+        final FieldAccess methodInvocation = (FieldAccess) parent;
+        final IVariableBinding fieldBinding = methodInvocation.resolveFieldBinding();
+        if (null == fieldBinding) {
+          warn(methodInvocation, "Unresolved Binding: %s", methodInvocation);
+        }
+        if (AutoCoder.contains(methodInvocation.getExpression(), node)) {
+          freeRefs(node, typeBinding);
         } else {
           info(node, "Result consumed by method");
         }
@@ -164,6 +143,42 @@ class InsertFreeRefs extends RefFileAstVisitor {
       }
     } else {
       warn(node, "Ignored method returning %s: %s", typeBinding.getQualifiedName(), node);
+    }
+  }
+
+  private void freeRefs(@NotNull Expression node, ITypeBinding typeBinding) {
+    Statement statement = getStatement(node);
+    final ASTNode statementParent = statement.getParent();
+    AST ast = node.getAST();
+    if (!(statementParent instanceof Block)) {
+      //warn(node, "Non-block statement %s", statementParent.getClass().getSimpleName());
+      Block block = ast.newBlock();
+      final List statements = block.statements();
+      final String identifier = randomIdentifier(node);
+      final ExpressionStatement localVariable = AutoCoder.newLocalVariable(identifier, node, AutoCoder.getType(ast, typeBinding.getQualifiedName()));
+      final ExpressionStatement freeStatement = ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding));
+      replace(node, ast.newSimpleName(identifier));
+      statements.add(localVariable);
+      statements.add(ASTNode.copySubtree(ast, statement));
+      statements.add(freeStatement);
+      replace(node, ast.newSimpleName(identifier));
+      replace(statement, block);
+      info(node, "Wrapped method call with freeref and new block");
+    } else {
+      Block block = (Block) statementParent;
+      final List statements = block.statements();
+      final int lineNumber = statements.indexOf(statement);
+      final String identifier = randomIdentifier(node);
+      final ExpressionStatement localVariable = AutoCoder.newLocalVariable(identifier, node, AutoCoder.getType(ast, typeBinding.getQualifiedName()));
+      final ExpressionStatement freeStatement = ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding));
+      replace(node, ast.newSimpleName(identifier));
+      if (lineNumber + 1 < statements.size()) {
+        statements.add(lineNumber + 1, freeStatement);
+      } else {
+        statements.add(lineNumber + 1, freeStatement);
+      }
+      statements.add(lineNumber, localVariable);
+      info(node, "Wrapped method call with freeref at line %s", lineNumber);
     }
   }
 
