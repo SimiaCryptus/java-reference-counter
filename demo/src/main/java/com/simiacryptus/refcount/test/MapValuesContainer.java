@@ -13,6 +13,15 @@ public class MapValuesContainer extends ReferenceCountingBase {
     }
   }
 
+  public void use() {
+    System.out.println(String.format("Increment %s", this));
+    for (int i = 0; i < TestOperations.count; i++) {
+      this.values.values().stream().forEach(x -> {
+        x.value++;
+      });
+    }
+  }
+
   @Override
   public String toString() {
     return "MapValuesContainer{" + "values=" + values + '}';

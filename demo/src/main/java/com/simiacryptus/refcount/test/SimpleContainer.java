@@ -13,6 +13,11 @@ public class SimpleContainer extends ReferenceCountingBase {
     this.value = value;
   }
 
+  public void use() {
+    System.out.println(String.format("Increment %s", this));
+    this.value.value++;
+  }
+
   @Override
   public String toString() {
     return "SimpleContainer{" + "values=" + value + '}';

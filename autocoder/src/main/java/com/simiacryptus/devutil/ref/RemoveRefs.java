@@ -51,7 +51,10 @@ class RemoveRefs extends RefFileAstVisitor {
           info(node, "%s removed as argument %s of %s", methodName, index, parent);
         }
       } else if (parent instanceof ExpressionStatement) {
-        if (subject instanceof Name) {
+        if (subject == null) {
+          info(node, "%s removed", parent);
+          delete((ExpressionStatement) parent);
+        } else if (subject instanceof Name) {
           info(node, "%s removed", parent);
           delete((ExpressionStatement) parent);
         } else if (subject instanceof FieldAccess) {
