@@ -86,7 +86,7 @@ public class RefMap<K, V> extends ReferenceCountingBase implements Map<K, V>, Cl
   public V put(K key, V value) {
     final V replaced = inner.put(key, value);
     if (null != replaced) {
-      RefUtil.freeRef(key);
+      RefUtil.freeRef(replaced);
     }
     return replaced;
   }

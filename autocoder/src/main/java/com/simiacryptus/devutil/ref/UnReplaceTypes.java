@@ -6,10 +6,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,8 +28,11 @@ class UnReplaceTypes extends RefFileAstVisitor {
       if (className.equals(RefArrays.class.getCanonicalName())) {
         replace(node, AutoCoder.newQualifiedName(node.getAST(), Arrays.class));
       }
-      if (className.equals(RefList.class.getCanonicalName())) {
+      if (className.equals(RefArrayList.class.getCanonicalName())) {
         replace(node, AutoCoder.newQualifiedName(node.getAST(), ArrayList.class));
+      }
+      if (className.equals(RefList.class.getCanonicalName())) {
+        replace(node, AutoCoder.newQualifiedName(node.getAST(), List.class));
       }
       if (className.equals(RefMap.class.getCanonicalName())) {
         replace(node, AutoCoder.newQualifiedName(node.getAST(), HashMap.class));

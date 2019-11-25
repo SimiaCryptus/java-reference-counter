@@ -1,7 +1,7 @@
 package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.devutil.AutoCoder;
-import com.simiacryptus.lang.ref.ReferenceCountingBase;
+import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -152,7 +152,7 @@ class InsertAddRefs extends RefFileAstVisitor {
   public MethodInvocation wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
       final SimpleName name = (SimpleName) node;
-      if (AutoCoder.derives(name.resolveTypeBinding(), ReferenceCountingBase.class)) {
+      if (AutoCoder.derives(name.resolveTypeBinding(), ReferenceCounting.class)) {
         return (MethodInvocation) wrapAddRef(name, name.resolveTypeBinding());
       }
     }

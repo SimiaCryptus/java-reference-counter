@@ -13,8 +13,8 @@ import java.util.stream.Collector;
 public class RefCollectors {
   public static <T> Collector<T, ?, List<T>> toList() {
     return new RefCollector<>(
-        () -> new RefList<T>(),
-        (RefList<T> list, T element) -> list.add(element),
+        () -> new RefArrayList<T>(),
+        (RefArrayList<T> list, T element) -> list.add(element),
         (left, right) -> {
           left.addAll(right);
           return left;

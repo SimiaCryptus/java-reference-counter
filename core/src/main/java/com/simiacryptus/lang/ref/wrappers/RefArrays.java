@@ -1,10 +1,9 @@
 package com.simiacryptus.lang.ref.wrappers;
 
 import com.simiacryptus.lang.ref.RefUtil;
-import com.simiacryptus.lang.ref.ReferenceCounting;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
+import java.util.List;
 
 public class RefArrays {
   public static <T> RefStream<T> stream(T[] array) {
@@ -17,5 +16,13 @@ public class RefArrays {
     final String result = Arrays.toString(values);
     Arrays.stream(values).forEach(RefUtil::freeRef);
     return result;
+  }
+
+  public static <T> RefList<T> asList(T... items) {
+    final RefArrayList<T> ts = new RefArrayList<>(Arrays.asList(items));
+    for (T item : items) {
+      RefUtil.freeRef(item);
+    }
+    return ts;
   }
 }

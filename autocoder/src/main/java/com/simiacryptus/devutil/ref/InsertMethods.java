@@ -1,7 +1,7 @@
 package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.devutil.AutoCoder;
-import com.simiacryptus.lang.ref.ReferenceCountingBase;
+import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ class InsertMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
-    if (AutoCoder.derives(node.resolveBinding(), ReferenceCountingBase.class)) {
+    if (AutoCoder.derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       declarations.add(method_free(ast));
@@ -28,7 +28,7 @@ class InsertMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
-    if (AutoCoder.derives(node.resolveBinding(), ReferenceCountingBase.class)) {
+    if (AutoCoder.derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       declarations.add(method_free(ast));
