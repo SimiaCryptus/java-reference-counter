@@ -1,6 +1,7 @@
 package com.simiacryptus.refcount.test;
 
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
+import java.util.ArrayList;
 
 public class ListContainer extends ReferenceCountingBase {
   public java.util.ArrayList<BasicType> values = new java.util.ArrayList<>();

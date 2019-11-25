@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ops;
 
-import com.simiacryptus.devutil.AutoCoder;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,10 +16,10 @@ public class InsertGCs extends FileAstVisitor {
   public void endVisit(MethodDeclaration node) {
     final AST ast = node.getAST();
     final Block body = node.getBody();
-    if(!node.isConstructor()) {
+    if (!node.isConstructor()) {
       body.statements().add(0, newGCCall(ast));
     }
-    if(null != body && body.statements().size() > 0) {
+    if (null != body && body.statements().size() > 0) {
       final ArrayList<ReturnStatement> returnStatements = new ArrayList<>();
       body.accept(new ASTVisitor() {
         @Override
@@ -28,11 +27,11 @@ public class InsertGCs extends FileAstVisitor {
           final Block block = ast.newBlock();
           block.statements().add(newGCCall(ast));
           block.statements().add(ASTNode.copySubtree(ast, node));
-          AutoCoder.replace(node, block);
+          replace(node, block);
           returnStatements.add(node);
         }
       });
-      if(returnStatements.isEmpty()) {
+      if (returnStatements.isEmpty()) {
         body.statements().add(newGCCall(ast));
       }
     }

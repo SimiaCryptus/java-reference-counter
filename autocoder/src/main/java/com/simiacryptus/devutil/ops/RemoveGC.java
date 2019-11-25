@@ -17,7 +17,7 @@ class RemoveGC extends FileAstVisitor {
   @Override
   public void endVisit(@NotNull MethodInvocation node) {
     final Expression expression = node.getExpression();
-    if(null==expression) return;
+    if (null == expression) return;
     final ITypeBinding typeBinding = expression.resolveTypeBinding();
     final String binaryName = typeBinding.getBinaryName();
     if (null != binaryName && binaryName.equals(System.class.getCanonicalName())) {

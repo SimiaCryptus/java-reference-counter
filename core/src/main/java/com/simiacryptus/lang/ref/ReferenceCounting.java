@@ -46,28 +46,7 @@ public interface ReferenceCounting {
 
   ReferenceCounting detach();
 
-  public static <T> T wrapInterface(T obj, ReferenceCounting... refs) {
-    final Class<?> objClass = obj.getClass();
-    final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
-      @Override
-      protected void _free() {
-        Arrays.stream(refs).forEach(ReferenceCounting::freeRef);
-        super._free();
-      }
-    };
-    return (T) Proxy.newProxyInstance(objClass.getClassLoader(), Stream.concat(
-        Arrays.stream(objClass.getInterfaces()),
-        Stream.of(ReferenceCounting.class)
-    ).toArray(i -> new Class[i]), new InvocationHandler() {
-      @Override
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if(method.getDeclaringClass().equals(ReferenceCounting.class)) {
-          return method.invoke(refcounter, args);
-        } else {
-          return method.invoke(obj, args);
-        }
-      }
-    });
-  };
-
+  public static <T extends ReferenceCounting> void freeRefs(T[] array) {
+    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
+  }
 }

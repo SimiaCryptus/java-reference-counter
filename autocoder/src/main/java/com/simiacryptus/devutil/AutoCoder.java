@@ -1,7 +1,6 @@
 package com.simiacryptus.devutil;
 
 import com.simiacryptus.devutil.ops.IndexSymbols;
-import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.ProjectBuildingException;
@@ -21,7 +20,10 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -58,158 +60,27 @@ public abstract class AutoCoder extends ASTVisitor {
     return null;
   }
 
-  public static void replace(ASTNode child, ASTNode newChild) {
-    StructuralPropertyDescriptor location = child.getLocationInParent();
-    if (location == null) {
-      return;
-    }
-    if (location.isChildProperty()) {
-      child.getParent().setStructuralProperty(location, newChild);
-      return;
-    }
-    if (location.isChildListProperty()) {
-      List l = (List) child.getParent().getStructuralProperty(location);
-      final int indexOf = l.indexOf(child);
-      l.set(indexOf, newChild);
-    }
-  }
-
-  @Nonnull
-  public abstract void rewrite();
-
   public static List<IMethodBinding> enclosingMethods(ASTNode node) {
     final ArrayList<IMethodBinding> list = new ArrayList<>();
-    if(null != node) {
-      if(node instanceof MethodDeclaration) {
+    if (null != node) {
+      if (node instanceof MethodDeclaration) {
         list.addAll(enclosingMethods(node.getParent()));
         list.add(((MethodDeclaration) node).resolveBinding());
-      } else if(null != node.getParent()) {
+      } else if (null != node.getParent()) {
         list.addAll(enclosingMethods(node.getParent()));
       }
     }
     return list;
   }
 
-  public int rewrite(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
-    return project.parse().entrySet().stream().mapToInt(entry -> {
-      File file = entry.getKey();
-      CompilationUnit compilationUnit = entry.getValue();
-      logger.debug(String.format("Scanning %s", file));
-      final String prevSrc = compilationUnit.toString();
-      final ASTVisitor astVisitor = visitor.apply(compilationUnit, file);
-      compilationUnit.accept(astVisitor);
-      final String finalSrc = compilationUnit.toString();
-      if (!prevSrc.equals(finalSrc)) {
-        logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
-        try {
-          FileUtils.write(file, format(finalSrc), "UTF-8");
-          return 1;
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      } else {
-        logger.debug("Not Touched: " + file);
-        return 0;
-      }
-    }).sum();
-  }
-
-  public void scan(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
-    project.parse().entrySet().stream().forEach(entry -> {
-      File file = entry.getKey();
-      CompilationUnit compilationUnit = entry.getValue();
-      logger.debug(String.format("Scanning %s", file));
-      compilationUnit.accept(visitor.apply(compilationUnit, file));
-    });
-  }
-
-  public String format(@NotNull String finalSrc) {
-    final Document document = new Document();
-    document.set(finalSrc);
-    try {
-      new DefaultCodeFormatter(formattingSettings())
-          .format(
-              CodeFormatter.K_COMPILATION_UNIT,
-              finalSrc,
-              0,
-              finalSrc.length(),
-              0,
-              "\n")
-          .apply(document);
-    } catch (BadLocationException e) {
-      throw new RuntimeException();
-    }
-    return document.get();
-  }
-
-  protected static void removeMethods(@NotNull AnonymousClassDeclaration node, String methodName) {
-    for (final Iterator iterator = node.bodyDeclarations().iterator(); iterator.hasNext(); ) {
-      final Object next = iterator.next();
-      if (next instanceof MethodDeclaration) {
-        final SimpleName name = ((MethodDeclaration) next).getName();
-        if (name.toString().equals(methodName)) {
-          iterator.remove();
-        }
-      }
-    }
-  }
-
-  protected static void removeMethods(@NotNull TypeDeclaration node, String methodName) {
-    for (final Iterator iterator = node.bodyDeclarations().iterator(); iterator.hasNext(); ) {
-      final Object next = iterator.next();
-      if (next instanceof MethodDeclaration) {
-        final SimpleName name = ((MethodDeclaration) next).getName();
-        if (name.toString().equals(methodName)) {
-          iterator.remove();
-        }
-      }
-    }
-  }
-
-  @NotNull
-  public <T> T setField(@NotNull T astNode, String name, Object value) {
-    try {
-      getField(astNode.getClass(), name).set(astNode, value);
-      return astNode;
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @NotNull
-  public Field getField(@NotNull Class<?> nodeClass, String name) {
-    final Field[] fields = nodeClass.getDeclaredFields();
-    final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
-    if (!parent.isPresent()) {
-      final Class<?> superclass = nodeClass.getSuperclass();
-      if (superclass != null) {
-        return getField(superclass, name);
-      } else {
-        throw new AssertionError(String.format("Cannot find field %s", name));
-      }
-    }
-    final Field field = parent.get();
-    field.setAccessible(true);
-    return field;
-  }
-
-  @NotNull
-  protected DefaultCodeFormatterOptions formattingSettings() {
-    final DefaultCodeFormatterOptions javaConventionsSettings = DefaultCodeFormatterOptions.getJavaConventionsSettings();
-    javaConventionsSettings.align_with_spaces = true;
-    javaConventionsSettings.tab_char = DefaultCodeFormatterOptions.SPACE;
-    javaConventionsSettings.indentation_size = 2;
-    return javaConventionsSettings;
-  }
-
-  protected static boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
+  public static boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
     final String binaryName = typeBinding.getBinaryName();
     if (null != binaryName && binaryName.equals(baseClass.getCanonicalName())) return true;
+    if (Arrays.stream(typeBinding.getInterfaces()).filter(x -> derives(x, baseClass)).findAny().isPresent()) return true;
     if (typeBinding.getSuperclass() != null) return derives(typeBinding.getSuperclass(), baseClass);
     if (typeBinding.isArray()) return derives(typeBinding.getElementType(), baseClass);
     return false;
   }
-
 
   @NotNull
   public static Name newQualifiedName(AST ast, Class<?> clazz) {
@@ -265,15 +136,8 @@ public abstract class AutoCoder extends ASTVisitor {
 
   public static Optional<MethodDeclaration> findMethod(@NotNull AnonymousClassDeclaration typeDeclaration, String name) {
     return typeDeclaration.bodyDeclarations().stream()
-        .filter(x->x instanceof MethodDeclaration)
-        .filter(methodDeclaration -> ((MethodDeclaration)methodDeclaration).getName().toString().equals(name)).findFirst();
-  }
-
-  @NotNull
-  public IndexSymbols.SymbolIndex getSymbolIndex() {
-    final IndexSymbols.SymbolIndex index = new IndexSymbols.SymbolIndex();
-    scan((cu, file) -> new IndexSymbols(cu, file, index));
-    return index;
+        .filter(x -> x instanceof MethodDeclaration)
+        .filter(methodDeclaration -> ((MethodDeclaration) methodDeclaration).getName().toString().equals(name)).findFirst();
   }
 
   @NotNull
@@ -333,27 +197,138 @@ public abstract class AutoCoder extends ASTVisitor {
       if (null != typeCode) {
         return ast.newPrimitiveType(typeCode);
       } else {
-        return ast.newSimpleType(ast.newSimpleName(name));
+        final int typeArg = name.indexOf('<');
+        if (typeArg < 0) {
+          return ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
+        } else {
+          final String mainType = name.substring(0, typeArg);
+          final String innerType = name.substring(typeArg + 1, name.length() - 1);
+          int nesting = 0;
+          ArrayList<Integer> primaryDelimiters = new ArrayList<>();
+          for (int i = 0; i < innerType.length(); i++) {
+            final char c = innerType.charAt(i);
+            if (c == '<') nesting++;
+            if (c == '>') nesting--;
+            if (c == ',') primaryDelimiters.add(i);
+          }
+          final ParameterizedType parameterizedType = ast.newParameterizedType(ast.newSimpleType(newQualifiedName(ast, mainType.split("\\."))));
+          if (primaryDelimiters.isEmpty()) {
+            parameterizedType.typeArguments().add(getType(ast, innerType));
+          } else {
+            for (int i = 0; i < primaryDelimiters.size(); i++) {
+              final int to = primaryDelimiters.get(i);
+              final int from = i == 0 ? 0 : (primaryDelimiters.get(i - 1) + 1);
+              parameterizedType.typeArguments().add(getType(ast, innerType.substring(from, to)));
+            }
+          }
+          return parameterizedType;
+        }
       }
     }
   }
 
-  public static void delete(@NotNull Statement parent) {
-    final ASTNode parent1 = parent.getParent();
-    if (parent1 instanceof Block) {
-      final Block block = (Block) parent1;
-      if (block.statements().size() == 1) {
-        final ASTNode blockParent = block.getParent();
-        if (blockParent instanceof Statement) {
-          delete(parent);
-          return;
-        }
-      }
-    } else if (parent1 instanceof Statement) {
-      delete((Statement) parent1);
-      return;
+  public static boolean contains(ASTNode node, ASTNode element) {
+    if (null == element) return false;
+    if (node == element) return true;
+    return contains(node, element.getParent());
+  }
+
+  public String format(@NotNull String finalSrc) {
+    final Document document = new Document();
+    document.set(finalSrc);
+    try {
+      new DefaultCodeFormatter(formattingSettings())
+          .format(
+              CodeFormatter.K_COMPILATION_UNIT,
+              finalSrc,
+              0,
+              finalSrc.length(),
+              0,
+              "\n")
+          .apply(document);
+    } catch (BadLocationException e) {
+      throw new RuntimeException();
     }
-    parent.delete();
+    return document.get();
+  }
+
+  @NotNull
+  protected DefaultCodeFormatterOptions formattingSettings() {
+    final DefaultCodeFormatterOptions javaConventionsSettings = DefaultCodeFormatterOptions.getJavaConventionsSettings();
+    javaConventionsSettings.align_with_spaces = true;
+    javaConventionsSettings.tab_char = DefaultCodeFormatterOptions.SPACE;
+    javaConventionsSettings.indentation_size = 2;
+    return javaConventionsSettings;
+  }
+
+  @NotNull
+  public Field getField(@NotNull Class<?> nodeClass, String name) {
+    final Field[] fields = nodeClass.getDeclaredFields();
+    final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
+    if (!parent.isPresent()) {
+      final Class<?> superclass = nodeClass.getSuperclass();
+      if (superclass != null) {
+        return getField(superclass, name);
+      } else {
+        throw new AssertionError(String.format("Cannot find field %s", name));
+      }
+    }
+    final Field field = parent.get();
+    field.setAccessible(true);
+    return field;
+  }
+
+  @NotNull
+  public IndexSymbols.SymbolIndex getSymbolIndex() {
+    final IndexSymbols.SymbolIndex index = new IndexSymbols.SymbolIndex();
+    scan((cu, file) -> new IndexSymbols(cu, file, index));
+    return index;
+  }
+
+  @Nonnull
+  public abstract void rewrite();
+
+  public int rewrite(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+    return project.parse().entrySet().stream().mapToInt(entry -> {
+      File file = entry.getKey();
+      CompilationUnit compilationUnit = entry.getValue();
+      logger.debug(String.format("Scanning %s", file));
+      final String prevSrc = compilationUnit.toString();
+      final ASTVisitor astVisitor = visitor.apply(compilationUnit, file);
+      compilationUnit.accept(astVisitor);
+      final String finalSrc = compilationUnit.toString();
+      if (!prevSrc.equals(finalSrc)) {
+        logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
+        try {
+          FileUtils.write(file, format(finalSrc), "UTF-8");
+          return 1;
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      } else {
+        logger.debug("Not Touched: " + file);
+        return 0;
+      }
+    }).sum();
+  }
+
+  public void scan(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+    project.parse().entrySet().stream().forEach(entry -> {
+      File file = entry.getKey();
+      CompilationUnit compilationUnit = entry.getValue();
+      logger.debug(String.format("Scanning %s", file));
+      compilationUnit.accept(visitor.apply(compilationUnit, file));
+    });
+  }
+
+  @NotNull
+  public <T> T setField(@NotNull T astNode, String name, Object value) {
+    try {
+      getField(astNode.getClass(), name).set(astNode, value);
+      return astNode;
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 }
