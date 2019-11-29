@@ -53,6 +53,7 @@ public enum PersistanceMode {
     }
   };
 
+  @org.jetbrains.annotations.Nullable
   @Nullable
   public abstract <T> Supplier<T> wrap(T obj);
 }

@@ -21,6 +21,7 @@ package com.simiacryptus.lang.ref;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.simiacryptus.lang.StackCounter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +39,14 @@ import static com.simiacryptus.lang.ref.PersistanceMode.WEAK;
 public abstract class RecycleBin<T> {
 
   public static final RecycleBin<double[]> DOUBLES = new RecycleBin<double[]>() {
-    @Override
-    protected void free(double[] obj) {
-    }
-
+    @NotNull
     @Override
     public double[] create(final long length) {
       return new double[(int) length];
+    }
+
+    @Override
+    protected void free(double[] obj) {
     }
 
     @Override
@@ -54,13 +56,14 @@ public abstract class RecycleBin<T> {
     }
   }.setPersistanceMode(RefSettings.INSTANCE().getDoubleCacheMode());
   public static final RecycleBin<float[]> FLOATS = new RecycleBin<float[]>() {
-    @Override
-    protected void free(float[] obj) {
-    }
-
+    @NotNull
     @Override
     public float[] create(final long length) {
       return new float[(int) length];
+    }
+
+    @Override
+    protected void free(float[] obj) {
     }
 
     @Override
@@ -134,7 +137,47 @@ public abstract class RecycleBin<T> {
     }).sum();
   }
 
-  protected long freeItem(T obj, long size) {
+  private void clearMemory(long length) {
+    long max = Runtime.getRuntime().maxMemory();
+    long previous = Runtime.getRuntime().freeMemory();
+    long size = getSize();
+    logger.warn(String.format("Allocation of length %d failed; %s/%s used memory; %s items in recycle buffer; Clearing memory", length, previous, max, size));
+    clear();
+    System.gc();
+    long after = Runtime.getRuntime().freeMemory();
+    logger.warn(String.format("Clearing memory freed %s/%s bytes", previous - after, max));
+  }
+
+  @Nullable
+  public T copyOf(@Nullable final T original, long size) {
+    if (null == original) return null;
+    final T copy = obtain(size);
+    System.arraycopy(original, 0, copy, 0, (int) size);
+    return copy;
+  }
+
+  @Nonnull
+  public abstract T create(long length);
+
+  @Nonnull
+  public T create(long length, int retries) {
+    try {
+      @Nonnull T result = create(length);
+      @Nullable StackCounter stackCounter = getAllocations(length);
+      if (null != stackCounter) {
+        stackCounter.increment(length);
+      }
+      return result;
+    } catch (@Nonnull final Throwable e) {
+      if (retries <= 0) throw new RuntimeException(String.format("Could not allocate %d bytes", length), e);
+    }
+    clearMemory(length);
+    return create(length, retries - 1);
+  }
+
+  protected abstract void free(T obj);
+
+  protected long freeItem(@org.jetbrains.annotations.Nullable T obj, long size) {
     @Nullable StackCounter stackCounter = getFrees(size);
     if (null != stackCounter) {
       stackCounter.increment(size);
@@ -143,7 +186,91 @@ public abstract class RecycleBin<T> {
     return size;
   }
 
-  protected abstract void free(T obj);
+  @Nullable
+  public StackCounter getAllocations(final long length) {
+    if (!isProfiling(length)) return null;
+    return allocations;
+  }
+
+  protected ConcurrentLinkedDeque<ObjectWrapper> getBin(long size) {
+    return buckets.computeIfAbsent(size, x -> new ConcurrentLinkedDeque<>());
+  }
+
+  @Nullable
+  public StackCounter getFrees(final long length) {
+    if (!isProfiling(length)) return null;
+    return frees;
+  }
+
+  public int getMaxItemsPerBuffer() {
+    return maxItemsPerBuffer;
+  }
+
+  @Nonnull
+  public RecycleBin<T> setMaxItemsPerBuffer(int maxItemsPerBuffer) {
+    this.maxItemsPerBuffer = maxItemsPerBuffer;
+    return this;
+  }
+
+  public double getMaxLengthPerBuffer() {
+    return maxLengthPerBuffer;
+  }
+
+  @Nonnull
+  public RecycleBin<T> setMaxLengthPerBuffer(double maxLengthPerBuffer) {
+    this.maxLengthPerBuffer = maxLengthPerBuffer;
+    return this;
+  }
+
+  public int getMinLengthPerBuffer() {
+    return minLengthPerBuffer;
+  }
+
+  @Nonnull
+  public RecycleBin<T> setMinLengthPerBuffer(int minLengthPerBuffer) {
+    this.minLengthPerBuffer = minLengthPerBuffer;
+    return this;
+  }
+
+  public PersistanceMode getPersistanceMode() {
+    return persistanceMode;
+  }
+
+  @Nonnull
+  public RecycleBin<T> setPersistanceMode(PersistanceMode persistanceMode) {
+    this.persistanceMode = persistanceMode;
+    return this;
+  }
+
+  public int getPurgeFreq() {
+    return purgeFreq;
+  }
+
+  @NotNull
+  public RecycleBin<T> setPurgeFreq(int purgeFreq) {
+    this.purgeFreq = purgeFreq;
+    return this;
+  }
+
+  @Nullable
+  public StackCounter getRecycle_get(final long length) {
+    if (!isProfiling(length)) return null;
+    return recycle_get;
+  }
+
+  @Nullable
+  public StackCounter getRecycle_put(final long length) {
+    if (!isProfiling(length)) return null;
+    return recycle_put;
+  }
+
+  public long getSize() {
+    return this.buckets.entrySet().stream().mapToLong(e -> e.getKey() * e.getValue().size()).sum();
+  }
+
+  public boolean isProfiling(final long length) {
+    return length > profilingThreshold;
+  }
 
   public T obtain(final long length) {
     final ConcurrentLinkedDeque<ObjectWrapper> bin = buckets.get(length);
@@ -162,45 +289,6 @@ public abstract class RecycleBin<T> {
       }
     }
     return create(length, 1);
-  }
-
-  @Nullable
-  public T copyOf(@Nullable final T original, long size) {
-    if (null == original) return null;
-    final T copy = obtain(size);
-    System.arraycopy(original, 0, copy, 0, (int) size);
-    return copy;
-  }
-
-  @Nonnull
-  public abstract T create(long length);
-
-  @Nullable
-  public StackCounter getAllocations(final long length) {
-    if (!isProfiling(length)) return null;
-    return allocations;
-  }
-
-  @Nullable
-  public StackCounter getFrees(final long length) {
-    if (!isProfiling(length)) return null;
-    return frees;
-  }
-
-  @Nullable
-  public StackCounter getRecycle_put(final long length) {
-    if (!isProfiling(length)) return null;
-    return recycle_put;
-  }
-
-  @Nullable
-  public StackCounter getRecycle_get(final long length) {
-    if (!isProfiling(length)) return null;
-    return recycle_get;
-  }
-
-  public boolean isProfiling(final long length) {
-    return length > profilingThreshold;
   }
 
   public void printAllProfiling(@Nonnull final PrintStream out) {
@@ -252,35 +340,12 @@ public abstract class RecycleBin<T> {
     freeItem(data, size);
   }
 
+  public abstract void reset(T data, long size);
+
   @Nonnull
-  public T create(long length, int retries) {
-    try {
-      @Nonnull T result = create(length);
-      @Nullable StackCounter stackCounter = getAllocations(length);
-      if (null != stackCounter) {
-        stackCounter.increment(length);
-      }
-      return result;
-    } catch (@Nonnull final Throwable e) {
-      if (retries <= 0) throw new RuntimeException(String.format("Could not allocate %d bytes", length), e);
-    }
-    clearMemory(length);
-    return create(length, retries - 1);
-  }
-
-  private void clearMemory(long length) {
-    long max = Runtime.getRuntime().maxMemory();
-    long previous = Runtime.getRuntime().freeMemory();
-    long size = getSize();
-    logger.warn(String.format("Allocation of length %d failed; %s/%s used memory; %s items in recycle buffer; Clearing memory", length, previous, max, size));
-    clear();
-    System.gc();
-    long after = Runtime.getRuntime().freeMemory();
-    logger.warn(String.format("Clearing memory freed %s/%s bytes", previous - after, max));
-  }
-
-  public long getSize() {
-    return this.buckets.entrySet().stream().mapToLong(e -> e.getKey() * e.getValue().size()).sum();
+  public RecycleBin<T> setProfiling(final int threshold) {
+    this.profilingThreshold = threshold;
+    return this;
   }
 
   public boolean want(long size) {
@@ -294,70 +359,9 @@ public abstract class RecycleBin<T> {
     return bin.size() < Math.min(Math.max(1, (int) (getMaxLengthPerBuffer() / size)), getMaxItemsPerBuffer());
   }
 
-  protected ConcurrentLinkedDeque<ObjectWrapper> getBin(long size) {
-    return buckets.computeIfAbsent(size, x -> new ConcurrentLinkedDeque<>());
-  }
-
-  public int getPurgeFreq() {
-    return purgeFreq;
-  }
-
-  public RecycleBin<T> setPurgeFreq(int purgeFreq) {
-    this.purgeFreq = purgeFreq;
-    return this;
-  }
-
-  public PersistanceMode getPersistanceMode() {
-    return persistanceMode;
-  }
-
-  @Nonnull
-  public RecycleBin<T> setPersistanceMode(PersistanceMode persistanceMode) {
-    this.persistanceMode = persistanceMode;
-    return this;
-  }
-
   @Nullable
   protected Supplier<T> wrap(T data) {
     return persistanceMode.wrap(data);
-  }
-
-  public abstract void reset(T data, long size);
-
-  @Nonnull
-  public RecycleBin<T> setProfiling(final int threshold) {
-    this.profilingThreshold = threshold;
-    return this;
-  }
-
-  public int getMinLengthPerBuffer() {
-    return minLengthPerBuffer;
-  }
-
-  @Nonnull
-  public RecycleBin<T> setMinLengthPerBuffer(int minLengthPerBuffer) {
-    this.minLengthPerBuffer = minLengthPerBuffer;
-    return this;
-  }
-
-  public double getMaxLengthPerBuffer() {
-    return maxLengthPerBuffer;
-  }
-
-  @Nonnull
-  public RecycleBin<T> setMaxLengthPerBuffer(double maxLengthPerBuffer) {
-    this.maxLengthPerBuffer = maxLengthPerBuffer;
-    return this;
-  }
-
-  public int getMaxItemsPerBuffer() {
-    return maxItemsPerBuffer;
-  }
-
-  @Nonnull
-  public RecycleBin<T> setMaxItemsPerBuffer(int maxItemsPerBuffer) {
-    this.maxItemsPerBuffer = maxItemsPerBuffer;
-    return this;
   }
 
   private class ObjectWrapper {

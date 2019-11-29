@@ -13,37 +13,81 @@ import static com.simiacryptus.lang.ref.RefUtil.addRef;
 public class RefStream<T> implements Stream<T> {
   private Stream<T> inner;
   private List<ReferenceCounting> lambdas;
+  private List<IdentityWrapper<ReferenceCounting>> refs;
 
   RefStream(Stream<T> stream) {
-    this(stream, new ArrayList<>());
-    onClose(()-> {
+    this(stream, new ArrayList<>(), new ArrayList<>());
+    onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
+      this.refs.forEach(x->x.inner.freeRef());
       this.lambdas.clear();
     });
   }
 
-  RefStream(Stream<T> stream, List<ReferenceCounting> lambdas) {
+  RefStream(Stream<T> stream, List<ReferenceCounting> lambdas, List<IdentityWrapper<ReferenceCounting>> refs) {
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = stream;
     this.lambdas = lambdas;
+    this.refs = refs;
+  }
+
+  public static <T> RefStream<T> of(T x) {
+    return new RefStream<>(Stream.of(x));
+  }
+
+  public static <T> RefStream<T> of(T... array) {
+    return new RefStream<>(Stream.of(array).onClose(() -> {
+      Arrays.stream(array).forEach(RefUtil::freeRef);
+    }));
   }
 
   @Override
-  public boolean allMatch(Predicate<? super T> predicate) {
+  public boolean allMatch(@NotNull Predicate<? super T> predicate) {
     track(predicate);
-    return inner.allMatch((T t) -> predicate.test(addRef(t)));
+    return inner.allMatch((T t) -> predicate.test(getRef(t)));
   }
 
-  private void track(Object... lambda) {
-    for (Object l : lambda) {
-      if(null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+  private <U> U getRef(U u) {
+    if (u instanceof ReferenceCounting) {
+      if (!refs.remove(new IdentityWrapper(u))) {
+        addRef(u);
+      }
+    }
+    return u;
+  }
+
+  public static class IdentityWrapper<T> {
+    public final T inner;
+
+    public IdentityWrapper(T inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      IdentityWrapper that = (IdentityWrapper) o;
+      return inner == that.inner;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(inner);
     }
   }
 
+  private <U> U storeRef(U u) {
+    if (u instanceof ReferenceCounting) {
+      refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
+    }
+    return u;
+  }
+
   @Override
-  public boolean anyMatch(Predicate<? super T> predicate) {
+  public boolean anyMatch(@NotNull Predicate<? super T> predicate) {
     track(predicate);
-    return inner.anyMatch((T t) -> predicate.test(addRef(t)));
+    return inner.anyMatch((T t) -> predicate.test(getRef(t)));
   }
 
   @Override
@@ -52,40 +96,47 @@ public class RefStream<T> implements Stream<T> {
   }
 
   @Override
-  public <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super T> accumulator, BiConsumer<R, R> combiner) {
+  public <R> R collect(@NotNull Supplier<R> supplier, @NotNull BiConsumer<R, ? super T> accumulator, @NotNull BiConsumer<R, R> combiner) {
     track(supplier);
     track(accumulator);
     track(combiner);
-    return inner.collect(() -> supplier.get(), (R t1, T u1) -> accumulator.accept(addRef(t1), addRef(u1)), (R t, R u) -> combiner.accept(addRef(t), addRef(u)));
+    return inner.collect(
+        () -> storeRef(supplier.get()),
+        (R t1, T u1) -> accumulator.accept(addRef(t1), getRef(u1)),
+        (R t, R u) -> combiner.accept(getRef(t), getRef(u))
+    );
   }
 
   @Override
   public <R, A> R collect(Collector<? super T, A, R> collector) {
-    if(collector instanceof ReferenceCounting) {
+    if (collector instanceof ReferenceCounting) {
       final Function<A, R> finisher = collector.finisher();
-      track(collector);
-      return finisher.apply(this.collect(
+      final R result = finisher.apply(this.collect(
           collector.supplier(),
           collector.accumulator(),
           collector.combiner()::apply));
+      ((ReferenceCounting) collector).freeRef();
+      return result;
     } else {
-      assert false;
       return inner.collect(collector);
     }
   }
 
   @Override
   public long count() {
-    return inner.count();
+    final long count = inner.count();
+    return count;
   }
 
+  @NotNull
   @Override
   public RefStream<T> distinct() {
     inner = inner.distinct();
     return this;
   }
 
-  public RefStream<T> filter(Predicate<? super T> predicate) {
+  @NotNull
+  public RefStream<T> filter(@NotNull Predicate<? super T> predicate) {
     inner = inner.filter((T t) -> predicate.test(addRef(t)));
     track(predicate);
     return this;
@@ -98,43 +149,47 @@ public class RefStream<T> implements Stream<T> {
 
   @Override
   public Optional<T> findFirst() {
-    return RefUtil.wrapInterface(inner.findFirst()).map(RefUtil::addRef);
+    return inner.findFirst().map(RefUtil::addRef);
+  }
+
+  @NotNull
+  @Override
+  public <R> RefStream<R> flatMap(@NotNull Function<? super T, ? extends Stream<? extends R>> mapper) {
+    track(mapper);
+    return new RefStream<>(inner.flatMap((T t) -> mapper.apply(getRef(t))
+        .collect(Collectors.toList()).stream()
+        .map(this::storeRef)
+    ), lambdas, refs);
   }
 
   @Override
-  public <R> RefStream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper) {
+  public DoubleStream flatMapToDouble(@NotNull Function<? super T, ? extends DoubleStream> mapper) {
     track(mapper);
-    return new RefStream<>(inner.flatMap((T t) -> mapper.apply(addRef(t))), lambdas);
+    return inner.flatMapToDouble((T t) -> mapper.apply(getRef(t)));
   }
 
   @Override
-  public DoubleStream flatMapToDouble(Function<? super T, ? extends DoubleStream> mapper) {
+  public IntStream flatMapToInt(@NotNull Function<? super T, ? extends IntStream> mapper) {
     track(mapper);
-    return inner.flatMapToDouble((T t) -> mapper.apply(addRef(t)));
+    return inner.flatMapToInt((T t) -> mapper.apply(getRef(t)));
   }
 
   @Override
-  public IntStream flatMapToInt(Function<? super T, ? extends IntStream> mapper) {
+  public LongStream flatMapToLong(@NotNull Function<? super T, ? extends LongStream> mapper) {
     track(mapper);
-    return inner.flatMapToInt((T t) -> mapper.apply(addRef(t)));
+    return inner.flatMapToLong((T t) -> mapper.apply(getRef(t)));
   }
 
-  @Override
-  public LongStream flatMapToLong(Function<? super T, ? extends LongStream> mapper) {
-    track(mapper);
-    return inner.flatMapToLong((T t) -> mapper.apply(addRef(t)));
-  }
-
-  public void forEach(Consumer<? super T> action) {
+  public void forEach(@NotNull Consumer<? super T> action) {
     track(action);
-    inner.forEach((T t) -> action.accept(addRef(t)));
+    inner.forEach((T t) -> action.accept(getRef(t)));
     close();
   }
 
   @Override
-  public void forEachOrdered(Consumer<? super T> action) {
+  public void forEachOrdered(@NotNull Consumer<? super T> action) {
     track(action);
-    inner.forEachOrdered((T t) -> action.accept(addRef(t)));
+    inner.forEachOrdered((T t) -> action.accept(getRef(t)));
   }
 
   @Override
@@ -144,56 +199,58 @@ public class RefStream<T> implements Stream<T> {
 
   @NotNull
   @Override
-  public Iterator<T> iterator() {
-    return inner.iterator();
+  public RefIterator<T> iterator() {
+    return new RefIterator<>(inner.iterator());
   }
 
+  @NotNull
   @Override
   public RefStream<T> limit(long maxSize) {
     inner = inner.limit(maxSize);
     return this;
   }
 
+  @NotNull
   @Override
-  public <R> RefStream<R> map(Function<? super T, ? extends R> mapper) {
+  public <R> RefStream<R> map(@NotNull Function<? super T, ? extends R> mapper) {
     track(mapper);
-    return new RefStream<>(inner.map(t -> mapper.apply(addRef(t))), lambdas);
+    return new RefStream<>(inner.map(t -> storeRef(mapper.apply(getRef(t)))), lambdas, refs);
   }
 
   @Override
-  public DoubleStream mapToDouble(ToDoubleFunction<? super T> mapper) {
+  public DoubleStream mapToDouble(@NotNull ToDoubleFunction<? super T> mapper) {
     track(mapper);
-    return inner.mapToDouble((T value) -> mapper.applyAsDouble(addRef(value)));
+    return inner.mapToDouble((T value) -> mapper.applyAsDouble(getRef(value)));
   }
 
   @Override
-  public IntStream mapToInt(ToIntFunction<? super T> mapper) {
+  public IntStream mapToInt(@NotNull ToIntFunction<? super T> mapper) {
     track(mapper);
-    return inner.mapToInt((T value) -> mapper.applyAsInt(addRef(value)));
+    return inner.mapToInt((T value) -> mapper.applyAsInt(getRef(value)));
   }
 
   @Override
-  public LongStream mapToLong(ToLongFunction<? super T> mapper) {
+  public LongStream mapToLong(@NotNull ToLongFunction<? super T> mapper) {
     track(mapper);
-    return inner.mapToLong((T value) -> mapper.applyAsLong(addRef(value)));
+    return inner.mapToLong((T value) -> mapper.applyAsLong(getRef(value)));
   }
 
   @Override
-  public Optional<T> max(Comparator<? super T> comparator) {
+  public Optional<T> max(@NotNull Comparator<? super T> comparator) {
     track(comparator);
-    return inner.max((T o1, T o2) -> comparator.compare(addRef(o1), addRef(o2)));
+    return inner.max((T o1, T o2) -> comparator.compare(addRef(o1), addRef(o2))).map(this::getRef);
   }
 
   @Override
-  public Optional<T> min(Comparator<? super T> comparator) {
+  public Optional<T> min(@NotNull Comparator<? super T> comparator) {
     track(comparator);
-    return inner.min((T o1, T o2) -> comparator.compare(addRef(o1), addRef(o2)));
+    return inner.min((T o1, T o2) -> comparator.compare(addRef(o1), addRef(o2))).map(this::getRef);
   }
 
   @Override
-  public boolean noneMatch(Predicate<? super T> predicate) {
+  public boolean noneMatch(@NotNull Predicate<? super T> predicate) {
     track(predicate);
-    return inner.noneMatch((T t) -> predicate.test(addRef(t)));
+    return inner.noneMatch((T t) -> predicate.test(getRef(t)));
   }
 
   @NotNull
@@ -211,34 +268,34 @@ public class RefStream<T> implements Stream<T> {
     return this;
   }
 
+  @NotNull
   @Override
-  public RefStream<T> peek(Consumer<? super T> action) {
+  public RefStream<T> peek(@NotNull Consumer<? super T> action) {
     track(action);
-    inner = inner.peek((T t) -> action.accept(addRef(t)));
+    inner = inner.peek((T t) -> action.accept(getRef(t)));
     return this;
   }
 
   @Override
-  public T reduce(T identity, BinaryOperator<T> accumulator) {
-    track(identity);
+  public T reduce(T identity, @NotNull BinaryOperator<T> accumulator) {
     track(accumulator);
-    return inner.reduce(identity, (T t, T u) -> accumulator.apply(addRef(t), addRef(u)));
+    return inner.reduce(storeRef(identity), (T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u))));
   }
 
   @Override
-  public Optional<T> reduce(BinaryOperator<T> accumulator) {
+  public Optional<T> reduce(@NotNull BinaryOperator<T> accumulator) {
     track(accumulator);
-    return inner.reduce((T t, T u) -> accumulator.apply(addRef(t), addRef(u)));
+    return inner.reduce((T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u)))).map(this::getRef);
   }
 
   @Override
-  public <U> U reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner) {
-    track(identity);
+  public <U> U reduce(U identity, @NotNull BiFunction<U, ? super T, U> accumulator, @NotNull BinaryOperator<U> combiner) {
     track(accumulator);
     track(combiner);
-    return inner.reduce(identity,
-        (U t1, T u1) -> accumulator.apply(addRef(t1), addRef(u1)),
-        (U t, U u) -> combiner.apply(addRef(t), addRef(u)));
+    return getRef(inner.reduce(
+        storeRef(identity),
+        (U t1, T u1) -> storeRef(accumulator.apply(getRef(t1), getRef(u1))),
+        (U t, U u) -> storeRef(combiner.apply(getRef(t), getRef(u)))));
   }
 
   @NotNull
@@ -248,39 +305,48 @@ public class RefStream<T> implements Stream<T> {
     return this;
   }
 
+  @NotNull
   @Override
   public RefStream<T> skip(long n) {
     inner = inner.skip(n);
     return this;
   }
 
+  @NotNull
   @Override
   public RefStream<T> sorted() {
-    inner = inner.sorted();
+    inner = inner.sorted((a, b) -> ((Comparable<T>) a).compareTo(addRef(b)));
     return this;
   }
 
+  @NotNull
   @Override
-  public RefStream<T> sorted(Comparator<? super T> comparator) {
+  public RefStream<T> sorted(@NotNull Comparator<? super T> comparator) {
     inner = inner.sorted((T o1, T o2) -> comparator.compare(addRef(o1), addRef(o2)));
     return this;
   }
 
   @NotNull
   @Override
-  public Spliterator<T> spliterator() {
+  public RefSpliterator<T> spliterator() {
     return new RefSpliterator<>(inner.spliterator());
   }
 
   @Override
   public Object[] toArray() {
-    return inner.toArray();
+    return inner.map(this::getRef).toArray();
   }
 
   @Override
-  public <A> A[] toArray(IntFunction<A[]> generator) {
+  public <A> A[] toArray(@NotNull IntFunction<A[]> generator) {
     track(generator);
-    return inner.toArray((int value) -> generator.apply(value));
+    return inner.map(this::getRef).toArray((int value) -> generator.apply(value));
+  }
+
+  private void track(Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
   }
 
   @NotNull

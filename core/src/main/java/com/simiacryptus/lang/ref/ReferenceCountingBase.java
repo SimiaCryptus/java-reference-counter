@@ -20,6 +20,7 @@
 package com.simiacryptus.lang.ref;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return obj.referenceReport(includeCaller, obj.isFinalized());
   }
 
-  public static StackTraceElement[] removeSuffix(final StackTraceElement[] stack, final Collection<StackTraceElement> prefix) {
+  public static StackTraceElement[] removeSuffix(@NotNull final StackTraceElement[] stack, final Collection<StackTraceElement> prefix) {
     return Arrays.stream(stack).limit(stack.length - prefix.size()).toArray(i -> new StackTraceElement[i]);
   }
 
@@ -92,7 +93,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return protoprefix;
   }
 
-  public static <T> List<T> reverseCopy(final List<T> x) {
+  public static <T> List<T> reverseCopy(@org.jetbrains.annotations.Nullable final List<T> x) {
     if (null == x) return Arrays.asList();
     return IntStream.range(0, x.size()).map(i -> (x.size() - 1) - i).mapToObj(i -> x.get(i)).collect(Collectors.toList());
   }
@@ -101,22 +102,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return IntStream.range(0, x.length).map(i -> (x.length - 1) - i).mapToObj(i -> x[i]).collect(Collectors.toList());
   }
 
-  protected final Object readResolve() throws ObjectStreamException {
-    return detach();
-  }
-
-  @Override
-  public int currentRefCount() {
-    return references.get();
-  }
-
-  @Override
-  public boolean tryAddRef() {
-    if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0) {
-      return false;
-    }
-    addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
-    return true;
+  protected void _free() {
   }
 
   @Override
@@ -126,8 +112,106 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return this;
   }
 
+  public boolean assertAlive() {
+    if (isFinalized) {
+      throw new LifecycleException(this);
+    }
+    if (isFinalized() && !inFinalizer.get()) {
+      logger.warn(String.format("Using freed reference for %s", getClass().getSimpleName()));
+      logger.warn(referenceReport(true, isFinalized()));
+      throw new LifecycleException(this);
+    }
+    return true;
+  }
+
+  @Override
+  public int currentRefCount() {
+    return references.get();
+  }
+
+  @NotNull
+  public ReferenceCountingBase detach() {
+    this.detached = true;
+    return this;
+  }
+
+  @Override
+  protected final void finalize() {
+    isFinalized = true;
+    if (!isFreed.getAndSet(true)) {
+      if (!isDetached() && !supressLog) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Instance Reclaimed by GC at %.9f: %s", (System.nanoTime() - LOAD_TIME) / 1e9, referenceReport(false, false)));
+        }
+      }
+      synchronized (freeRefs) {
+        freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
+      }
+      inFinalizer.set(true);
+      try {
+        _free();
+      } finally {
+        inFinalizer.set(false);
+      }
+    }
+  }
+
+  @Override
+  public int freeRef() {
+    if (isFinalized) {
+      //logger.debug("Object has been finalized");
+      return 0;
+    }
+    int refs = references.decrementAndGet();
+    if (refs < 0 && !detached) {
+      boolean isInFinalizer = Arrays.stream(Thread.currentThread().getStackTrace()).filter(x -> x.getClassName().equals("java.lang.ref.Finalizer")).findAny().isPresent();
+      if (!isInFinalizer) {
+        logger.warn(String.format("Error freeing reference for %s", getClass().getSimpleName()));
+        logger.warn(referenceReport(true, isFinalized()));
+        throw new LifecycleException(this);
+      } else {
+        return refs;
+      }
+    }
+
+    synchronized (freeRefs) {
+      freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
+    }
+    if (refs == 0 && !detached) {
+      if (!isFreed.getAndSet(true)) {
+        try {
+          _free();
+        } catch (LifecycleException e) {
+          if (!inFinalizer.get()) logger.info("Error freeing resources: " + referenceReport(true, isFinalized()));
+          throw e;
+        }
+      }
+    }
+    return refs;
+  }
+
+  @Override
+  public void freeRefAsync() {
+    gcPool.submit((Runnable) this::freeRef);
+  }
+
+  @NotNull
+  @Override
+  public UUID getObjectId() {
+    return objectId;
+  }
+
+  public boolean isDetached() {
+    return detached;
+  }
+
   public final boolean isFinalized() {
     return isFreed.get();
+  }
+
+  @NotNull
+  protected final Object readResolve() throws ObjectStreamException {
+    return detach();
   }
 
   public String referenceReport(boolean includeCaller, boolean isFinalized) {
@@ -181,93 +265,13 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return buffer.toString();
   }
 
-  public boolean assertAlive() {
-    if (isFinalized) {
-      throw new LifecycleException(this);
+  @Override
+  public boolean tryAddRef() {
+    if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0) {
+      return false;
     }
-    if (isFinalized() && !inFinalizer.get()) {
-      logger.warn(String.format("Using freed reference for %s", getClass().getSimpleName()));
-      logger.warn(referenceReport(true, isFinalized()));
-      throw new LifecycleException(this);
-    }
+    addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
     return true;
-  }
-
-  @Override
-  public void freeRefAsync() {
-    gcPool.submit((Runnable) this::freeRef);
-  }
-
-  @Override
-  public int freeRef() {
-    if (isFinalized) {
-      //logger.debug("Object has been finalized");
-      return 0;
-    }
-    int refs = references.decrementAndGet();
-    if (refs < 0 && !detached) {
-      boolean isInFinalizer = Arrays.stream(Thread.currentThread().getStackTrace()).filter(x -> x.getClassName().equals("java.lang.ref.Finalizer")).findAny().isPresent();
-      if (!isInFinalizer) {
-        logger.warn(String.format("Error freeing reference for %s", getClass().getSimpleName()));
-        logger.warn(referenceReport(true, isFinalized()));
-        throw new LifecycleException(this);
-      } else {
-        return refs;
-      }
-    }
-
-    synchronized (freeRefs) {
-      freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
-    }
-    if (refs == 0 && !detached) {
-      if (!isFreed.getAndSet(true)) {
-        try {
-          _free();
-        } catch (LifecycleException e) {
-          if (!inFinalizer.get()) logger.info("Error freeing resources: " + referenceReport(true, isFinalized()));
-          throw e;
-        }
-      }
-    }
-    return refs;
-  }
-
-  protected void _free() {
-  }
-
-  @Override
-  protected final void finalize() {
-    isFinalized = true;
-    if (!isFreed.getAndSet(true)) {
-      if (!isDetached() && !supressLog) {
-        if (logger.isDebugEnabled()) {
-          logger.debug(String.format("Instance Reclaimed by GC at %.9f: %s", (System.nanoTime() - LOAD_TIME) / 1e9, referenceReport(false, false)));
-        }
-      }
-      synchronized (freeRefs) {
-        freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
-      }
-      inFinalizer.set(true);
-      try {
-        _free();
-      } finally {
-        inFinalizer.set(false);
-      }
-    }
-  }
-
-  public boolean isDetached() {
-    return detached;
-  }
-
-  public ReferenceCountingBase detach() {
-    this.detached = true;
-    return this;
-  }
-
-  @Override
-  public UUID getObjectId() {
-    return objectId;
   }
 
 }

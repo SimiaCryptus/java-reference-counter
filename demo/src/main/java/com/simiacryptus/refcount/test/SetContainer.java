@@ -1,9 +1,11 @@
 package com.simiacryptus.refcount.test;
 
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
+import com.simiacryptus.lang.ref.wrappers.RefHashSet;
+import java.util.function.Consumer;
 
 public class SetContainer extends ReferenceCountingBase {
-  public com.simiacryptus.lang.ref.wrappers.RefSet<BasicType> values = new com.simiacryptus.lang.ref.wrappers.RefSet<>();
+  public com.simiacryptus.lang.ref.wrappers.RefHashSet<BasicType> values = new com.simiacryptus.lang.ref.wrappers.RefHashSet<>();
 
   public SetContainer(BasicType... values) {
     for (BasicType value : values) {
@@ -14,71 +16,98 @@ public class SetContainer extends ReferenceCountingBase {
 
   public void test() {
     System.out.println(String.format("Increment %s", this));
-    com.simiacryptus.lang.ref.wrappers.RefSet<com.simiacryptus.refcount.test.BasicType> temp8708 = new com.simiacryptus.lang.ref.wrappers.RefSet<>(
+    com.simiacryptus.lang.ref.wrappers.RefHashSet<com.simiacryptus.refcount.test.BasicType> temp2634 = new com.simiacryptus.lang.ref.wrappers.RefHashSet<>(
         this.values.addRef());
-    if (this.values.size() != temp8708.size())
+    if (this.values.size() != temp2634.size())
       throw new RuntimeException();
-    temp8708.freeRef();
+    temp2634.freeRef();
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations();
       testElementOperations();
-      this.values.stream().forEach(x -> {
+      testStreamOperations();
+      testArrayOperations();
+    }
+  }
+
+  private static void testStreamOperations() {
+    testOperations(values -> {
+      values.stream().forEach(x -> {
         x.value++;
         x.freeRef();
       });
-    }
+      values.freeRef();
+    });
   }
 
-  private void testArrayOperations() {
-    if (0 == this.values.size())
-      throw new RuntimeException();
-    if (false) {
-      if (this.values.size() != this.values.toArray().length)
+  private static void testArrayOperations() {
+    testOperations(values -> {
+      values.add(new BasicType());
+      if (0 == values.size())
         throw new RuntimeException();
-    }
-    com.simiacryptus.refcount.test.BasicType[] temp4460 = this.values.toArray(new BasicType[] {});
-    if (this.values.size() != temp4460.length)
-      throw new RuntimeException();
-    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(temp4460);
+      if (false) {
+        if (values.size() != values.toArray().length)
+          throw new RuntimeException();
+      }
+      com.simiacryptus.refcount.test.BasicType[] temp5651 = values.toArray(new BasicType[] {});
+      if (values.size() != temp5651.length)
+        throw new RuntimeException();
+      com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(temp5651);
+      values.freeRef();
+    });
   }
 
-  private void testElementOperations() {
-    if (!this.values.isEmpty())
-      throw new RuntimeException();
-    final BasicType basicType1 = new BasicType();
-    if (!this.values.add(basicType1.addRef()))
-      throw new RuntimeException();
-    if (!this.values.contains(basicType1.addRef()))
-      throw new RuntimeException();
-    basicType1.freeRef();
-    if (this.values.add(this.values.iterator().next()))
-      throw new RuntimeException();
-    if (false) {
-      if (!this.values.remove(basicType1.addRef()))
+  private static void testElementOperations() {
+    testOperations(values -> {
+      if (!values.isEmpty())
         throw new RuntimeException();
-    } else {
-      this.values.clear();
-    }
-    if (!this.values.isEmpty())
-      throw new RuntimeException();
+      final BasicType basicType1 = new BasicType();
+      if (!values.add(basicType1.addRef()))
+        throw new RuntimeException();
+      if (!values.contains(basicType1.addRef()))
+        throw new RuntimeException();
+      if (values.add(values.iterator().next()))
+        throw new RuntimeException();
+      if (!values.contains(basicType1.addRef()))
+        throw new RuntimeException();
+      if (!values.remove(basicType1.addRef()))
+        throw new RuntimeException();
+      if (values.remove(basicType1.addRef()))
+        throw new RuntimeException();
+      if (!values.add(basicType1.addRef()))
+        throw new RuntimeException();
+      basicType1.freeRef();
+      values.clear();
+      if (!values.isEmpty())
+        throw new RuntimeException();
+      values.freeRef();
+    });
   }
 
   private void testCollectionOperations() {
-    final BasicType basicType = new BasicType();
-    final com.simiacryptus.lang.ref.wrappers.RefList<BasicType> list = com.simiacryptus.lang.ref.wrappers.RefArrays
-        .asList(basicType.addRef());
-    basicType.freeRef();
-    if (!this.values.addAll(list.addRef()))
-      throw new RuntimeException();
-    if (!this.values.containsAll(list.addRef()))
-      throw new RuntimeException();
-    if (!this.values.retainAll(list.addRef()))
-      throw new RuntimeException();
-    testArrayOperations();
-    this.values.removeAll(list.addRef());
-    list.freeRef();
-    if (!this.values.isEmpty())
-      throw new RuntimeException();
+    testOperations(values -> {
+      values.add(new BasicType());
+      final BasicType basicType = new BasicType();
+      final com.simiacryptus.lang.ref.wrappers.RefList<BasicType> list = com.simiacryptus.lang.ref.wrappers.RefArrays
+          .asList(basicType.addRef());
+      basicType.freeRef();
+      if (!values.addAll(list.addRef()))
+        throw new RuntimeException();
+      if (!values.containsAll(list.addRef()))
+        throw new RuntimeException();
+      if (!values.retainAll(list.addRef()))
+        throw new RuntimeException();
+      values.removeAll(list.addRef());
+      list.freeRef();
+      if (!values.isEmpty())
+        throw new RuntimeException();
+      values.freeRef();
+    });
+  }
+
+  private static void testOperations(Consumer<com.simiacryptus.lang.ref.wrappers.RefHashSet<BasicType>> fn) {
+    com.simiacryptus.lang.ref.wrappers.RefHashSet<BasicType> values = new com.simiacryptus.lang.ref.wrappers.RefHashSet<>();
+    fn.accept(values.addRef());
+    values.freeRef();
   }
 
   @Override

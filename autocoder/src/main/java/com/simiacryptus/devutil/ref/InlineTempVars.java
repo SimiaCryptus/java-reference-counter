@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ref;
 
-import com.simiacryptus.devutil.AutoCoder;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
@@ -29,7 +28,7 @@ class InlineTempVars extends RefFileAstVisitor {
           block.accept(new ASTVisitor() {
             @Override
             public void endVisit(SimpleName simpleName) {
-              if (AutoCoder.contains(node, simpleName)) return;
+              if (contains(node, simpleName)) return;
               if (name.toString().equals(simpleName.toString())) {
                 replace(simpleName, ASTNode.copySubtree(simpleName.getAST(), expression));
               }

@@ -6,7 +6,8 @@ import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
@@ -20,13 +21,9 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 public abstract class AutoCoder extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
@@ -42,198 +39,7 @@ public abstract class AutoCoder extends ASTVisitor {
 
   }
 
-  @NotNull
-  public static String toString(IPackageBinding declaringClassPackage) {
-    return Arrays.stream(declaringClassPackage.getNameComponents()).reduce((a, b) -> a + "." + b).get();
-  }
-
-  public static <T> T getField(Object obj, String name) {
-    final Field value = Arrays.stream(obj.getClass().getDeclaredFields()).filter(x -> x.getName().equals(name)).findFirst().orElse(null);
-    if (value != null) {
-      value.setAccessible(true);
-      try {
-        return (T) value.get(obj);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return null;
-  }
-
-  public static List<IMethodBinding> enclosingMethods(ASTNode node) {
-    final ArrayList<IMethodBinding> list = new ArrayList<>();
-    if (null != node) {
-      if (node instanceof MethodDeclaration) {
-        list.addAll(enclosingMethods(node.getParent()));
-        list.add(((MethodDeclaration) node).resolveBinding());
-      } else if (null != node.getParent()) {
-        list.addAll(enclosingMethods(node.getParent()));
-      }
-    }
-    return list;
-  }
-
-  public static boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
-    final String binaryName = typeBinding.getBinaryName();
-    if (null != binaryName && binaryName.equals(baseClass.getCanonicalName())) return true;
-    if (Arrays.stream(typeBinding.getInterfaces()).filter(x -> derives(x, baseClass)).findAny().isPresent()) return true;
-    if (typeBinding.getSuperclass() != null) return derives(typeBinding.getSuperclass(), baseClass);
-    if (typeBinding.isArray()) return derives(typeBinding.getElementType(), baseClass);
-    return false;
-  }
-
-  @NotNull
-  public static Name newQualifiedName(AST ast, Class<?> clazz) {
-    return newQualifiedName(ast, clazz.getName().split("\\."));
-  }
-
-  @NotNull
-  public static Name newQualifiedName(@NotNull AST ast, @NotNull String... path) {
-    final SimpleName simpleName = ast.newSimpleName(path[path.length - 1]);
-    if (path.length == 1) return simpleName;
-    return ast.newQualifiedName(newQualifiedName(ast, Arrays.stream(path).limit(path.length - 1).toArray(i -> new String[i])), simpleName);
-  }
-
-  @NotNull
-  public static ArrayType arrayType(@NotNull AST ast, @NotNull String fqTypeName) {
-    return ast.newArrayType(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
-  }
-
-  @NotNull
-  public static MarkerAnnotation annotation_override(@NotNull AST ast) {
-    final MarkerAnnotation annotation = ast.newMarkerAnnotation();
-    annotation.setTypeName(ast.newSimpleName("Override"));
-    return annotation;
-  }
-
-  @NotNull
-  public static ExpressionStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression) {
-    return newLocalVariable(identifier, expression, getType(expression));
-  }
-
-  @NotNull
-  public static ExpressionStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression, @NotNull Type simpleType) {
-    AST ast = expression.getAST();
-    final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
-    variableDeclarationFragment.setName(ast.newSimpleName(identifier));
-    final VariableDeclarationExpression variableDeclarationExpression = ast.newVariableDeclarationExpression(variableDeclarationFragment);
-    variableDeclarationExpression.setType(simpleType);
-    final Assignment assignment = ast.newAssignment();
-    assignment.setLeftHandSide(variableDeclarationExpression);
-    assignment.setOperator(Assignment.Operator.ASSIGN);
-    assignment.setRightHandSide((Expression) ASTNode.copySubtree(ast, expression));
-    return ast.newExpressionStatement(assignment);
-  }
-
-  @NotNull
-  public static Type getType(@NotNull Expression expression) {
-    return getType(expression.getAST(), expression.resolveTypeBinding().getName());
-  }
-
-  public static Optional<MethodDeclaration> findMethod(@NotNull TypeDeclaration typeDeclaration, String name) {
-    return Arrays.stream(typeDeclaration.getMethods()).filter(methodDeclaration -> methodDeclaration.getName().toString().equals(name)).findFirst();
-  }
-
-  public static Optional<MethodDeclaration> findMethod(@NotNull AnonymousClassDeclaration typeDeclaration, String name) {
-    return typeDeclaration.bodyDeclarations().stream()
-        .filter(x -> x instanceof MethodDeclaration)
-        .filter(methodDeclaration -> ((MethodDeclaration) methodDeclaration).getName().toString().equals(name)).findFirst();
-  }
-
-  @NotNull
-  public static List<IndexSymbols.Mention> lastMentions(@NotNull Block block, IBinding variable) {
-    final List statements = block.statements();
-    final ArrayList<IndexSymbols.Mention> mentions = new ArrayList<>();
-    IndexSymbols.Mention lastMention = null;
-    for (int j = 0; j < statements.size(); j++) {
-      final Statement statement = (Statement) statements.get(j);
-      if (statement instanceof IfStatement) {
-        final IfStatement ifStatement = (IfStatement) statement;
-        final Statement thenStatement = ifStatement.getThenStatement();
-        if (thenStatement instanceof Block) {
-          mentions.addAll(lastMentions((Block) thenStatement, variable)
-              .stream().filter(x -> x.isReturn()).collect(Collectors.toList()));
-        } else if (thenStatement instanceof ReturnStatement && contains(thenStatement, variable)) {
-          new IndexSymbols.Mention(block, j, thenStatement);
-        }
-        final Statement elseStatement = ifStatement.getElseStatement();
-        if (elseStatement instanceof Block) {
-          mentions.addAll(lastMentions((Block) elseStatement, variable)
-              .stream().filter(x -> x.isReturn()).collect(Collectors.toList()));
-        } else if (elseStatement instanceof ReturnStatement && contains(elseStatement, variable)) {
-          new IndexSymbols.Mention(block, j, elseStatement);
-        }
-        if (contains(ifStatement.getExpression(), variable)) {
-          lastMention = new IndexSymbols.Mention(block, j, ifStatement);
-        }
-      } else if (contains(statement, variable)) {
-        lastMention = new IndexSymbols.Mention(block, j, statement);
-      }
-    }
-    if (null != lastMention) mentions.add(lastMention);
-    return mentions;
-  }
-
-  private static boolean contains(ASTNode expression, IBinding variableBinding) {
-    final AtomicBoolean found = new AtomicBoolean(false);
-    expression.accept(new ASTVisitor() {
-      @Override
-      public void endVisit(@NotNull SimpleName node) {
-        final IBinding binding = node.resolveBinding();
-        if (null != binding && binding.equals(variableBinding)) found.set(true);
-      }
-    });
-    return found.get();
-  }
-
-  @NotNull
-  public static Type getType(@Nonnull AST ast, @NotNull String name) {
-    if (name.endsWith("[]")) {
-      return ast.newArrayType(getType(ast, name.substring(0, name.length() - 2)));
-    } else if (name.contains("\\.")) {
-      return ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
-    } else {
-      final PrimitiveType.Code typeCode = PrimitiveType.toCode(name);
-      if (null != typeCode) {
-        return ast.newPrimitiveType(typeCode);
-      } else {
-        final int typeArg = name.indexOf('<');
-        if (typeArg < 0) {
-          return ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
-        } else {
-          final String mainType = name.substring(0, typeArg);
-          final String innerType = name.substring(typeArg + 1, name.length() - 1);
-          int nesting = 0;
-          ArrayList<Integer> primaryDelimiters = new ArrayList<>();
-          for (int i = 0; i < innerType.length(); i++) {
-            final char c = innerType.charAt(i);
-            if (c == '<') nesting++;
-            if (c == '>') nesting--;
-            if (c == ',') primaryDelimiters.add(i);
-          }
-          final ParameterizedType parameterizedType = ast.newParameterizedType(ast.newSimpleType(newQualifiedName(ast, mainType.split("\\."))));
-          if (primaryDelimiters.isEmpty()) {
-            parameterizedType.typeArguments().add(getType(ast, innerType));
-          } else {
-            for (int i = 0; i < primaryDelimiters.size(); i++) {
-              final int to = primaryDelimiters.get(i);
-              final int from = i == 0 ? 0 : (primaryDelimiters.get(i - 1) + 1);
-              parameterizedType.typeArguments().add(getType(ast, innerType.substring(from, to)));
-            }
-          }
-          return parameterizedType;
-        }
-      }
-    }
-  }
-
-  public static boolean contains(ASTNode node, ASTNode element) {
-    if (null == element) return false;
-    if (node == element) return true;
-    return contains(node, element.getParent());
-  }
-
-  public String format(@NotNull String finalSrc) {
+  protected String format(@NotNull String finalSrc) {
     final Document document = new Document();
     document.set(finalSrc);
     try {
@@ -262,7 +68,7 @@ public abstract class AutoCoder extends ASTVisitor {
   }
 
   @NotNull
-  public Field getField(@NotNull Class<?> nodeClass, String name) {
+  public static Field getField(@NotNull Class<?> nodeClass, String name) {
     final Field[] fields = nodeClass.getDeclaredFields();
     final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
     if (!parent.isPresent()) {
@@ -279,7 +85,7 @@ public abstract class AutoCoder extends ASTVisitor {
   }
 
   @NotNull
-  public IndexSymbols.SymbolIndex getSymbolIndex() {
+  protected IndexSymbols.SymbolIndex getSymbolIndex() {
     final IndexSymbols.SymbolIndex index = new IndexSymbols.SymbolIndex();
     scan((cu, file) -> new IndexSymbols(cu, file, index));
     return index;
@@ -288,7 +94,7 @@ public abstract class AutoCoder extends ASTVisitor {
   @Nonnull
   public abstract void rewrite();
 
-  public int rewrite(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+  protected int rewrite(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
     return project.parse().entrySet().stream().mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
@@ -312,7 +118,7 @@ public abstract class AutoCoder extends ASTVisitor {
     }).sum();
   }
 
-  public void scan(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+  protected void scan(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
     project.parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
@@ -322,7 +128,7 @@ public abstract class AutoCoder extends ASTVisitor {
   }
 
   @NotNull
-  public <T> T setField(@NotNull T astNode, String name, Object value) {
+  public static <T> T setField(@NotNull T astNode, String name, Object value) {
     try {
       getField(astNode.getClass(), name).set(astNode, value);
       return astNode;

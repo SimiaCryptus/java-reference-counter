@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ref;
 
-import com.simiacryptus.devutil.AutoCoder;
 import com.simiacryptus.devutil.ops.IndexSymbols;
 import com.simiacryptus.lang.ref.RefUtil;
 import org.eclipse.jdt.core.dom.*;
@@ -23,20 +22,20 @@ class InstrumentClosures extends RefFileAstVisitor {
     this.index = index;
   }
 
-  public void addRefcounting(@Nonnull AnonymousClassDeclaration declaration, Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures) {
-    final AST ast = declaration.getAST();
-    final Optional<MethodDeclaration> freeMethodOpt = AutoCoder.findMethod(declaration, "_free");
+  public void addRefcounting(@Nonnull AnonymousClassDeclaration node, Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures) {
+    final AST ast = node.getAST();
+    final Optional<MethodDeclaration> freeMethodOpt = findMethod(node, "_free");
     if (freeMethodOpt.isPresent()) {
       closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
         if (closureNode instanceof SingleVariableDeclaration) {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
           final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
-          if (isRefCounted(type)) {
+          if (isRefCounted(node, type)) {
             final SimpleName name = (SimpleName) ASTNode.copySubtree(ast, singleVariableDeclaration.getName());
             freeMethodOpt.get().getBody().statements().add(0, ast.newExpressionStatement(newFreeRef(name, type)));
           }
         } else {
-          warn(declaration, "Cannot handle " + closureNode.getClass().getSimpleName());
+          warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());
         }
       });
     }
@@ -46,16 +45,16 @@ class InstrumentClosures extends RefFileAstVisitor {
       if (closureNode instanceof SingleVariableDeclaration) {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
         final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
-        if (isRefCounted(type)) {
+        if (isRefCounted(node, type)) {
           final SimpleName name = (SimpleName) ASTNode.copySubtree(ast, singleVariableDeclaration.getName());
           initializerBlock.statements().add(ast.newExpressionStatement(newAddRef(name, type)));
         }
       } else {
-        warn(declaration, "Cannot handle " + closureNode.getClass().getSimpleName());
+        warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());
       }
     });
     initializer.setBody(initializerBlock);
-    declaration.bodyDeclarations().add(initializer);
+    node.bodyDeclarations().add(initializer);
   }
 
   @Override
@@ -71,7 +70,7 @@ class InstrumentClosures extends RefFileAstVisitor {
             lambdaLocation,
             closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
         wrapInterface((Expression) node.getParent(), closures);
-      } else if (isRefCounted(typeBinding)) {
+      } else if (isRefCounted(node, typeBinding)) {
         info(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
             bindingId,
             lambdaLocation,
@@ -121,7 +120,7 @@ class InstrumentClosures extends RefFileAstVisitor {
   public void wrapInterface(Expression node, Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures) {
     AST ast = node.getAST();
     final MethodInvocation methodInvocation = ast.newMethodInvocation();
-    methodInvocation.setExpression(AutoCoder.newQualifiedName(ast, RefUtil.class));
+    methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
     methodInvocation.setName(ast.newSimpleName("wrapInterface"));
     methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
     closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
@@ -129,7 +128,7 @@ class InstrumentClosures extends RefFileAstVisitor {
         final MethodInvocation addRefInvoke = ast.newMethodInvocation();
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
         final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
-        if (isRefCounted(type)) {
+        if (isRefCounted(node, type)) {
           addRefInvoke.setExpression((Name) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()));
           addRefInvoke.setName(ast.newSimpleName("addRef"));
           methodInvocation.arguments().add(addRefInvoke);

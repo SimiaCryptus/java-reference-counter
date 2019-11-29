@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ref;
 
-import com.simiacryptus.devutil.AutoCoder;
 import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +21,7 @@ class InsertAddRefs extends RefFileAstVisitor {
       final String qualifiedName = type.getElementType().getQualifiedName();
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRefs"));
-      methodInvocation.setExpression(AutoCoder.newQualifiedName(ast, qualifiedName.split("\\.")));
+      methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
       methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
       return methodInvocation;
     } else {
@@ -47,7 +46,7 @@ class InsertAddRefs extends RefFileAstVisitor {
       } else if (arg instanceof Expression) {
         final Expression expression = (Expression) arg;
         final ITypeBinding resolveTypeBinding = expression.resolveTypeBinding();
-        if (isRefCounted(resolveTypeBinding)) {
+        if (isRefCounted(node, resolveTypeBinding)) {
           arguments.set(i, addAddRef(expression, resolveTypeBinding));
           info(node, "Argument addRef for %s: %s (%s) defined", node, resolveTypeBinding.getQualifiedName(), expression);
         } else {
@@ -138,21 +137,14 @@ class InsertAddRefs extends RefFileAstVisitor {
   }
 
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
-    return AutoCoder.toString(declaringClass.getPackage()).startsWith("com.simiacryptus");
-  }
-
-  public boolean skip(@NotNull ASTNode declaration) {
-    return AutoCoder.enclosingMethods(declaration).stream().filter(enclosingMethod -> {
-      final String methodName = enclosingMethod.getName();
-      return methodName.equals("addRefs") || methodName.equals("freeRefs");
-    }).findFirst().isPresent();
+    return toString(declaringClass.getPackage()).startsWith("com.simiacryptus");
   }
 
   @Nullable
   public MethodInvocation wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
       final SimpleName name = (SimpleName) node;
-      if (AutoCoder.derives(name.resolveTypeBinding(), ReferenceCounting.class)) {
+      if (derives(name.resolveTypeBinding(), ReferenceCounting.class)) {
         return (MethodInvocation) wrapAddRef(name, name.resolveTypeBinding());
       }
     }

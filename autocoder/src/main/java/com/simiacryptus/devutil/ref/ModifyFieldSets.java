@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ref;
 
-import com.simiacryptus.devutil.AutoCoder;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,10 +15,15 @@ class ModifyFieldSets extends RefFileAstVisitor {
   public void endVisit(@NotNull Assignment node) {
     if (node.getLeftHandSide() instanceof FieldAccess) {
       final FieldAccess fieldAccess = (FieldAccess) node.getLeftHandSide();
+      final ITypeBinding typeBinding = fieldAccess.resolveTypeBinding();
+      if (null == typeBinding) {
+        warn(node, "Unresolved binding");
+        return;
+      }
+      if (!isRefCounted(node, typeBinding)) return;
       final ASTNode parent = node.getParent();
       if (parent instanceof ExpressionStatement) {
         final ASTNode parent2 = parent.getParent();
-        final ITypeBinding typeBinding = fieldAccess.resolveTypeBinding();
         if (parent2 instanceof Block) {
           final Block block = (Block) parent2;
           final int lineNumber = block.statements().indexOf(parent);
@@ -32,7 +36,7 @@ class ModifyFieldSets extends RefFileAstVisitor {
           } else {
             final Block exchangeBlock = ast.newBlock();
             final String identifier = randomIdentifier(node);
-            exchangeBlock.statements().add(AutoCoder.newLocalVariable(identifier, rightHandSide, AutoCoder.getType(ast, typeBinding.getName())));
+            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(ast, typeBinding.getName())));
             exchangeBlock.statements().add(freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
             final Assignment assignment = ast.newAssignment();
             assignment.setLeftHandSide((Expression) ASTNode.copySubtree(ast, fieldAccess));

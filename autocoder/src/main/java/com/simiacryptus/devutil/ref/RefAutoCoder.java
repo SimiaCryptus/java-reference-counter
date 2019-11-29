@@ -59,7 +59,7 @@ public class RefAutoCoder extends AutoCoder {
   public void rewrite() {
 //    if (isVerbose()) rewrite((cu, file) -> new LogNodes(cu, file));
     rewrite((cu, file) -> new RemoveRefs(cu, file));
-    rewrite((cu, file) -> new UnReplaceTypes(cu, file));
+    rewrite((cu, file) -> new ReplaceTypes(cu, file, true));
     while (rewrite((cu, file) -> new InlineRefs(cu, file)) > 0) {
       logger.info("Re-running InlineRefs");
     }
@@ -67,15 +67,17 @@ public class RefAutoCoder extends AutoCoder {
       logger.info("Re-running InlineRefs");
     }
     if (isAddRefcounting()) {
-      rewrite((cu, file) -> new ReplaceTypes(cu, file));
+      rewrite((cu, file) -> new ReplaceTypes(cu, file, false));
       rewrite((cu, file) -> new InsertMethods(cu, file));
       rewrite((cu, file) -> new InsertAddRefs(cu, file));
       rewrite((cu, file) -> new ModifyFieldSets(cu, file));
       rewrite((cu, file) -> new InsertFreeRefs(cu, file));
       final IndexSymbols.SymbolIndex index = getSymbolIndex();
       rewrite((cu, file) -> new InstrumentClosures(cu, file, index));
-      // Identify Optional<? extends ReferenceCounting> and free
+      // Test and fix complex function branching; return and throw and if, while, and for
       // Optimize adjacent addRef / freeRef
+      // Identify Entry<?,?> objects and free
+      // addRef and freeRef for pure interfaces (just in case)
     }
   }
 

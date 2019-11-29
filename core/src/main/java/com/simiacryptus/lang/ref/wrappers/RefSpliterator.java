@@ -1,5 +1,8 @@
 package com.simiacryptus.lang.ref.wrappers;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
@@ -14,16 +17,8 @@ class RefSpliterator<T> implements Spliterator<T> {
   }
 
   @Override
-  public boolean tryAdvance(Consumer<? super T> action) {
-    final boolean tryAdvance = inner.tryAdvance(t -> action.accept(addRef(t)));
-    freeRef(tryAdvance);
-    return tryAdvance;
-  }
-
-  @Override
-  public Spliterator<T> trySplit() {
-    final Spliterator<T> trySplit = this.inner.trySplit();
-    return null == trySplit ? null : new RefSpliterator<>(trySplit);
+  public int characteristics() {
+    return this.inner.characteristics();
   }
 
   @Override
@@ -32,7 +27,14 @@ class RefSpliterator<T> implements Spliterator<T> {
   }
 
   @Override
-  public int characteristics() {
-    return this.inner.characteristics();
+  public boolean tryAdvance(@NotNull Consumer<? super T> action) {
+    return inner.tryAdvance(t -> action.accept(addRef(t)));
+  }
+
+  @Nullable
+  @Override
+  public Spliterator<T> trySplit() {
+    final Spliterator<T> trySplit = this.inner.trySplit();
+    return null == trySplit ? null : new RefSpliterator<>(trySplit);
   }
 }
