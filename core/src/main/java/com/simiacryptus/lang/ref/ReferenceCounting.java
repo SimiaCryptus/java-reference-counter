@@ -19,34 +19,31 @@
 
 package com.simiacryptus.lang.ref;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.UUID;
-import java.util.stream.Stream;
 
 public interface ReferenceCounting {
 
-  int currentRefCount();
-
-  void freeRefAsync();
+  static <T extends ReferenceCounting> void freeRefs(@NotNull T[] array) {
+    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
+  }
 
   ReferenceCounting addRef();
 
-  boolean tryAddRef();
-
-  boolean isFinalized();
-
   boolean assertAlive();
 
-  int freeRef();
-
-  UUID getObjectId();
+  int currentRefCount();
 
   ReferenceCounting detach();
 
-  public static <T extends ReferenceCounting> void freeRefs(T[] array) {
-    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
-  }
+  int freeRef();
+
+  void freeRefAsync();
+
+  UUID getObjectId();
+
+  boolean isFinalized();
+
+  boolean tryAddRef();
 }

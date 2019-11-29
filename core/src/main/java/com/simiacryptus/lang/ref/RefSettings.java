@@ -20,6 +20,8 @@
 package com.simiacryptus.lang.ref;
 
 import com.simiacryptus.lang.Settings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,7 @@ import java.util.stream.Stream;
 public class RefSettings implements Settings {
 
   private static final Logger logger = LoggerFactory.getLogger(RefSettings.class);
+  @Nullable
   private static transient RefSettings INSTANCE = null;
 
   private final boolean lifecycleDebug;
@@ -72,6 +75,7 @@ public class RefSettings implements Settings {
     }).filter(x -> x != null).collect(Collectors.toSet());
   }
 
+  @Nullable
   public static RefSettings INSTANCE() {
     if (null == INSTANCE) {
       synchronized (RefSettings.class) {
@@ -84,16 +88,16 @@ public class RefSettings implements Settings {
     return INSTANCE;
   }
 
-  public boolean isLifecycleDebug(ReferenceCountingBase obj) {
+  public PersistanceMode getDoubleCacheMode() {
+    return doubleCacheMode;
+  }
+
+  public boolean isLifecycleDebug(@NotNull ReferenceCountingBase obj) {
     if (watchedClasses.contains(obj.getClass())) {
       return true;
     } else {
       return lifecycleDebug;
     }
-  }
-
-  public PersistanceMode getDoubleCacheMode() {
-    return doubleCacheMode;
   }
 
 }

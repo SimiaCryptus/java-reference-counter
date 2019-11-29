@@ -32,26 +32,26 @@ public class ReferenceWrapper<T> {
     this.destructor = destructor;
   }
 
-  @Override
-  protected void finalize() throws Throwable {
-    destroy();
-    super.finalize();
-  }
-
   public void destroy() {
     if (!isFinalized.getAndSet(true)) {
       destructor.accept(obj);
     }
   }
 
+  @Override
+  protected void finalize() throws Throwable {
+    destroy();
+    super.finalize();
+  }
+
+  public T peek() {
+    return obj;
+  }
+
   public T unwrap() {
     if (isFinalized.getAndSet(true)) {
       throw new IllegalStateException();
     }
-    return obj;
-  }
-
-  public T peek() {
     return obj;
   }
 }

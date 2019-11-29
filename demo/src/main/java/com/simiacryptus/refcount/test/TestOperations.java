@@ -2,6 +2,7 @@ package com.simiacryptus.refcount.test;
 
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
+import java.util.Random;
 
 public class TestOperations extends ReferenceCountingBase {
   private SimpleContainer simpleContainer;
@@ -10,6 +11,7 @@ public class TestOperations extends ReferenceCountingBase {
   private MapValuesContainer mapValuesContainer;
   private SetContainer setContainer;
   public static final int count = 1;
+  public static final Random random = new Random(143892);
 
   public static void main(String... args) {
     final TestOperations self = new TestOperations();
@@ -25,22 +27,20 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void test(BasicType datum1) {
-    final BasicType[] values = { datum1.addRef() };
-    testSet(new BasicType[] { datum1.addRef() });
-    testList(datum1.addRef());
-    testMap(datum1.addRef());
+    testArray(new BasicType[] { datum1.addRef() });
     datum1.freeRef();
-    testArray(com.simiacryptus.refcount.test.BasicType.addRefs(values));
-    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
+    testSet();
+    testList();
+    testMap();
   }
 
   private void testArray(BasicType[] values) {
     {
-      ArrayContainer temp3707 = new ArrayContainer(com.simiacryptus.refcount.test.BasicType.addRefs(values));
+      ArrayContainer temp3170 = new ArrayContainer(com.simiacryptus.refcount.test.BasicType.addRefs(values));
       if (null != this.arrayContainer)
         this.arrayContainer.freeRef();
-      this.arrayContainer = temp3707.addRef();
-      temp3707.freeRef();
+      this.arrayContainer = temp3170.addRef();
+      temp3170.freeRef();
     }
     com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
     System.out.println(String.format("Instantiated %s", arrayContainer));
@@ -52,45 +52,42 @@ public class TestOperations extends ReferenceCountingBase {
     arrayContainer.useClosures3(testBasicType());
   }
 
-  private void testMap(BasicType... values) {
+  private void testMap() {
     {
-      MapValuesContainer temp5068 = new MapValuesContainer(com.simiacryptus.refcount.test.BasicType.addRefs(values));
+      MapValuesContainer temp6383 = new MapValuesContainer();
       if (null != this.mapValuesContainer)
         this.mapValuesContainer.freeRef();
-      this.mapValuesContainer = temp5068.addRef();
-      temp5068.freeRef();
+      this.mapValuesContainer = temp6383.addRef();
+      temp6383.freeRef();
     }
-    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
     System.out.println(String.format("Instantiated %s", mapValuesContainer));
     for (int i = 0; i < count; i++) {
       mapValuesContainer.use();
     }
   }
 
-  private void testList(BasicType... values) {
+  private void testList() {
     {
-      ListContainer temp3964 = new ListContainer(com.simiacryptus.refcount.test.BasicType.addRefs(values));
+      ListContainer temp5556 = new ListContainer();
       if (null != this.listContainer)
         this.listContainer.freeRef();
-      this.listContainer = temp3964.addRef();
-      temp3964.freeRef();
+      this.listContainer = temp5556.addRef();
+      temp5556.freeRef();
     }
-    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
     System.out.println(String.format("Instantiated %s", listContainer));
     for (int i = 0; i < count; i++) {
-      listContainer.use();
+      listContainer.test();
     }
   }
 
-  private void testSet(BasicType... values) {
+  private void testSet() {
     {
-      SetContainer temp8146 = new SetContainer(com.simiacryptus.refcount.test.BasicType.addRefs(values));
+      SetContainer temp6039 = new SetContainer();
       if (null != this.setContainer)
         this.setContainer.freeRef();
-      this.setContainer = temp8146.addRef();
-      temp8146.freeRef();
+      this.setContainer = temp6039.addRef();
+      temp6039.freeRef();
     }
-    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
     System.out.println(String.format("Instantiated %s", setContainer));
     for (int i = 0; i < count; i++) {
       setContainer.test();
@@ -99,11 +96,11 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void testSimpleContainer() {
     {
-      SimpleContainer temp7817 = new SimpleContainer();
+      SimpleContainer temp4239 = new SimpleContainer();
       if (null != this.simpleContainer)
         this.simpleContainer.freeRef();
-      this.simpleContainer = temp7817.addRef();
-      temp7817.freeRef();
+      this.simpleContainer = temp4239.addRef();
+      temp4239.freeRef();
     }
     System.out.println(String.format("Instantiated %s", simpleContainer));
     for (int i = 0; i < count; i++) {
@@ -114,9 +111,8 @@ public class TestOperations extends ReferenceCountingBase {
   @NotNull
   private BasicType testBasicType() {
     BasicType datum1 = new BasicType();
-    BasicType temp1767 = testBasicType(datum1.addRef());
-    datum1.freeRef();
-    return temp1767;
+    com.simiacryptus.lang.ref.RefUtil.freeRef(testBasicType(datum1.addRef()));
+    return datum1;
   }
 
   private BasicType testBasicType(BasicType datum1) {

@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T> {
+  @NotNull
   private final List<T> inner;
 
   public RefArrayList() {
@@ -16,9 +17,14 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
     this.inner.forEach(RefUtil::addRef);
   }
 
-  public RefArrayList(List<T> list) {
+  public RefArrayList(@NotNull List<T> list) {
     this();
     this.addAll(list);
+  }
+
+  public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
+        .toArray((x) -> new RefArrayList[x]);
   }
 
   @Override
@@ -29,7 +35,6 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
 
   @Override
   public void add(int index, T element) {
-    if (index < size()) RefUtil.freeRef(inner.get(index));
     inner.add(index, element);
   }
 
@@ -40,10 +45,9 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
 
   @Override
   public boolean addAll(int index, @NotNull Collection<? extends T> c) {
-    for (int i = index; i < inner.size(); i++) {
-      RefUtil.freeRef(inner.get(i));
-    }
-    return inner.addAll(index, c);
+    final boolean changed = inner.addAll(index, c);
+    RefUtil.freeRef(c);
+    return changed;
   }
 
   @Override
@@ -56,6 +60,12 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
       return c.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
     }
 
+  }
+
+  @NotNull
+  public @Override
+  RefArrayList<T> addRef() {
+    return (RefArrayList<T>) super.addRef();
   }
 
   @Override
@@ -177,7 +187,7 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
         return !c.contains(inner.get(idx));
       }).toArray();
     }
-    Arrays.stream(indicesToRemove).mapToObj(x->-x).sorted().map(x->-x).forEachOrdered(idx->remove(idx));
+    Arrays.stream(indicesToRemove).mapToObj(x -> -x).sorted().map(x -> -x).forEachOrdered(idx -> remove(idx));
     return 0 < indicesToRemove.length;
   }
 
@@ -222,13 +232,8 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
     return returnValue;
   }
 
-  public @Override
-  RefArrayList<T> addRef() {
-    return (RefArrayList<T>) super.addRef();
-  }
-
-  public static <T> RefArrayList<T>[] addRefs(RefArrayList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
-        .toArray((x) -> new RefArrayList[x]);
+  @Override
+  public RefSpliterator<T> spliterator() {
+    return new RefSpliterator<>(Spliterators.spliterator(inner, Spliterator.ORDERED));
   }
 }

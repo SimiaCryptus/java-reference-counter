@@ -1,23 +1,35 @@
 package com.simiacryptus.lang.ref;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class RefUtil {
 
-  public static <T> void freeRef(T value) {
-    if (null != value && value instanceof ReferenceCounting) ((ReferenceCounting) value).freeRef();
+  public static <T> void freeRef(@Nullable T value) {
+    if (null != value) {
+      if (value instanceof ReferenceCounting) {
+        ((ReferenceCounting) value).freeRef();
+      } else if (value instanceof Optional) {
+        final Optional optional = (Optional) value;
+        if(optional.isPresent()) freeRef(optional.get());
+      }
+    }
   }
 
-  public static <T> T addRef(T value) {
+  @Nullable
+  public static <T> T addRef(@Nullable T value) {
     if (null != value && value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
     return value;
   }
 
-  public static <T> T wrapInterface(T obj, ReferenceCounting... refs) {
+  public static <T> T wrapInterface(T obj, @NotNull ReferenceCounting... refs) {
     final Class<?> objClass = obj.getClass();
     final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
       @Override
@@ -31,8 +43,8 @@ public class RefUtil {
         Stream.of(ReferenceCounting.class)
     ).toArray(i -> new Class[i]), new InvocationHandler() {
       @Override
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if(method.getDeclaringClass().equals(ReferenceCounting.class)) {
+      public Object invoke(Object proxy, @NotNull Method method, Object[] args) throws Throwable {
+        if (method.getDeclaringClass().equals(ReferenceCounting.class)) {
           return method.invoke(refcounter, args);
         } else {
           return method.invoke(obj, args);

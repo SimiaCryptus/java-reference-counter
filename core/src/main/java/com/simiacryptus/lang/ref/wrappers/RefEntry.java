@@ -28,12 +28,12 @@ public class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K
 
   @Override
   public K getKey() {
-    return key;
+    return RefUtil.addRef(key);
   }
 
   @Override
   public V getValue() {
-    return value;
+    return RefUtil.addRef(value);
   }
 
   @Override

@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ref;
 
-import com.simiacryptus.devutil.AutoCoder;
 import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +15,7 @@ class InsertMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
-    if (AutoCoder.derives(node.resolveBinding(), ReferenceCounting.class)) {
+    if (derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       declarations.add(method_free(ast));
@@ -28,7 +27,7 @@ class InsertMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
-    if (AutoCoder.derives(node.resolveBinding(), ReferenceCounting.class)) {
+    if (derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       declarations.add(method_free(ast));
@@ -42,7 +41,7 @@ class InsertMethods extends RefFileAstVisitor {
     methodDeclaration.setName(ast.newSimpleName("addRef"));
     methodDeclaration.setReturnType2(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-    methodDeclaration.modifiers().add(AutoCoder.annotation_override(ast));
+    methodDeclaration.modifiers().add(annotation_override(ast));
     final Block block = ast.newBlock();
     final CastExpression castExpression = ast.newCastExpression();
     castExpression.setType(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
@@ -62,17 +61,17 @@ class InsertMethods extends RefFileAstVisitor {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRefs"));
 
-    methodDeclaration.setReturnType2(AutoCoder.arrayType(ast, fqTypeName));
+    methodDeclaration.setReturnType2(arrayType(ast, fqTypeName));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
 
     final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
-    arg.setType(AutoCoder.arrayType(ast, fqTypeName));
+    arg.setType(arrayType(ast, fqTypeName));
     arg.setName(ast.newSimpleName("array"));
     methodDeclaration.parameters().add(arg);
 
     final MethodInvocation stream_invoke = ast.newMethodInvocation();
-    stream_invoke.setExpression(AutoCoder.newQualifiedName(ast, "java.util.Arrays".split("\\.")));
+    stream_invoke.setExpression(newQualifiedName(ast, "java.util.Arrays".split("\\.")));
     stream_invoke.setName(ast.newSimpleName("stream"));
     stream_invoke.arguments().add(ast.newSimpleName("array"));
 
@@ -112,7 +111,7 @@ class InsertMethods extends RefFileAstVisitor {
       filter_lambda.parameters().add(variableDeclarationFragment);
 
       final ArrayCreation arrayCreation = ast.newArrayCreation();
-      arrayCreation.setType(AutoCoder.arrayType(ast, fqTypeName));
+      arrayCreation.setType(arrayType(ast, fqTypeName));
       arrayCreation.dimensions().add(ast.newSimpleName("x"));
 
       filter_lambda.setBody(arrayCreation);
@@ -132,7 +131,7 @@ class InsertMethods extends RefFileAstVisitor {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("_free"));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-    methodDeclaration.modifiers().add(AutoCoder.annotation_override(ast));
+    methodDeclaration.modifiers().add(annotation_override(ast));
     final Block body = ast.newBlock();
     final SuperMethodInvocation superCall = ast.newSuperMethodInvocation();
     superCall.setName(ast.newSimpleName("_free"));
@@ -151,12 +150,12 @@ class InsertMethods extends RefFileAstVisitor {
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
 
     final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
-    arg.setType(AutoCoder.arrayType(ast, fqTypeName));
+    arg.setType(arrayType(ast, fqTypeName));
     arg.setName(ast.newSimpleName("array"));
     methodDeclaration.parameters().add(arg);
 
     final MethodInvocation stream_invoke = ast.newMethodInvocation();
-    stream_invoke.setExpression(AutoCoder.newQualifiedName(ast, "java.util.Arrays".split("\\.")));
+    stream_invoke.setExpression(newQualifiedName(ast, "java.util.Arrays".split("\\.")));
     stream_invoke.setName(ast.newSimpleName("stream"));
     stream_invoke.arguments().add(ast.newSimpleName("array"));
 

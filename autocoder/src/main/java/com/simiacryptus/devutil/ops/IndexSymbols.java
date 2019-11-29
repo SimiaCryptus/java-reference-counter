@@ -1,6 +1,5 @@
 package com.simiacryptus.devutil.ops;
 
-import com.simiacryptus.devutil.AutoCoder;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -96,7 +95,7 @@ public class IndexSymbols extends FileAstVisitor {
   public void indexReference(Name node, IBinding binding) {
     if (null != binding) {
       BindingId bindingId = index.describe(binding);
-      if(null != bindingId) {
+      if (null != bindingId) {
         final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
         final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
         if (isVerbose()) info(node, "Reference to %s at %s within:\n\t%s", bindingId, contextLocation.location, contextPath);
@@ -129,7 +128,7 @@ public class IndexSymbols extends FileAstVisitor {
 
     public boolean isComplexReturn() {
       if (!isReturn()) return false;
-      return !(((ReturnStatement) statement).getExpression() instanceof Name);
+      return !(((ReturnStatement) statement).getExpression() instanceof SimpleName);
     }
 
     public boolean isReturn() {
@@ -200,7 +199,7 @@ public class IndexSymbols extends FileAstVisitor {
 
     public BindingId describe(@Nonnull IBinding binding) {
       final String path = getPath(binding);
-      if(null==path) return null;
+      if (null == path) return null;
       if (path.contains("::lambda$")) return new BindingId(path, "Lambda");
       else return new BindingId(path, getType(binding));
     }
@@ -213,7 +212,7 @@ public class IndexSymbols extends FileAstVisitor {
 
     public IMethodBinding getImplementation(IMethodBinding methodBinding) {
       while (true) {
-        IMethodBinding impl = AutoCoder.getField(methodBinding, "implementation");
+        IMethodBinding impl = getField(methodBinding, "implementation");
         if (null != impl && methodBinding != impl) {
           methodBinding = impl;
         } else break;
@@ -232,7 +231,7 @@ public class IndexSymbols extends FileAstVisitor {
       if (binding instanceof IVariableBinding) {
         IVariableBinding variableBinding = (IVariableBinding) binding;
         if (variableBinding.isField()) {
-          final FieldBinding fieldBinding = AutoCoder.getField(variableBinding, "binding");
+          final FieldBinding fieldBinding = getField(variableBinding, "binding");
           if (fieldBinding != null) {
             final ReferenceBinding declaringClass = fieldBinding.declaringClass;
             if (null == declaringClass) {
@@ -246,7 +245,7 @@ public class IndexSymbols extends FileAstVisitor {
             return "null::" + variableBinding.getName();
           }
         } else if (variableBinding.isParameter()) {
-          final LocalVariableBinding localVariableBinding = AutoCoder.getField(variableBinding, "binding");
+          final LocalVariableBinding localVariableBinding = getField(variableBinding, "binding");
           final IMethodBinding methodBinding = variableBinding.getDeclaringMethod();
           final String paramName = null == variableBinding ? "?" : new String(localVariableBinding.declaration.name);
           final MethodScope declaringScope = (MethodScope) localVariableBinding.declaringScope;

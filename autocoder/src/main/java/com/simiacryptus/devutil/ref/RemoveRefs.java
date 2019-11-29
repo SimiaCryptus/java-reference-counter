@@ -1,6 +1,6 @@
 package com.simiacryptus.devutil.ref;
 
-import com.simiacryptus.devutil.AutoCoder;
+import com.simiacryptus.lang.ref.RefUtil;
 import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +18,7 @@ class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
-    if (AutoCoder.derives(typeBinding, ReferenceCounting.class)) {
+    if (derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "addRef");
       removeMethods(node, "freeRef");
       removeMethods(node, "_free");
@@ -30,10 +30,18 @@ class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull MethodInvocation node) {
     final String methodName = node.getName().toString();
+    final IMethodBinding methodBinding = node.resolveMethodBinding();
+    if (null == methodBinding) {
+      warn(node, "Unresolved method binding %s", node);
+      return;
+    }
+    final String declaringClass = methodBinding.getDeclaringClass().getQualifiedName();
     if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
       final AST ast = node.getAST();
       final Expression subject;
       if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
+        subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
+      } else if (declaringClass.equals(RefUtil.class.getCanonicalName())) {
         subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
       } else {
         subject = (Expression) ASTNode.copySubtree(ast, node.getExpression());
@@ -89,7 +97,7 @@ class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
-    if (AutoCoder.derives(typeBinding, ReferenceCounting.class)) {
+    if (derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "_free");
     }
   }
