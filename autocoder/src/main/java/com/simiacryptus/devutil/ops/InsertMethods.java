@@ -17,8 +17,9 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
 import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.List;
 
-class InsertMethods extends RefFileAstVisitor {
+public class InsertMethods extends RefFileAstVisitor {
 
   public InsertMethods(CompilationUnit cu, File file) {
     super(cu, file);

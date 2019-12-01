@@ -17,9 +17,10 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
-import com.simiacryptus.devutil.ops.IndexSymbols;
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
+import com.simiacryptus.devutil.core.ops.IndexSymbols;
 import com.simiacryptus.lang.ref.RefUtil;
 import org.eclipse.jdt.core.dom.*;
 import scala.Tuple2;
@@ -32,11 +33,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class InstrumentClosures extends RefFileAstVisitor {
+public class InstrumentClosures extends RefFileAstVisitor {
 
   private final IndexSymbols.SymbolIndex index;
 
-  InstrumentClosures(CompilationUnit compilationUnit, File file, IndexSymbols.SymbolIndex index) {
+  public InstrumentClosures(CompilationUnit compilationUnit, File file, IndexSymbols.SymbolIndex index) {
     super(compilationUnit, file);
     this.index = index;
   }

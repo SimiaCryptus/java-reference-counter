@@ -17,14 +17,10 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil;
+package com.simiacryptus.devutil.core;
 
-import com.simiacryptus.devutil.ops.IndexSymbols;
+import com.simiacryptus.devutil.core.ops.IndexSymbols;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
@@ -47,12 +43,12 @@ import java.util.function.BiFunction;
 public abstract class AutoCoder extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
   @NotNull
-  protected final SimpleMavenProject project;
+  protected final ProjectInfo projectInfo;
 
-  public AutoCoder(@NotNull String pathname) {
+  public AutoCoder(ProjectInfo projectInfo) {
     try {
-      this.project = SimpleMavenProject.load(new File(pathname).getCanonicalPath());
-    } catch (@NotNull IOException | PlexusContainerException | DependencyResolutionException | ProjectBuildingException | ComponentLookupException e) {
+      this.projectInfo = projectInfo;
+    } catch (@NotNull Exception e) {
       throw new RuntimeException(e);
     }
 
@@ -124,7 +120,7 @@ public abstract class AutoCoder extends ASTVisitor {
   public abstract void rewrite();
 
   protected int rewrite(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
-    return project.parse().entrySet().stream().mapToInt(entry -> {
+    return projectInfo.parse().entrySet().stream().mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
@@ -148,7 +144,7 @@ public abstract class AutoCoder extends ASTVisitor {
   }
 
   protected void scan(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
-    project.parse().entrySet().stream().forEach(entry -> {
+    projectInfo.parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));

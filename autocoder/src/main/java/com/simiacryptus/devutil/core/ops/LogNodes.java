@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ops;
+package com.simiacryptus.devutil.core.ops;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;

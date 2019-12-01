@@ -17,16 +17,17 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-class ModifyFieldSets extends RefFileAstVisitor {
+public class ModifyFieldSets extends RefFileAstVisitor {
 
-  ModifyFieldSets(CompilationUnit compilationUnit, File file) {
+  public ModifyFieldSets(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 

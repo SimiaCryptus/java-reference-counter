@@ -17,16 +17,17 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 import java.util.regex.Pattern;
 
-class InlineTempVars extends RefFileAstVisitor {
+public class InlineTempVars extends RefFileAstVisitor {
 
-  InlineTempVars(CompilationUnit compilationUnit, File file) {
+  public InlineTempVars(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 

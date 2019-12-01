@@ -3,8 +3,7 @@ package com.simiacryptus.refcount.test;
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
-public @com.simiacryptus.lang.ref.RefAware class BasicType extends ReferenceCountingBase
-    implements Comparable<BasicType> {
+public class BasicType extends ReferenceCountingBase implements Comparable<BasicType> {
   public static final boolean BUG_WORKAROUND = true;
   private final String label;
   private final double doubleLabel;
@@ -26,9 +25,7 @@ public @com.simiacryptus.lang.ref.RefAware class BasicType extends ReferenceCoun
 
   @Override
   public int compareTo(@NotNull BasicType o) {
-    int temp1394 = this.label.compareTo(o.label);
-    o.freeRef();
-    return temp1394;
+    return this.label.compareTo(o.label);
   }
 
   @Override
@@ -40,9 +37,7 @@ public @com.simiacryptus.lang.ref.RefAware class BasicType extends ReferenceCoun
     if (o == null || getClass() != o.getClass())
       return false;
     BasicType basicType = (BasicType) o;
-    boolean temp4900 = label == basicType.label;
-    basicType.freeRef();
-    return temp4900;
+    return label == basicType.label;
   }
 
   @Override
@@ -60,14 +55,5 @@ public @com.simiacryptus.lang.ref.RefAware class BasicType extends ReferenceCoun
   public void use() {
     System.out.println(String.format("Increment %s", this));
     this.value++;
-  }
-
-  public @Override BasicType addRef() {
-    return (BasicType) super.addRef();
-  }
-
-  public static BasicType[] addRefs(BasicType[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
-        .toArray((x) -> new BasicType[x]);
   }
 }

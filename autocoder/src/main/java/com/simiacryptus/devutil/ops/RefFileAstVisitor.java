@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
-import com.simiacryptus.devutil.ops.FileAstVisitor;
+import com.simiacryptus.devutil.core.ops.FileAstVisitor;
 import com.simiacryptus.lang.ref.RefAware;
 import com.simiacryptus.lang.ref.RefUtil;
 import com.simiacryptus.lang.ref.ReferenceCounting;
@@ -29,7 +29,10 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 abstract class RefFileAstVisitor extends FileAstVisitor {
@@ -65,15 +68,15 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
   @Nullable
   protected Block getBlock(ASTNode node) {
     final ASTNode parent = node.getParent();
-    if(parent == null) {
+    if (parent == null) {
       return null;
-    } else if(parent instanceof Block) {
+    } else if (parent instanceof Block) {
       return (Block) parent;
-    } else if(parent instanceof MethodDeclaration) {
+    } else if (parent instanceof MethodDeclaration) {
       return null;
-    } else if(parent instanceof LambdaExpression) {
+    } else if (parent instanceof LambdaExpression) {
       return null;
-    } else if(parent instanceof TypeDeclaration) {
+    } else if (parent instanceof TypeDeclaration) {
       return null;
     } else {
       return getBlock(parent);

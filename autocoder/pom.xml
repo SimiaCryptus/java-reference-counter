@@ -31,6 +31,7 @@
     <artifactId>refcount-util-java</artifactId>
     <description>Java 8 Reference Counting Code Utilities</description>
     <url>https://simiacryptus.github.io/${github.project}/</url>
+    <packaging>maven-plugin</packaging>
     <scm>
         <url>https://github.com/simiacryptus/refcount-util-java/</url>
         <connection>scm:git:git@github.com:simiacryptus/refcount-util-java.git</connection>
@@ -40,6 +41,7 @@
         <github.project>refcount-util-java</github.project>
         <github.global.userName></github.global.userName>
         <github.global.oauth2Token></github.global.oauth2Token>
+        <maven.version>3.6.0</maven.version>
     </properties>
     <distributionManagement>
         <site>
@@ -93,6 +95,19 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-embedder</artifactId>
+            <version>${maven.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>${maven.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>${maven.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.simiacryptus</groupId>
@@ -106,6 +121,22 @@
             <version>RELEASE</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>${maven.version}</version>
+        </dependency>
     </dependencies>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>${maven.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
