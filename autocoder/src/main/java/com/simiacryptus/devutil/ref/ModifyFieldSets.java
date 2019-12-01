@@ -7,8 +7,8 @@ import java.io.File;
 
 class ModifyFieldSets extends RefFileAstVisitor {
 
-  ModifyFieldSets(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  ModifyFieldSets(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
+    super(refAutoCoder, compilationUnit, file);
   }
 
   @Override
@@ -20,7 +20,7 @@ class ModifyFieldSets extends RefFileAstVisitor {
         warn(node, "Unresolved binding");
         return;
       }
-      if (!isRefCounted(node, typeBinding)) return;
+      if (!isRefCounted(fieldAccess, typeBinding)) return;
       final ASTNode parent = node.getParent();
       if (parent instanceof ExpressionStatement) {
         final ASTNode parent2 = parent.getParent();
@@ -36,7 +36,7 @@ class ModifyFieldSets extends RefFileAstVisitor {
           } else {
             final Block exchangeBlock = ast.newBlock();
             final String identifier = randomIdentifier(node);
-            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(ast, typeBinding.getName())));
+            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(node, typeBinding.getQualifiedName())));
             exchangeBlock.statements().add(freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
             final Assignment assignment = ast.newAssignment();
             assignment.setLeftHandSide((Expression) ASTNode.copySubtree(ast, fieldAccess));

@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 class InlineTempVars extends RefFileAstVisitor {
 
-  InlineTempVars(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  InlineTempVars(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
+    super(refAutoCoder, compilationUnit, file);
   }
 
   @Override

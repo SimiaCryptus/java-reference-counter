@@ -15,12 +15,12 @@ class ReplaceTypes extends RefFileAstVisitor {
 
   private Map<String, String> replacements;
 
-  ReplaceTypes(CompilationUnit compilationUnit, File file, boolean invert) {
-    this(compilationUnit, file, classMapping(invert));
+  ReplaceTypes(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file, boolean invert) {
+    this(refAutoCoder, compilationUnit, file, classMapping(invert));
   }
 
-  ReplaceTypes(CompilationUnit compilationUnit, File file, Map<String, String> classMapping) {
-    super(compilationUnit, file);
+  ReplaceTypes(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file, Map<String, String> classMapping) {
+    super(refAutoCoder, compilationUnit, file);
     this.replacements = classMapping;
   }
 

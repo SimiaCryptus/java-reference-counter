@@ -17,8 +17,8 @@ class InstrumentClosures extends RefFileAstVisitor {
 
   private final IndexSymbols.SymbolIndex index;
 
-  InstrumentClosures(CompilationUnit compilationUnit, File file, IndexSymbols.SymbolIndex index) {
-    super(compilationUnit, file);
+  InstrumentClosures(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file, IndexSymbols.SymbolIndex index) {
+    super(refAutoCoder, compilationUnit, file);
     this.index = index;
   }
 
@@ -29,7 +29,7 @@ class InstrumentClosures extends RefFileAstVisitor {
       closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
         if (closureNode instanceof SingleVariableDeclaration) {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
-          final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
+          final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           if (isRefCounted(node, type)) {
             final SimpleName name = (SimpleName) ASTNode.copySubtree(ast, singleVariableDeclaration.getName());
             freeMethodOpt.get().getBody().statements().add(0, ast.newExpressionStatement(newFreeRef(name, type)));
@@ -127,7 +127,7 @@ class InstrumentClosures extends RefFileAstVisitor {
       if (closureNode instanceof SingleVariableDeclaration) {
         final MethodInvocation addRefInvoke = ast.newMethodInvocation();
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
-        final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
+        final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
           addRefInvoke.setExpression((Name) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()));
           addRefInvoke.setName(ast.newSimpleName("addRef"));

@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class RefHashMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
   @NotNull
@@ -74,11 +73,8 @@ public class RefHashMap<K, V> extends ReferenceCountingBase implements RefMap<K,
   @NotNull
   @Override
   public RefHashSet<Entry<K, V>> entrySet() {
-    final Set<Entry<K, V>> entrySet = inner.entrySet().stream()
-        .map(x -> new RefEntry<K, V>(x))
-        .collect(Collectors.toSet());
-    final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>(entrySet);
-    entrySet.stream().forEach(RefUtil::freeRef);
+    final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
+    inner.entrySet().stream().map(x -> new RefEntry<K, V>(x)).forEach(refSet::add);
     return refSet;
   }
 

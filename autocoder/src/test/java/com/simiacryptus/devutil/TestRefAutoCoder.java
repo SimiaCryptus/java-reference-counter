@@ -8,6 +8,7 @@ public class TestRefAutoCoder {
   public void add() {
     new RefAutoCoder("../demo").setAddRefcounting(true).rewrite();
   }
+
   @Test
   public void remove() {
     new RefAutoCoder("../demo").setAddRefcounting(false).rewrite();

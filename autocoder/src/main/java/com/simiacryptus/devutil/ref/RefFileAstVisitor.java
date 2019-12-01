@@ -9,11 +9,15 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.util.Map;
 import java.util.Optional;
 
 abstract class RefFileAstVisitor extends FileAstVisitor {
-  public RefFileAstVisitor(CompilationUnit compilationUnit, File file) {
+  protected final RefAutoCoder refAutoCoder;
+
+  public RefFileAstVisitor(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
+    this.refAutoCoder = refAutoCoder;
   }
 
   @NotNull
@@ -40,13 +44,22 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     return ast.newExpressionStatement(newFreeRefUtil(node, typeBinding));
   }
 
+  protected ITypeBinding getTypeBinding(@NotNull VariableDeclaration declaration) {
+    final IVariableBinding iVariableBinding = declaration.resolveBinding();
+    if (iVariableBinding == null) {
+      warn(declaration, "Cannot resolve method of %s", declaration);
+      return null;
+    }
+    return iVariableBinding.getType();
+  }
+
   protected boolean isRefCounted(ASTNode node, @NotNull ITypeBinding typeBinding) {
     final ITypeBinding type;
     if (typeBinding.isPrimitive()) return false;
     if (typeBinding.getTypeDeclaration().getQualifiedName().equals(Optional.class.getCanonicalName())) {
       final ITypeBinding[] typeArguments = typeBinding.getTypeArguments();
-      if(null == typeArguments || 0 == typeArguments.length) {
-        warn(node,"No type argument for Optional");
+      if (null == typeArguments || 0 == typeArguments.length) {
+        warn(node, "No type argument for Optional");
       }
       return isRefCounted(node, typeArguments[0]);
     }
@@ -55,17 +68,19 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     } else {
       type = typeBinding;
     }
-    return derives(type, ReferenceCounting.class);
-  }
-
-  protected boolean methodConsumesSelfRefs(@Nonnull IMethodBinding methodBinding) {
-    final String qualifiedName = methodBinding.getDeclaringClass().getTypeDeclaration().getQualifiedName();
-    final String methodName = methodBinding.getName();
-    if (qualifiedName.equals(Optional.class.getCanonicalName())) {
-      if (methodName.equals("get")) {
-        return true;
-      }
+    if(type.isInterface() && !(node instanceof LambdaExpression)) {
+      info(node, "Is potentially refcounted interface: %s (%s)", node, type);
+      return true;
     }
+    if(derives(type, ReferenceCounting.class)) {
+      info(node, "Derives ReferenceCounting: %s (%s)", node, type);
+      return true;
+    }
+    if(derives(type, Map.Entry.class)) {
+      info(node, "Derives Map.Entry: %s (%s)", node, type);
+      return true;
+    }
+    debug(node, "Not refcounted: %s (%s)", node, type);
     return false;
   }
 
@@ -84,9 +99,20 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     if (methodName.equals("freeRefs")) {
       return false;
     }
-    if (toString(methodBinding.getDeclaringClass().getPackage()).startsWith("com.simiacryptus")) return true;
+    if (refAutoCoder.isRefAware(methodBinding)) return true;
     warn(1, node, "Not sure if %s consumes refs", methodBinding);
     return true;
+  }
+
+  protected boolean methodConsumesSelfRefs(@Nonnull IMethodBinding methodBinding) {
+    final String qualifiedName = methodBinding.getDeclaringClass().getTypeDeclaration().getQualifiedName();
+    final String methodName = methodBinding.getName();
+    if (qualifiedName.equals(Optional.class.getCanonicalName())) {
+      if (methodName.equals("get")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @NotNull
@@ -116,11 +142,9 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
       methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
       return methodInvocation;
-    } else if (typeBinding.getTypeDeclaration().getQualifiedName().equals(Optional.class.getCanonicalName())) {
-      final ITypeBinding[] typeArguments = typeBinding.getTypeArguments();
-      if(null == typeArguments || 0 == typeArguments.length) {
-        warn(node,"No type argument for Optional");
-      }
+    } else if (typeBinding.getTypeDeclaration().getQualifiedName().equals(Optional.class.getCanonicalName())
+        || derives(typeBinding, Map.Entry.class)
+        || typeBinding.isInterface()) {
       final MethodInvocation freeInvocation = ast.newMethodInvocation();
       freeInvocation.setName(ast.newSimpleName("freeRef"));
       freeInvocation.setExpression(newQualifiedName(ast, RefUtil.class));

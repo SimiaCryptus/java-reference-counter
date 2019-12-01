@@ -1,5 +1,6 @@
 package com.simiacryptus.devutil.ref;
 
+import com.simiacryptus.lang.ref.RefUtil;
 import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -10,8 +11,8 @@ import java.util.List;
 
 class InsertAddRefs extends RefFileAstVisitor {
 
-  InsertAddRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  InsertAddRefs(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
+    super(refAutoCoder, compilationUnit, file);
   }
 
   @NotNull
@@ -22,6 +23,12 @@ class InsertAddRefs extends RefFileAstVisitor {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRefs"));
       methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
+      methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
+      return methodInvocation;
+    } if (type.isInterface()) {
+      final MethodInvocation methodInvocation = ast.newMethodInvocation();
+      methodInvocation.setName(ast.newSimpleName("addRef"));
+      methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
       methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
       return methodInvocation;
     } else {
@@ -46,7 +53,11 @@ class InsertAddRefs extends RefFileAstVisitor {
       } else if (arg instanceof Expression) {
         final Expression expression = (Expression) arg;
         final ITypeBinding resolveTypeBinding = expression.resolveTypeBinding();
-        if (isRefCounted(node, resolveTypeBinding)) {
+        if(null == resolveTypeBinding) {
+          warn(arg, "Unresolved binding");
+          return;
+        }
+        if (isRefCounted(arg, resolveTypeBinding)) {
           arguments.set(i, addAddRef(expression, resolveTypeBinding));
           info(node, "Argument addRef for %s: %s (%s) defined", node, resolveTypeBinding.getQualifiedName(), expression);
         } else {
@@ -81,7 +92,10 @@ class InsertAddRefs extends RefFileAstVisitor {
   public void endVisit(@NotNull MethodInvocation node) {
     if (skip(node)) return;
     final IMethodBinding methodBinding = node.resolveMethodBinding();
-    if (null != methodBinding) {
+    if (null == methodBinding) {
+      warn(node, "Unresolved binding on %s", node);
+      return;
+    }
 //        if (modifyArgs(methodBinding.getDeclaringClass()) && !node.getName().toString().equals("addRefs")) {
 //          final List arguments = node.arguments();
 //          for (int i = 0; i < arguments.size(); i++) {
@@ -94,13 +108,10 @@ class InsertAddRefs extends RefFileAstVisitor {
 //            }
 //          }
 //        }
-      if (methodConsumesRefs(methodBinding, node)) {
-        apply(node, node.getName(), node.arguments());
-      } else {
-        debug(node, "Ignored method on %s", node);
-      }
+    if (methodConsumesRefs(methodBinding, node)) {
+      apply(node, node.getName(), node.arguments());
     } else {
-      warn(node, "Unresolved binding on %s", node);
+      debug(node, "Ignored method on %s", node);
     }
   }
 
@@ -137,7 +148,7 @@ class InsertAddRefs extends RefFileAstVisitor {
   }
 
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
-    return toString(declaringClass.getPackage()).startsWith("com.simiacryptus");
+    return refAutoCoder.isRefAware(declaringClass);
   }
 
   @Nullable

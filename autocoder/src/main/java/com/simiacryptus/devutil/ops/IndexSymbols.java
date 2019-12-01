@@ -115,28 +115,6 @@ public class IndexSymbols extends FileAstVisitor {
     return this;
   }
 
-  public static class Mention {
-    public final Block block;
-    public final int line;
-    public final Statement statement;
-
-    public Mention(Block block, int line, Statement statement) {
-      this.block = block;
-      this.line = line;
-      this.statement = statement;
-    }
-
-    public boolean isComplexReturn() {
-      if (!isReturn()) return false;
-      return !(((ReturnStatement) statement).getExpression() instanceof SimpleName);
-    }
-
-    public boolean isReturn() {
-      return statement instanceof ReturnStatement;
-    }
-
-  }
-
   public static class Span {
     public final int lineStart;
     public final int colStart;

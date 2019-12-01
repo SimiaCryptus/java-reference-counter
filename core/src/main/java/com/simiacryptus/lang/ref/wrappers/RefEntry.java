@@ -38,8 +38,9 @@ public class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K
 
   @Override
   public V setValue(V value) {
+    final V oldValue = this.value;
     this.value = value;
-    return value;
+    return oldValue;
   }
 
 }

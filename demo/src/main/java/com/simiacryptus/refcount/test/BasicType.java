@@ -21,19 +21,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
 
   @Override
   public int compareTo(@NotNull BasicType o) {
-    int temp1475 = this.label.compareTo(o.label);
-    o.freeRef();
-    return temp1475;
-  }
-
-  public void use() {
-    System.out.println(String.format("Increment %s", this));
-    this.value++;
-  }
-
-  @Override
-  public String toString() {
-    return "BasicType{" + "values=" + value + '}';
+    return this.label.compareTo(o.label);
   }
 
   @Override
@@ -45,9 +33,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     if (o == null || getClass() != o.getClass())
       return false;
     BasicType basicType = (BasicType) o;
-    boolean temp3533 = label == basicType.label;
-    basicType.freeRef();
-    return temp3533;
+    return label == basicType.label;
   }
 
   @Override
@@ -57,16 +43,17 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     return label.hashCode();
   }
 
+  @Override
+  public String toString() {
+    return "BasicType{" + "values=" + value + '}';
+  }
+
+  public void use() {
+    System.out.println(String.format("Increment %s", this));
+    this.value++;
+  }
+
   public @Override void _free() {
     super._free();
-  }
-
-  public @Override BasicType addRef() {
-    return (BasicType) super.addRef();
-  }
-
-  public static BasicType[] addRefs(BasicType[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
-        .toArray((x) -> new BasicType[x]);
   }
 }

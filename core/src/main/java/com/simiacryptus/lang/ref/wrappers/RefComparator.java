@@ -16,7 +16,7 @@ public class RefComparator {
     };
   }
 
-  public static <T,U extends Comparable<U>> Comparator<? super T> comparing(Function<T,U> fn) {
+  public static <T, U extends Comparable<U>> Comparator<? super T> comparing(Function<T, U> fn) {
     return (a, b) -> {
       return fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b)));
     };
