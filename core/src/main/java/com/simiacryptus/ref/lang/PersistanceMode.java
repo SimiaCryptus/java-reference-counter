@@ -25,6 +25,7 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.function.Supplier;
 
+@RefCoderIgnore
 public enum PersistanceMode {
   SOFT {
     @Override

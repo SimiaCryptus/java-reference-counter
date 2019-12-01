@@ -20,12 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 
 import java.util.ListIterator;
 
 @RefAware
-class RefListIterator<T> extends RefIterator<T> implements ListIterator<T> {
+@RefCoderIgnore
+public class RefListIterator<T> extends RefIterator<T> implements ListIterator<T> {
 
   public RefListIterator(ListIterator<T> inner) {
     super(inner);

@@ -19,15 +19,15 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
-import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.IntStream;
 
+@RefAware
+@RefCoderIgnore
 public abstract class RefAbstractList<T> extends ReferenceCountingBase implements RefList<T>, Cloneable, Serializable {
   @Override
   protected void _free() {

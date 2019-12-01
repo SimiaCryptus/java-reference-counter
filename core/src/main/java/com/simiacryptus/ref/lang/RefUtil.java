@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @RefAware
+@RefCoderIgnore
 public class RefUtil {
 
   public static <T> void freeRef(@Nullable T value) {

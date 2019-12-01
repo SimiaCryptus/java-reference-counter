@@ -71,6 +71,7 @@ public class RefAutoCoder extends AutoCoder {
     rewrite(RemoveAnnotations::new);
     rewrite(RemoveRefs::new);
     rewrite((cu, file) -> new ReplaceTypes(cu, file, true));
+    rewrite(FixVariableDeclarations::new);
     while (rewrite(InlineRefs::new) > 0) {
       logger.info("Re-running InlineRefs");
     }
@@ -80,6 +81,7 @@ public class RefAutoCoder extends AutoCoder {
     if (isAddRefcounting()) {
       rewrite(InsertAnnotations::new);
       rewrite((cu, file) -> new ReplaceTypes(cu, file, false));
+      rewrite(NarrowVariableDeclarations::new);
       rewrite(InsertMethods::new);
       rewrite(InsertAddRefs::new);
       rewrite(ModifyFieldSets::new);

@@ -21,6 +21,7 @@ package com.simiacryptus.ref.lang;
 
 import javax.annotation.Nonnull;
 
+@RefCoderIgnore
 public class LifecycleException extends RuntimeException {
   @Nonnull
   public final ReferenceCounting obj;

@@ -1,31 +1,11 @@
-/*
- * Copyright (c) 2019 by Andrew Charneski.
- *
- * The author licenses this file to you under the
- * Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance
- * with the License.  You may obtain a copy
- * of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import java.util.ArrayList;
+import com.simiacryptus.ref.wrappers.RefConsumer;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.Spliterator;
-import java.util.function.Consumer;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -39,10 +19,11 @@ public class ListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testOperations(Consumer<java.util.ArrayList<BasicType>> fn) {
+  private static void testOperations(RefConsumer<java.util.ArrayList<BasicType>> fn) {
     java.util.ArrayList<BasicType> values = new java.util.ArrayList<>();
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 5; i++) {
       values.add(new BasicType());
+    }
     fn.accept(values);
   }
 
@@ -55,7 +36,7 @@ public class ListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[]{}).length)
+    if (values.size() != values.toArray(new BasicType[] {}).length)
       throw new RuntimeException();
   }
 
@@ -97,7 +78,7 @@ public class ListContainer extends ReferenceCountingBase {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
-    final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
+    final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
     values.addAll(java.util.Arrays.asList(basicTypeN));
     values.add(1, basicType1);
     values.addAll(1, java.util.Arrays.asList(basicTypeN));
@@ -138,8 +119,7 @@ public class ListContainer extends ReferenceCountingBase {
       throw new RuntimeException();
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 
@@ -164,7 +144,7 @@ public class ListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      final ListIterator<BasicType> iterator = values.listIterator();
+      final java.util.ListIterator<com.simiacryptus.demo.refcount.BasicType> iterator = values.listIterator();
       assert 0 == iterator.nextIndex();
       if (iterator.hasNext()) {
         iterator.next();
@@ -178,13 +158,13 @@ public class ListContainer extends ReferenceCountingBase {
         iterator.next();
       }
       if (iterator.hasPrevious()) {
-        assert 1 == iterator.previousIndex() : 1 + " != " + iterator.previousIndex();
+        assert 2 == iterator.previousIndex() : 2 + " != " + iterator.previousIndex();
         iterator.previous();
         iterator.set(new BasicType());
       }
     });
     testOperations(values -> {
-      final Spliterator<BasicType> spliterator = values.spliterator();
+      final java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> spliterator = values.spliterator();
       final Spliterator<BasicType> split = spliterator.trySplit();
       if (null != split)
         while (split.tryAdvance(x -> {
@@ -286,14 +266,14 @@ public class ListContainer extends ReferenceCountingBase {
       }).findFirst().isPresent();
     });
     testOperations(values -> {
-      Iterator<BasicType> iter = values.stream().iterator();
+      java.util.Iterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream().iterator();
       while (iter.hasNext()) {
         assert iter.next() != null;
       }
     });
     testOperations(values -> {
       @NotNull
-      Spliterator<BasicType> iter = values.stream().spliterator();
+      java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream().spliterator();
       while (iter.tryAdvance(x -> {
         assert x != null;
       })) {
@@ -301,7 +281,7 @@ public class ListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       @NotNull
-      ListIterator<BasicType> iter = values.listIterator();
+      java.util.ListIterator<com.simiacryptus.demo.refcount.BasicType> iter = values.listIterator();
       while (iter.hasNext()) {
         assert iter.next() != null;
       }

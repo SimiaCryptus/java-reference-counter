@@ -20,12 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 
 import java.util.Comparator;
 import java.util.function.Function;
 
 @RefAware
+@RefCoderIgnore
 public class RefComparator {
 
   public static <T extends Comparable<T>> Comparator<? super T> naturalOrder() {

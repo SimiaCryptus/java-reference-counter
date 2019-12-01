@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 @RefAware
+@RefCoderIgnore
 public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCountingBase implements Supplier<T> {
   @Nullable
   private volatile T val = null;

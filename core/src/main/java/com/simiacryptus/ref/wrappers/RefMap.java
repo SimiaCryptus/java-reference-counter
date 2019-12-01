@@ -20,12 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
 @RefAware
+@RefCoderIgnore
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   public static <K, V> RefMap<K, V>[] addRefs(@NotNull RefMap<K, V>[] array) {

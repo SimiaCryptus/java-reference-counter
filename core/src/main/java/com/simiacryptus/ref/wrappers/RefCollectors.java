@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Collections;
@@ -32,6 +33,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 @RefAware
+@RefCoderIgnore
 public class RefCollectors {
   public static <T> Collector<T, ?, RefList<T>> toList() {
     final Supplier<RefArrayList<T>> supplier = () -> new RefArrayList<T>();

@@ -17,23 +17,11 @@
  * under the License.
  */
 
-package com.simiacryptus.ref.wrappers;
+package com.simiacryptus.ref.lang;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-import java.util.List;
-
-@RefAware
-@RefCoderIgnore
-public interface RefList<T> extends ReferenceCounting, List<T> {
-
-  public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
-        .toArray((x) -> new RefArrayList[x]);
-  }
-
-  RefList<T> addRef();
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RefCoderIgnore {
 }

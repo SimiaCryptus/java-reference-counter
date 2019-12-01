@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 public class InsertAddRefs extends RefFileAstVisitor {
@@ -35,7 +36,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
   }
 
   @NotNull
-  public MethodInvocation addAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
+  public MethodInvocation insertAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
     AST ast = expression.getAST();
     if (type.isArray()) {
       final String qualifiedName = type.getElementType().getQualifiedName();
@@ -45,7 +46,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
       methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
       return methodInvocation;
     }
-    if (type.isInterface()) {
+    if (null == getAddRefMethod(type)) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRef"));
       methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
@@ -59,17 +60,24 @@ public class InsertAddRefs extends RefFileAstVisitor {
     }
   }
 
-  public void apply(ASTNode methodNode, @NotNull ASTNode node, @NotNull List<ASTNode> arguments) {
+  @Nullable
+  public static IMethodBinding getAddRefMethod(@NotNull ITypeBinding type) {
+    return Arrays.stream(type.getDeclaredMethods()).filter(method ->
+        method.getName().equals("addRef") && (0 != (method.getModifiers() & Modifier.PUBLIC)) && method.getParameterTypes().length == 0
+    ).findAny().orElse(null);
+  }
+
+  public void apply(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
       if (arg instanceof ClassInstanceCreation) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), methodNode);
+        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
       } else if (arg instanceof AnonymousClassDeclaration) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), methodNode);
+        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
       } else if (arg instanceof MethodInvocation) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), methodNode);
+        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
       } else if (arg instanceof ArrayCreation) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), methodNode);
+        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
       } else if (arg instanceof Expression) {
         final Expression expression = (Expression) arg;
         final ITypeBinding resolveTypeBinding = expression.resolveTypeBinding();
@@ -78,13 +86,13 @@ public class InsertAddRefs extends RefFileAstVisitor {
           return;
         }
         if (isRefCounted(arg, resolveTypeBinding)) {
-          arguments.set(i, addAddRef(expression, resolveTypeBinding));
-          info(node, "Argument addRef for %s: %s (%s) defined", node, resolveTypeBinding.getQualifiedName(), expression);
+          arguments.set(i, insertAddRef(expression, resolveTypeBinding));
+          info(node, "Argument addRef for %s: %s (%s) defined", name, resolveTypeBinding.getQualifiedName(), expression);
         } else {
-          info(node, "Non-refcounted arg %s", expression);
+          info(node, "Non-refcounted arg %s in %s", expression, name);
         }
       } else {
-        warn(node, "Unexpected type %s", arg.getClass().getSimpleName());
+        warn(node, "Unexpected type %s in %s", arg.getClass().getSimpleName(), name);
       }
     }
   }
@@ -110,28 +118,24 @@ public class InsertAddRefs extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull MethodInvocation node) {
+    final Expression expression = node.getExpression();
+    info(node, "Processing method %s.%s", null==expression?"?":expression.toString(), node.getName());
     if (skip(node)) return;
     final IMethodBinding methodBinding = node.resolveMethodBinding();
     if (null == methodBinding) {
       warn(node, "Unresolved binding on %s", node);
       return;
     }
-//        if (modifyArgs(methodBinding.getDeclaringClass()) && !node.getName().toString().equals("addRefs")) {
-//          final List arguments = node.arguments();
-//          for (int i = 0; i < arguments.size(); i++) {
-//            Object next = arguments.get(i);
-//            MethodInvocation methodInvocation = wrapAddRef((ASTNode) next);
-//            if (null != methodInvocation) {
-//              final SimpleName nodeName = node.getName();
-//              info(node, "Argument addRef for %s: %s", nodeName, nodeName.resolveTypeBinding().getQualifiedName());
-//              arguments.set(i, methodInvocation);
-//            }
-//          }
-//        }
-    if (methodConsumesRefs(methodBinding, node)) {
-      apply(node, node.getName(), node.arguments());
+    final String targetLabel;
+    if(null != expression && expression instanceof Name) {
+      targetLabel = expression.toString() + "." + node.getName();
     } else {
-      debug(node, "Ignored method on %s", node);
+      targetLabel = methodBinding.getDeclaringClass().getQualifiedName() + "::" + node.getName();
+    }
+    if (consumesRefs(methodBinding, null==expression?null:expression.resolveTypeBinding())) {
+      apply(node, node.arguments(), targetLabel);
+    } else {
+      info(node, "Ignored method %s", targetLabel);
     }
   }
 
@@ -139,12 +143,12 @@ public class InsertAddRefs extends RefFileAstVisitor {
   public void endVisit(@NotNull ConstructorInvocation node) {
     if (skip(node)) return;
     final IMethodBinding methodBinding = node.resolveConstructorBinding();
-    if (null != methodBinding) {
-      if (methodConsumesRefs(methodBinding, node) && node.arguments().size() > 0) {
-        apply(node, node, node.arguments());
-      }
-    } else {
+    if (null == methodBinding) {
       warn(node, "Cannot resolve " + node);
+      return;
+    }
+    if (consumesRefs(methodBinding, methodBinding.getReturnType()) && node.arguments().size() > 0) {
+      apply(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
     }
   }
 
@@ -152,18 +156,18 @@ public class InsertAddRefs extends RefFileAstVisitor {
   public void endVisit(@NotNull ClassInstanceCreation node) {
     if (skip(node)) return;
     final IMethodBinding methodBinding = node.resolveConstructorBinding();
-    if (null != methodBinding) {
-      if (methodConsumesRefs(methodBinding, node)) {
-        if (node.arguments().size() > 0) {
-          apply(node, node.getType(), node.arguments());
-        } else {
-          debug(node, "No args %s", node);
-        }
+    if (null == methodBinding) {
+      warn(node, "Cannot resolve %s", node);
+      return;
+    }
+    if (consumesRefs(methodBinding, node.resolveTypeBinding())) {
+      if (node.arguments().size() > 0) {
+        apply(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
       } else {
-        info(node, "Non-refcounted arg %s", node);
+        debug(node, "No args %s", node);
       }
     } else {
-      warn(node, "Cannot resolve %s", node);
+      info(node, "Non-refcounted constructor %s", node);
     }
   }
 

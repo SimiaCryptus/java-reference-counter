@@ -20,12 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
 @RefAware
+@RefCoderIgnore
 public class RefArrays {
   public static <T> RefStream<T> stream(@NotNull T[] array) {
     return new RefStream<>(Arrays.stream(array).onClose(() -> {

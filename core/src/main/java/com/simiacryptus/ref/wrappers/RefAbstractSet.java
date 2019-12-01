@@ -19,16 +19,17 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
-import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Consumer;
 
+@RefAware
+@RefCoderIgnore
 public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements RefSet<T>, Cloneable, Serializable {
   @Override
   protected void _free() {
@@ -69,6 +70,14 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
   public synchronized final void clear() {
     getInner().keySet().forEach(RefUtil::freeRef);
     getInner().clear();
+  }
+
+  @Override
+  public void forEach(Consumer<? super T> action) {
+    for (T t : getInner().keySet()) {
+      action.accept(RefUtil.addRef(t));
+    }
+    RefUtil.freeRef(action);
   }
 
   @Override

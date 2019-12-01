@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.lang.RefAware;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 public abstract class FileAstVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(FileAstVisitor.class);
@@ -89,6 +91,12 @@ public abstract class FileAstVisitor extends ASTVisitor {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
     annotation.setTypeName(ast.newSimpleName("Override"));
     return annotation;
+  }
+
+  public static boolean hasAnnotation(IBinding declaringClass, Class<?> aClass) {
+    return Arrays.stream(declaringClass.getAnnotations())
+        .map(annotation -> annotation.getAnnotationType().getQualifiedName())
+        .anyMatch(qualifiedName -> qualifiedName.equals(aClass.getCanonicalName()));
   }
 
   protected boolean contains(@Nonnull ASTNode expression, @Nonnull IBinding variableBinding) {
@@ -236,8 +244,31 @@ public abstract class FileAstVisitor extends ASTVisitor {
         .filter(methodDeclaration -> ((MethodDeclaration) methodDeclaration).getName().toString().equals(name)).findFirst();
   }
 
+  @Nullable
+  protected Block getBlock(ASTNode node) {
+    final ASTNode parent = node.getParent();
+    if (parent == null) {
+      return null;
+    } else if (parent instanceof Block) {
+      return (Block) parent;
+    } else if (parent instanceof MethodDeclaration) {
+      return null;
+    } else if (parent instanceof LambdaExpression) {
+      return null;
+    } else if (parent instanceof TypeDeclaration) {
+      return null;
+    } else {
+      return getBlock(parent);
+    }
+  }
+
   protected String getFormatString(ASTNode node, String formatString, StackTraceElement caller) {
     return String.format("(%s) (%s) - %s", toString(caller), getLocation(node), formatString);
+  }
+
+  protected int getLineNumber(Block block, ASTNode node) {
+    final List statements = block.statements();
+    return IntStream.range(0, statements.size()).filter(i -> contains((ASTNode) statements.get(i), node)).findFirst().orElse(-1);
   }
 
   @NotNull
