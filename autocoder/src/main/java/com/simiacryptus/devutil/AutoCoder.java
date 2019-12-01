@@ -39,6 +39,33 @@ public abstract class AutoCoder extends ASTVisitor {
 
   }
 
+  @NotNull
+  public static Field getField(@NotNull Class<?> nodeClass, String name) {
+    final Field[] fields = nodeClass.getDeclaredFields();
+    final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
+    if (!parent.isPresent()) {
+      final Class<?> superclass = nodeClass.getSuperclass();
+      if (superclass != null) {
+        return getField(superclass, name);
+      } else {
+        throw new AssertionError(String.format("Cannot find field %s", name));
+      }
+    }
+    final Field field = parent.get();
+    field.setAccessible(true);
+    return field;
+  }
+
+  @NotNull
+  public static <T> T setField(@NotNull T astNode, String name, Object value) {
+    try {
+      getField(astNode.getClass(), name).set(astNode, value);
+      return astNode;
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   protected String format(@NotNull String finalSrc) {
     final Document document = new Document();
     document.set(finalSrc);
@@ -65,23 +92,6 @@ public abstract class AutoCoder extends ASTVisitor {
     javaConventionsSettings.tab_char = DefaultCodeFormatterOptions.SPACE;
     javaConventionsSettings.indentation_size = 2;
     return javaConventionsSettings;
-  }
-
-  @NotNull
-  public static Field getField(@NotNull Class<?> nodeClass, String name) {
-    final Field[] fields = nodeClass.getDeclaredFields();
-    final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
-    if (!parent.isPresent()) {
-      final Class<?> superclass = nodeClass.getSuperclass();
-      if (superclass != null) {
-        return getField(superclass, name);
-      } else {
-        throw new AssertionError(String.format("Cannot find field %s", name));
-      }
-    }
-    final Field field = parent.get();
-    field.setAccessible(true);
-    return field;
   }
 
   @NotNull
@@ -125,16 +135,6 @@ public abstract class AutoCoder extends ASTVisitor {
       logger.debug(String.format("Scanning %s", file));
       compilationUnit.accept(visitor.apply(compilationUnit, file));
     });
-  }
-
-  @NotNull
-  public static <T> T setField(@NotNull T astNode, String name, Object value) {
-    try {
-      getField(astNode.getClass(), name).set(astNode, value);
-      return astNode;
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
   }
 
 }

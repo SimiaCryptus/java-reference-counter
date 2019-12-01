@@ -19,7 +19,7 @@ public class RefStream<T> implements Stream<T> {
     this(stream, new ArrayList<>(), new ArrayList<>());
     onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
-      this.refs.forEach(x->x.inner.freeRef());
+      this.refs.forEach(x -> x.inner.freeRef());
       this.lambdas.clear();
     });
   }
@@ -45,43 +45,6 @@ public class RefStream<T> implements Stream<T> {
   public boolean allMatch(@NotNull Predicate<? super T> predicate) {
     track(predicate);
     return inner.allMatch((T t) -> predicate.test(getRef(t)));
-  }
-
-  private <U> U getRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      if (!refs.remove(new IdentityWrapper(u))) {
-        addRef(u);
-      }
-    }
-    return u;
-  }
-
-  public static class IdentityWrapper<T> {
-    public final T inner;
-
-    public IdentityWrapper(T inner) {
-      this.inner = inner;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      IdentityWrapper that = (IdentityWrapper) o;
-      return inner == that.inner;
-    }
-
-    @Override
-    public int hashCode() {
-      return System.identityHashCode(inner);
-    }
-  }
-
-  private <U> U storeRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
-    }
-    return u;
   }
 
   @Override
@@ -190,6 +153,15 @@ public class RefStream<T> implements Stream<T> {
   public void forEachOrdered(@NotNull Consumer<? super T> action) {
     track(action);
     inner.forEachOrdered((T t) -> action.accept(getRef(t)));
+  }
+
+  private <U> U getRef(U u) {
+    if (u instanceof ReferenceCounting) {
+      if (!refs.remove(new IdentityWrapper(u))) {
+        addRef(u);
+      }
+    }
+    return u;
   }
 
   @Override
@@ -332,6 +304,13 @@ public class RefStream<T> implements Stream<T> {
     return new RefSpliterator<>(inner.spliterator());
   }
 
+  private <U> U storeRef(U u) {
+    if (u instanceof ReferenceCounting) {
+      refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
+    }
+    return u;
+  }
+
   @Override
   public Object[] toArray() {
     return inner.map(this::getRef).toArray();
@@ -354,6 +333,27 @@ public class RefStream<T> implements Stream<T> {
   public RefStream<T> unordered() {
     inner = inner.unordered();
     return this;
+  }
+
+  public static class IdentityWrapper<T> {
+    public final T inner;
+
+    public IdentityWrapper(T inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      IdentityWrapper that = (IdentityWrapper) o;
+      return inner == that.inner;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(inner);
+    }
   }
 
 }

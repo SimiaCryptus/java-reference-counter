@@ -7,7 +7,6 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import static com.simiacryptus.lang.ref.RefUtil.addRef;
-import static com.simiacryptus.lang.ref.RefUtil.freeRef;
 
 class RefSpliterator<T> implements Spliterator<T> {
   private final Spliterator<T> inner;

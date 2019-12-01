@@ -1,26 +1,83 @@
 package com.simiacryptus.refcount.test;
 
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
-import com.simiacryptus.lang.ref.wrappers.RefHashSet;
 import java.util.function.Consumer;
 
 public class SetContainer extends ReferenceCountingBase {
-  public com.simiacryptus.lang.ref.wrappers.RefHashSet<BasicType> values = new com.simiacryptus.lang.ref.wrappers.RefHashSet<>();
+  public java.util.HashSet<BasicType> values = new java.util.HashSet<>();
 
   public SetContainer(BasicType... values) {
     for (BasicType value : values) {
-      this.values.add(value.addRef());
+      this.values.add(value);
     }
-    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
+  }
+
+  private static void testStreamOperations() {
+    testOperations(values -> {
+      values.stream().forEach(x -> {
+        x.value++;
+      });
+    });
+  }
+
+  private static void testArrayOperations() {
+    testOperations(values -> {
+      values.add(new BasicType());
+      if (0 == values.size()) {
+        throw new RuntimeException();
+      }
+      if (false) {
+        if (values.size() != values.toArray().length) {
+          throw new RuntimeException();
+        }
+      }
+      if (values.size() != values.toArray(new BasicType[] {}).length)
+        throw new RuntimeException();
+    });
+  }
+
+  private static void testElementOperations() {
+    testOperations(values -> {
+      if (!values.isEmpty()) {
+        throw new RuntimeException();
+      }
+      final BasicType basicType1 = new BasicType();
+      if (!values.add(basicType1)) {
+        throw new RuntimeException();
+      }
+      if (!values.contains(basicType1)) {
+        throw new RuntimeException();
+      }
+      if (values.add(values.iterator().next())) {
+        throw new RuntimeException();
+      }
+      if (!values.contains(basicType1)) {
+        throw new RuntimeException();
+      }
+      if (!values.remove(basicType1)) {
+        throw new RuntimeException();
+      }
+      if (values.remove(basicType1)) {
+        throw new RuntimeException();
+      }
+      if (!values.add(basicType1)) {
+        throw new RuntimeException();
+      }
+      values.clear();
+      if (!values.isEmpty())
+        throw new RuntimeException();
+    });
+  }
+
+  private static void testOperations(Consumer<java.util.HashSet<BasicType>> fn) {
+    java.util.HashSet<BasicType> values = new java.util.HashSet<>();
+    fn.accept(values);
   }
 
   public void test() {
     System.out.println(String.format("Increment %s", this));
-    com.simiacryptus.lang.ref.wrappers.RefHashSet<com.simiacryptus.refcount.test.BasicType> temp2634 = new com.simiacryptus.lang.ref.wrappers.RefHashSet<>(
-        this.values.addRef());
-    if (this.values.size() != temp2634.size())
+    if (this.values.size() != new java.util.HashSet<>(this.values).size())
       throw new RuntimeException();
-    temp2634.freeRef();
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations();
       testElementOperations();
@@ -29,85 +86,24 @@ public class SetContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testStreamOperations() {
-    testOperations(values -> {
-      values.stream().forEach(x -> {
-        x.value++;
-        x.freeRef();
-      });
-      values.freeRef();
-    });
-  }
-
-  private static void testArrayOperations() {
-    testOperations(values -> {
-      values.add(new BasicType());
-      if (0 == values.size())
-        throw new RuntimeException();
-      if (false) {
-        if (values.size() != values.toArray().length)
-          throw new RuntimeException();
-      }
-      com.simiacryptus.refcount.test.BasicType[] temp5651 = values.toArray(new BasicType[] {});
-      if (values.size() != temp5651.length)
-        throw new RuntimeException();
-      com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(temp5651);
-      values.freeRef();
-    });
-  }
-
-  private static void testElementOperations() {
-    testOperations(values -> {
-      if (!values.isEmpty())
-        throw new RuntimeException();
-      final BasicType basicType1 = new BasicType();
-      if (!values.add(basicType1.addRef()))
-        throw new RuntimeException();
-      if (!values.contains(basicType1.addRef()))
-        throw new RuntimeException();
-      if (values.add(values.iterator().next()))
-        throw new RuntimeException();
-      if (!values.contains(basicType1.addRef()))
-        throw new RuntimeException();
-      if (!values.remove(basicType1.addRef()))
-        throw new RuntimeException();
-      if (values.remove(basicType1.addRef()))
-        throw new RuntimeException();
-      if (!values.add(basicType1.addRef()))
-        throw new RuntimeException();
-      basicType1.freeRef();
-      values.clear();
-      if (!values.isEmpty())
-        throw new RuntimeException();
-      values.freeRef();
-    });
-  }
-
   private void testCollectionOperations() {
     testOperations(values -> {
       values.add(new BasicType());
       final BasicType basicType = new BasicType();
-      final com.simiacryptus.lang.ref.wrappers.RefList<BasicType> list = com.simiacryptus.lang.ref.wrappers.RefArrays
-          .asList(basicType.addRef());
-      basicType.freeRef();
-      if (!values.addAll(list.addRef()))
+      final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);
+      if (!values.addAll(list)) {
         throw new RuntimeException();
-      if (!values.containsAll(list.addRef()))
+      }
+      if (!values.containsAll(list)) {
         throw new RuntimeException();
-      if (!values.retainAll(list.addRef()))
+      }
+      if (!values.retainAll(list)) {
         throw new RuntimeException();
-      values.removeAll(list.addRef());
-      list.freeRef();
+      }
+      values.removeAll(list);
       if (!values.isEmpty())
         throw new RuntimeException();
-      values.freeRef();
     });
-  }
-
-  private static void testOperations(Consumer<com.simiacryptus.lang.ref.wrappers.RefHashSet<BasicType>> fn) {
-    com.simiacryptus.lang.ref.wrappers.RefHashSet<BasicType> values = new com.simiacryptus.lang.ref.wrappers.RefHashSet<>();
-    fn.accept(values.addRef());
-    values.freeRef();
   }
 
   @Override
@@ -116,17 +112,6 @@ public class SetContainer extends ReferenceCountingBase {
   }
 
   public @Override void _free() {
-    if (null != values)
-      values.freeRef();
     super._free();
-  }
-
-  public @Override SetContainer addRef() {
-    return (SetContainer) super.addRef();
-  }
-
-  public static SetContainer[] addRefs(SetContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SetContainer::addRef)
-        .toArray((x) -> new SetContainer[x]);
   }
 }

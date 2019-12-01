@@ -2,6 +2,7 @@ package com.simiacryptus.devutil.ops;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,8 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public abstract class FileAstVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(FileAstVisitor.class);
@@ -38,7 +40,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected static boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
-    final String binaryName = typeBinding.getBinaryName();
+    final String binaryName = typeBinding.getTypeDeclaration().getQualifiedName();
     if (null != binaryName && binaryName.equals(baseClass.getCanonicalName())) return true;
     if (Arrays.stream(typeBinding.getInterfaces()).filter(x -> derives(x, baseClass)).findAny().isPresent()) return true;
     if (typeBinding.getSuperclass() != null) return derives(typeBinding.getSuperclass(), baseClass);
@@ -70,48 +72,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return annotation;
   }
 
-  @NotNull
-  protected static Type getType(@Nonnull AST ast, @NotNull String name) {
-    if (name.endsWith("[]")) {
-      return ast.newArrayType(getType(ast, name.substring(0, name.length() - 2)));
-    } else if (name.contains("\\.")) {
-      return ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
-    } else {
-      final PrimitiveType.Code typeCode = PrimitiveType.toCode(name);
-      if (null != typeCode) {
-        return ast.newPrimitiveType(typeCode);
-      } else {
-        final int typeArg = name.indexOf('<');
-        if (typeArg < 0) {
-          return ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
-        } else {
-          final String mainType = name.substring(0, typeArg);
-          final String innerType = name.substring(typeArg + 1, name.length() - 1);
-          int nesting = 0;
-          ArrayList<Integer> primaryDelimiters = new ArrayList<>();
-          for (int i = 0; i < innerType.length(); i++) {
-            final char c = innerType.charAt(i);
-            if (c == '<') nesting++;
-            if (c == '>') nesting--;
-            if (c == ',') primaryDelimiters.add(i);
-          }
-          final ParameterizedType parameterizedType = ast.newParameterizedType(ast.newSimpleType(newQualifiedName(ast, mainType.split("\\."))));
-          if (primaryDelimiters.isEmpty()) {
-            parameterizedType.typeArguments().add(getType(ast, innerType));
-          } else {
-            for (int i = 0; i < primaryDelimiters.size(); i++) {
-              final int to = primaryDelimiters.get(i);
-              final int from = i == 0 ? 0 : (primaryDelimiters.get(i - 1) + 1);
-              parameterizedType.typeArguments().add(getType(ast, innerType.substring(from, to)));
-            }
-          }
-          return parameterizedType;
-        }
-      }
-    }
-  }
-
-  protected boolean contains(ASTNode expression, IBinding variableBinding) {
+  protected boolean contains(@Nonnull ASTNode expression, @Nonnull IBinding variableBinding) {
     final AtomicBoolean found = new AtomicBoolean(false);
     expression.accept(new ASTVisitor() {
       @Override
@@ -177,6 +138,75 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return list;
   }
 
+  protected List<StatementOfInterest> exits(@NotNull Block block, SimpleName variable, int startAt, int endAt) {
+    IBinding binding = variable.resolveBinding();
+    if (null == binding) {
+      warn(variable, "Unresolved binding");
+      return Arrays.asList();
+    } else {
+      final List<StatementOfInterest> exits = exits(block, startAt, endAt);
+      info(variable, "Last mentions of %s: \n\t%s", variable, exits.stream().map(x ->
+          String.format("%s at line %s", x.statement.toString().trim(), x.line)
+      ).reduce((a, b) -> a + "\n\t" + b).orElse(""));
+      return exits;
+    }
+  }
+
+  private List<StatementOfInterest> exits(@NotNull Block block, int startAt, int endAt) {
+    final List statements = block.statements();
+    final ArrayList<StatementOfInterest> exits = new ArrayList<>();
+    StatementOfInterest lastMention = null;
+    final AST ast = block.getAST();
+    for (int j = startAt; j < endAt; j++) {
+      final Statement statement = (Statement) statements.get(j);
+      if (statement instanceof IfStatement) {
+        final IfStatement ifStatement = (IfStatement) statement;
+        exits.addAll(exits(ast, ifStatement::getThenStatement, ifStatement::setThenStatement));
+        exits.addAll(exits(ast, ifStatement::getElseStatement, ifStatement::setElseStatement));
+      } else if (statement instanceof WhileStatement) {
+        final WhileStatement whileStatement = (WhileStatement) statement;
+        exits.addAll(exits(ast, whileStatement::getBody, whileStatement::setBody));
+      } else if (statement instanceof DoStatement) {
+        final DoStatement doStatement = (DoStatement) statement;
+        exits.addAll(exits(ast, doStatement::getBody, doStatement::setBody));
+      } else if (statement instanceof ForStatement) {
+        final ForStatement forStatement = (ForStatement) statement;
+        exits.addAll(exits(ast, forStatement::getBody, forStatement::setBody));
+      } else if (statement instanceof EnhancedForStatement) {
+        final EnhancedForStatement forStatement = (EnhancedForStatement) statement;
+        exits.addAll(exits(ast, forStatement::getBody, forStatement::setBody));
+      } else if (statement instanceof TryStatement) {
+        final TryStatement tryStatement = (TryStatement) statement;
+        exits.addAll(exits(ast, tryStatement::getBody, tryStatement::setBody));
+      } else if (statement instanceof SynchronizedStatement) {
+        final SynchronizedStatement synchronizedStatement = (SynchronizedStatement) statement;
+        exits.addAll(exits(ast, synchronizedStatement::getBody, synchronizedStatement::setBody));
+      } else if (isExit(statement)) {
+        exits.add(new StatementOfInterest(statement, j));
+      }
+    }
+    if (null != lastMention) exits.add(lastMention);
+    return exits;
+  }
+
+  private List<StatementOfInterest> exits(AST ast, Supplier<Statement> supplier, Consumer<Block> consumer) {
+    Statement body = supplier.get();
+    if (!(body instanceof Block) && isExit(body)) {
+      final Block newBlock = ast.newBlock();
+      newBlock.statements().add(ASTNode.copySubtree(ast, body));
+      consumer.accept(newBlock);
+      body = newBlock;
+    }
+    final List<StatementOfInterest> exits1;
+    if (body instanceof Block) {
+      final Block thenBlock = (Block) body;
+      exits1 = exits(thenBlock, 0, (thenBlock).statements().size());
+    } else {
+      exits1 = new ArrayList<>();
+    }
+    return exits1;
+  }
+
   protected Optional<MethodDeclaration> findMethod(@NotNull TypeDeclaration typeDeclaration, String name) {
     return Arrays.stream(typeDeclaration.getMethods()).filter(methodDeclaration -> methodDeclaration.getName().toString().equals(name)).findFirst();
   }
@@ -230,6 +260,78 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return lambdaIndex;
   }
 
+  @Nullable
+  private ArrayList<Integer> getTopTypeDelimiters(ASTNode node, String typeString) {
+    int nesting = 0;
+    ArrayList<Integer> delimiters = new ArrayList<>();
+    for (int i = 0; i < typeString.length(); i++) {
+      final char c = typeString.charAt(i);
+      if (c == '<') nesting++;
+      if (c == '>') nesting--;
+      if (c == ',' && nesting == 0) delimiters.add(i);
+    }
+    if (nesting != 0) {
+      warn(node, "Unbalanced type args: %s", typeString);
+      return null;
+    }
+    delimiters.add(typeString.length());
+    return delimiters;
+  }
+
+  protected Type getType(ASTNode node, @NotNull String name) {
+    @Nonnull AST ast = node.getAST();
+    if (name.endsWith("[]")) {
+      final ArrayType arrayType = ast.newArrayType(getType(node, name.substring(0, name.length() - 2)));
+      info(node, "Converted type string %s to %s", name, arrayType);
+      return arrayType;
+    } else if (name.contains("\\.")) {
+      final SimpleType simpleType = ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
+      info(node, "Converted type string %s to %s", name, simpleType);
+      return simpleType;
+    } else {
+      final PrimitiveType.Code typeCode = PrimitiveType.toCode(name);
+      if (null != typeCode) {
+        final PrimitiveType primitiveType = ast.newPrimitiveType(typeCode);
+        info(node, "Converted type string %s to %s", name, primitiveType);
+        return primitiveType;
+      } else {
+        final int typeArg = name.indexOf('<');
+        if (typeArg < 0) {
+          final SimpleType simpleType = ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
+          info(node, "Converted type string %s to %s", name, simpleType);
+          return simpleType;
+        } else {
+          if (!name.endsWith(">")) {
+            warn(node, "Unclosed type args: %s", name);
+            return null;
+          }
+          final String mainType = name.substring(0, typeArg);
+          final String innerType = name.substring(typeArg + 1, name.length() - 1);
+          ArrayList<Integer> delimiters = getTopTypeDelimiters(node, innerType);
+          if (delimiters == null) return null;
+          final ArrayList<Type> innerTypes = new ArrayList<>();
+          for (int i = 0; i < delimiters.size(); i++) {
+            final int to = delimiters.get(i);
+            final int from = i == 0 ? 0 : (delimiters.get(i - 1) + 1);
+            final String substring = innerType.substring(from, to);
+            final String wildcardPrefix = "? extends ";
+            if(substring.startsWith(wildcardPrefix)) {
+              final WildcardType wildcardType = ast.newWildcardType();
+              wildcardType.setBound(getType(node, substring.substring(wildcardPrefix.length())));
+              innerTypes.add(wildcardType);
+            } else {
+              innerTypes.add(getType(node, substring));
+            }
+          }
+          final ParameterizedType parameterizedType = ast.newParameterizedType(ast.newSimpleType(newQualifiedName(ast, mainType.split("\\."))));
+          parameterizedType.typeArguments().addAll(innerTypes);
+          info(node, "Converted type string %s to %s", name, parameterizedType);
+          return parameterizedType;
+        }
+      }
+    }
+  }
+
   @NotNull
   protected Type getType(@NotNull Expression node) {
     final ITypeBinding typeBinding = node.resolveTypeBinding();
@@ -237,7 +339,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
       warn(1, node, "Unresolved binding");
       return null;
     }
-    return getType(node.getAST(), typeBinding.getName());
+    return getType(node, typeBinding.getQualifiedName());
   }
 
   protected void info(ASTNode node, String formatString, Object... args) {
@@ -250,38 +352,37 @@ public abstract class FileAstVisitor extends ASTVisitor {
     logger.info(String.format(getFormatString(node, formatString, caller), Arrays.stream(args).map(o -> o == null ? null : o.toString().trim()).toArray()));
   }
 
-  @NotNull
-  protected List<IndexSymbols.Mention> lastMentions(@NotNull Block block, IBinding variable) {
-    final List statements = block.statements();
-    final ArrayList<IndexSymbols.Mention> mentions = new ArrayList<>();
-    IndexSymbols.Mention lastMention = null;
-    for (int j = 0; j < statements.size(); j++) {
-      final Statement statement = (Statement) statements.get(j);
-      if (statement instanceof IfStatement) {
-        final IfStatement ifStatement = (IfStatement) statement;
-        final Statement thenStatement = ifStatement.getThenStatement();
-        if (thenStatement instanceof Block) {
-          mentions.addAll(lastMentions((Block) thenStatement, variable)
-              .stream().filter(x -> x.isReturn()).collect(Collectors.toList()));
-        } else if (thenStatement instanceof ReturnStatement && contains(thenStatement, variable)) {
-          new IndexSymbols.Mention(block, j, thenStatement);
+  private boolean isExit(Statement statement) {
+    if (statement instanceof ReturnStatement) return true;
+    if (statement instanceof ThrowStatement) return true;
+    return false;
+  }
+
+  protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt) {
+    IBinding binding = variable.resolveBinding();
+    if (null == binding) {
+      warn(variable, "Unresolved binding");
+      return null;
+    } else {
+      final List statements = block.statements();
+      StatementOfInterest lastMention1 = null;
+      for (int j = startAt; j < statements.size(); j++) {
+        final Statement statement = (Statement) statements.get(j);
+        if (contains(statement, binding)) {
+          lastMention1 = new StatementOfInterest(statement, j);
         }
-        final Statement elseStatement = ifStatement.getElseStatement();
-        if (elseStatement instanceof Block) {
-          mentions.addAll(lastMentions((Block) elseStatement, variable)
-              .stream().filter(x -> x.isReturn()).collect(Collectors.toList()));
-        } else if (elseStatement instanceof ReturnStatement && contains(elseStatement, variable)) {
-          new IndexSymbols.Mention(block, j, elseStatement);
-        }
-        if (contains(ifStatement.getExpression(), variable)) {
-          lastMention = new IndexSymbols.Mention(block, j, ifStatement);
-        }
-      } else if (contains(statement, variable)) {
-        lastMention = new IndexSymbols.Mention(block, j, statement);
       }
+      final StatementOfInterest lastMention = lastMention1;
+      if (null == lastMention) {
+        info(variable, "No mentions of %s", variable);
+      } else {
+        info(variable, "Last mentions of %s: %s at line %s\"",
+            variable,
+            lastMention.statement.toString().trim(),
+            lastMention.line);
+      }
+      return lastMention;
     }
-    if (null != lastMention) mentions.add(lastMention);
-    return mentions;
   }
 
   @NotNull
@@ -373,11 +474,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   @NotNull
   protected String toString(StackTraceElement caller) {
     return caller.getFileName() + ":" + caller.getLineNumber();
-  }
-
-  @NotNull
-  protected String toString(IPackageBinding declaringClassPackage) {
-    return Arrays.stream(declaringClassPackage.getNameComponents()).reduce((a, b) -> a + "." + b).get();
   }
 
   protected void warn(ASTNode node, String formatString, Object... args) {

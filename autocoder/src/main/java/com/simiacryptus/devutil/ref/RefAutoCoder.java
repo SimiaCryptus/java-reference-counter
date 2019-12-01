@@ -21,17 +21,28 @@ package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.devutil.AutoCoder;
 import com.simiacryptus.devutil.ops.IndexSymbols;
+import com.simiacryptus.devutil.ops.LogNodes;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.IPackageBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RefAutoCoder extends AutoCoder {
 
-  private boolean verbose = true;
+  private boolean verbose = false;
   private boolean addRefcounting = true;
 
   public RefAutoCoder(@NotNull String pathname) {
     super(pathname);
+  }
+
+  @NotNull
+  public static String toString(IPackageBinding declaringClassPackage) {
+    return Arrays.stream(declaringClassPackage.getNameComponents()).reduce((a, b) -> a + "." + b).get();
   }
 
   public boolean isAddRefcounting() {
@@ -42,6 +53,18 @@ public class RefAutoCoder extends AutoCoder {
   public RefAutoCoder setAddRefcounting(boolean addRefcounting) {
     this.addRefcounting = addRefcounting;
     return this;
+  }
+
+  public boolean isRefAware(ITypeBinding declaringClass) {
+    return isRefAware(declaringClass.getPackage());
+  }
+
+  public boolean isRefAware(IMethodBinding methodBinding) {
+    return isRefAware(methodBinding.getDeclaringClass());
+  }
+
+  public boolean isRefAware(IPackageBinding classPackage) {
+    return toString(classPackage).startsWith("com.simiacryptus");
   }
 
   public boolean isVerbose() {
@@ -57,27 +80,26 @@ public class RefAutoCoder extends AutoCoder {
   @Override
   @Nonnull
   public void rewrite() {
-//    if (isVerbose()) rewrite((cu, file) -> new LogNodes(cu, file));
-    rewrite((cu, file) -> new RemoveRefs(cu, file));
-    rewrite((cu, file) -> new ReplaceTypes(cu, file, true));
-    while (rewrite((cu, file) -> new InlineRefs(cu, file)) > 0) {
+    if (isVerbose()) rewrite((cu, file) -> new LogNodes(cu, file));
+    rewrite((cu, file) -> new RemoveRefs(this, cu, file));
+    rewrite((cu, file) -> new ReplaceTypes(this, cu, file, true));
+    while (rewrite((cu, file) -> new InlineRefs(this, cu, file)) > 0) {
       logger.info("Re-running InlineRefs");
     }
-    while (rewrite((cu, file) -> new InlineTempVars(cu, file)) > 0) {
+    while (rewrite((cu, file) -> new InlineTempVars(this, cu, file)) > 0) {
       logger.info("Re-running InlineRefs");
     }
     if (isAddRefcounting()) {
-      rewrite((cu, file) -> new ReplaceTypes(cu, file, false));
-      rewrite((cu, file) -> new InsertMethods(cu, file));
-      rewrite((cu, file) -> new InsertAddRefs(cu, file));
-      rewrite((cu, file) -> new ModifyFieldSets(cu, file));
-      rewrite((cu, file) -> new InsertFreeRefs(cu, file));
-      final IndexSymbols.SymbolIndex index = getSymbolIndex();
-      rewrite((cu, file) -> new InstrumentClosures(cu, file, index));
-      // Test and fix complex function branching; return and throw and if, while, and for
-      // Optimize adjacent addRef / freeRef
-      // Identify Entry<?,?> objects and free
-      // addRef and freeRef for pure interfaces (just in case)
+      rewrite((cu, file) -> new ReplaceTypes(this, cu, file, false));
+      rewrite((cu, file) -> new InsertMethods(this, cu, file));
+      rewrite((cu, file) -> new InsertAddRefs(this, cu, file));
+      rewrite((cu, file) -> new ModifyFieldSets(this, cu, file));
+      rewrite((cu, file) -> new InsertFreeRefs(this, cu, file));
+      IndexSymbols.SymbolIndex index = getSymbolIndex();
+      rewrite((cu, file) -> new InstrumentClosures(this, cu, file, index));
+      // TODO: Mark ref-aware classes with annotations and use them to identify consumers
+      // TODO: Optimize adjacent addRef / freeRef
+      // TODO: Package as maven plugin
     }
   }
 

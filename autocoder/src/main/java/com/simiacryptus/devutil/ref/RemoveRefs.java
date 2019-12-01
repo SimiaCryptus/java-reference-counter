@@ -11,8 +11,8 @@ import java.util.List;
 
 class RemoveRefs extends RefFileAstVisitor {
 
-  RemoveRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  RemoveRefs(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
+    super(refAutoCoder, compilationUnit, file);
   }
 
   @Override
@@ -21,7 +21,7 @@ class RemoveRefs extends RefFileAstVisitor {
     if (derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "addRef");
       removeMethods(node, "freeRef");
-      removeMethods(node, "_free");
+      //removeMethods(node, "_free");
       removeMethods(node, "addRefs");
       removeMethods(node, "freeRefs");
     }

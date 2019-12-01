@@ -10,8 +10,8 @@ import java.util.List;
 
 class InlineRefs extends RefFileAstVisitor {
 
-  InlineRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  InlineRefs(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
+    super(refAutoCoder, compilationUnit, file);
   }
 
   @Override

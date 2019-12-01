@@ -9,8 +9,8 @@ import java.util.List;
 
 class InsertMethods extends RefFileAstVisitor {
 
-  public InsertMethods(CompilationUnit cu, File file) {
-    super(cu, file);
+  public InsertMethods(RefAutoCoder refAutoCoder, CompilationUnit cu, File file) {
+    super(refAutoCoder, cu, file);
   }
 
   @Override
@@ -18,7 +18,9 @@ class InsertMethods extends RefFileAstVisitor {
     if (derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
-      declarations.add(method_free(ast));
+      if(!findMethod(node, "_free").isPresent()) {
+        declarations.add(method_free(ast));
+      }
       declarations.add(method_addRef(ast, node.getName()));
       declarations.add(method_addRefs(ast, node.getName()));
       //declarations.add(method_freeRefs(ast, node.getName()));
@@ -137,57 +139,6 @@ class InsertMethods extends RefFileAstVisitor {
     superCall.setName(ast.newSimpleName("_free"));
     body.statements().add(ast.newExpressionStatement(superCall));
     methodDeclaration.setBody(body);
-    return methodDeclaration;
-  }
-
-  @NotNull
-  public MethodDeclaration method_freeRefs(@NotNull AST ast, @NotNull SimpleName name) {
-    final String fqTypeName = name.getFullyQualifiedName();
-    final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
-    methodDeclaration.setName(ast.newSimpleName("freeRefs"));
-
-    methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-    methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
-
-    final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
-    arg.setType(arrayType(ast, fqTypeName));
-    arg.setName(ast.newSimpleName("array"));
-    methodDeclaration.parameters().add(arg);
-
-    final MethodInvocation stream_invoke = ast.newMethodInvocation();
-    stream_invoke.setExpression(newQualifiedName(ast, "java.util.Arrays".split("\\.")));
-    stream_invoke.setName(ast.newSimpleName("stream"));
-    stream_invoke.arguments().add(ast.newSimpleName("array"));
-
-    final MethodInvocation filter_invoke = ast.newMethodInvocation();
-    {
-      filter_invoke.setExpression(stream_invoke);
-      filter_invoke.setName(ast.newSimpleName("filter"));
-      final LambdaExpression filter_lambda = ast.newLambdaExpression();
-      final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
-      variableDeclarationFragment.setName(ast.newSimpleName("x"));
-      filter_lambda.parameters().add(variableDeclarationFragment);
-      final InfixExpression infixExpression = ast.newInfixExpression();
-      infixExpression.setLeftOperand(ast.newSimpleName("x"));
-      infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
-      infixExpression.setRightOperand(ast.newNullLiteral());
-      filter_lambda.setBody(infixExpression);
-      filter_invoke.arguments().add(filter_lambda);
-    }
-
-    final MethodInvocation addref_invoke = ast.newMethodInvocation();
-    {
-      addref_invoke.setExpression(filter_invoke);
-      addref_invoke.setName(ast.newSimpleName("forEach"));
-      final ExpressionMethodReference body = ast.newExpressionMethodReference();
-      body.setExpression(ast.newSimpleName(fqTypeName));
-      body.setName(ast.newSimpleName("freeRef"));
-      addref_invoke.arguments().add(body);
-    }
-
-    final Block block = ast.newBlock();
-    block.statements().add(ast.newExpressionStatement(addref_invoke));
-    methodDeclaration.setBody(block);
     return methodDeclaration;
   }
 

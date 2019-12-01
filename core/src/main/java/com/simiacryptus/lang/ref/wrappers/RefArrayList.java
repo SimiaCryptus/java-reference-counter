@@ -202,6 +202,11 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
   }
 
   @Override
+  public RefSpliterator<T> spliterator() {
+    return new RefSpliterator<>(Spliterators.spliterator(inner, Spliterator.ORDERED));
+  }
+
+  @Override
   public final RefStream<T> stream() {
     return new RefStream<T>(inner.stream());
   }
@@ -230,10 +235,5 @@ public class RefArrayList<T> extends ReferenceCountingBase implements RefList<T>
       RefUtil.addRef(x);
     }
     return returnValue;
-  }
-
-  @Override
-  public RefSpliterator<T> spliterator() {
-    return new RefSpliterator<>(Spliterators.spliterator(inner, Spliterator.ORDERED));
   }
 }

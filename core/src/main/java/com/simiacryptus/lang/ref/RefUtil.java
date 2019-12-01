@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -16,9 +17,12 @@ public class RefUtil {
     if (null != value) {
       if (value instanceof ReferenceCounting) {
         ((ReferenceCounting) value).freeRef();
+      } else if (value instanceof Map.Entry) {
+        freeRef(((Map.Entry) value).getKey());
+        freeRef(((Map.Entry) value).getValue());
       } else if (value instanceof Optional) {
         final Optional optional = (Optional) value;
-        if(optional.isPresent()) freeRef(optional.get());
+        if (optional.isPresent()) freeRef(optional.get());
       }
     }
   }

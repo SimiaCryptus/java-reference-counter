@@ -11,8 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Test {
   static {
-    System.setProperty("DEBUG_LIFECYCLE","true");
+    System.setProperty("DEBUG_LIFECYCLE", "true");
   }
+
   @org.junit.Test
   public void test() throws InterruptedException {
     ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory
@@ -36,6 +37,7 @@ public class Test {
     TestOperations.main();
     System.gc();
     Thread.sleep(1000);
-    if (0 != bytes.get()) throw new AssertionError();
+    if (0 != bytes.get())
+      throw new AssertionError();
   }
 }
