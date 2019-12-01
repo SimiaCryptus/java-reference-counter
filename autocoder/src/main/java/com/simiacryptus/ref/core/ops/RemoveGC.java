@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -27,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+@RefCoderIgnore
 class RemoveGC extends FileAstVisitor {
 
   RemoveGC(CompilationUnit compilationUnit, File file) {

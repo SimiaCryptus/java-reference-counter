@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.mvn;
 
 import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.execution.MavenSession;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public abstract class BaseMojo extends AbstractMojo {
   @Parameter(defaultValue = "${basedir}", required = true, readonly = true)
   private File basedir;
@@ -59,7 +61,7 @@ public abstract class BaseMojo extends AbstractMojo {
     return Stream.concat(
         project.getTestCompileSourceRoots().stream(),
         project.getCompileSourceRoots().stream()
-    ).toArray(i -> new String[i]);
+    ).filter(s->new File(s).exists()).toArray(i -> new String[i]);
   }
 
   public ArtifactResolutionResult resolve() {

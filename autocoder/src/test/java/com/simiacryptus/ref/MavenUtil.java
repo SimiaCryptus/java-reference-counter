@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -48,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+@RefCoderIgnore
 public class MavenUtil {
   public static MavenProject getMavenProject(File pom, final DefaultPlexusContainer container, final DefaultRepositorySystemSession session) throws ProjectBuildingException, org.codehaus.plexus.component.repository.exception.ComponentLookupException {
     DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();

@@ -20,10 +20,12 @@
 package com.simiacryptus.ref.mvn;
 
 import com.simiacryptus.ref.RefAutoCoder;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 
 @Mojo(name = "remove")
+@RefCoderIgnore
 public class RemoveMojo extends BaseMojo {
   public void execute() throws MojoExecutionException {
     new RefAutoCoder(getProjectInfo()).setAddRefcounting(false).rewrite();

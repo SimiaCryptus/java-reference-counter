@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.List;
 
+@RefCoderIgnore
 public class InsertMethods extends RefFileAstVisitor {
 
   public InsertMethods(CompilationUnit cu, File file) {

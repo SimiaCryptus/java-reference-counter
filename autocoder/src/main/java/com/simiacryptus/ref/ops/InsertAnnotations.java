@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
@@ -27,6 +28,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.io.File;
 
+@RefCoderIgnore
 public class InsertAnnotations extends RefFileAstVisitor {
 
   public InsertAnnotations(CompilationUnit compilationUnit, File file) {

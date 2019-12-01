@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.IndexSymbols;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -40,6 +41,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
+@RefCoderIgnore
 public abstract class AutoCoder extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
   @NotNull

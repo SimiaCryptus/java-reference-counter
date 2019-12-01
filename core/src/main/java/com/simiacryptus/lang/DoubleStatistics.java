@@ -19,10 +19,13 @@
 
 package com.simiacryptus.lang;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
+
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.Collector;
 
+@RefCoderIgnore
 public class DoubleStatistics extends DoubleSummaryStatistics {
 
   @javax.annotation.Nonnull

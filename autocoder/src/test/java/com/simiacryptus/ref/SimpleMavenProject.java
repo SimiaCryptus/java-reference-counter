@@ -20,6 +20,7 @@
 package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.maven.project.*;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
@@ -38,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public class SimpleMavenProject {
   private static final File repositoryLocation = new File(System.getProperty("user.home"), ".m2/repository");
   private static final Logger logger = LoggerFactory.getLogger(SimpleMavenProject.class);

@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -26,6 +27,7 @@ import org.eclipse.jdt.core.dom.Statement;
 
 import javax.annotation.Nonnull;
 
+@RefCoderIgnore
 public class StatementOfInterest {
   public final int line;
   public final Statement statement;

@@ -20,12 +20,14 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.StatementOfInterest;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 
+@RefCoderIgnore
 public class OptimizeRefs extends RefFileAstVisitor {
 
   public OptimizeRefs(CompilationUnit compilationUnit, File file) {

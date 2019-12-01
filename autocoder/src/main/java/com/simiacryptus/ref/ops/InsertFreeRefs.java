@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.StatementOfInterest;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public class InsertFreeRefs extends RefFileAstVisitor {
 
   public InsertFreeRefs(CompilationUnit compilationUnit, File file) {

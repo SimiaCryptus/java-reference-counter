@@ -19,11 +19,13 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+@RefCoderIgnore
 public class ModifyFieldSets extends RefFileAstVisitor {
 
   public ModifyFieldSets(CompilationUnit compilationUnit, File file) {

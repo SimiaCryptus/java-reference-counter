@@ -23,6 +23,7 @@ import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.core.ops.LogNodes;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
+@RefCoderIgnore
 public class RefAutoCoder extends AutoCoder {
 
   private boolean verbose = false;
