@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2019 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.devutil.ops;
 
 import org.eclipse.jdt.core.dom.*;
@@ -315,7 +334,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
             final int from = i == 0 ? 0 : (delimiters.get(i - 1) + 1);
             final String substring = innerType.substring(from, to);
             final String wildcardPrefix = "? extends ";
-            if(substring.startsWith(wildcardPrefix)) {
+            if (substring.startsWith(wildcardPrefix)) {
               final WildcardType wildcardType = ast.newWildcardType();
               wildcardType.setBound(getType(node, substring.substring(wildcardPrefix.length())));
               innerTypes.add(wildcardType);
@@ -359,6 +378,10 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt) {
+    return lastMention(block, variable, startAt, block.statements().size());
+  }
+
+  protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt, int endAt) {
     IBinding binding = variable.resolveBinding();
     if (null == binding) {
       warn(variable, "Unresolved binding");
@@ -366,7 +389,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     } else {
       final List statements = block.statements();
       StatementOfInterest lastMention1 = null;
-      for (int j = startAt; j < statements.size(); j++) {
+      for (int j = startAt; j < endAt; j++) {
         final Statement statement = (Statement) statements.get(j);
         if (contains(statement, binding)) {
           lastMention1 = new StatementOfInterest(statement, j);

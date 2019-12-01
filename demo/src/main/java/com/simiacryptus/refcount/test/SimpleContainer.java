@@ -2,7 +2,7 @@ package com.simiacryptus.refcount.test;
 
 import com.simiacryptus.lang.ref.ReferenceCountingBase;
 
-public class SimpleContainer extends ReferenceCountingBase {
+public @com.simiacryptus.lang.ref.RefAware class SimpleContainer extends ReferenceCountingBase {
   public BasicType value;
 
   public SimpleContainer() {
@@ -10,7 +10,15 @@ public class SimpleContainer extends ReferenceCountingBase {
   }
 
   public SimpleContainer(BasicType value) {
+    if (null != this.value)
+      this.value.freeRef();
     this.value = value;
+  }
+
+  public @Override void _free() {
+    if (null != value)
+      value.freeRef();
+    super._free();
   }
 
   @Override
@@ -23,7 +31,12 @@ public class SimpleContainer extends ReferenceCountingBase {
     this.value.value++;
   }
 
-  public @Override void _free() {
-    super._free();
+  public @Override SimpleContainer addRef() {
+    return (SimpleContainer) super.addRef();
+  }
+
+  public static SimpleContainer[] addRefs(SimpleContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRef)
+        .toArray((x) -> new SimpleContainer[x]);
   }
 }

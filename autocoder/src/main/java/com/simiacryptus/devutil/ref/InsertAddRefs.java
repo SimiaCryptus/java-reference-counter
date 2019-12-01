@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2019 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.lang.ref.RefUtil;
@@ -11,8 +30,8 @@ import java.util.List;
 
 class InsertAddRefs extends RefFileAstVisitor {
 
-  InsertAddRefs(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
-    super(refAutoCoder, compilationUnit, file);
+  InsertAddRefs(CompilationUnit compilationUnit, File file) {
+    super(compilationUnit, file);
   }
 
   @NotNull
@@ -25,7 +44,8 @@ class InsertAddRefs extends RefFileAstVisitor {
       methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
       methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
       return methodInvocation;
-    } if (type.isInterface()) {
+    }
+    if (type.isInterface()) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRef"));
       methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
@@ -53,7 +73,7 @@ class InsertAddRefs extends RefFileAstVisitor {
       } else if (arg instanceof Expression) {
         final Expression expression = (Expression) arg;
         final ITypeBinding resolveTypeBinding = expression.resolveTypeBinding();
-        if(null == resolveTypeBinding) {
+        if (null == resolveTypeBinding) {
           warn(arg, "Unresolved binding");
           return;
         }
@@ -148,7 +168,7 @@ class InsertAddRefs extends RefFileAstVisitor {
   }
 
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
-    return refAutoCoder.isRefAware(declaringClass);
+    return isRefAware(declaringClass);
   }
 
   @Nullable
