@@ -17,18 +17,19 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
-import com.simiacryptus.devutil.ops.StatementOfInterest;
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
+import com.simiacryptus.devutil.core.ops.StatementOfInterest;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 
-class OptimizeRefs extends RefFileAstVisitor {
+public class OptimizeRefs extends RefFileAstVisitor {
 
-  OptimizeRefs(CompilationUnit compilationUnit, File file) {
+  public OptimizeRefs(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 
@@ -88,8 +89,12 @@ class OptimizeRefs extends RefFileAstVisitor {
       final Statement statement = (Statement) block.statements().get(i);
       statement.accept(new ASTVisitor() {
         @Override
-        public boolean visit(AnonymousClassDeclaration node) {
-          return false;
+        public void endVisit(MethodInvocation addRefNode) {
+          if (addRefNode.getName().toString().equals("addRef")) {
+            if (addRefNode.getExpression().toString().equals(subject.toString())) {
+              addRefInvocations.add(addRefNode);
+            }
+          }
         }
 
         @Override
@@ -98,12 +103,8 @@ class OptimizeRefs extends RefFileAstVisitor {
         }
 
         @Override
-        public void endVisit(MethodInvocation addRefNode) {
-          if (addRefNode.getName().toString().equals("addRef")) {
-            if (addRefNode.getExpression().toString().equals(subject.toString())) {
-              addRefInvocations.add(addRefNode);
-            }
-          }
+        public boolean visit(AnonymousClassDeclaration node) {
+          return false;
         }
       });
       if (!addRefInvocations.isEmpty()) {

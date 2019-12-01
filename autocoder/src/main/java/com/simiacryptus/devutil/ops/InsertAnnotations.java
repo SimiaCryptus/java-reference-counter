@@ -17,33 +17,30 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
 import com.simiacryptus.lang.ref.RefAware;
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.io.File;
-import java.util.Iterator;
 
-class RemoveAnnotations extends RefFileAstVisitor {
+public class InsertAnnotations extends RefFileAstVisitor {
 
-  RemoveAnnotations(CompilationUnit compilationUnit, File file) {
+  public InsertAnnotations(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 
   @Override
   public void endVisit(TypeDeclaration node) {
-    final Iterator iterator = node.modifiers().iterator();
-    while (iterator.hasNext()) {
-      final Object next = iterator.next();
-      if (next instanceof MarkerAnnotation) {
-        if (((MarkerAnnotation) next).getTypeName().getFullyQualifiedName().equals(RefAware.class.getCanonicalName())) {
-          info(node, "Removed @RefAware from %s", node.getName());
-          iterator.remove();
-        }
-      }
-    }
+    final AST ast = node.getAST();
+    final MarkerAnnotation annotation = ast.newMarkerAnnotation();
+    annotation.setTypeName(newQualifiedName(ast, RefAware.class));
+    node.modifiers().add(annotation);
+    info(node, "Added @RefAware to %s", node.getName());
+    super.endVisit(node);
   }
 }

@@ -17,8 +17,9 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +28,9 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 
-class InlineRefs extends RefFileAstVisitor {
+public class InlineRefs extends RefFileAstVisitor {
 
-  InlineRefs(CompilationUnit compilationUnit, File file) {
+  public InlineRefs(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 

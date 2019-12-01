@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
 import com.simiacryptus.lang.ref.RefUtil;
 import com.simiacryptus.lang.ref.ReferenceCounting;
@@ -28,9 +28,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-class RemoveRefs extends RefFileAstVisitor {
+public class RemoveRefs extends RefFileAstVisitor {
 
-  RemoveRefs(CompilationUnit compilationUnit, File file) {
+  public RemoveRefs(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 

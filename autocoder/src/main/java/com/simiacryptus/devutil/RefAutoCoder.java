@@ -17,11 +17,13 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil;
 
-import com.simiacryptus.devutil.AutoCoder;
-import com.simiacryptus.devutil.ops.IndexSymbols;
-import com.simiacryptus.devutil.ops.LogNodes;
+import com.simiacryptus.devutil.core.AutoCoder;
+import com.simiacryptus.devutil.core.ProjectInfo;
+import com.simiacryptus.devutil.core.ops.IndexSymbols;
+import com.simiacryptus.devutil.core.ops.LogNodes;
+import com.simiacryptus.devutil.ops.*;
 import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,8 +35,8 @@ public class RefAutoCoder extends AutoCoder {
   private boolean verbose = false;
   private boolean addRefcounting = true;
 
-  public RefAutoCoder(@NotNull String pathname) {
-    super(pathname);
+  public RefAutoCoder(ProjectInfo projectInfo) {
+    super(projectInfo);
   }
 
   @NotNull
@@ -65,26 +67,26 @@ public class RefAutoCoder extends AutoCoder {
   @Override
   @Nonnull
   public void rewrite() {
-    if (isVerbose()) rewrite((cu, file) -> new LogNodes(cu, file));
-    rewrite((cu, file) -> new RemoveAnnotations(cu, file));
-    rewrite((cu, file) -> new RemoveRefs(cu, file));
+    if (isVerbose()) rewrite(LogNodes::new);
+    rewrite(RemoveAnnotations::new);
+    rewrite(RemoveRefs::new);
     rewrite((cu, file) -> new ReplaceTypes(cu, file, true));
-    while (rewrite((cu, file) -> new InlineRefs(cu, file)) > 0) {
+    while (rewrite(InlineRefs::new) > 0) {
       logger.info("Re-running InlineRefs");
     }
-    while (rewrite((cu, file) -> new InlineTempVars(cu, file)) > 0) {
+    while (rewrite(InlineTempVars::new) > 0) {
       logger.info("Re-running InlineRefs");
     }
     if (isAddRefcounting()) {
-      rewrite((cu, file) -> new InsertAnnotations(cu, file));
+      rewrite(InsertAnnotations::new);
       rewrite((cu, file) -> new ReplaceTypes(cu, file, false));
-      rewrite((cu, file) -> new InsertMethods(cu, file));
-      rewrite((cu, file) -> new InsertAddRefs(cu, file));
-      rewrite((cu, file) -> new ModifyFieldSets(cu, file));
-      rewrite((cu, file) -> new InsertFreeRefs(cu, file));
+      rewrite(InsertMethods::new);
+      rewrite(InsertAddRefs::new);
+      rewrite(ModifyFieldSets::new);
+      rewrite(InsertFreeRefs::new);
       IndexSymbols.SymbolIndex index = getSymbolIndex();
       rewrite((cu, file) -> new InstrumentClosures(cu, file, index));
-      rewrite((cu, file) -> new OptimizeRefs(cu, file));
+      rewrite(OptimizeRefs::new);
     }
   }
 

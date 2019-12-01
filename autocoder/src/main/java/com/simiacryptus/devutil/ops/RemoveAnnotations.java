@@ -19,29 +19,31 @@
 
 package com.simiacryptus.devutil.ops;
 
+import com.simiacryptus.lang.ref.RefAware;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.jetbrains.annotations.NotNull;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.io.File;
+import java.util.Iterator;
 
-class RemoveGC extends FileAstVisitor {
+public class RemoveAnnotations extends RefFileAstVisitor {
 
-  RemoveGC(CompilationUnit compilationUnit, File file) {
+  public RemoveAnnotations(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull MethodInvocation node) {
-    final Expression expression = node.getExpression();
-    if (null == expression) return;
-    final ITypeBinding typeBinding = expression.resolveTypeBinding();
-    final String binaryName = typeBinding.getBinaryName();
-    if (null != binaryName && binaryName.equals(System.class.getCanonicalName())) {
-      node.getParent().delete();
+  public void endVisit(TypeDeclaration node) {
+    final Iterator iterator = node.modifiers().iterator();
+    while (iterator.hasNext()) {
+      final Object next = iterator.next();
+      if (next instanceof MarkerAnnotation) {
+        if (((MarkerAnnotation) next).getTypeName().getFullyQualifiedName().equals(RefAware.class.getCanonicalName())) {
+          info(node, "Removed @RefAware from %s", node.getName());
+          iterator.remove();
+        }
+      }
     }
   }
-
 }

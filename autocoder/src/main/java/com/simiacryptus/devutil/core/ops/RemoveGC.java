@@ -17,29 +17,31 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.core.ops;
 
-import com.simiacryptus.lang.ref.RefAware;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MarkerAnnotation;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-class InsertAnnotations extends RefFileAstVisitor {
+class RemoveGC extends FileAstVisitor {
 
-  InsertAnnotations(CompilationUnit compilationUnit, File file) {
+  RemoveGC(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 
   @Override
-  public void endVisit(TypeDeclaration node) {
-    final AST ast = node.getAST();
-    final MarkerAnnotation annotation = ast.newMarkerAnnotation();
-    annotation.setTypeName(newQualifiedName(ast, RefAware.class));
-    node.modifiers().add(annotation);
-    info(node, "Added @RefAware to %s", node.getName());
-    super.endVisit(node);
+  public void endVisit(@NotNull MethodInvocation node) {
+    final Expression expression = node.getExpression();
+    if (null == expression) return;
+    final ITypeBinding typeBinding = expression.resolveTypeBinding();
+    final String binaryName = typeBinding.getBinaryName();
+    if (null != binaryName && binaryName.equals(System.class.getCanonicalName())) {
+      node.getParent().delete();
+    }
   }
+
 }

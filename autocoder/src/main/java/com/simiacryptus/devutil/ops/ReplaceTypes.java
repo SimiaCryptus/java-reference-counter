@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -30,11 +30,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class ReplaceTypes extends RefFileAstVisitor {
+public class ReplaceTypes extends RefFileAstVisitor {
 
   private Map<String, String> replacements;
 
-  ReplaceTypes(CompilationUnit compilationUnit, File file, boolean invert) {
+  public ReplaceTypes(CompilationUnit compilationUnit, File file, boolean invert) {
     this(compilationUnit, file, classMapping(invert));
   }
 

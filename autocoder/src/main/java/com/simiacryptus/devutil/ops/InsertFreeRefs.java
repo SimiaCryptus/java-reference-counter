@@ -17,9 +17,10 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ref;
+package com.simiacryptus.devutil.ops;
 
-import com.simiacryptus.devutil.ops.StatementOfInterest;
+import com.simiacryptus.devutil.ops.RefFileAstVisitor;
+import com.simiacryptus.devutil.core.ops.StatementOfInterest;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,9 +36,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-class InsertFreeRefs extends RefFileAstVisitor {
+public class InsertFreeRefs extends RefFileAstVisitor {
 
-  InsertFreeRefs(CompilationUnit compilationUnit, File file) {
+  public InsertFreeRefs(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 
