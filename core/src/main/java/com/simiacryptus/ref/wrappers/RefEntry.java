@@ -20,12 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
 
 @RefAware
+@RefCoderIgnore
 public class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
 
   private final K key;

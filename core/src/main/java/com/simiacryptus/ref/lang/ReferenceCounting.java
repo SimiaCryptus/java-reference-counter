@@ -23,28 +23,45 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-@RefAware
+@RefAware @RefCoderIgnore
 public interface ReferenceCounting {
 
   static <T extends ReferenceCounting> void freeRefs(@NotNull T[] array) {
     java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
   }
 
-  ReferenceCounting addRef();
+  default ReferenceCounting addRef() {
+    return this;
+  }
 
-  boolean assertAlive();
+  default boolean assertAlive() {
+    return true;
+  }
 
-  int currentRefCount();
+  default int currentRefCount() {
+    return 1;
+  }
 
-  ReferenceCounting detach();
+  default ReferenceCounting detach() {
+    return this;
+  }
 
-  int freeRef();
+  default int freeRef() {
+    return 0;
+  }
 
-  void freeRefAsync();
+  default void freeRefAsync() {
+  }
 
-  UUID getObjectId();
+  default UUID getObjectId() {
+    throw new RuntimeException("Not Implemented");
+  }
 
-  boolean isFinalized();
+  default boolean isFinalized() {
+    return false;
+  }
 
-  boolean tryAddRef();
+  default boolean tryAddRef() {
+    return true;
+  }
 }

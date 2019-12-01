@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RefAware
+@RefCoderIgnore
 public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, V> inner;

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @RefAware
+@RefCoderIgnore
 public class ReferenceWrapper<T> {
   final T obj;
   final Consumer<T> destructor;

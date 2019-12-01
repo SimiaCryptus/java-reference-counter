@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,8 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 @RefAware
-class RefSpliterator<T> implements Spliterator<T> {
+@RefCoderIgnore
+public class RefSpliterator<T> implements Spliterator<T> {
   private final Spliterator<T> inner;
 
   public RefSpliterator(Spliterator<T> inner) {

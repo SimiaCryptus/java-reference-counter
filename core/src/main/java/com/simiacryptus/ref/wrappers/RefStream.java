@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +30,7 @@ import java.util.function.*;
 import java.util.stream.*;
 
 @RefAware
+@RefCoderIgnore
 public class RefStream<T> implements Stream<T> {
   private Stream<T> inner;
   private List<ReferenceCounting> lambdas;

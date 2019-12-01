@@ -1,27 +1,8 @@
-/*
- * Copyright (c) 2019 by Andrew Charneski.
- *
- * The author licenses this file to you under the
- * Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance
- * with the License.  You may obtain a copy
- * of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-
-import java.util.function.Consumer;
+import com.simiacryptus.ref.wrappers.RefConsumer;
+import java.util.HashSet;
 
 public class SetContainer extends ReferenceCountingBase {
   public java.util.HashSet<BasicType> values = new java.util.HashSet<>();
@@ -37,6 +18,7 @@ public class SetContainer extends ReferenceCountingBase {
       values.stream().forEach(x -> {
         x.value++;
       });
+      values.stream();
     });
   }
 
@@ -51,8 +33,10 @@ public class SetContainer extends ReferenceCountingBase {
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[]{}).length)
+      if (values.size() != values.toArray(new BasicType[] {}).length) {
         throw new RuntimeException();
+      }
+      values.toArray(new BasicType[] {});
     });
   }
 
@@ -71,6 +55,7 @@ public class SetContainer extends ReferenceCountingBase {
       if (values.add(values.iterator().next())) {
         throw new RuntimeException();
       }
+      values.iterator();
       if (!values.contains(basicType1)) {
         throw new RuntimeException();
       }
@@ -89,13 +74,12 @@ public class SetContainer extends ReferenceCountingBase {
     });
   }
 
-  private static void testOperations(Consumer<java.util.HashSet<BasicType>> fn) {
+  private static void testOperations(RefConsumer<java.util.HashSet<BasicType>> fn) {
     java.util.HashSet<BasicType> values = new java.util.HashSet<>();
     fn.accept(values);
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 
@@ -112,21 +96,21 @@ public class SetContainer extends ReferenceCountingBase {
   }
 
   private void testCollectionOperations() {
-    testOperations(values -> {
-      values.add(new BasicType());
+    testOperations(setValues -> {
+      setValues.add(new BasicType());
       final BasicType basicType = new BasicType();
       final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);
-      if (!values.addAll(list)) {
+      if (!setValues.addAll(list)) {
         throw new RuntimeException();
       }
-      if (!values.containsAll(list)) {
+      if (!setValues.containsAll(list)) {
         throw new RuntimeException();
       }
-      if (!values.retainAll(list)) {
+      if (!setValues.retainAll(list)) {
         throw new RuntimeException();
       }
-      values.removeAll(list);
-      if (!values.isEmpty())
+      setValues.removeAll(list);
+      if (!setValues.isEmpty())
         throw new RuntimeException();
     });
   }

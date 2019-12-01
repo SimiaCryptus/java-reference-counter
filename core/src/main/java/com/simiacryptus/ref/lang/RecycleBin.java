@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 import static com.simiacryptus.ref.lang.PersistanceMode.WEAK;
 
 @RefAware
+@RefCoderIgnore
 public abstract class RecycleBin<T> {
 
   public static final RecycleBin<double[]> DOUBLES = new RecycleBin<double[]>() {

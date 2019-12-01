@@ -21,6 +21,7 @@ package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
@@ -29,11 +30,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 abstract class RefFileAstVisitor extends FileAstVisitor {
 
@@ -51,7 +49,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
     ifStatement.setExpression(infixExpression);
     if (null == typeBinding) {
-      info(node, "Cannot add freeRef (binding not resolved)");
+      info(1, node, "Cannot add freeRef (binding not resolved)");
     } else {
       ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(node, typeBinding)));
       info(1, node, "Added freeRef");
@@ -65,45 +63,18 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     return ast.newExpressionStatement(newFreeRefUtil(node, typeBinding));
   }
 
-  @Nullable
-  protected Block getBlock(ASTNode node) {
-    final ASTNode parent = node.getParent();
-    if (parent == null) {
-      return null;
-    } else if (parent instanceof Block) {
-      return (Block) parent;
-    } else if (parent instanceof MethodDeclaration) {
-      return null;
-    } else if (parent instanceof LambdaExpression) {
-      return null;
-    } else if (parent instanceof TypeDeclaration) {
-      return null;
-    } else {
-      return getBlock(parent);
-    }
-  }
-
-  protected int getLineNumber(Block block, ASTNode node) {
-    final List statements = block.statements();
-    return IntStream.range(0, statements.size()).filter(i -> contains((ASTNode) statements.get(i), node)).findFirst().orElse(-1);
-  }
-
   protected ITypeBinding getTypeBinding(@NotNull VariableDeclaration declaration) {
     final IVariableBinding iVariableBinding = declaration.resolveBinding();
     if (iVariableBinding == null) {
-      warn(declaration, "Cannot resolve method of %s", declaration);
+      warn(1, declaration, "Cannot resolve method of %s", declaration);
       return null;
     }
     return iVariableBinding.getType();
   }
 
   public boolean isRefAware(ITypeBinding declaringClass) {
-    return Arrays.stream(declaringClass.getAnnotations())
-        .anyMatch(annotation -> annotation.getAnnotationType().getQualifiedName().equals(RefAware.class.getCanonicalName()));
-  }
-
-  public boolean isRefAware(IMethodBinding methodBinding) {
-    return isRefAware(methodBinding.getDeclaringClass());
+    if(declaringClass.getTypeDeclaration().getQualifiedName().equals(Map.Entry.class.getCanonicalName())) return true;
+    return hasAnnotation(declaringClass, RefAware.class);
   }
 
   protected boolean isRefCounted(ASTNode node, @NotNull ITypeBinding typeBinding) {
@@ -112,7 +83,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     if (typeBinding.getTypeDeclaration().getQualifiedName().equals(Optional.class.getCanonicalName())) {
       final ITypeBinding[] typeArguments = typeBinding.getTypeArguments();
       if (null == typeArguments || 0 == typeArguments.length) {
-        warn(node, "No type argument for Optional");
+        warn(1, node, "No type argument for Optional");
       }
       return isRefCounted(node, typeArguments[0]);
     }
@@ -122,43 +93,34 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       type = typeBinding;
     }
     if (type.isInterface() && !(node instanceof LambdaExpression)) {
-      info(node, "Is potentially refcounted interface: %s (%s)", node, type);
+      info(1, node, "Is potentially refcounted interface: %s (%s)", node, type);
       return true;
     }
     if (derives(type, ReferenceCounting.class)) {
-      info(node, "Derives ReferenceCounting: %s (%s)", node, type);
+      info(1, node, "Derives ReferenceCounting: %s (%s)", node, type);
       return true;
     }
     if (derives(type, Map.Entry.class)) {
-      info(node, "Derives Map.Entry: %s (%s)", node, type);
+      info(1, node, "Derives Map.Entry: %s (%s)", node, type);
       return true;
     }
     if (isRefAware(typeBinding)) {
-      info(node, "Marked with @RefAware: %s (%s)", node, type);
+      info(1, node, "Marked with @RefAware: %s (%s)", node, type);
       return true;
     }
     debug(node, "Not refcounted: %s (%s)", node, type);
     return false;
   }
 
-  protected boolean methodConsumesRefs(@Nonnull IMethodBinding methodBinding, ASTNode node) {
-    final String qualifiedName = methodBinding.getDeclaringClass().getQualifiedName();
+  protected boolean consumesRefs(@Nonnull IMethodBinding methodBinding, ITypeBinding expression) {
     final String methodName = methodBinding.getName();
-    if (qualifiedName.equals(String.class.getCanonicalName())) {
-      if (methodName.equals("format")) {
-        return false;
-      }
-    }
-    //Arrays.toString
     if (methodName.equals("addRefs")) {
       return false;
     }
     if (methodName.equals("freeRefs")) {
       return false;
     }
-    if (isRefAware(methodBinding)) return true;
-    warn(1, node, "Not sure if %s consumes refs", methodBinding);
-    return true;
+    return null==expression?isRefAware(methodBinding.getDeclaringClass()):isRefAware(expression);
   }
 
   protected boolean methodConsumesSelfRefs(@Nonnull IMethodBinding methodBinding) {
@@ -256,5 +218,12 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       methodInvocation.setExpression((Expression) ASTNode.copySubtree(ast, expression));
       return methodInvocation;
     }
+  }
+
+  @Override
+  public boolean visit(TypeDeclaration node) {
+    final ITypeBinding binding = node.resolveBinding();
+    if(null != binding && hasAnnotation(binding, RefCoderIgnore.class)) return false;
+    return super.visit(node);
   }
 }

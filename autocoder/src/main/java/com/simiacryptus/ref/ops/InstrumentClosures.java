@@ -152,6 +152,15 @@ public class InstrumentClosures extends RefFileAstVisitor {
           addRefInvoke.setName(ast.newSimpleName("addRef"));
           methodInvocation.arguments().add(addRefInvoke);
         }
+      } else if (closureNode instanceof VariableDeclarationFragment) {
+        final MethodInvocation addRefInvoke = ast.newMethodInvocation();
+        final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) closureNode;
+        final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
+        if (isRefCounted(node, type)) {
+          addRefInvoke.setExpression((Name) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()));
+          addRefInvoke.setName(ast.newSimpleName("addRef"));
+          methodInvocation.arguments().add(addRefInvoke);
+        }
       } else {
         warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());
       }

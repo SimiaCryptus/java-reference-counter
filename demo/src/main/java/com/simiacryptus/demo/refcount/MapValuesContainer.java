@@ -1,26 +1,8 @@
-/*
- * Copyright (c) 2019 by Andrew Charneski.
- *
- * The author licenses this file to you under the
- * Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance
- * with the License.  You may obtain a copy
- * of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-
+import com.simiacryptus.ref.wrappers.RefConsumer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -64,12 +46,11 @@ public class MapValuesContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 
-  private void test(Consumer<java.util.HashMap<Integer, BasicType>> fn) {
+  private void test(RefConsumer<java.util.HashMap<Integer, BasicType>> fn) {
     final java.util.HashMap<Integer, BasicType> hashMap = new java.util.HashMap<>();
     fn.accept(hashMap);
   }
@@ -104,43 +85,43 @@ public class MapValuesContainer extends ReferenceCountingBase {
     test((java.util.HashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.HashMap<Integer, BasicType> targetMap = new java.util.HashMap<>();
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = entry -> {
-        if (1 == ((int) entry.getKey())) {
-          if (null == entry.getValue()) {
+      final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = lambdaParameter -> {
+        if (1 == ((int) lambdaParameter.getKey())) {
+          if (null == lambdaParameter.getValue()) {
             throw new AssertionError();
           }
         } else {
-          if (null == entry.getValue()) {
+          if (null == lambdaParameter.getValue()) {
             return;
           }
         }
-        targetMap.put(entry.getKey(), entry.getValue());
+        closureMap.put(lambdaParameter.getKey(), lambdaParameter.getValue());
       };
       values.entrySet().forEach(entryConsumer);
-      assert targetMap.size() == values.size();
+      assert closureMap.size() == values.size();
     });
     test((java.util.HashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.HashMap<Integer, BasicType> targetMap = new java.util.HashMap<>();
+      final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
-        public void accept(Map.Entry<Integer, BasicType> entry) {
-          if (1 == ((int) entry.getKey())) {
-            if (null == entry.getValue()) {
+        public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
+          if (1 == ((int) anonymousParameter.getKey())) {
+            if (null == anonymousParameter.getValue()) {
               throw new AssertionError();
             }
           } else {
-            if (null == entry.getValue()) {
+            if (null == anonymousParameter.getValue()) {
               return;
             }
           }
-          targetMap.put(entry.getKey(), entry.getValue());
+          closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
         }
       };
       values.entrySet().forEach(entryConsumer);
-      assert targetMap.size() == values.size();
+      assert closureMap.size() == values.size();
     });
   }
 

@@ -166,7 +166,8 @@ public class InsertFreeRefs extends RefFileAstVisitor {
           warn(methodInvocation, "Unresolved Binding: %s", methodInvocation);
           return;
         }
-        if (contains(methodInvocation.getExpression(), node)) {
+        final Expression expression = methodInvocation.getExpression();
+        if (contains(expression, node)) {
           if (!methodConsumesSelfRefs(methodBinding)) {
             info(node, "Adding freeref for Ref-returning method: %s", node);
             freeRefs(node, typeBinding);
@@ -175,7 +176,7 @@ public class InsertFreeRefs extends RefFileAstVisitor {
           }
           return;
         }
-        if (!methodConsumesRefs(methodBinding, node)) {
+        if (!consumesRefs(methodBinding, null==expression?null:expression.resolveTypeBinding())) {
           freeRefs(node, typeBinding);
           info(node, "Adding freeref for Ref-returning method: %s", node);
           return;
@@ -222,13 +223,18 @@ public class InsertFreeRefs extends RefFileAstVisitor {
     if (skip(declaration)) return;
     debug(declaration, "VariableDeclarationFragment: %s", declaration);
     final ASTNode parent = declaration.getParent();
+    final ITypeBinding declarationType = getTypeBinding(declaration);
+    if(null == declarationType) {
+      warn(declaration, "Cannot resolve type of %s", declaration);
+      return;
+    }
     if (parent instanceof VariableDeclarationStatement) {
       final ITypeBinding typeBinding = ((VariableDeclarationStatement) parent).getType().resolveBinding();
       if (null == typeBinding) {
         warn(declaration, "Cannot resolve type of %s", parent);
         return;
       }
-      addFreeRef(declaration, getTypeBinding(declaration));
+      addFreeRef(declaration, declarationType);
     } else if (parent instanceof VariableDeclarationExpression) {
       final Type type = ((VariableDeclarationExpression) parent).getType();
       final ITypeBinding typeBinding = type.resolveBinding();
@@ -236,14 +242,14 @@ public class InsertFreeRefs extends RefFileAstVisitor {
         warn(declaration, "Cannot resolve type of %s", parent);
         return;
       }
-      addFreeRef(declaration, getTypeBinding(declaration));
+      addFreeRef(declaration, declarationType);
     } else if (parent instanceof FieldDeclaration) {
       final ITypeBinding typeBinding = ((FieldDeclaration) parent).getType().resolveBinding();
       if (null == typeBinding) {
         warn(declaration, "Cannot resolve type of %s", parent);
         return;
       }
-      addFreeRef(declaration, getTypeBinding(declaration));
+      addFreeRef(declaration, declarationType);
     } else if (parent instanceof LambdaExpression) {
       final LambdaExpression lambdaExpression = (LambdaExpression) parent;
       final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
@@ -251,7 +257,7 @@ public class InsertFreeRefs extends RefFileAstVisitor {
         warn(declaration, "Cannot resolve method of %s", parent);
         return;
       }
-      addFreeRef(declaration, getTypeBinding(declaration));
+      addFreeRef(declaration, declarationType);
     } else {
       warn(declaration, "Cannot handle %s", parent);
     }
@@ -304,10 +310,7 @@ public class InsertFreeRefs extends RefFileAstVisitor {
   }
 
   protected int findStatementIndex(Block block, ASTNode node) {
-    final List statements = block.statements();
-    return IntStream.range(0, statements.size())
-        .filter(i -> contains((ASTNode) statements.get(i), node))
-        .findFirst().orElse(-1);
+    return getLineNumber(block, node);
   }
 
   private void freeRefs(@NotNull Expression node, ITypeBinding typeBinding) {

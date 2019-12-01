@@ -34,6 +34,10 @@ public class InsertMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
+    if(node.isInterface()) {
+      info(node, "%s is an interface", node.getName());
+      return;
+    }
     if (derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
