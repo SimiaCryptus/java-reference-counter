@@ -17,22 +17,29 @@
  * under the License.
  */
 
-package com.simiacryptus.devutil.ops;
+package com.simiacryptus.devutil.ref;
 
-import org.eclipse.jdt.core.dom.ASTNode;
+import com.simiacryptus.lang.ref.RefAware;
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.io.File;
 
-public class LogNodes extends FileAstVisitor {
+class InsertAnnotations extends RefFileAstVisitor {
 
-  public LogNodes(CompilationUnit compilationUnit, File file) {
+  InsertAnnotations(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
   }
 
   @Override
-  public void preVisit(@NotNull ASTNode node) {
-    info(node, "Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));
+  public void endVisit(TypeDeclaration node) {
+    final AST ast = node.getAST();
+    final MarkerAnnotation annotation = ast.newMarkerAnnotation();
+    annotation.setTypeName(newQualifiedName(ast, RefAware.class));
+    node.modifiers().add(annotation);
+    info(node, "Added @RefAware to %s", node.getName());
+    super.endVisit(node);
   }
 }

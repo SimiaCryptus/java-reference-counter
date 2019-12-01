@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2019 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.devutil.ops.StatementOfInterest;
@@ -18,8 +37,8 @@ import java.util.stream.Stream;
 
 class InsertFreeRefs extends RefFileAstVisitor {
 
-  InsertFreeRefs(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
-    super(refAutoCoder, compilationUnit, file);
+  InsertFreeRefs(CompilationUnit compilationUnit, File file) {
+    super(compilationUnit, file);
   }
 
   public void addFreeRef(@Nonnull ASTNode node, @NotNull Expression expression, @Nonnull ITypeBinding typeBinding) {
@@ -295,21 +314,7 @@ class InsertFreeRefs extends RefFileAstVisitor {
     Statement statement = getStatement(node);
     final ASTNode statementParent = statement.getParent();
     AST ast = node.getAST();
-    if (!(statementParent instanceof Block)) {
-      //warn(node, "Non-block statement %s", statementParent.getClass().getSimpleName());
-      Block block = ast.newBlock();
-      final List statements = block.statements();
-      final String identifier = randomIdentifier(node);
-      final ExpressionStatement localVariable = newLocalVariable(identifier, node, getType(node, typeBinding.getQualifiedName()));
-      final ExpressionStatement freeStatement = ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding));
-      replace(node, ast.newSimpleName(identifier));
-      statements.add(localVariable);
-      statements.add(ASTNode.copySubtree(ast, statement));
-      statements.add(freeStatement);
-      replace(node, ast.newSimpleName(identifier));
-      replace(statement, block);
-      info(node, "Wrapped method call with freeref and new block");
-    } else {
+    if (statementParent instanceof Block) {
       Block block = (Block) statementParent;
       final List statements = block.statements();
       final int lineNumber = statements.indexOf(statement);
@@ -324,6 +329,20 @@ class InsertFreeRefs extends RefFileAstVisitor {
       }
       statements.add(lineNumber, localVariable);
       info(node, "Wrapped method call with freeref at line %s", lineNumber);
+    } else {
+      //warn(node, "Non-block statement %s", statementParent.getClass().getSimpleName());
+      Block block = ast.newBlock();
+      final List statements = block.statements();
+      final String identifier = randomIdentifier(node);
+      final ExpressionStatement localVariable = newLocalVariable(identifier, node, getType(node, typeBinding.getQualifiedName()));
+      final ExpressionStatement freeStatement = ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding));
+      replace(node, ast.newSimpleName(identifier));
+      statements.add(localVariable);
+      statements.add(ASTNode.copySubtree(ast, statement));
+      statements.add(freeStatement);
+      replace(node, ast.newSimpleName(identifier));
+      replace(statement, block);
+      info(node, "Wrapped method call with freeref and new block");
     }
   }
 
@@ -405,41 +424,6 @@ class InsertFreeRefs extends RefFileAstVisitor {
     return false;
   }
 
-  public void insertFreeRefs(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block body, int declaredAt) {
-    final StatementOfInterest lastMention = lastMention(body, node, declaredAt);
-    if (null == lastMention) {
-      info(node, "No mentions in body. Adding freeRef");
-      insertFreeRef(typeBinding, node, body, -1);
-    } else {
-      if (lastMention.isComplexReturn()) {
-        insertFreeRef_ComplexReturn(typeBinding, node, lastMention.block, lastMention.line);
-      } else if (!lastMention.isReturn()) {
-        info(node, "Adding freeRef after last reference at %s", lastMention.line);
-        insertFreeRef(typeBinding, node, lastMention.block, lastMention.line);
-      } else {
-        info(node, "Last usage returns reference");
-      }
-      for (StatementOfInterest exitPoint : exits(body, node, declaredAt, lastMention.line)) {
-        if (exitPoint.isReturn()) {
-          final ReturnStatement returnStatement = (ReturnStatement) exitPoint.statement;
-          final Expression expression = returnStatement.getExpression();
-          if(null != expression) {
-            if(expression.toString().equals(node.toString())) {
-              info(node, "Last usage returns reference");
-              continue;
-            } else if(contains(returnStatement, node)) {
-              insertFreeRef_ComplexReturn(typeBinding, node, exitPoint.block, exitPoint.line);
-              info(node, "Last usage returns reference");
-              continue;
-            }
-          }
-        }
-        info(node, "Adding freeRef before flow return at %s", exitPoint.line-1);
-        insertFreeRef(typeBinding, node, exitPoint.block, exitPoint.line-1);
-      }
-    }
-  }
-
   public void insertFreeRef(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, Block body, int line) {
     final ExpressionStatement statement = body.getAST().newExpressionStatement(newFreeRef(node, typeBinding));
     if (line < 0) {
@@ -462,6 +446,41 @@ class InsertFreeRefs extends RefFileAstVisitor {
     newReturnStatement.setExpression(ast.newSimpleName(identifier));
     statements.set(line + 2, newReturnStatement);
     info(node, "Added freeRef for return value %s", node);
+  }
+
+  public void insertFreeRefs(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block body, int declaredAt) {
+    final StatementOfInterest lastMention = lastMention(body, node, declaredAt);
+    if (null == lastMention) {
+      info(node, "No mentions in body. Adding freeRef");
+      insertFreeRef(typeBinding, node, body, -1);
+    } else {
+      if (lastMention.isComplexReturn()) {
+        insertFreeRef_ComplexReturn(typeBinding, node, lastMention.block, lastMention.line);
+      } else if (!lastMention.isReturn()) {
+        info(node, "Adding freeRef after last reference at %s", lastMention.line);
+        insertFreeRef(typeBinding, node, lastMention.block, lastMention.line);
+      } else {
+        info(node, "Last usage returns reference");
+      }
+      for (StatementOfInterest exitPoint : exits(body, node, declaredAt, lastMention.line)) {
+        if (exitPoint.isReturn()) {
+          final ReturnStatement returnStatement = (ReturnStatement) exitPoint.statement;
+          final Expression expression = returnStatement.getExpression();
+          if (null != expression) {
+            if (expression.toString().equals(node.toString())) {
+              info(node, "Last usage returns reference");
+              continue;
+            } else if (contains(returnStatement, node)) {
+              insertFreeRef_ComplexReturn(typeBinding, node, exitPoint.block, exitPoint.line);
+              info(node, "Last usage returns reference");
+              continue;
+            }
+          }
+        }
+        info(node, "Adding freeRef before flow return at %s", exitPoint.line - 1);
+        insertFreeRef(typeBinding, node, exitPoint.block, exitPoint.line - 1);
+      }
+    }
   }
 
 }

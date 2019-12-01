@@ -9,7 +9,7 @@ import java.io.PrintStream;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Test {
+public @com.simiacryptus.lang.ref.RefAware class Test {
   static {
     System.setProperty("DEBUG_LIFECYCLE", "true");
   }
@@ -26,6 +26,7 @@ public class Test {
       @Override
       protected synchronized void append(ILoggingEvent iLoggingEvent) {
         String formattedMessage = iLoggingEvent.getFormattedMessage();
+        com.simiacryptus.lang.ref.RefUtil.freeRef(iLoggingEvent);
         out.println(formattedMessage);
         out.flush();
         bytes.addAndGet(formattedMessage.length());

@@ -1,6 +1,26 @@
+/*
+ * Copyright (c) 2019 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.devutil.ref;
 
 import com.simiacryptus.devutil.ops.FileAstVisitor;
+import com.simiacryptus.lang.ref.RefAware;
 import com.simiacryptus.lang.ref.RefUtil;
 import com.simiacryptus.lang.ref.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
@@ -9,15 +29,13 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.IntStream;
 
 abstract class RefFileAstVisitor extends FileAstVisitor {
-  protected final RefAutoCoder refAutoCoder;
 
-  public RefFileAstVisitor(RefAutoCoder refAutoCoder, CompilationUnit compilationUnit, File file) {
+  public RefFileAstVisitor(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
-    this.refAutoCoder = refAutoCoder;
   }
 
   @NotNull
@@ -44,6 +62,29 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     return ast.newExpressionStatement(newFreeRefUtil(node, typeBinding));
   }
 
+  @Nullable
+  protected Block getBlock(ASTNode node) {
+    final ASTNode parent = node.getParent();
+    if(parent == null) {
+      return null;
+    } else if(parent instanceof Block) {
+      return (Block) parent;
+    } else if(parent instanceof MethodDeclaration) {
+      return null;
+    } else if(parent instanceof LambdaExpression) {
+      return null;
+    } else if(parent instanceof TypeDeclaration) {
+      return null;
+    } else {
+      return getBlock(parent);
+    }
+  }
+
+  protected int getLineNumber(Block block, ASTNode node) {
+    final List statements = block.statements();
+    return IntStream.range(0, statements.size()).filter(i -> contains((ASTNode) statements.get(i), node)).findFirst().orElse(-1);
+  }
+
   protected ITypeBinding getTypeBinding(@NotNull VariableDeclaration declaration) {
     final IVariableBinding iVariableBinding = declaration.resolveBinding();
     if (iVariableBinding == null) {
@@ -51,6 +92,15 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       return null;
     }
     return iVariableBinding.getType();
+  }
+
+  public boolean isRefAware(ITypeBinding declaringClass) {
+    return Arrays.stream(declaringClass.getAnnotations())
+        .anyMatch(annotation -> annotation.getAnnotationType().getQualifiedName().equals(RefAware.class.getCanonicalName()));
+  }
+
+  public boolean isRefAware(IMethodBinding methodBinding) {
+    return isRefAware(methodBinding.getDeclaringClass());
   }
 
   protected boolean isRefCounted(ASTNode node, @NotNull ITypeBinding typeBinding) {
@@ -68,16 +118,20 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     } else {
       type = typeBinding;
     }
-    if(type.isInterface() && !(node instanceof LambdaExpression)) {
+    if (type.isInterface() && !(node instanceof LambdaExpression)) {
       info(node, "Is potentially refcounted interface: %s (%s)", node, type);
       return true;
     }
-    if(derives(type, ReferenceCounting.class)) {
+    if (derives(type, ReferenceCounting.class)) {
       info(node, "Derives ReferenceCounting: %s (%s)", node, type);
       return true;
     }
-    if(derives(type, Map.Entry.class)) {
+    if (derives(type, Map.Entry.class)) {
       info(node, "Derives Map.Entry: %s (%s)", node, type);
+      return true;
+    }
+    if (isRefAware(typeBinding)) {
+      info(node, "Marked with @RefAware: %s (%s)", node, type);
       return true;
     }
     debug(node, "Not refcounted: %s (%s)", node, type);
@@ -99,7 +153,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     if (methodName.equals("freeRefs")) {
       return false;
     }
-    if (refAutoCoder.isRefAware(methodBinding)) return true;
+    if (isRefAware(methodBinding)) return true;
     warn(1, node, "Not sure if %s consumes refs", methodBinding);
     return true;
   }
@@ -142,19 +196,17 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
       methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
       return methodInvocation;
-    } else if (typeBinding.getTypeDeclaration().getQualifiedName().equals(Optional.class.getCanonicalName())
-        || derives(typeBinding, Map.Entry.class)
-        || typeBinding.isInterface()) {
+    } else if (derives(typeBinding, ReferenceCounting.class)) {
+      final MethodInvocation methodInvocation = ast.newMethodInvocation();
+      methodInvocation.setName(ast.newSimpleName("freeRef"));
+      methodInvocation.setExpression((Expression) ASTNode.copySubtree(ast, node));
+      return methodInvocation;
+    } else {
       final MethodInvocation freeInvocation = ast.newMethodInvocation();
       freeInvocation.setName(ast.newSimpleName("freeRef"));
       freeInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
       freeInvocation.arguments().add((Expression) ASTNode.copySubtree(ast, node));
       return freeInvocation;
-    } else {
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("freeRef"));
-      methodInvocation.setExpression((Expression) ASTNode.copySubtree(ast, node));
-      return methodInvocation;
     }
   }
 

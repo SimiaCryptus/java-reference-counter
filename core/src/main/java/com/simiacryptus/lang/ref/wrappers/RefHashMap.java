@@ -1,17 +1,33 @@
+/*
+ * Copyright (c) 2019 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.lang.ref.wrappers;
 
+import com.simiacryptus.lang.ref.RefAware;
 import com.simiacryptus.lang.ref.RefUtil;
-import com.simiacryptus.lang.ref.ReferenceCounting;
-import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-public class RefHashMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
+@RefAware
+public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, V> inner;
 
@@ -36,103 +52,8 @@ public class RefHashMap<K, V> extends ReferenceCountingBase implements RefMap<K,
   }
 
   @Override
-  protected void _free() {
-    clear();
-    super._free();
+  public Map<K, V> getInner() {
+    return inner;
   }
 
-  @NotNull
-  public @Override
-  RefHashMap<K, V> addRef() {
-    return (RefHashMap<K, V>) super.addRef();
-  }
-
-  @Override
-  public synchronized void clear() {
-    inner.forEach((k, v) -> {
-      RefUtil.freeRef(k);
-      RefUtil.freeRef(v);
-    });
-    inner.clear();
-  }
-
-  @Override
-  public boolean containsKey(Object key) {
-    final boolean containsKey = inner.containsKey(key);
-    RefUtil.freeRef(key);
-    return containsKey;
-  }
-
-  @Override
-  public boolean containsValue(Object value) {
-    final boolean containsValue = inner.containsValue(value);
-    RefUtil.freeRef(value);
-    return containsValue;
-  }
-
-  @NotNull
-  @Override
-  public RefHashSet<Entry<K, V>> entrySet() {
-    final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
-    inner.entrySet().stream().map(x -> new RefEntry<K, V>(x)).forEach(refSet::add);
-    return refSet;
-  }
-
-  @Override
-  public V get(Object key) {
-    final V value = RefUtil.addRef(inner.get(key));
-    RefUtil.freeRef(key);
-    return value;
-  }
-
-  @Override
-  public boolean isEmpty() {
-    return inner.isEmpty();
-  }
-
-  @NotNull
-  @Override
-  public RefSet<K> keySet() {
-    return new RefHashSet<>(inner.keySet());
-  }
-
-  @Nullable
-  @Override
-  public V put(K key, V value) {
-    return inner.put(key, value);
-  }
-
-  @Override
-  public void putAll(@NotNull Map<? extends K, ? extends V> m) {
-    if (m instanceof ReferenceCounting) {
-      final Set<? extends Entry<? extends K, ? extends V>> entrySet = m.entrySet();
-      entrySet.stream().forEach(t -> {
-        final V put = put(t.getKey(), t.getValue());
-        RefUtil.freeRef(put);
-        RefUtil.freeRef(t);
-      });
-      RefUtil.freeRef(entrySet);
-      ((ReferenceCounting) m).freeRef();
-    } else {
-      m.forEach((k, v) -> put(RefUtil.addRef(k), RefUtil.addRef(v)));
-    }
-  }
-
-  @Override
-  public V remove(Object key) {
-    final V removed = inner.remove(key);
-    RefUtil.freeRef(key);
-    return removed;
-  }
-
-  @Override
-  public int size() {
-    return inner.size();
-  }
-
-  @NotNull
-  @Override
-  public RefHashSet<V> values() {
-    return new RefHashSet<V>(inner.values());
-  }
 }

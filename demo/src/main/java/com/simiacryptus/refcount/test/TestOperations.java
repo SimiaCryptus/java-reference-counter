@@ -4,7 +4,7 @@ import com.simiacryptus.lang.ref.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 import java.util.Random;
 
-public class TestOperations extends ReferenceCountingBase {
+public @com.simiacryptus.lang.ref.RefAware class TestOperations extends ReferenceCountingBase {
   public static final int count = 1;
   public static final Random random = new Random(143892);
   private SimpleContainer simpleContainer;
@@ -16,6 +16,21 @@ public class TestOperations extends ReferenceCountingBase {
   public static void main(String... args) {
     final TestOperations self = new TestOperations();
     self.run();
+    self.freeRef();
+  }
+
+  public @Override void _free() {
+    if (null != setContainer)
+      setContainer.freeRef();
+    if (null != mapValuesContainer)
+      mapValuesContainer.freeRef();
+    if (null != listContainer)
+      listContainer.freeRef();
+    if (null != arrayContainer)
+      arrayContainer.freeRef();
+    if (null != simpleContainer)
+      simpleContainer.freeRef();
+    super._free();
   }
 
   private void run() {
@@ -32,7 +47,14 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testArray(BasicType[] values) {
-    this.arrayContainer = new ArrayContainer(values);
+    {
+      com.simiacryptus.refcount.test.ArrayContainer temp1289 = new ArrayContainer(
+          com.simiacryptus.refcount.test.BasicType.addRefs(values));
+      if (null != this.arrayContainer)
+        this.arrayContainer.freeRef();
+      this.arrayContainer = temp1289;
+    }
+    com.simiacryptus.lang.ref.ReferenceCounting.freeRefs(values);
     System.out.println(String.format("Instantiated %s", arrayContainer));
     for (int i = 0; i < count; i++) {
       arrayContainer.use();
@@ -45,7 +67,7 @@ public class TestOperations extends ReferenceCountingBase {
   @NotNull
   private BasicType testBasicType() {
     BasicType datum1 = new BasicType();
-    testBasicType(datum1);
+    com.simiacryptus.lang.ref.RefUtil.freeRef(testBasicType(datum1.addRef()));
     return datum1;
   }
 
@@ -58,7 +80,12 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testList() {
-    this.listContainer = new ListContainer();
+    {
+      com.simiacryptus.refcount.test.ListContainer temp1766 = new ListContainer();
+      if (null != this.listContainer)
+        this.listContainer.freeRef();
+      this.listContainer = temp1766;
+    }
     System.out.println(String.format("Instantiated %s", listContainer));
     for (int i = 0; i < count; i++) {
       listContainer.test();
@@ -66,7 +93,12 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testMap() {
-    this.mapValuesContainer = new MapValuesContainer();
+    {
+      com.simiacryptus.refcount.test.MapValuesContainer temp8398 = new MapValuesContainer();
+      if (null != this.mapValuesContainer)
+        this.mapValuesContainer.freeRef();
+      this.mapValuesContainer = temp8398;
+    }
     System.out.println(String.format("Instantiated %s", mapValuesContainer));
     for (int i = 0; i < count; i++) {
       mapValuesContainer.use();
@@ -74,7 +106,12 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testSet() {
-    this.setContainer = new SetContainer();
+    {
+      com.simiacryptus.refcount.test.SetContainer temp6143 = new SetContainer();
+      if (null != this.setContainer)
+        this.setContainer.freeRef();
+      this.setContainer = temp6143;
+    }
     System.out.println(String.format("Instantiated %s", setContainer));
     for (int i = 0; i < count; i++) {
       setContainer.test();
@@ -82,14 +119,24 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testSimpleContainer() {
-    this.simpleContainer = new SimpleContainer();
+    {
+      com.simiacryptus.refcount.test.SimpleContainer temp5785 = new SimpleContainer();
+      if (null != this.simpleContainer)
+        this.simpleContainer.freeRef();
+      this.simpleContainer = temp5785;
+    }
     System.out.println(String.format("Instantiated %s", simpleContainer));
     for (int i = 0; i < count; i++) {
       simpleContainer.use();
     }
   }
 
-  public @Override void _free() {
-    super._free();
+  public @Override TestOperations addRef() {
+    return (TestOperations) super.addRef();
+  }
+
+  public static TestOperations[] addRefs(TestOperations[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRef)
+        .toArray((x) -> new TestOperations[x]);
   }
 }
