@@ -19,12 +19,14 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
 
+@RefCoderIgnore
 public class InsertGCs extends FileAstVisitor {
 
   public InsertGCs(CompilationUnit cu, File file) {

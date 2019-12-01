@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.StatementOfInterest;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public class NarrowVariableDeclarations extends RefFileAstVisitor {
 
   public NarrowVariableDeclarations(CompilationUnit compilationUnit, File file) {

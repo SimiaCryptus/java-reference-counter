@@ -21,6 +21,7 @@ package com.simiacryptus.ref.ops;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.wrappers.*;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public class ReplaceTypes extends RefFileAstVisitor {
 
   private Map<String, String> replacements;

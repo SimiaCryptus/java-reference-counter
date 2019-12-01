@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.IndexSymbols;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
 import scala.Tuple2;
@@ -32,6 +33,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public class InstrumentClosures extends RefFileAstVisitor {
 
   private final IndexSymbols.SymbolIndex index;

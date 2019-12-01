@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 
+@RefCoderIgnore
 public class InlineRefs extends RefFileAstVisitor {
 
   public InlineRefs(CompilationUnit compilationUnit, File file) {

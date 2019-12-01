@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+@RefCoderIgnore
 public class RemoveRefs extends RefFileAstVisitor {
 
   public RemoveRefs(CompilationUnit compilationUnit, File file) {

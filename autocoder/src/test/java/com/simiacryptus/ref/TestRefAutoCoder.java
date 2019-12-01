@@ -20,6 +20,7 @@
 package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
@@ -30,6 +31,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
+@RefCoderIgnore
 public class TestRefAutoCoder {
   @Test
   public void add() throws Exception {

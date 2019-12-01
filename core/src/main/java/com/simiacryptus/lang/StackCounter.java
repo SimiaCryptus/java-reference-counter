@@ -19,6 +19,8 @@
 
 package com.simiacryptus.lang;
 
+import com.simiacryptus.ref.lang.RefCoderIgnore;
+
 import javax.annotation.Nonnull;
 import java.util.Comparator;
 import java.util.Map;
@@ -27,6 +29,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+@RefCoderIgnore
 public class StackCounter {
 
   @Nonnull

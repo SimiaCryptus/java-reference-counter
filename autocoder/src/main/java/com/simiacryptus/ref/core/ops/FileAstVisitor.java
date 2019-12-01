@@ -20,6 +20,7 @@
 package com.simiacryptus.ref.core.ops;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+@RefCoderIgnore
 public abstract class FileAstVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(FileAstVisitor.class);
   @NotNull

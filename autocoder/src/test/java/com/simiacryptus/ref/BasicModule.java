@@ -20,6 +20,7 @@
 package com.simiacryptus.ref;
 
 import com.google.inject.AbstractModule;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.ArtifactRepositoryPolicy;
@@ -44,6 +45,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+@RefCoderIgnore
 class BasicModule extends AbstractModule {
   private final ArtifactRepository repository;
 

@@ -21,6 +21,7 @@ package com.simiacryptus.lang;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+@RefCoderIgnore
 public interface Settings {
   Logger logger = LoggerFactory.getLogger(Settings.class);
 

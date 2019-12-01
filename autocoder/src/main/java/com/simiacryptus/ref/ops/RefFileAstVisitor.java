@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 
+@RefCoderIgnore
 abstract class RefFileAstVisitor extends FileAstVisitor {
 
   public RefFileAstVisitor(CompilationUnit compilationUnit, File file) {
@@ -221,9 +222,19 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
   }
 
   @Override
-  public boolean visit(TypeDeclaration node) {
-    final ITypeBinding binding = node.resolveBinding();
-    if(null != binding && hasAnnotation(binding, RefCoderIgnore.class)) return false;
-    return super.visit(node);
+  public boolean preVisit2(ASTNode node) {
+    if(node instanceof TypeDeclaration) {
+      final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+      if(null != binding) {
+        warn(node, "Unresolved binding");
+        return false;
+      }
+      if(hasAnnotation(binding, RefCoderIgnore.class)) {
+        warn(node, "Marked with RefCoderIgnore");
+        return false;
+      }
+    }
+    return super.preVisit2(node);
   }
+
 }
