@@ -46,6 +46,12 @@ public class RefArrayList<T> extends RefAbstractList<T> {
         .toArray((x) -> new RefArrayList[x]);
   }
 
+  @NotNull
+  public @Override
+  RefArrayList<T> addRef() {
+    return (RefArrayList<T>) super.addRef();
+  }
+
   @Override
   public List<T> getInner() {
     return inner;

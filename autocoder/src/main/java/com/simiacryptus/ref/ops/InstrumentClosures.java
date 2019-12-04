@@ -23,10 +23,10 @@ import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import scala.Tuple2;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -143,25 +143,28 @@ public class InstrumentClosures extends RefFileAstVisitor {
     final MethodInvocation methodInvocation = ast.newMethodInvocation();
     methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
     methodInvocation.setName(ast.newSimpleName("wrapInterface"));
-    methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
+    final CastExpression castExpression = ast.newCastExpression();
+    final Type castType = getType(node, false);
+    if (null != castType) {
+      warn(node, "Unresolved binding");
+      castExpression.setType(castType);
+      castExpression.setExpression((Expression) ASTNode.copySubtree(ast, node));
+      methodInvocation.arguments().add(castExpression);
+    } else {
+      methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
+    }
     closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
       if (closureNode instanceof SingleVariableDeclaration) {
-        final MethodInvocation addRefInvoke = ast.newMethodInvocation();
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
-          addRefInvoke.setExpression((Name) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()));
-          addRefInvoke.setName(ast.newSimpleName("addRef"));
-          methodInvocation.arguments().add(addRefInvoke);
+          methodInvocation.arguments().add(wrapAddRef((Expression) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()), type));
         }
       } else if (closureNode instanceof VariableDeclarationFragment) {
-        final MethodInvocation addRefInvoke = ast.newMethodInvocation();
         final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) closureNode;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
-          addRefInvoke.setExpression((Name) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()));
-          addRefInvoke.setName(ast.newSimpleName("addRef"));
-          methodInvocation.arguments().add(addRefInvoke);
+          methodInvocation.arguments().add(wrapAddRef((Expression) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()), type));
         }
       } else {
         warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());
@@ -172,4 +175,26 @@ public class InstrumentClosures extends RefFileAstVisitor {
     }
   }
 
+
+  private static class Tuple2<A, B> implements Serializable {
+    public final A _1;
+    public final B _2;
+
+    public Tuple2() {
+      this(null, null);
+    }
+
+    public Tuple2(final A a, final B b) {
+      _1 = a;
+      _2 = b;
+    }
+
+    public A getFirst() {
+      return _1;
+    }
+
+    public B getSecond() {
+      return _2;
+    }
+  }
 }

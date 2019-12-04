@@ -49,7 +49,7 @@ public class RemoveRefs extends RefFileAstVisitor {
   }
 
   @Override
-  public void endVisit(@NotNull MethodInvocation node) {
+  public void endVisit(@NotNull final MethodInvocation node) {
     final String methodName = node.getName().toString();
     final IMethodBinding methodBinding = node.resolveMethodBinding();
     if (null == methodBinding) {
@@ -59,13 +59,18 @@ public class RemoveRefs extends RefFileAstVisitor {
     final String declaringClass = methodBinding.getDeclaringClass().getQualifiedName();
     if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
       final AST ast = node.getAST();
-      final Expression subject;
+      Expression subject;
       if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
         subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
       } else if (declaringClass.equals(RefUtil.class.getCanonicalName())) {
         subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
       } else {
-        subject = (Expression) ASTNode.copySubtree(ast, node.getExpression());
+        final Expression expression = node.getExpression();
+        if (null == expression) {
+          warn(node, "Naked method call. Cannot remove.");
+          return;
+        }
+        subject = (Expression) ASTNode.copySubtree(ast, expression);
       }
       info(node, "Removing %s and replacing with %s", methodName, subject);
       //        replace(node, subject);
@@ -80,18 +85,13 @@ public class RemoveRefs extends RefFileAstVisitor {
           info(node, "%s removed as argument %s of %s", methodName, index, parent);
         }
       } else if (parent instanceof ExpressionStatement) {
-        if (subject == null) {
-          info(node, "%s removed", parent);
-          delete((ExpressionStatement) parent);
-        } else if (subject instanceof Name) {
-          info(node, "%s removed", parent);
-          delete((ExpressionStatement) parent);
-        } else if (subject instanceof FieldAccess) {
-          info(node, "%s removed", parent);
-          delete((ExpressionStatement) parent);
+        subject = unwrap(subject);
+        if (isEvaluable(subject)) {
+          info(subject, "%s replaced with %s", parent, subject);
+          replace(parent, ast.newExpressionStatement((Expression) ASTNode.copySubtree(ast, subject)));
         } else {
-          info(node, "%s replaced with %s", parent, subject);
-          replace(parent, ast.newExpressionStatement(subject));
+          info(subject, "%s removed", parent);
+          delete((ExpressionStatement) parent);
         }
       } else if (parent instanceof ClassInstanceCreation) {
         final List arguments = ((ClassInstanceCreation) parent).arguments();
@@ -109,6 +109,10 @@ public class RemoveRefs extends RefFileAstVisitor {
         final int index = arguments.indexOf(node);
         arguments.set(index, subject);
         info(node, "%s removed as argument %s of %s", node, index, parent);
+      } else if (parent instanceof ConditionalExpression) {
+        subject = unwrap(subject);
+        info(subject, "%s replaced with %s", parent, subject);
+        replace(node, (Expression) ASTNode.copySubtree(ast, subject));
       } else {
         warn(node, "Cannot remove %s called in %s: %s", node, parent.getClass(), parent);
       }
@@ -118,6 +122,10 @@ public class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
     if (derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "_free");
     }
@@ -131,6 +139,16 @@ public class RemoveRefs extends RefFileAstVisitor {
         info(node, "delete %s", parent);
         parent.delete();
       }
+    }
+  }
+
+  private Expression unwrap(Expression subject) {
+    if (subject instanceof ParenthesizedExpression) {
+      return unwrap(((ParenthesizedExpression) subject).getExpression());
+    } else if (subject instanceof CastExpression) {
+      return unwrap(((CastExpression) subject).getExpression());
+    } else {
+      return subject;
     }
   }
 }

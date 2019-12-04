@@ -54,12 +54,12 @@ public class RefUtil {
     return value;
   }
 
-  public static <T> T wrapInterface(T obj, @NotNull ReferenceCounting... refs) {
+  public static <T> T wrapInterface(T obj, @NotNull Object... refs) {
     final Class<?> objClass = obj.getClass();
     final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
       @Override
       protected void _free() {
-        Arrays.stream(refs).forEach(ReferenceCounting::freeRef);
+        Arrays.stream(refs).forEach(RefUtil::freeRef);
         super._free();
       }
     };
@@ -77,4 +77,9 @@ public class RefUtil {
       }
     });
   }
+
+  public static <T> void freeRefs(@NotNull T[] array) {
+    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
+  }
+
 }

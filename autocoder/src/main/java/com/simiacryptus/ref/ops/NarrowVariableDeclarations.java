@@ -19,21 +19,11 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.ref.core.ops.StatementOfInterest;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RefCoderIgnore
 public class NarrowVariableDeclarations extends RefFileAstVisitor {
@@ -42,31 +32,51 @@ public class NarrowVariableDeclarations extends RefFileAstVisitor {
     super(compilationUnit, file);
   }
 
+  private Type apply(ASTNode node, Type type, Expression initializer) {
+    final ITypeBinding typeBinding = type.resolveBinding();
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding for %s", type);
+      return null;
+    }
+    if (null == initializer) {
+      info(node, "No initializer");
+      return null;
+    }
+    final ITypeBinding initializerType = initializer.resolveTypeBinding();
+    if (null == initializerType) {
+      warn(node, "Unresolved binding");
+      return null;
+    }
+    if (isRefAware(typeBinding) || !isRefAware(initializerType)) {
+      return null;
+    }
+    Type newType = getType(initializer, true);
+    warn(node, "Replaced variable type %s to %s", type, newType);
+    return newType;
+  }
+
   @Override
   public void endVisit(VariableDeclarationStatement node) {
     final Type type = node.getType();
-    final ITypeBinding typeBinding = type.resolveBinding();
-    if(null == typeBinding) {
-      warn(node, "Unresolved binding");
+    final List fragments = node.fragments();
+    if (1 != fragments.size()) {
+      warn(node, "%s fragments", fragments.size());
       return;
     }
-    if(1 != node.fragments().size()) {
-      warn(node, "%s fragments", node.fragments().size());
+    final Type newType = apply(node, type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+    if (null != newType && type != newType) node.setType(newType);
+  }
+
+  @Override
+  public void endVisit(FieldDeclaration node) {
+    final Type type = node.getType();
+    final List fragments = node.fragments();
+    if (1 != fragments.size()) {
+      warn(node, "%s fragments", fragments.size());
       return;
     }
-    VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
-    final Expression initializer = fragment.getInitializer();
-    final ITypeBinding initializerType = initializer.resolveTypeBinding();
-    if(null == initializerType) {
-      warn(node, "Unresolved binding");
-      return;
-    }
-    if(!isRefAware(typeBinding) && isRefAware(initializerType)) {
-      final Type newType = getType(initializer);
-      warn(node, "Replaced variable type %s to %s", node.getType(), newType);
-      node.setType(newType);
-    }
-    super.endVisit(node);
+    final Type newType = apply(node, type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+    if (null != newType && type != newType) node.setType(newType);
   }
 
   @Override

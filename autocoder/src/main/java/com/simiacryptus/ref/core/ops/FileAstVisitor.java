@@ -19,7 +19,6 @@
 
 package com.simiacryptus.ref.core.ops;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +43,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   protected final CompilationUnit compilationUnit;
   protected final File file;
 
-  protected FileAstVisitor(CompilationUnit compilationUnit, File file) {
+  protected FileAstVisitor(@Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     this.compilationUnit = compilationUnit;
     this.file = file;
   }
@@ -84,8 +83,8 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   @NotNull
-  protected static ArrayType arrayType(@NotNull AST ast, @NotNull String fqTypeName) {
-    return ast.newArrayType(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
+  protected static ArrayType arrayType(@NotNull AST ast, @NotNull String fqTypeName, int rank) {
+    return ast.newArrayType(ast.newSimpleType(ast.newSimpleName(fqTypeName)), rank);
   }
 
   @NotNull
@@ -136,19 +135,103 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected void delete(@NotNull Statement statement) {
+    info(statement, "Deleting %s", statement);
     final ASTNode parent = statement.getParent();
+    final AST ast = statement.getAST();
     if (parent instanceof Block) {
       final Block block = (Block) parent;
-      final ASTNode blockParent = block.getParent();
       if (block.statements().size() == 1) {
-        if (blockParent instanceof Statement) {
-          delete((Statement) blockParent);
+        final ASTNode blockParent = block.getParent();
+        if (blockParent instanceof LambdaExpression) {
+          info(statement, "Keeping block; removing single statement %s", statement);
+        } else if (blockParent instanceof MethodDeclaration) {
+          info(statement, "Keeping block; removing single statement %s", statement);
+        } else if (blockParent instanceof TryStatement) {
+          final TryStatement tryStatement = (TryStatement) blockParent;
+          final Block tryStatementFinally = tryStatement.getFinally();
+          if (null != tryStatementFinally && block.equals(tryStatementFinally) && tryStatement.catchClauses().isEmpty()) {
+            info(statement, "Unwrapping try statement %s", tryStatement);
+            replace(tryStatement, ASTNode.copySubtree(ast, tryStatement.getBody()));
+            return;
+          }
+        } else {
+          delete(block);
           return;
         }
       }
-    } else if (parent instanceof Statement) {
-      delete((Statement) parent);
+    } else if (parent instanceof Initializer) {
+      parent.delete();
       return;
+    } else if (parent instanceof EnhancedForStatement) {
+      final EnhancedForStatement forStatement = (EnhancedForStatement) parent;
+      final List<Statement> evaluableStatements = getEvaluableStatements(forStatement.getExpression());
+      if (evaluableStatements.size() == 0) {
+        info(statement, "Removing for %s", forStatement);
+        delete(forStatement);
+      } else if (evaluableStatements.size() == 1) {
+        info(statement, "Removing for %s; keeping %s", forStatement, evaluableStatements.get(0));
+        replace(forStatement, evaluableStatements.get(0));
+      } else {
+        final Block block = ast.newBlock();
+        block.statements().addAll(evaluableStatements);
+        info(statement, "Removing for %s; keeping %s", forStatement, block);
+        replace(forStatement, block);
+      }
+      return;
+    } else if (parent instanceof ForStatement) {
+      final ForStatement forStatement = (ForStatement) parent;
+      final List<Statement> evaluableStatements = getEvaluableStatements(forStatement.getExpression());
+      if (evaluableStatements.size() == 0) {
+        info(statement, "Removing for %s", forStatement);
+        delete(forStatement);
+      } else if (evaluableStatements.size() == 1) {
+        info(statement, "Removing for %s; keeping %s", forStatement, evaluableStatements.get(0));
+        replace(forStatement, evaluableStatements.get(0));
+      } else {
+        final Block block = ast.newBlock();
+        block.statements().addAll(evaluableStatements);
+        info(statement, "Removing for %s; keeping %s", forStatement, block);
+        replace(forStatement, block);
+      }
+      return;
+    } else if (parent instanceof IfStatement) {
+      final IfStatement ifStatement = (IfStatement) parent;
+      final Statement elseStatement = ifStatement.getElseStatement();
+      final Statement thenStatement = ifStatement.getThenStatement();
+      if (thenStatement.equals(statement)) {
+        final Expression condition = ifStatement.getExpression();
+        if (null != elseStatement) {
+          info(statement, "Deleting if-then; inverting %s", ifStatement);
+          ifStatement.setElseStatement(null);
+          ifStatement.setThenStatement((Statement) ASTNode.copySubtree(ast, elseStatement));
+          final PrefixExpression prefixExpression = ast.newPrefixExpression();
+          prefixExpression.setOperand((Expression) ASTNode.copySubtree(ast, condition));
+          prefixExpression.setOperator(PrefixExpression.Operator.NOT);
+          ifStatement.setExpression(prefixExpression);
+          return;
+        } else {
+          final List<Statement> evaluableStatements = getEvaluableStatements(condition);
+          if (evaluableStatements.size() == 0) {
+            info(statement, "Removing if-then %s", ifStatement);
+            delete(ifStatement);
+          } else if (evaluableStatements.size() == 1) {
+            info(statement, "Removing if-then %s; keeping %s", ifStatement, evaluableStatements.get(0));
+            replace(ifStatement, evaluableStatements.get(0));
+          } else {
+            final Block block = ast.newBlock();
+            block.statements().addAll(evaluableStatements);
+            info(statement, "Removing if-then %s; keeping %s", ifStatement, block);
+            replace(ifStatement, block);
+          }
+          return;
+        }
+      } else if (null != elseStatement && elseStatement.equals(statement)) {
+        info(statement, "Removing if-else %s", ifStatement);
+        ifStatement.setElseStatement(null);
+        return;
+      } else {
+        warn(statement, "Not sure how to remove %s from %s", statement, ifStatement);
+      }
     }
     statement.delete();
   }
@@ -264,7 +347,51 @@ public abstract class FileAstVisitor extends ASTVisitor {
     }
   }
 
-  protected String getFormatString(ASTNode node, String formatString, StackTraceElement caller) {
+  protected List<Statement> getEvaluableStatements(Expression expression) {
+    final ArrayList<Statement> statements = new ArrayList<>();
+    if (isEvaluable(expression)) {
+      if (expression instanceof InfixExpression) {
+        final InfixExpression infixExpression = (InfixExpression) expression;
+        if (isEvaluable(infixExpression.getLeftOperand())) {
+          statements.addAll(getEvaluableStatements(infixExpression.getLeftOperand()));
+        }
+        if (isEvaluable(infixExpression.getRightOperand())) {
+          statements.addAll(getEvaluableStatements(infixExpression.getRightOperand()));
+        }
+      } else if (expression instanceof PrefixExpression) {
+        final PrefixExpression prefixExpression = (PrefixExpression) expression;
+        if (isEvaluable(prefixExpression.getOperand())) {
+          statements.addAll(getEvaluableStatements(prefixExpression.getOperand()));
+        }
+      } else if (expression instanceof PostfixExpression) {
+        final PostfixExpression postfixExpression = (PostfixExpression) expression;
+        if (isEvaluable(postfixExpression.getOperand())) {
+          statements.addAll(getEvaluableStatements(postfixExpression.getOperand()));
+        }
+      } else if (expression instanceof ParenthesizedExpression) {
+        final ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) expression;
+        if (isEvaluable(parenthesizedExpression.getExpression())) {
+          statements.addAll(getEvaluableStatements(parenthesizedExpression.getExpression()));
+        }
+      } else if (expression instanceof CastExpression) {
+        final CastExpression castExpression = (CastExpression) expression;
+        if (isEvaluable(castExpression.getExpression())) {
+          statements.addAll(getEvaluableStatements(castExpression.getExpression()));
+        }
+      } else if (expression instanceof InstanceofExpression) {
+        final InstanceofExpression castExpression = (InstanceofExpression) expression;
+        if (isEvaluable(castExpression.getLeftOperand())) {
+          statements.addAll(getEvaluableStatements(castExpression.getLeftOperand()));
+        }
+      } else {
+        final AST ast = expression.getAST();
+        statements.add(ast.newExpressionStatement((Expression) ASTNode.copySubtree(ast, expression)));
+      }
+    }
+    return statements;
+  }
+
+  protected String getFormatString(@Nonnull ASTNode node, @Nonnull String formatString, @Nonnull StackTraceElement caller) {
     return String.format("(%s) (%s) - %s", toString(caller), getLocation(node), formatString);
   }
 
@@ -274,7 +401,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   @NotNull
-  protected String getLocation(ASTNode node) {
+  protected String getLocation(@Nonnull ASTNode node) {
     final int lineNumber = compilationUnit.getLineNumber(node.getStartPosition());
     return file.getName() + ":" + lineNumber;
   }
@@ -330,12 +457,25 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return delimiters;
   }
 
-  protected Type getType(ASTNode node, @NotNull String name) {
+  protected Type getType(ASTNode node, @NotNull String name, boolean isDeclaration) {
     @Nonnull AST ast = node.getAST();
     if (name.endsWith("[]")) {
-      final ArrayType arrayType = ast.newArrayType(getType(node, name.substring(0, name.length() - 2)));
+      int rank = 0;
+      while (name.endsWith("[]")) {
+        name = name.substring(0, name.length() - 2);
+        rank++;
+      }
+      final ArrayType arrayType = ast.newArrayType(getType(node, name, isDeclaration), rank);
       info(node, "Converted type string %s to %s", name, arrayType);
       return arrayType;
+    } else if (name.isEmpty()) {
+      final WildcardType wildcardType = ast.newWildcardType();
+      info(node, "Cannot determine type of %s", node);
+      return null;
+    } else if (name.equals("?")) {
+      final WildcardType wildcardType = ast.newWildcardType();
+      info(node, "Converted type string %s to %s", name, wildcardType);
+      return wildcardType;
     } else if (name.contains("\\.")) {
       final SimpleType simpleType = ast.newSimpleType(newQualifiedName(ast, name.split("\\.")));
       info(node, "Converted type string %s to %s", name, simpleType);
@@ -366,14 +506,13 @@ public abstract class FileAstVisitor extends ASTVisitor {
             final int to = delimiters.get(i);
             final int from = i == 0 ? 0 : (delimiters.get(i - 1) + 1);
             final String substring = innerType.substring(from, to);
-            final String wildcardPrefix = "? extends ";
-            if (substring.startsWith(wildcardPrefix)) {
-              final WildcardType wildcardType = ast.newWildcardType();
-              wildcardType.setBound(getType(node, substring.substring(wildcardPrefix.length())));
-              innerTypes.add(wildcardType);
-            } else {
-              innerTypes.add(getType(node, substring));
+            if (substring.isEmpty()) {
+              if (isDeclaration) {
+                innerTypes.add(ast.newWildcardType());
+              }
+              continue;
             }
+            innerTypes.add(getTypeParameter(node, substring, isDeclaration));
           }
           final ParameterizedType parameterizedType = ast.newParameterizedType(ast.newSimpleType(newQualifiedName(ast, mainType.split("\\."))));
           parameterizedType.typeArguments().addAll(innerTypes);
@@ -384,24 +523,73 @@ public abstract class FileAstVisitor extends ASTVisitor {
     }
   }
 
-  @NotNull
-  protected Type getType(@NotNull Expression node) {
+  protected Type getType(@NotNull Expression node, boolean isDeclaration) {
     final ITypeBinding typeBinding = node.resolveTypeBinding();
     if (null == typeBinding) {
       warn(1, node, "Unresolved binding");
       return null;
     }
-    return getType(node, typeBinding.getQualifiedName());
+    final String qualifiedName = typeBinding.getQualifiedName();
+    if (qualifiedName.isEmpty()) {
+      warn(1, node, "No type string for %s", typeBinding);
+      return null;
+    }
+    return getType(node, qualifiedName, isDeclaration);
   }
 
-  protected void info(ASTNode node, String formatString, Object... args) {
+  private Type getTypeParameter(ASTNode node, String name, boolean isDeclaration) {
+    final AST ast = node.getAST();
+    final String extendsPrefix = "? extends ";
+    final String superPrefix = "? super ";
+    if (name.startsWith(extendsPrefix)) {
+      final WildcardType wildcardType = ast.newWildcardType();
+      wildcardType.setBound(getType(node, name.substring(extendsPrefix.length()), isDeclaration));
+      wildcardType.setUpperBound(true);
+      return wildcardType;
+    } else if (name.startsWith(superPrefix)) {
+      final WildcardType wildcardType = ast.newWildcardType();
+      wildcardType.setBound(getType(node, name.substring(superPrefix.length()), isDeclaration));
+      wildcardType.setUpperBound(false);
+      return wildcardType;
+    } else {
+      return getType(node, name, isDeclaration);
+    }
+  }
+
+  protected void info(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
     info(1, node, formatString, args);
   }
 
-  protected void info(int frames, ASTNode node, String formatString, Object... args) {
+  protected void info(int frames, @Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
     logger.info(String.format(getFormatString(node, formatString, caller), Arrays.stream(args).map(o -> o == null ? null : o.toString().trim()).toArray()));
+  }
+
+  protected boolean isEvaluable(Expression node) {
+    if (node == null) {
+      return false;
+    } else if (node instanceof Name) {
+      return false;
+    } else if (node instanceof ThisExpression) {
+      return false;
+    } else if (node instanceof NullLiteral) {
+      return false;
+    } else if (node instanceof CharacterLiteral) {
+      return false;
+    } else if (node instanceof StringLiteral) {
+      return false;
+    } else if (node instanceof FieldAccess) {
+      return false;
+    } else if (node instanceof CastExpression) {
+      return isEvaluable(((CastExpression) node).getExpression());
+    } else if (node instanceof ParenthesizedExpression) {
+      return isEvaluable(((ParenthesizedExpression) node).getExpression());
+    } else if (node instanceof InstanceofExpression) {
+      return isEvaluable(((InstanceofExpression) node).getLeftOperand());
+    } else {
+      return true;
+    }
   }
 
   private boolean isExit(Statement statement) {
@@ -455,9 +643,13 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return ast.newExpressionStatement(assignment);
   }
 
-  @NotNull
   protected ExpressionStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression) {
-    return newLocalVariable(identifier, expression, getType(expression));
+    final Type type = getType(expression, true);
+    if (null == type) {
+      warn(expression, "Cannot resolve type of %s", expression);
+      return null;
+    }
+    return newLocalVariable(identifier, expression, type);
   }
 
   protected String randomIdentifier(ASTNode node) {
@@ -502,6 +694,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
           final FieldAccess fieldAccess = ast.newFieldAccess();
           fieldAccess.setExpression((Expression) ASTNode.copySubtree(ast, newChild));
           fieldAccess.setName((SimpleName) ASTNode.copySubtree(ast, qualifiedName.getName()));
+          info(child, "Replacing %s with %s", child, newChild);
           replace(parent, fieldAccess);
           return;
         }
@@ -514,16 +707,16 @@ public abstract class FileAstVisitor extends ASTVisitor {
         parent.setStructuralProperty(location, newChild);
       } else {
         if (location.isChildListProperty()) {
-          info(child, "Replace %s with %s", child, newChild);
+          info(1, child, "Replace %s with %s", child, newChild);
           List l = (List) parent.getStructuralProperty(location);
           final int indexOf = l.indexOf(child);
           l.set(indexOf, newChild);
         } else {
-          warn(child, "Failed to replace %s with %s", child, newChild);
+          warn(1, child, "Failed to replace %s with %s", child, newChild);
         }
       }
     } else {
-      warn(child, "Failed to replace %s with %s", child, newChild);
+      warn(1, child, "Failed to replace %s with %s", child, newChild);
     }
   }
 

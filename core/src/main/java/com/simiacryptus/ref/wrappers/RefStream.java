@@ -62,6 +62,10 @@ public class RefStream<T> implements Stream<T> {
     }));
   }
 
+  public static <T> RefStream<T> concat(Stream<? extends T> a, Stream<? extends T> b) {
+    return new RefStream<>(Stream.concat(a, b));
+  }
+
   @Override
   public boolean allMatch(@NotNull Predicate<? super T> predicate) {
     track(predicate);
@@ -147,21 +151,21 @@ public class RefStream<T> implements Stream<T> {
   }
 
   @Override
-  public DoubleStream flatMapToDouble(@NotNull Function<? super T, ? extends DoubleStream> mapper) {
+  public RefDoubleStream flatMapToDouble(@NotNull Function<? super T, ? extends DoubleStream> mapper) {
     track(mapper);
-    return inner.flatMapToDouble((T t) -> mapper.apply(getRef(t)));
+    return new RefDoubleStream(inner.flatMapToDouble((T t) -> mapper.apply(getRef(t))), lambdas, refs);
   }
 
   @Override
-  public IntStream flatMapToInt(@NotNull Function<? super T, ? extends IntStream> mapper) {
+  public RefIntStream flatMapToInt(@NotNull Function<? super T, ? extends IntStream> mapper) {
     track(mapper);
-    return inner.flatMapToInt((T t) -> mapper.apply(getRef(t)));
+    return new RefIntStream(inner.flatMapToInt((T t) -> mapper.apply(getRef(t))), lambdas, refs);
   }
 
   @Override
-  public LongStream flatMapToLong(@NotNull Function<? super T, ? extends LongStream> mapper) {
+  public RefLongStream flatMapToLong(@NotNull Function<? super T, ? extends LongStream> mapper) {
     track(mapper);
-    return inner.flatMapToLong((T t) -> mapper.apply(getRef(t)));
+    return new RefLongStream(inner.flatMapToLong((T t) -> mapper.apply(getRef(t))), lambdas, refs);
   }
 
   public void forEach(@NotNull Consumer<? super T> action) {
@@ -211,21 +215,21 @@ public class RefStream<T> implements Stream<T> {
   }
 
   @Override
-  public DoubleStream mapToDouble(@NotNull ToDoubleFunction<? super T> mapper) {
+  public RefDoubleStream mapToDouble(@NotNull ToDoubleFunction<? super T> mapper) {
     track(mapper);
-    return inner.mapToDouble((T value) -> mapper.applyAsDouble(getRef(value)));
+    return new RefDoubleStream(inner.mapToDouble((T value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs);
   }
 
   @Override
-  public IntStream mapToInt(@NotNull ToIntFunction<? super T> mapper) {
+  public RefIntStream mapToInt(@NotNull ToIntFunction<? super T> mapper) {
     track(mapper);
-    return inner.mapToInt((T value) -> mapper.applyAsInt(getRef(value)));
+    return new RefIntStream(inner.mapToInt((T value) -> mapper.applyAsInt(getRef(value))), lambdas, refs);
   }
 
   @Override
-  public LongStream mapToLong(@NotNull ToLongFunction<? super T> mapper) {
+  public RefLongStream mapToLong(@NotNull ToLongFunction<? super T> mapper) {
     track(mapper);
-    return inner.mapToLong((T value) -> mapper.applyAsLong(getRef(value)));
+    return new RefLongStream(inner.mapToLong((T value) -> mapper.applyAsLong(getRef(value))), lambdas, refs);
   }
 
   @Override
@@ -376,5 +380,4 @@ public class RefStream<T> implements Stream<T> {
       return System.identityHashCode(inner);
     }
   }
-
 }

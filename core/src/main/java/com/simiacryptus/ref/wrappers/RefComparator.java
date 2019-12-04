@@ -25,10 +25,13 @@ import com.simiacryptus.ref.lang.RefUtil;
 
 import java.util.Comparator;
 import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 
 @RefAware
 @RefCoderIgnore
-public class RefComparator {
+public class RefComparator<T> {
 
   public static <T extends Comparable<T>> Comparator<? super T> naturalOrder() {
     return (a, b) -> {
@@ -39,9 +42,21 @@ public class RefComparator {
     };
   }
 
-  public static <T, U extends Comparable<U>> Comparator<? super T> comparing(Function<T, U> fn) {
+  public static <T, U extends Comparable<? super U>> Comparator<? super T> comparing(Function<? super T, ? extends U> fn) {
     return (a, b) -> {
       return fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b)));
     };
+  }
+
+  public static <T> Comparator<T> comparingInt(ToIntFunction<? super T> keyExtractor) {
+    return Comparator.comparingInt(keyExtractor);
+  }
+
+  public static <T> Comparator<T> comparingLong(ToLongFunction<? super T> keyExtractor) {
+    return Comparator.comparingLong(keyExtractor);
+  }
+
+  public static <T> Comparator<T> comparingDouble(ToDoubleFunction<? super T> keyExtractor) {
+    return Comparator.comparingDouble(keyExtractor);
   }
 }

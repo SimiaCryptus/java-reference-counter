@@ -28,6 +28,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "insert")
 public class InsertMojo extends BaseMojo {
   public void execute() throws MojoExecutionException {
+    if (!resolve().getArtifacts().stream().filter(artifact ->
+        artifact.getGroupId().equals("com.simiacryptus") &&
+            artifact.getArtifactId().equals("refcount-core")).findAny().isPresent()) {
+      getLog().warn("Dependency not found: refcount-core");
+      return;
+    } else {
+      getLog().warn("Dependency confirmed: refcount-core");
+    }
     new RefAutoCoder(getProjectInfo()).setAddRefcounting(true).rewrite();
   }
 }

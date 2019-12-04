@@ -62,22 +62,14 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
 
   @NotNull
   public @Override
-  RefHashSet<T> addRef() {
-    return (RefHashSet<T>) super.addRef();
+  RefAbstractSet<T> addRef() {
+    return (RefAbstractSet<T>) super.addRef();
   }
 
   @Override
   public synchronized final void clear() {
     getInner().keySet().forEach(RefUtil::freeRef);
     getInner().clear();
-  }
-
-  @Override
-  public void forEach(Consumer<? super T> action) {
-    for (T t : getInner().keySet()) {
-      action.accept(RefUtil.addRef(t));
-    }
-    RefUtil.freeRef(action);
   }
 
   @Override
@@ -100,6 +92,14 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
     } else {
       return c.stream().filter(o -> !getInner().containsKey(o)).count() == 0;
     }
+  }
+
+  @Override
+  public void forEach(Consumer<? super T> action) {
+    for (T t : getInner().keySet()) {
+      action.accept(RefUtil.addRef(t));
+    }
+    RefUtil.freeRef(action);
   }
 
   public abstract Map<T, T> getInner();

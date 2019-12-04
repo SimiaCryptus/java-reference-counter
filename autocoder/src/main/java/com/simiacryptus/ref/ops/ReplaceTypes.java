@@ -21,6 +21,7 @@ package com.simiacryptus.ref.ops;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.wrappers.*;
 import org.eclipse.jdt.core.dom.*;
@@ -28,8 +29,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.*;
 
 @RefCoderIgnore
 public class ReplaceTypes extends RefFileAstVisitor {
@@ -56,30 +58,50 @@ public class ReplaceTypes extends RefFileAstVisitor {
   public static BiMap<Class<?>, Class<?>> classMapping() {
     BiMap<Class<?>, Class<?>> replacements = HashBiMap.create();
     replacements.put(Stream.class, RefStream.class);
+    replacements.put(IntStream.class, RefIntStream.class);
+    replacements.put(LongStream.class, RefLongStream.class);
+    replacements.put(DoubleStream.class, RefDoubleStream.class);
+    replacements.put(ConcurrentLinkedDeque.class, RefConcurrentLinkedDeque.class);
     replacements.put(Arrays.class, RefArrays.class);
     replacements.put(ArrayList.class, RefArrayList.class);
     replacements.put(List.class, RefList.class);
     replacements.put(HashMap.class, RefHashMap.class);
+    replacements.put(ConcurrentHashMap.class, RefConcurrentHashMap.class);
+    replacements.put(LinkedHashMap.class, RefLinkedHashMap.class);
+    replacements.put(LinkedList.class, RefLinkedList.class);
     replacements.put(HashSet.class, RefHashSet.class);
+    replacements.put(TreeSet.class, RefTreeSet.class);
     replacements.put(Collectors.class, RefCollectors.class);
     replacements.put(Comparator.class, RefComparator.class);
+    replacements.put(StreamSupport.class, RefStreamSupport.class);
+    replacements.put(Lists.class, RefLists.class);
     return replacements;
   }
+
 
   public void apply(Name node) {
     if (skip(node)) return;
     final IBinding binding = node.resolveBinding();
+    if (null == binding) {
+      warn(node, "Unresolved binding: %s", node);
+    }
     if (binding instanceof ITypeBinding) {
       final String className = ((ITypeBinding) binding).getBinaryName();
       final String replacement = replacements.get(className);
       if (null != replacement) {
         try {
           replace(node, newQualifiedName(node.getAST(), Class.forName(replacement)));
+          info(node, "Replaced %s with %s", className, replacement);
         } catch (ClassNotFoundException e) {
           warn(node, e.getMessage());
         }
       }
     }
+  }
+
+  @Override
+  public void endVisit(TypeParameter node) {
+    apply(node.getName());
   }
 
   @Override

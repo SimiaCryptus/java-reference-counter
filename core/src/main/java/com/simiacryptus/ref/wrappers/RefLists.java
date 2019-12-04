@@ -19,39 +19,17 @@
 
 package com.simiacryptus.ref.wrappers;
 
+import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 @RefAware
 @RefCoderIgnore
-public interface RefList<T> extends ReferenceCounting, List<T> {
-
-  public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
-        .toArray((x) -> new RefList[x]);
+public class RefLists {
+  public static <T> RefList<RefList<T>> partition(List<T> list, int size) {
+    return new RefStream<>(Lists.partition(list, size).stream())
+        .map(RefArrayList::new).collect(RefCollectors.toList());
   }
-
-  RefList<T> addRef();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator(int index);
-
-  @Override
-  RefSpliterator<T> spliterator();
-
-  @Override
-  RefStream<T> stream();
-
-  @NotNull
-  @Override
-  RefList<T> subList(int fromIndex, int toIndex);
 }

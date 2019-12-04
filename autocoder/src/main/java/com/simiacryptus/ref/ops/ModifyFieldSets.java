@@ -34,9 +34,19 @@ public class ModifyFieldSets extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull Assignment node) {
+
     if (node.getLeftHandSide() instanceof FieldAccess) {
       final FieldAccess fieldAccess = (FieldAccess) node.getLeftHandSide();
-      final ITypeBinding typeBinding = fieldAccess.resolveTypeBinding();
+      final IVariableBinding fieldBinding = fieldAccess.resolveFieldBinding();
+      if (null == fieldBinding) {
+        warn(node, "Unresolved binding");
+        return;
+      }
+      if (0 != (fieldBinding.getModifiers() & Modifier.FINAL)) {
+        warn(node, "Final field");
+        return;
+      }
+      final ITypeBinding typeBinding = fieldBinding.getType();
       if (null == typeBinding) {
         warn(node, "Unresolved binding");
         return;
@@ -51,14 +61,14 @@ public class ModifyFieldSets extends RefFileAstVisitor {
           final Expression rightHandSide = node.getRightHandSide();
           final AST ast = node.getAST();
           if (rightHandSide instanceof Name) {
-            block.statements().add(lineNumber, freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
+            if (0 == (fieldBinding.getModifiers() & Modifier.FINAL)) block.statements().add(lineNumber, freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
             node.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
             info(node, "Simple field-set statement at line " + lineNumber);
           } else {
             final Block exchangeBlock = ast.newBlock();
             final String identifier = randomIdentifier(node);
-            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(node, typeBinding.getQualifiedName())));
-            exchangeBlock.statements().add(freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
+            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(node, typeBinding.getQualifiedName(), true)));
+            if (0 == (fieldBinding.getModifiers() & Modifier.FINAL)) exchangeBlock.statements().add(freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
             final Assignment assignment = ast.newAssignment();
             assignment.setLeftHandSide((Expression) ASTNode.copySubtree(ast, fieldAccess));
             assignment.setOperator(Assignment.Operator.ASSIGN);

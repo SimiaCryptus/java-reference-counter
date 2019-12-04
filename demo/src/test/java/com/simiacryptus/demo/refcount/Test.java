@@ -5,11 +5,13 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.slf4j.LoggerFactory;
+
 import java.io.PrintStream;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Test {
+public @com.simiacryptus.ref.lang.RefAware
+class Test {
   static {
     System.setProperty("DEBUG_LIFECYCLE", "true");
   }
@@ -26,6 +28,7 @@ public class Test {
       @Override
       protected synchronized void append(ILoggingEvent iLoggingEvent) {
         String formattedMessage = iLoggingEvent.getFormattedMessage();
+        com.simiacryptus.ref.lang.RefUtil.freeRef(iLoggingEvent);
         out.println(formattedMessage);
         out.flush();
         bytes.addAndGet(formattedMessage.length());

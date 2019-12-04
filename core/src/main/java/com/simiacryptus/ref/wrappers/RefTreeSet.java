@@ -27,39 +27,44 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.TreeMap;
 
 @RefAware
 @RefCoderIgnore
-public class RefHashSet<T> extends RefAbstractSet<T> {
+public class RefTreeSet<T> extends RefAbstractSet<T> {
 
-  private final Map<T, T> inner;
+  private final TreeMap<T, T> inner;
 
-  public RefHashSet() {
-    this(new HashMap<>());
+  public RefTreeSet() {
+    this(new TreeMap<>());
   }
 
-  RefHashSet(@Nonnull HashMap<T, T> inner) {
+  public RefTreeSet(Comparator<? super T> comparator) {
+    this(new TreeMap<>(comparator));
+  }
+
+  RefTreeSet(@Nonnull TreeMap<T, T> inner) {
     if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
     this.getInner().keySet().forEach(RefUtil::addRef);
   }
 
-  public RefHashSet(@NotNull Collection<T> values) {
+  public RefTreeSet(@NotNull Collection<T> values) {
     this();
     addAll(values);
   }
 
-  public static <T> RefHashSet<T>[] addRefs(@NotNull RefHashSet<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef)
-        .toArray((x) -> new RefHashSet[x]);
+  public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
+        .toArray((x) -> new RefTreeSet[x]);
   }
 
   @NotNull
   public @Override
-  RefHashSet<T> addRef() {
-    return (RefHashSet<T>) super.addRef();
+  RefTreeSet<T> addRef() {
+    return (RefTreeSet<T>) super.addRef();
   }
 
   @Override
@@ -67,4 +72,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     return inner;
   }
 
+  public T pollFirst() {
+    return RefUtil.addRef(inner.pollFirstEntry().getKey());
+  }
 }

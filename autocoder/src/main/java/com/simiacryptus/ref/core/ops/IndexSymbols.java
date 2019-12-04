@@ -41,6 +41,31 @@ public class IndexSymbols extends FileAstVisitor {
     this.index = index;
   }
 
+  public LinkedHashMap<BindingId, Span> context(ASTNode node, Function<ASTNode, Span> locator) {
+    final LinkedHashMap<BindingId, Span> list = new LinkedHashMap<>();
+    final ASTNode parent = node.getParent();
+    if (parent != null) list.putAll(context(parent, locator));
+    if (node instanceof MethodDeclaration) {
+      list.put(index.describe(((MethodDeclaration) node).resolveBinding()), locator.apply(node));
+    } else if (node instanceof LambdaExpression) {
+      final LambdaExpression lambdaExpression = (LambdaExpression) node;
+      final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
+      if (methodBinding == null) {
+        warn(node, "Unresolved binding for %s", node);
+      } else {
+        list.put(index.describe(methodBinding).setType("Lambda"), locator.apply(node));
+      }
+    } else if (node instanceof TypeDeclaration) {
+      final ITypeBinding typeBinding = ((TypeDeclaration) node).resolveBinding();
+      if (typeBinding == null) {
+        warn(node, "Unresolved binding for %s", node);
+      } else {
+        list.put(index.describe(typeBinding), locator.apply(node));
+      }
+    }
+    return list;
+  }
+
   @Override
   public void endVisit(LambdaExpression node) {
     indexDef(node, node.resolveMethodBinding());
@@ -102,14 +127,23 @@ public class IndexSymbols extends FileAstVisitor {
     super.endVisit(node);
   }
 
+  @NotNull
+  public ContextLocation getContextLocation(ASTNode node, Function<ASTNode, Span> locator) {
+    final LinkedHashMap<BindingId, Span> context = context(node, locator);
+    return new ContextLocation(locator.apply(node), context);
+  }
+
   private void indexDef(ASTNode node, IBinding binding) {
     if (null == binding) return;
-    final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
+    final ContextLocation contextLocation = getContextLocation(node, this::getSpan);
     final BindingId bindingId = index.describe(binding);
     final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
     if (isVerbose()) info(node, "Declaration of %s at %s within: \n\t%s", bindingId, getSpan(node), contextPath);
     final ContextLocation replaced = index.definitionLocations.put(bindingId, contextLocation);
-    if (null != replaced) throw new RuntimeException(String.format("Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location));
+    if (null != replaced) {
+      warn(node, "Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location);
+      //throw new RuntimeException(String.format("Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location));
+    }
     index.definitionNodes.put(bindingId, node);
   }
 
@@ -117,7 +151,7 @@ public class IndexSymbols extends FileAstVisitor {
     if (null != binding) {
       BindingId bindingId = index.describe(binding);
       if (null != bindingId) {
-        final ContextLocation contextLocation = index.getContextLocation(node, this::getSpan);
+        final ContextLocation contextLocation = getContextLocation(node, this::getSpan);
         final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
         if (isVerbose()) info(node, "Reference to %s at %s within:\n\t%s", bindingId, contextLocation.location, contextPath);
         index.references.computeIfAbsent(bindingId, x -> new ArrayList<>()).add(contextLocation);
@@ -180,33 +214,12 @@ public class IndexSymbols extends FileAstVisitor {
     public final HashMap<BindingId, ASTNode> definitionNodes = new HashMap<>();
     public final HashMap<BindingId, List<ContextLocation>> references = new HashMap<>();
 
-    public LinkedHashMap<BindingId, Span> context(ASTNode node, Function<ASTNode, Span> locator) {
-      final LinkedHashMap<BindingId, Span> list = new LinkedHashMap<>();
-      final ASTNode parent = node.getParent();
-      if (parent != null) list.putAll(context(parent, locator));
-      if (node instanceof MethodDeclaration) {
-        list.put(describe(((MethodDeclaration) node).resolveBinding()), locator.apply(node));
-      } else if (node instanceof LambdaExpression) {
-        final LambdaExpression lambdaExpression = (LambdaExpression) node;
-        final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
-        list.put(describe(methodBinding).setType("Lambda"), locator.apply(node));
-      } else if (node instanceof TypeDeclaration) {
-        list.put(describe(((TypeDeclaration) node).resolveBinding()), locator.apply(node));
-      }
-      return list;
-    }
-
     public BindingId describe(@Nonnull IBinding binding) {
+      if (null == binding) return null;
       final String path = getPath(binding);
       if (null == path) return null;
       if (path.contains("::lambda$")) return new BindingId(path, "Lambda");
       else return new BindingId(path, getType(binding));
-    }
-
-    @NotNull
-    public ContextLocation getContextLocation(ASTNode node, Function<ASTNode, Span> locator) {
-      final LinkedHashMap<BindingId, Span> context = context(node, locator);
-      return new ContextLocation(locator.apply(node), context);
     }
 
     public IMethodBinding getImplementation(IMethodBinding methodBinding) {
@@ -270,6 +283,7 @@ public class IndexSymbols extends FileAstVisitor {
       } else if (binding instanceof IPackageBinding) {
         return binding.getName();
       } else {
+        logger.warn(String.format("Cannot format path of %s", binding.getClass().getCanonicalName()));
         throw new RuntimeException(binding.getClass().getCanonicalName());
       }
     }

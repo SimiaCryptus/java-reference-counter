@@ -26,6 +26,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RefCoderIgnore
 public class InsertMethods extends RefFileAstVisitor {
@@ -36,49 +38,87 @@ public class InsertMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
-    if(node.isInterface()) {
-      info(node, "%s is an interface", node.getName());
-      return;
-    }
+    final boolean isInterface = node.isInterface();
     if (derives(node.resolveBinding(), ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
-      if (!findMethod(node, "_free").isPresent()) {
-        declarations.add(method_free(ast));
+      final Optional<MethodDeclaration> freeMethod = findMethod(node, "_free");
+      if (!freeMethod.isPresent()) {
+        declarations.add(method_free(ast, isInterface));
+      } else {
+        final MethodDeclaration methodDeclaration = freeMethod.get();
+        final int modifiers = methodDeclaration.getModifiers();
+        if (0 == (modifiers & Modifier.PUBLIC)) {
+          methodDeclaration.modifiers().clear();
+          methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+          if (0 != (modifiers & Modifier.ABSTRACT)) {
+            methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.ABSTRACT_KEYWORD));
+          }
+        }
       }
-      declarations.add(method_addRef(ast, node.getName()));
+      final TypeParameter[] typeParameters = ((Stream<TypeParameter>) node.typeParameters().stream()).toArray(i -> new TypeParameter[i]);
+      declarations.add(method_addRef(node, node.getName(), isInterface, typeParameters));
       declarations.add(method_addRefs(ast, node.getName()));
+      declarations.add(method_addRefs2(ast, node.getName()));
       //declarations.add(method_freeRefs(ast, node.getName()));
     }
   }
 
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
-    if (derives(node.resolveBinding(), ReferenceCounting.class)) {
+    final ITypeBinding typeBinding = node.resolveBinding();
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    if (derives(typeBinding, ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
-      declarations.add(method_free(ast));
+      declarations.add(method_free(ast, false));
     }
   }
 
   @NotNull
-  public MethodDeclaration method_addRef(@NotNull AST ast, @NotNull SimpleName name) {
+  private Type getType(@NotNull ASTNode node, String fqTypeName, TypeParameter... typeParameters) {
+    final Type baseType = getType(node, fqTypeName, false);
+    if (typeParameters.length > 0) {
+      final AST ast = node.getAST();
+      final ParameterizedType parameterizedType = ast.newParameterizedType(baseType);
+      for (TypeParameter typeParameter : typeParameters) {
+        final ITypeBinding binding = typeParameter.resolveBinding();
+        if (binding == null) {
+          warn(typeParameter, "Unresolved Binding %s", typeParameter);
+          parameterizedType.typeArguments().add(ast.newWildcardType());
+          continue;
+        }
+        parameterizedType.typeArguments().add(getType(typeParameter, binding.getQualifiedName(), false));
+      }
+      return parameterizedType;
+    } else {
+      return baseType;
+    }
+  }
+
+  public MethodDeclaration method_addRef(@NotNull ASTNode node, @NotNull SimpleName name, boolean isInterface, TypeParameter... typeParameters) {
+    final AST ast = node.getAST();
     final String fqTypeName = name.getFullyQualifiedName();
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRef"));
-    methodDeclaration.setReturnType2(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
+    methodDeclaration.setReturnType2(getType(node, fqTypeName, typeParameters));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-    methodDeclaration.modifiers().add(annotation_override(ast));
-    final Block block = ast.newBlock();
-    final CastExpression castExpression = ast.newCastExpression();
-    castExpression.setType(ast.newSimpleType(ast.newSimpleName(fqTypeName)));
-    final SuperMethodInvocation superMethodInvocation = ast.newSuperMethodInvocation();
-    superMethodInvocation.setName(ast.newSimpleName("addRef"));
-    castExpression.setExpression(superMethodInvocation);
-    final ReturnStatement returnStatement = ast.newReturnStatement();
-    returnStatement.setExpression(castExpression);
-    block.statements().add(returnStatement);
-    methodDeclaration.setBody(block);
+    if (!isInterface) {
+      methodDeclaration.modifiers().add(annotation_override(ast));
+      final Block block = ast.newBlock();
+      final CastExpression castExpression = ast.newCastExpression();
+      castExpression.setType(getType(node, fqTypeName, typeParameters));
+      final SuperMethodInvocation superMethodInvocation = ast.newSuperMethodInvocation();
+      superMethodInvocation.setName(ast.newSimpleName("addRef"));
+      castExpression.setExpression(superMethodInvocation);
+      final ReturnStatement returnStatement = ast.newReturnStatement();
+      returnStatement.setExpression(castExpression);
+      block.statements().add(returnStatement);
+      methodDeclaration.setBody(block);
+    }
     return methodDeclaration;
   }
 
@@ -88,12 +128,12 @@ public class InsertMethods extends RefFileAstVisitor {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRefs"));
 
-    methodDeclaration.setReturnType2(arrayType(ast, fqTypeName));
+    methodDeclaration.setReturnType2(arrayType(ast, fqTypeName, 1));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
 
     final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
-    arg.setType(arrayType(ast, fqTypeName));
+    arg.setType(arrayType(ast, fqTypeName, 1));
     arg.setName(ast.newSimpleName("array"));
     methodDeclaration.parameters().add(arg);
 
@@ -138,7 +178,7 @@ public class InsertMethods extends RefFileAstVisitor {
       filter_lambda.parameters().add(variableDeclarationFragment);
 
       final ArrayCreation arrayCreation = ast.newArrayCreation();
-      arrayCreation.setType(arrayType(ast, fqTypeName));
+      arrayCreation.setType(arrayType(ast, fqTypeName, 1));
       arrayCreation.dimensions().add(ast.newSimpleName("x"));
 
       filter_lambda.setBody(arrayCreation);
@@ -154,16 +194,88 @@ public class InsertMethods extends RefFileAstVisitor {
   }
 
   @NotNull
-  public MethodDeclaration method_free(@NotNull AST ast) {
+  public MethodDeclaration method_addRefs2(@NotNull AST ast, @NotNull SimpleName name) {
+    final String fqTypeName = name.getFullyQualifiedName();
+    final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
+    methodDeclaration.setName(ast.newSimpleName("addRefs"));
+
+    methodDeclaration.setReturnType2(arrayType(ast, fqTypeName, 2));
+    methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+    methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+
+    final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
+    arg.setType(arrayType(ast, fqTypeName, 2));
+    arg.setName(ast.newSimpleName("array"));
+    methodDeclaration.parameters().add(arg);
+
+    final MethodInvocation stream_invoke = ast.newMethodInvocation();
+    stream_invoke.setExpression(newQualifiedName(ast, "java.util.Arrays".split("\\.")));
+    stream_invoke.setName(ast.newSimpleName("stream"));
+    stream_invoke.arguments().add(ast.newSimpleName("array"));
+
+    final MethodInvocation filter_invoke = ast.newMethodInvocation();
+    {
+      filter_invoke.setExpression(stream_invoke);
+      filter_invoke.setName(ast.newSimpleName("filter"));
+      final LambdaExpression filter_lambda = ast.newLambdaExpression();
+      final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
+      variableDeclarationFragment.setName(ast.newSimpleName("x"));
+      filter_lambda.parameters().add(variableDeclarationFragment);
+      final InfixExpression infixExpression = ast.newInfixExpression();
+      infixExpression.setLeftOperand(ast.newSimpleName("x"));
+      infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
+      infixExpression.setRightOperand(ast.newNullLiteral());
+      filter_lambda.setBody(infixExpression);
+      filter_invoke.arguments().add(filter_lambda);
+    }
+
+    final MethodInvocation addref_invoke = ast.newMethodInvocation();
+    {
+      addref_invoke.setExpression(filter_invoke);
+      addref_invoke.setName(ast.newSimpleName("map"));
+      final ExpressionMethodReference body = ast.newExpressionMethodReference();
+      body.setExpression(ast.newSimpleName(fqTypeName));
+      body.setName(ast.newSimpleName("addRefs"));
+      addref_invoke.arguments().add(body);
+    }
+
+    final MethodInvocation toArray_invoke = ast.newMethodInvocation();
+    {
+      toArray_invoke.setExpression(addref_invoke);
+      toArray_invoke.setName(ast.newSimpleName("toArray"));
+      final LambdaExpression filter_lambda = ast.newLambdaExpression();
+      final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
+      variableDeclarationFragment.setName(ast.newSimpleName("x"));
+      filter_lambda.parameters().add(variableDeclarationFragment);
+
+      final ArrayCreation arrayCreation = ast.newArrayCreation();
+      arrayCreation.setType(arrayType(ast, fqTypeName, 2));
+      arrayCreation.dimensions().add(ast.newSimpleName("x"));
+
+      filter_lambda.setBody(arrayCreation);
+      toArray_invoke.arguments().add(filter_lambda);
+    }
+
+    final Block block = ast.newBlock();
+    final ReturnStatement returnStatement = ast.newReturnStatement();
+    returnStatement.setExpression(toArray_invoke);
+    block.statements().add(returnStatement);
+    methodDeclaration.setBody(block);
+    return methodDeclaration;
+  }
+
+  public MethodDeclaration method_free(@NotNull AST ast, boolean isInterface) {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("_free"));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-    methodDeclaration.modifiers().add(annotation_override(ast));
-    final Block body = ast.newBlock();
-    final SuperMethodInvocation superCall = ast.newSuperMethodInvocation();
-    superCall.setName(ast.newSimpleName("_free"));
-    body.statements().add(ast.newExpressionStatement(superCall));
-    methodDeclaration.setBody(body);
+    if (!isInterface) {
+      methodDeclaration.modifiers().add(annotation_override(ast));
+      final Block body = ast.newBlock();
+      final SuperMethodInvocation superCall = ast.newSuperMethodInvocation();
+      superCall.setName(ast.newSimpleName("_free"));
+      body.statements().add(ast.newExpressionStatement(superCall));
+      methodDeclaration.setBody(body);
+    }
     return methodDeclaration;
   }
 

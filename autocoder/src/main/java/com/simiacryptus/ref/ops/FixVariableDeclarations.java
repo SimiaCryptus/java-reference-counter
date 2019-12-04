@@ -33,30 +33,42 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
 
   @Override
   public void endVisit(VariableDeclarationStatement node) {
-    final Type type = node.getType();
-    final ITypeBinding typeBinding = type.resolveBinding();
-    if(null == typeBinding) {
+    final Type nodeType = node.getType();
+    ITypeBinding typeBinding = nodeType.resolveBinding();
+    if (null == typeBinding) {
       warn(node, "Unresolved binding");
       return;
     }
-    if(1 != node.fragments().size()) {
+    if (1 != node.fragments().size()) {
       warn(node, "%s fragments", node.fragments().size());
       return;
     }
     VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
     final Expression initializer = fragment.getInitializer();
-    final ITypeBinding initializerType = initializer.resolveTypeBinding();
-    if(null == initializerType) {
+    if (null == initializer) {
+      info(node, "No initializer");
+      return;
+    }
+    ITypeBinding initializerType = initializer.resolveTypeBinding();
+    if (null == initializerType) {
       warn(node, "Unresolved binding");
       return;
     }
-
-    if(!initializerType.isAssignmentCompatible(typeBinding)) {
-      final Type newType = getType(initializer);
-      warn(node, "Fixing variable type %s to %s", node.getType(), newType);
+    if (typeBinding.isArray() != initializerType.isArray()) {
+      warn(node, "Array mismatch: %s != %s", typeBinding.getQualifiedName(), initializerType.getQualifiedName());
+      return;
+    }
+    if (initializerType.isArray()) {
+      initializerType = initializerType.getElementType();
+    }
+    if (typeBinding.isArray()) {
+      typeBinding = typeBinding.getElementType();
+    }
+    if (!initializerType.isAssignmentCompatible(typeBinding)) {
+      final Type newType = getType(node, initializerType.getQualifiedName(), true);
+      info(node, "Fixing variable type %s to %s for %s", nodeType, newType, fragment.getName());
       node.setType(newType);
     }
-    super.endVisit(node);
   }
 
   @Override

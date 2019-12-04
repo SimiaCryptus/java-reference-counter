@@ -21,37 +21,18 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Deque;
 
 @RefAware
 @RefCoderIgnore
-public interface RefList<T> extends ReferenceCounting, List<T> {
+public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
-  public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
-        .toArray((x) -> new RefList[x]);
+  public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
+        .toArray((x) -> new RefDeque[x]);
   }
 
-  RefList<T> addRef();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator(int index);
-
-  @Override
-  RefSpliterator<T> spliterator();
-
-  @Override
-  RefStream<T> stream();
-
-  @NotNull
-  @Override
-  RefList<T> subList(int fromIndex, int toIndex);
+  RefDeque<T> addRef();
 }
