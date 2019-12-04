@@ -23,11 +23,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-@RefAware @RefCoderIgnore
+@RefAware
+@RefCoderIgnore
 public interface ReferenceCounting {
 
   static <T extends ReferenceCounting> void freeRefs(@NotNull T[] array) {
     java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
+  }
+
+  static <T extends ReferenceCounting> void freeRefs(@NotNull T[][] array) {
+    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+  }
+
+  static <T extends ReferenceCounting> void freeRefs(@NotNull T[][][] array) {
+    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
   }
 
   default ReferenceCounting addRef() {

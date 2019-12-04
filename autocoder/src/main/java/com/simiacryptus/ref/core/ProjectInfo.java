@@ -61,18 +61,19 @@ public class ProjectInfo {
 
   @NotNull
   public HashMap<File, CompilationUnit> parse() {
-    ASTParser astParser = ASTParser.newParser(AST.JLS11);
-    astParser.setKind(ASTParser.K_COMPILATION_UNIT);
-    astParser.setResolveBindings(true);
     HashMap<String, String> compilerOptions = new HashMap<>();
     compilerOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8));
     compilerOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
+    ASTParser astParser = ASTParser.newParser(AST.JLS11);
     astParser.setCompilerOptions(compilerOptions);
+    astParser.setKind(ASTParser.K_COMPILATION_UNIT);
+    astParser.setResolveBindings(true);
+    astParser.setBindingsRecovery(true);
+    astParser.setStatementsRecovery(true);
     astParser.setEnvironment(classpathEntries, sourcepathEntries, null, true);
-    final ASTParser parser = astParser;
     HashMap<File, CompilationUnit> results = new HashMap<>();
     HashMap<String, File> fileMap = new HashMap<>();
-    parser.createASTs(
+    astParser.createASTs(
         FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true).stream().map(file -> {
           final String absolutePath = file.getAbsolutePath();
           fileMap.put(absolutePath, file);

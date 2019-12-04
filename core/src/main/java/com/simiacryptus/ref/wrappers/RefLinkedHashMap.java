@@ -22,48 +22,39 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RefAware
 @RefCoderIgnore
-public class RefHashSet<T> extends RefAbstractSet<T> {
-
-  private final Map<T, T> inner;
-
-  public RefHashSet() {
-    this(new HashMap<>());
-  }
-
-  RefHashSet(@Nonnull HashMap<T, T> inner) {
-    if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
-    this.inner = inner;
-    this.getInner().keySet().forEach(RefUtil::addRef);
-  }
-
-  public RefHashSet(@NotNull Collection<T> values) {
-    this();
-    addAll(values);
-  }
-
-  public static <T> RefHashSet<T>[] addRefs(@NotNull RefHashSet<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef)
-        .toArray((x) -> new RefHashSet[x]);
-  }
-
+public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
-  public @Override
-  RefHashSet<T> addRef() {
-    return (RefHashSet<T>) super.addRef();
+  private final Map<K, V> inner;
+
+  public RefLinkedHashMap() {
+    this.inner = new LinkedHashMap<>();
+  }
+
+  public RefLinkedHashMap(RefLinkedHashMap<? extends K, ? extends V> values) {
+    this();
+    final RefHashSet<? extends Entry<? extends K, ? extends V>> entries = values.entrySet();
+    entries.stream().forEach(t -> {
+      put(t.getKey(), t.getValue());
+      RefUtil.freeRef(t);
+    });
+    entries.freeRef();
+    RefUtil.freeRef(values);
+  }
+
+  public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@NotNull RefLinkedHashMap<K, V>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
+        .toArray((x) -> new RefLinkedHashMap[x]);
   }
 
   @Override
-  public Map<T, T> getInner() {
+  public Map<K, V> getInner() {
     return inner;
   }
 

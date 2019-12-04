@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ops.StatementOfInterest;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +53,15 @@ public class InlineRefs extends RefFileAstVisitor {
         final List fragments = ((VariableDeclarationStatement) previousStatement).fragments();
         if (1 == fragments.size()) {
           final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
+          final StatementOfInterest lastMention = lastMention(getBlock(node), fragment.getName(), 0);
+          if (null == lastMention) {
+            warn(node, "No mentions of %s", fragment.getName());
+            return;
+          }
+          if (!lastMention.statement.equals(previousStatement)) {
+            info(node, "Assignment is not last usage of %s", fragment.getName());
+            return;
+          }
           if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
             info(node, "Inlining %s", fragment.getName());
             node.setRightHandSide((Expression) ASTNode.copySubtree(node.getAST(), fragment.getInitializer()));
@@ -78,6 +88,15 @@ public class InlineRefs extends RefFileAstVisitor {
           final List fragments = ((VariableDeclarationStatement) previousStatement).fragments();
           if (1 == fragments.size()) {
             final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
+            final StatementOfInterest lastMention = lastMention(getBlock(node), fragment.getName(), 0);
+            if (null == lastMention) {
+              warn(node, "No mentions of %s", fragment.getName());
+              return;
+            }
+            if (lastMention.statement.equals(previousStatement)) {
+              info(node, "Assignment is not last usage of %s", fragment.getName());
+              return;
+            }
             if (fragment.getName().toString().equals(node.getExpression().toString())) {
               info(node, "Inlining %s", fragment.getName());
               node.setExpression((Expression) ASTNode.copySubtree(node.getAST(), fragment.getInitializer()));

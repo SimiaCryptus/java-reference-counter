@@ -24,34 +24,16 @@ import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Queue;
 
 @RefAware
 @RefCoderIgnore
-public interface RefList<T> extends ReferenceCounting, List<T> {
+public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
-  public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
-        .toArray((x) -> new RefList[x]);
+  public static <T> RefQueue<T>[] addRefs(@NotNull RefQueue<T>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefQueue::addRef)
+        .toArray((x) -> new RefQueue[x]);
   }
 
-  RefList<T> addRef();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator(int index);
-
-  @Override
-  RefSpliterator<T> spliterator();
-
-  @Override
-  RefStream<T> stream();
-
-  @NotNull
-  @Override
-  RefList<T> subList(int fromIndex, int toIndex);
+  RefQueue<T> addRef();
 }

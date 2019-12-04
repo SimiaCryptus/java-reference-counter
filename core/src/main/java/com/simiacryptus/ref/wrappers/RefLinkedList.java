@@ -21,37 +21,40 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @RefAware
 @RefCoderIgnore
-public interface RefList<T> extends ReferenceCounting, List<T> {
+public class RefLinkedList<T> extends RefAbstractList<T> {
+  @NotNull
+  private final List<T> inner;
 
-  public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
-        .toArray((x) -> new RefList[x]);
+  public RefLinkedList() {
+    this.inner = new LinkedList<>();
   }
 
-  RefList<T> addRef();
+  public RefLinkedList(@NotNull List<T> list) {
+    this();
+    this.addAll(list);
+  }
+
+  public static <T> RefLinkedList<T>[] addRefs(@NotNull RefLinkedList<T>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedList::addRef)
+        .toArray((x) -> new RefLinkedList[x]);
+  }
 
   @NotNull
-  @Override
-  RefListIterator<T> listIterator();
-
-  @NotNull
-  @Override
-  RefListIterator<T> listIterator(int index);
+  public @Override
+  RefLinkedList<T> addRef() {
+    return (RefLinkedList<T>) super.addRef();
+  }
 
   @Override
-  RefSpliterator<T> spliterator();
+  public List<T> getInner() {
+    return inner;
+  }
 
-  @Override
-  RefStream<T> stream();
-
-  @NotNull
-  @Override
-  RefList<T> subList(int fromIndex, int toIndex);
 }

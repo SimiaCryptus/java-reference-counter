@@ -61,7 +61,7 @@ public abstract class BaseMojo extends AbstractMojo {
     return Stream.concat(
         project.getTestCompileSourceRoots().stream(),
         project.getCompileSourceRoots().stream()
-    ).filter(s->new File(s).exists()).toArray(i -> new String[i]);
+    ).filter(s -> new File(s).exists()).toArray(i -> new String[i]);
   }
 
   public ArtifactResolutionResult resolve() {

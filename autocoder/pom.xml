@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.simiacryptus</groupId>
         <artifactId>java-parent</artifactId>
-        <version>1.8.1</version>
+        <version>1.8.1-SNAPSHOT</version>
         <relativePath>../../java-parent</relativePath>
     </parent>
 
@@ -110,21 +110,19 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.simiacryptus</groupId>
-            <artifactId>refcount-core</artifactId>
-            <version>1.8.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>co.fs2</groupId>
-            <artifactId>fs2-io_2.11</artifactId>
-            <version>RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
             <version>${maven.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.simiacryptus</groupId>
+            <artifactId>refcount-core</artifactId>
+            <version>1.8.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.simiacryptus</groupId>
+            <artifactId>java-util</artifactId>
         </dependency>
     </dependencies>
 

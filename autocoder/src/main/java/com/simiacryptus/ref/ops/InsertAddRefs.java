@@ -20,14 +20,12 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 
 @RefCoderIgnore
@@ -35,38 +33,6 @@ public class InsertAddRefs extends RefFileAstVisitor {
 
   public InsertAddRefs(CompilationUnit compilationUnit, File file) {
     super(compilationUnit, file);
-  }
-
-  @NotNull
-  public MethodInvocation insertAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
-    AST ast = expression.getAST();
-    if (type.isArray()) {
-      final String qualifiedName = type.getElementType().getQualifiedName();
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRefs"));
-      methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
-      methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
-      return methodInvocation;
-    }
-    if (null == getAddRefMethod(type)) {
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRef"));
-      methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-      methodInvocation.arguments().add(ASTNode.copySubtree(ast, expression));
-      return methodInvocation;
-    } else {
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRef"));
-      methodInvocation.setExpression((Expression) ASTNode.copySubtree(ast, expression));
-      return methodInvocation;
-    }
-  }
-
-  @Nullable
-  public static IMethodBinding getAddRefMethod(@NotNull ITypeBinding type) {
-    return Arrays.stream(type.getDeclaredMethods()).filter(method ->
-        method.getName().equals("addRef") && (0 != (method.getModifiers() & Modifier.PUBLIC)) && method.getParameterTypes().length == 0
-    ).findAny().orElse(null);
   }
 
   public void apply(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
@@ -88,7 +54,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
           return;
         }
         if (isRefCounted(arg, resolveTypeBinding)) {
-          arguments.set(i, insertAddRef(expression, resolveTypeBinding));
+          arguments.set(i, wrapAddRef(expression, resolveTypeBinding));
           info(node, "Argument addRef for %s: %s (%s) defined", name, resolveTypeBinding.getQualifiedName(), expression);
         } else {
           info(node, "Non-refcounted arg %s in %s", expression, name);
@@ -121,7 +87,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull MethodInvocation node) {
     final Expression expression = node.getExpression();
-    info(node, "Processing method %s.%s", null==expression?"?":expression.toString(), node.getName());
+    info(node, "Processing method %s.%s", null == expression ? "?" : expression.toString(), node.getName());
     if (skip(node)) return;
     final IMethodBinding methodBinding = node.resolveMethodBinding();
     if (null == methodBinding) {
@@ -129,12 +95,12 @@ public class InsertAddRefs extends RefFileAstVisitor {
       return;
     }
     final String targetLabel;
-    if(null != expression && expression instanceof Name) {
+    if (null != expression && expression instanceof Name) {
       targetLabel = expression.toString() + "." + node.getName();
     } else {
       targetLabel = methodBinding.getDeclaringClass().getQualifiedName() + "::" + node.getName();
     }
-    if (consumesRefs(methodBinding, null==expression?null:expression.resolveTypeBinding())) {
+    if (consumesRefs(methodBinding, null == expression ? null : expression.resolveTypeBinding())) {
       apply(node, node.arguments(), targetLabel);
     } else {
       info(node, "Ignored method %s", targetLabel);

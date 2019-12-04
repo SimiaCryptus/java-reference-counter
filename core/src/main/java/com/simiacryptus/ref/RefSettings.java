@@ -21,7 +21,6 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.lang.Settings;
 import com.simiacryptus.ref.lang.PersistanceMode;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefCoderIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;

@@ -3,7 +3,9 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
-public class BasicType extends ReferenceCountingBase implements Comparable<BasicType> {
+public @com.simiacryptus.ref.lang.RefAware
+class BasicType extends ReferenceCountingBase
+    implements Comparable<BasicType> {
   public static final boolean BUG_WORKAROUND = true;
   private final String label;
   private final double doubleLabel;
@@ -19,13 +21,31 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     this.label = label;
   }
 
-  public @Override void _free() {
+  public static BasicType[] addRefs(BasicType[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
+        .toArray((x) -> new BasicType[x]);
+  }
+
+  public static BasicType[][] addRefs(BasicType[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
+        .toArray((x) -> new BasicType[x][]);
+  }
+
+  public @Override
+  void _free() {
     super._free();
+  }
+
+  public @Override
+  BasicType addRef() {
+    return (BasicType) super.addRef();
   }
 
   @Override
   public int compareTo(@NotNull BasicType o) {
-    return this.label.compareTo(o.label);
+    int temp2684 = this.label.compareTo(o.label);
+    o.freeRef();
+    return temp2684;
   }
 
   @Override
@@ -37,7 +57,9 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     if (o == null || getClass() != o.getClass())
       return false;
     BasicType basicType = (BasicType) o;
-    return label == basicType.label;
+    boolean temp6851 = label == basicType.label;
+    basicType.freeRef();
+    return temp6851;
   }
 
   @Override
