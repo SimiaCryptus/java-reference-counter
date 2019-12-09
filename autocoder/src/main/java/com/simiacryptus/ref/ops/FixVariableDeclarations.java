@@ -19,12 +19,12 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 
-@RefCoderIgnore
+@RefIgnore
 public class FixVariableDeclarations extends RefFileAstVisitor {
 
   public FixVariableDeclarations(CompilationUnit compilationUnit, File file) {

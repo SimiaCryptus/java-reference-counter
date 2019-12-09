@@ -20,14 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefArrayList<T> extends RefAbstractList<T> {
   @NotNull
   private final List<T> inner;
@@ -38,7 +38,7 @@ public class RefArrayList<T> extends RefAbstractList<T> {
 
   public RefArrayList(@NotNull List<T> list) {
     this();
-    this.addAll(list);
+    addAll(list);
   }
 
   public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {

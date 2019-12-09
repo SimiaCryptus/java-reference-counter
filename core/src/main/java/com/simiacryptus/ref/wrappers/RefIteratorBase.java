@@ -19,34 +19,47 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
-@RefAware
-@RefIgnore
-public class RefIterator<T> extends RefIteratorBase<T> {
+public abstract class RefIteratorBase<T> extends ReferenceCountingBase implements Iterator<T> {
+  protected final ArrayList<ReferenceCounting> list = new ArrayList<>();
+  protected T current;
 
-  private final Iterator<T> inner;
+  @Override
+  protected void _free() {
+    list.forEach(ReferenceCounting::freeRef);
+    list.clear();
+    super._free();
+  }
 
-  public RefIterator(Iterator<T> inner) {
-    if (inner instanceof RefIterator) {
-      this.inner = ((RefIterator<T>) inner).getInner();
-    } else {
-      this.inner = inner;
-    }
+  public abstract Iterator<T> getInner();
+
+  @Override
+  public boolean hasNext() {
+    return getInner().hasNext();
   }
 
   @Override
-  public Iterator<T> getInner() {
-    return inner;
+  public T next() {
+    current = getInner().next();
+    return RefUtil.addRef((T) current);
   }
 
-  public @NotNull RefIterator<T> track(ReferenceCounting obj) {
-    super.track(obj);
+  @Override
+  public void remove() {
+    getInner().remove();
+    RefUtil.freeRef(current);
+    current = null;
+  }
+
+  public @NotNull RefIteratorBase<T> track(ReferenceCounting obj) {
+    list.add(obj);
     return this;
   }
 }

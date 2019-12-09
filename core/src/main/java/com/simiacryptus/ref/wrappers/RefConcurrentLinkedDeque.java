@@ -20,15 +20,17 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implements RefDeque<T> {
 
   private final ConcurrentLinkedDeque<T> inner;
@@ -43,22 +45,36 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
+  protected void _free() {
+    inner.forEach(RefUtil::freeRef);
+    inner.clear();
+    super._free();
+  }
+
+  @Override
   public boolean add(T t) {
+    assertAlive();
     return getInner().add(t);
   }
 
   @Override
   public boolean addAll(@NotNull Collection<? extends T> c) {
-    return getInner().addAll(c);
+    assertAlive();
+    final Deque<T> inner = getInner();
+    final boolean b = c.stream().allMatch(inner::add);
+    RefUtil.freeRef(c);
+    return b;
   }
 
   @Override
   public void addFirst(T t) {
+    assertAlive();
     getInner().addFirst(t);
   }
 
   @Override
   public void addLast(T t) {
+    assertAlive();
     getInner().addLast(t);
   }
 
@@ -71,121 +87,153 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   @NotNull
   @Override
   public RefIterator<T> descendingIterator() {
-    return new RefIterator(getInner().descendingIterator());
+    assertAlive();
+    return new RefIterator(getInner().descendingIterator()).track(this.addRef());
   }
 
   @Override
   public T element() {
-    return getInner().element();
+    assertAlive();
+    return RefUtil.addRef(getInner().element());
   }
 
   @Override
   public T getFirst() {
-    return getInner().getFirst();
+    assertAlive();
+    return RefUtil.addRef(getInner().getFirst());
   }
 
   @Override
-  protected ConcurrentLinkedDeque<T> getInner() {
+  public Deque<T> getInner() {
     return inner;
   }
 
   @Override
   public T getLast() {
-    return getInner().getLast();
+    assertAlive();
+    return RefUtil.addRef(getInner().getLast());
   }
 
   @Override
   public boolean offer(T t) {
-    return getInner().offer(t);
+    assertAlive();
+    final boolean b = getInner().offer(t);
+    if (!b) RefUtil.freeRef(t);
+    return b;
   }
 
   @Override
   public boolean offerFirst(T t) {
-    return getInner().offerFirst(t);
+    assertAlive();
+    final boolean b = getInner().offerFirst(t);
+    if (!b) RefUtil.freeRef(t);
+    return b;
   }
 
   @Override
   public boolean offerLast(T t) {
-    return getInner().offerLast(t);
+    assertAlive();
+    final boolean b = getInner().offerLast(t);
+    if (!b) RefUtil.freeRef(t);
+    return b;
   }
 
   @Nullable
   @Override
   public T peek() {
-    return getInner().peek();
+    assertAlive();
+    return RefUtil.addRef(getInner().peek());
   }
 
   @Override
   public T peekFirst() {
-    return getInner().peekFirst();
+    assertAlive();
+    return RefUtil.addRef(getInner().peekFirst());
   }
 
   @Override
   public T peekLast() {
-    return getInner().peekLast();
+    assertAlive();
+    return RefUtil.addRef(getInner().peekLast());
   }
 
   @Nullable
   @Override
   public T poll() {
+    assertAlive();
     return getInner().poll();
   }
 
   @Nullable
   @Override
   public T pollFirst() {
-    return getInner().peekFirst();
+    assertAlive();
+    return getInner().pollFirst();
   }
 
   @Nullable
   @Override
   public T pollLast() {
+    assertAlive();
     return getInner().pollLast();
   }
 
   @Override
   public T pop() {
+    assertAlive();
     return getInner().pop();
   }
 
   @Override
   public void push(T t) {
+    assertAlive();
     getInner().push(t);
   }
 
   @Override
   public boolean remove(Object o) {
-    return getInner().remove(o);
+    assertAlive();
+    final boolean remove = getInner().remove(o);
+    if (remove) RefUtil.freeRef(o);
+    RefUtil.freeRef(o);
+    return remove;
   }
 
   @Override
   public T remove() {
+    assertAlive();
     return getInner().remove();
   }
 
   @Override
   public T removeFirst() {
+    assertAlive();
     return getInner().removeFirst();
   }
 
   @Override
   public boolean removeFirstOccurrence(Object o) {
-    return getInner().removeFirstOccurrence(o);
+    assertAlive();
+    final boolean remove = getInner().removeFirstOccurrence(o);
+    if (remove) RefUtil.freeRef(o);
+    RefUtil.freeRef(o);
+    return remove;
   }
 
   @Override
   public T removeLast() {
+    assertAlive();
     return getInner().removeLast();
   }
 
   @Override
   public boolean removeLastOccurrence(Object o) {
-    return getInner().removeLastOccurrence(o);
+    assertAlive();
+    final boolean remove = getInner().removeLastOccurrence(o);
+    if (remove) RefUtil.freeRef(o);
+    RefUtil.freeRef(o);
+    return remove;
   }
 
-  @Override
-  public boolean retainAll(@NotNull Collection<?> c) {
-    return getInner().retainAll(c);
-  }
 
 }

@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public abstract class ReferenceCountingBase implements ReferenceCounting {
 
   private static final Logger logger = LoggerFactory.getLogger(ReferenceCountingBase.class);

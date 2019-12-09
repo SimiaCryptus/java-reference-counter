@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefArrays {
   public static <T> RefStream<T> stream(@NotNull T[] array) {
     return new RefStream<>(Arrays.stream(array).onClose(() -> {
@@ -54,67 +54,67 @@ public class RefArrays {
   }
 
   public static <T> T[] copyOf(T[] data, int length) {
-    throw new RuntimeException();
+    return Arrays.copyOf(data, length);
   }
 
   public static int[] copyOf(int[] data, int length) {
-    throw new RuntimeException();
+    return Arrays.copyOf(data, length);
   }
 
   public static double[] copyOf(double[] data, int length) {
-    throw new RuntimeException();
+    return Arrays.copyOf(data, length);
   }
 
   public static boolean equals(int[] l, int[] r) {
-    throw new RuntimeException();
+    return Arrays.equals(l, r);
   }
 
   public static boolean equals(double[] l, double[] r) {
-    throw new RuntimeException();
+    return Arrays.equals(l, r);
   }
 
   public static String toString(int[] ints) {
-    throw new RuntimeException();
+    return Arrays.toString(ints);
   }
 
   public static String toString(double[] ints) {
-    throw new RuntimeException();
+    return Arrays.toString(ints);
   }
 
   public static void parallelSetAll(double[] data, IntToDoubleFunction fn) {
-    throw new RuntimeException();
+    Arrays.parallelSetAll(data, fn);
   }
 
   public static void setAll(double[] data, IntToDoubleFunction fn) {
-    throw new RuntimeException();
+    Arrays.setAll(data, fn);
   }
 
   public static <T> void setAll(T[] data, IntFunction<T> fn) {
-    throw new RuntimeException();
+    Arrays.setAll(data, fn);
   }
 
   public static RefDoubleStream stream(double[] data) {
-    throw new RuntimeException();
+    return new RefDoubleStream(Arrays.stream(data));
   }
 
   public static RefIntStream stream(int[] data) {
-    throw new RuntimeException();
+    return new RefIntStream(Arrays.stream(data));
   }
 
   public static RefLongStream stream(long[] data) {
-    throw new RuntimeException();
+    return new RefLongStream(Arrays.stream(data));
   }
 
   public static int binarySearch(double[] array, double value) {
-    throw new RuntimeException();
+    return Arrays.binarySearch(array, value);
   }
 
   public static int hashCode(double[] data) {
-    throw new RuntimeException();
+    return Arrays.hashCode(data);
   }
 
   public static int hashCode(int[] data) {
-    throw new RuntimeException();
+    return Arrays.hashCode(data);
   }
 
 }

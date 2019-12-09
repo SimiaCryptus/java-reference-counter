@@ -19,7 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -30,7 +30,7 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 
-@RefCoderIgnore
+@RefIgnore
 public class IndexSymbols extends FileAstVisitor {
 
   SymbolIndex index;

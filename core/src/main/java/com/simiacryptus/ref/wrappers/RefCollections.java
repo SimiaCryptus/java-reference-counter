@@ -17,11 +17,26 @@
  * under the License.
  */
 
-package com.simiacryptus.ref.lang;
+package com.simiacryptus.ref.wrappers;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import org.jetbrains.annotations.NotNull;
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface RefCoderIgnore {
+import java.util.Collection;
+import java.util.stream.Stream;
+
+public class RefCollections {
+
+  public static <T> Stream<T> getInnerStream(@NotNull Collection<T> c) {
+    final Stream<T> stream = getInnerCollection(c).stream();
+    assert !(stream instanceof RefStream);
+    return stream;
+  }
+
+  public static <T> Collection<T> getInnerCollection(@NotNull Collection<T> c) {
+    if(c instanceof RefCollection) {
+      return ((RefCollection<T>) c).getInner();
+    } else {
+      return c;
+    }
+  }
 }

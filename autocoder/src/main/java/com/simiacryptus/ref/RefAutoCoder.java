@@ -23,7 +23,7 @@ import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.core.ops.LogNodes;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
-@RefCoderIgnore
+@RefIgnore
 public class RefAutoCoder extends AutoCoder {
 
   private boolean verbose = false;
@@ -71,7 +71,9 @@ public class RefAutoCoder extends AutoCoder {
   public void rewrite() {
     if (isVerbose()) rewrite(LogNodes::new);
     rewrite(RemoveAnnotations::new);
-    rewrite(RemoveRefs::new);
+    while (rewrite(RemoveRefs::new) > 0) {
+      logger.info("Re-running RemoveRefs");
+    }
     rewrite((cu, file) -> new ReplaceTypes(cu, file, true));
     rewrite(FixVariableDeclarations::new);
     while (rewrite(InlineRefs::new) > 0) {

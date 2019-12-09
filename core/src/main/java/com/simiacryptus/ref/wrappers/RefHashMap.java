@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,24 +28,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
-  private final Map<K, V> inner;
+  private final Map<K, KeyValue<K, V>> inner;
 
   public RefHashMap() {
     this.inner = new HashMap<>();
   }
 
-  public RefHashMap(RefHashMap<? extends K, ? extends V> values) {
+  public RefHashMap(Map<? extends K, ? extends V> values) {
     this();
-    final RefHashSet<? extends Entry<? extends K, ? extends V>> entries = values.entrySet();
-    entries.stream().forEach(t -> {
-      put(t.getKey(), t.getValue());
-      RefUtil.freeRef(t);
-    });
-    entries.freeRef();
-    RefUtil.freeRef(values);
+    putAll(values);
   }
 
   public static <K, V> RefHashMap<K, V>[] addRefs(@NotNull RefHashMap<K, V>[] array) {
@@ -54,7 +48,7 @@ public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
   }
 
   @Override
-  public Map<K, V> getInner() {
+  public Map<K, KeyValue<K, V>> getInner() {
     return inner;
   }
 

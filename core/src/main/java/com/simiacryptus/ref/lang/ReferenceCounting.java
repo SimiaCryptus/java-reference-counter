@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public interface ReferenceCounting {
 
   static <T extends ReferenceCounting> void freeRefs(@NotNull T[] array) {

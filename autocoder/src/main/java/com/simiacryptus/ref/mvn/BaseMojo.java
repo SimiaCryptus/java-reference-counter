@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.mvn;
 
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.execution.MavenSession;
@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.stream.Stream;
 
-@RefCoderIgnore
+@RefIgnore
 public abstract class BaseMojo extends AbstractMojo {
   @Parameter(defaultValue = "${basedir}", required = true, readonly = true)
   private File basedir;

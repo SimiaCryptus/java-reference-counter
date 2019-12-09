@@ -20,14 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedList;
 import java.util.List;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefLinkedList<T> extends RefAbstractList<T> {
   @NotNull
   private final List<T> inner;

@@ -19,16 +19,9 @@
 
 package com.simiacryptus.ref.lang;
 
-import javax.annotation.Nonnull;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-@RefIgnore
-public class LifecycleException extends RuntimeException {
-  @Nonnull
-  public final ReferenceCounting obj;
-
-  public LifecycleException(@Nonnull ReferenceCountingBase obj) {
-    super("Lifecycle Exception: " + ReferenceCountingBase.referenceReport(obj, false));
-    this.obj = obj;
-  }
-
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RefIgnore {
 }

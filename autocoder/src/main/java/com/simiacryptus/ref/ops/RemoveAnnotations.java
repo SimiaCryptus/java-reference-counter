@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import java.io.File;
 import java.util.Iterator;
 
-@RefCoderIgnore
+@RefIgnore
 public class RemoveAnnotations extends RefFileAstVisitor {
 
   public RemoveAnnotations(CompilationUnit compilationUnit, File file) {

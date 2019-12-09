@@ -21,7 +21,7 @@ package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
-@RefCoderIgnore
+@RefIgnore
 abstract class RefFileAstVisitor extends FileAstVisitor {
 
   public RefFileAstVisitor(CompilationUnit compilationUnit, File file) {
@@ -50,6 +50,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   protected boolean consumesRefs(@Nonnull IMethodBinding methodBinding, ITypeBinding expression) {
     final String methodName = methodBinding.getName();
+    if (hasAnnotation(methodBinding, RefIgnore.class)) return false;
     if (methodName.equals("addRefs")) {
       return false;
     }
@@ -219,8 +220,8 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
         warn(node, "Unresolved binding");
         return false;
       }
-      if (hasAnnotation(binding, RefCoderIgnore.class)) {
-        warn(node, "Marked with RefCoderIgnore");
+      if (hasAnnotation(binding, RefIgnore.class)) {
+        warn(node, "Marked with RefIgnore");
         return false;
       }
     }
@@ -228,10 +229,11 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
   }
 
   protected boolean skip(@NotNull ASTNode node) {
-    return enclosingMethods(node).stream().filter(enclosingMethod -> {
+    return enclosingMethods(node).stream().anyMatch(enclosingMethod -> {
+      if (hasAnnotation(enclosingMethod, RefIgnore.class)) return true;
       final String methodName = enclosingMethod.getName();
       return methodName.equals("addRefs") || methodName.equals("freeRefs");
-    }).findFirst().isPresent();
+    });
   }
 
   @NotNull

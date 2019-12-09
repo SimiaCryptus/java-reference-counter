@@ -20,15 +20,22 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 
 import java.util.Spliterator;
 import java.util.stream.StreamSupport;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefStreamSupport {
   public static <T> RefStream<T> stream(Spliterator<T> spliterator, boolean parallel) {
-    return new RefStream<>(StreamSupport.stream(spliterator, parallel));
+    if (spliterator instanceof RefSpliterator) {
+      final RefSpliterator refSpliterator = (RefSpliterator) spliterator;
+      final RefStream refStream = new RefStream<>(StreamSupport.stream(refSpliterator.getInner(), parallel));
+      refSpliterator.freeRef();
+      return refStream;
+    } else {
+      return new RefStream<>(StreamSupport.stream(spliterator, parallel));
+    }
   }
 }

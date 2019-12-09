@@ -1,12 +1,11 @@
 package com.simiacryptus.demo.refcount;
 
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
-public @com.simiacryptus.ref.lang.RefAware
-class BasicType extends ReferenceCountingBase
+public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCountingBase
     implements Comparable<BasicType> {
-  public static final boolean BUG_WORKAROUND = true;
   private final String label;
   private final double doubleLabel;
   public int value;
@@ -21,51 +20,34 @@ class BasicType extends ReferenceCountingBase
     this.label = label;
   }
 
-  public static BasicType[] addRefs(BasicType[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
-        .toArray((x) -> new BasicType[x]);
-  }
-
-  public static BasicType[][] addRefs(BasicType[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
-        .toArray((x) -> new BasicType[x][]);
-  }
-
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
-  }
-
-  public @Override
-  BasicType addRef() {
-    return (BasicType) super.addRef();
   }
 
   @Override
   public int compareTo(@NotNull BasicType o) {
-    int temp2684 = this.label.compareTo(o.label);
+    int temp4616 = this.label.compareTo(o.label);
     o.freeRef();
-    return temp2684;
+    return temp4616;
   }
 
+  @RefIgnore
   @Override
   public boolean equals(Object o) {
-    if (BUG_WORKAROUND)
-      return super.equals(o);
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
+    if (o == null)
+      return false;
+    if (!(o instanceof BasicType))
       return false;
     BasicType basicType = (BasicType) o;
-    boolean temp6851 = label == basicType.label;
-    basicType.freeRef();
-    return temp6851;
+    if (this == basicType) {
+      return true;
+    }
+    return label == basicType.label;
   }
 
+  @RefIgnore
   @Override
   public int hashCode() {
-    if (BUG_WORKAROUND)
-      return super.hashCode();
     return label.hashCode();
   }
 
@@ -75,7 +57,20 @@ class BasicType extends ReferenceCountingBase
   }
 
   public void use() {
-    System.out.println(String.format("Increment %s", this));
     this.value++;
+  }
+
+  public @Override BasicType addRef() {
+    return (BasicType) super.addRef();
+  }
+
+  public static BasicType[] addRefs(BasicType[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
+        .toArray((x) -> new BasicType[x]);
+  }
+
+  public static BasicType[][] addRefs(BasicType[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
+        .toArray((x) -> new BasicType[x][]);
   }
 }

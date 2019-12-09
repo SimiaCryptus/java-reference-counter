@@ -20,14 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Queue;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
   public static <T> RefQueue<T>[] addRefs(@NotNull RefQueue<T>[] array) {

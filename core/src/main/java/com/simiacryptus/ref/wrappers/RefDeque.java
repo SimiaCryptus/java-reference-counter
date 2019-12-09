@@ -20,13 +20,13 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Deque;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
   public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {

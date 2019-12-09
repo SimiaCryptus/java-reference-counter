@@ -19,16 +19,19 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Set;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
+
   @Override
   protected void _free() {
     clear();
@@ -37,15 +40,15 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
 
   @NotNull
   public @Override
-  RefHashMap<K, V> addRef() {
-    return (RefHashMap<K, V>) super.addRef();
+  RefAbstractMap<K, V> addRef() {
+    return (RefAbstractMap<K, V>) super.addRef();
   }
 
   @Override
   public synchronized void clear() {
     getInner().forEach((k, v) -> {
-      RefUtil.freeRef(k);
-      RefUtil.freeRef(v);
+      RefUtil.freeRef(v.key);
+      RefUtil.freeRef(v.value);
     });
     getInner().clear();
   }
@@ -59,7 +62,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
 
   @Override
   public boolean containsValue(Object value) {
-    final boolean containsValue = getInner().containsValue(value);
+    final boolean containsValue = getInner().values().stream().anyMatch(x -> x.value.equals(value));
     RefUtil.freeRef(value);
     return containsValue;
   }
@@ -68,18 +71,23 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   @Override
   public RefHashSet<Entry<K, V>> entrySet() {
     final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
-    getInner().entrySet().stream().map(x -> new RefEntry<K, V>(x)).forEach(refSet::add);
+    getInner().values().stream().map(x -> new RefEntry<K, V>(RefUtil.addRef(x.key), RefUtil.addRef(x.value)) {
+      @Override
+      public V setValue(V value) {
+        return put(RefUtil.addRef(x.key), value);
+      }
+    }).forEach(refSet::add);
     return refSet;
   }
 
   @Override
   public V get(Object key) {
-    final V value = RefUtil.addRef(getInner().get(key));
+    final KeyValue<K, V> keyValue = getInner().get(key);
     RefUtil.freeRef(key);
-    return value;
+    return RefUtil.addRef(null == keyValue ? null : keyValue.value);
   }
 
-  public abstract Map<K, V> getInner();
+  protected abstract Map<K, KeyValue<K, V>> getInner();
 
   @Override
   public boolean isEmpty() {
@@ -94,30 +102,34 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
 
   @Override
   public V put(K key, V value) {
-    return getInner().put(key, value);
+    final KeyValue<K, V> put = getInner().put(key, new KeyValue<>(key, value));
+    if (null == put) return null;
+    RefUtil.freeRef(put.key);
+    return put.value;
   }
 
   @Override
   public void putAll(@NotNull Map<? extends K, ? extends V> m) {
-    if (m instanceof ReferenceCounting) {
-      final Set<? extends Entry<? extends K, ? extends V>> entrySet = m.entrySet();
-      entrySet.stream().forEach(t -> {
-        final V put = put(t.getKey(), t.getValue());
-        RefUtil.freeRef(put);
-        RefUtil.freeRef(t);
-      });
-      RefUtil.freeRef(entrySet);
-      ((ReferenceCounting) m).freeRef();
+    final Map<? extends K, ? extends V> m_inner;
+    if (m instanceof RefAbstractMap) {
+      m_inner = ((RefAbstractMap) m).getInner();
     } else {
-      m.forEach((k, v) -> put(RefUtil.addRef(k), RefUtil.addRef(v)));
+      m_inner = m;
     }
+    m_inner.forEach((k, v) -> {
+      RefUtil.freeRef(put(RefUtil.addRef(k), RefUtil.addRef(v)));
+    });
+    RefUtil.freeRef(m);
   }
 
   @Override
   public V remove(Object key) {
-    final V removed = getInner().remove(key);
+    final KeyValue<K, V> removed = getInner().remove(key);
+    if (null != removed) {
+      RefUtil.freeRef(removed.key);
+    }
     RefUtil.freeRef(key);
-    return removed;
+    return removed.value;
   }
 
   @Override
@@ -128,6 +140,19 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   @NotNull
   @Override
   public RefHashSet<V> values() {
-    return new RefHashSet<V>(getInner().values());
+    final RefHashSet<V> hashSet = new RefHashSet<>();
+    getInner().values().forEach(x -> hashSet.add(x.value));
+    return hashSet;
   }
+
+  protected static class KeyValue<K, V> {
+    public final K key;
+    public final V value;
+
+    public KeyValue(K key, V value) {
+      this.key = key;
+      this.value = value;
+    }
+  }
+
 }

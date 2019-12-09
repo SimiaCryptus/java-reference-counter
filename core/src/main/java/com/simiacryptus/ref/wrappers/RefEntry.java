@@ -20,15 +20,15 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
 
 @RefAware
-@RefCoderIgnore
-public class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
+@RefIgnore
+public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
 
   private final K key;
   private V value;
@@ -60,10 +60,6 @@ public class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K
   }
 
   @Override
-  public V setValue(V value) {
-    final V oldValue = this.value;
-    this.value = value;
-    return oldValue;
-  }
+  public abstract V setValue(V value);
 
 }

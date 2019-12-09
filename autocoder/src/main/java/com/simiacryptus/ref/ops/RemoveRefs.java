@@ -19,7 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
@@ -29,7 +29,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-@RefCoderIgnore
+@RefIgnore
 public class RemoveRefs extends RefFileAstVisitor {
 
   public RemoveRefs(CompilationUnit compilationUnit, File file) {
@@ -110,6 +110,10 @@ public class RemoveRefs extends RefFileAstVisitor {
         arguments.set(index, subject);
         info(node, "%s removed as argument %s of %s", node, index, parent);
       } else if (parent instanceof ConditionalExpression) {
+        subject = unwrap(subject);
+        info(subject, "%s replaced with %s", parent, subject);
+        replace(node, (Expression) ASTNode.copySubtree(ast, subject));
+      } else if (parent instanceof CastExpression) {
         subject = unwrap(subject);
         info(subject, "%s replaced with %s", parent, subject);
         replace(node, (Expression) ASTNode.copySubtree(ast, subject));

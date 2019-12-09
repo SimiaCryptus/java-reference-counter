@@ -19,7 +19,9 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
@@ -29,8 +31,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @RefAware
-@RefCoderIgnore
-public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements RefSet<T>, Cloneable, Serializable {
+@RefIgnore
+public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> implements RefSet<T>, Cloneable, Serializable {
   @Override
   protected void _free() {
     clear();
@@ -39,7 +41,8 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
 
   @Override
   public final boolean add(T o) {
-    final T replaced = getInner().put(o, o);
+    assertAlive();
+    final T replaced = getInnerMap().put(o, o);
     if (null != replaced) {
       RefUtil.freeRef(replaced);
       return false;
@@ -50,14 +53,16 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
 
   @Override
   public final boolean addAll(@NotNull Collection<? extends T> c) {
-    if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().map(o -> add(o)).reduce((a, b) -> a || b).orElse(false);
-      ((ReferenceCounting) c).freeRef();
-      return returnValue;
+    assertAlive();
+    final Collection<? extends T> c_inner;
+    if (c instanceof RefAbstractCollection) {
+      c_inner = ((RefAbstractCollection<? extends T>) c).getInner();
     } else {
-      return c.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
+      c_inner = c;
     }
-
+    final boolean returnValue = c_inner.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
+    RefUtil.freeRef(c);
+    return returnValue;
   }
 
   @NotNull
@@ -68,56 +73,29 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
 
   @Override
   public synchronized final void clear() {
-    getInner().keySet().forEach(RefUtil::freeRef);
-    getInner().clear();
-  }
-
-  @Override
-  public final boolean contains(Object o) {
-    final boolean returnValue = getInner().containsKey(o);
-    RefUtil.freeRef(o);
-    return returnValue;
-  }
-
-  @Override
-  public final boolean containsAll(@NotNull Collection<?> c) {
-    if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().filter(o -> {
-        final boolean b = !getInner().containsKey(o);
-        RefUtil.freeRef(o);
-        return b;
-      }).count() == 0;
-      ((ReferenceCounting) c).freeRef();
-      return returnValue;
-    } else {
-      return c.stream().filter(o -> !getInner().containsKey(o)).count() == 0;
-    }
+    getInnerMap().keySet().forEach(RefUtil::freeRef);
+    getInnerMap().clear();
   }
 
   @Override
   public void forEach(Consumer<? super T> action) {
-    for (T t : getInner().keySet()) {
+    assertAlive();
+    for (T t : getInnerMap().keySet()) {
       action.accept(RefUtil.addRef(t));
     }
     RefUtil.freeRef(action);
   }
 
-  public abstract Map<T, T> getInner();
-
-  @Override
-  public final boolean isEmpty() {
-    return getInner().isEmpty();
+  public Collection<T> getInner() {
+    return getInnerMap().keySet();
   }
 
-  @NotNull
-  @Override
-  public final Iterator<T> iterator() {
-    return new RefIterator<>(getInner().keySet().iterator());
-  }
+  public abstract Map<T, T> getInnerMap();
 
   @Override
   public final boolean remove(Object o) {
-    final T removed = getInner().remove(o);
+    assertAlive();
+    final T removed = getInnerMap().remove(o);
     RefUtil.freeRef(o);
     if (null != removed) {
       RefUtil.freeRef(removed);
@@ -129,69 +107,48 @@ public abstract class RefAbstractSet<T> extends ReferenceCountingBase implements
 
   @Override
   public synchronized final boolean removeAll(@NotNull Collection<?> c) {
-    if (c instanceof ReferenceCounting) {
-      final boolean returnValue = ((RefStream<?>) c.stream()).map(o -> {
-        final T remove = getInner().remove(o);
-        RefUtil.freeRef(o);
-        final boolean b = remove != null;
-        if (b) RefUtil.freeRef(o);
-        return b;
-      }).reduce((a, b) -> a || b).orElse(false);
-      ((ReferenceCounting) c).freeRef();
-      return returnValue;
+    assertAlive();
+    final Collection<?> c_inner;
+    if (c instanceof RefAbstractCollection) {
+      c_inner = ((RefAbstractCollection<?>) c).getInner();
     } else {
-      return c.stream().map(o -> {
-        final T remove = getInner().remove(o);
-        final boolean found = remove != null;
-        if (found) RefUtil.freeRef(o);
-        return found;
-      }).reduce((a, b) -> a || b).orElse(false);
+      c_inner = c;
     }
+    final Iterator<Map.Entry<T, T>> iterator = getInnerMap().entrySet().iterator();
+    boolean b = false;
+    while (iterator.hasNext()) {
+      final Map.Entry<T, T> next = iterator.next();
+      if (c_inner.contains(next.getKey())) {
+        iterator.remove();
+        RefUtil.freeRef(next.getKey());
+        b = true;
+      }
+    }
+    RefUtil.freeRef(c);
+    return b;
   }
 
   @Override
   public synchronized final boolean retainAll(@NotNull Collection<?> c) {
-    final Object[] toRemove;
-    if (c instanceof ReferenceCounting) {
-      toRemove = getInner().keySet().stream().filter(o -> !c.contains(RefUtil.addRef(o))).toArray();
-      ((ReferenceCounting) c).freeRef();
+    assertAlive();
+    final Collection<?> c_inner;
+    if (c instanceof RefAbstractCollection) {
+      c_inner = ((RefAbstractCollection<?>) c).getInner();
     } else {
-      toRemove = getInner().keySet().stream().filter(o -> !c.contains(o)).map(RefUtil::addRef).toArray();
+      c_inner = c;
     }
-    for (Object o : toRemove) {
-      getInner().remove(o);
-      RefUtil.freeRef(o);
+    final Iterator<Map.Entry<T, T>> iterator = getInnerMap().entrySet().iterator();
+    boolean b = false;
+    while (iterator.hasNext()) {
+      final Map.Entry<T, T> next = iterator.next();
+      if (!c_inner.contains(next.getKey())) {
+        iterator.remove();
+        RefUtil.freeRef(next.getKey());
+        b = true;
+      }
     }
-    return 0 < toRemove.length;
+    RefUtil.freeRef(c);
+    return b;
   }
 
-  @Override
-  public final int size() {
-    return getInner().size();
-  }
-
-  @Override
-  public final RefStream<T> stream() {
-    return new RefStream<T>(getInner().keySet().stream());
-  }
-
-  @NotNull
-  @Override
-  public final Object[] toArray() {
-    final @NotNull Object[] returnValue = getInner().keySet().toArray();
-    for (Object x : returnValue) {
-      RefUtil.addRef(x);
-    }
-    return returnValue;
-  }
-
-  @NotNull
-  @Override
-  public final <T1> T1[] toArray(@NotNull T1[] a) {
-    final @NotNull T1[] returnValue = getInner().keySet().toArray(a);
-    for (T1 x : returnValue) {
-      RefUtil.addRef(x);
-    }
-    return returnValue;
-  }
 }

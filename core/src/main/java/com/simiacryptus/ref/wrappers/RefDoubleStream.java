@@ -19,24 +19,23 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.*;
 import com.simiacryptus.ref.wrappers.RefStream.IdentityWrapper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
+import java.util.List;
+import java.util.OptionalDouble;
 import java.util.function.*;
 import java.util.stream.DoubleStream;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefDoubleStream implements DoubleStream {
-  private DoubleStream inner;
-  private List<IdentityWrapper<ReferenceCounting>> refs;
-
-  private List<ReferenceCounting> lambdas;
+  private final DoubleStream inner;
+  private final List<IdentityWrapper<ReferenceCounting>> refs;
+  private final List<ReferenceCounting> lambdas;
 
   RefDoubleStream(DoubleStream stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
@@ -54,6 +53,10 @@ public class RefDoubleStream implements DoubleStream {
     this.inner = stream;
   }
 
+  public static RefDoubleStream generate(DoubleSupplier s) {
+    return new RefDoubleStream(DoubleStream.generate(s));
+  }
+
   public static RefDoubleStream iterate(final double seed, final DoubleUnaryOperator f) {
     return new RefDoubleStream(DoubleStream.iterate(seed, f));
   }
@@ -69,18 +72,24 @@ public class RefDoubleStream implements DoubleStream {
   @Override
   public boolean allMatch(@NotNull DoublePredicate predicate) {
     track(predicate);
-    return inner.allMatch(predicate::test);
+    final boolean match = inner.allMatch(predicate::test);
+    close();
+    return match;
   }
 
   @Override
   public boolean anyMatch(@NotNull DoublePredicate predicate) {
     track(predicate);
-    return inner.anyMatch(predicate::test);
+    final boolean match = inner.anyMatch(predicate::test);
+    close();
+    return match;
   }
 
   @Override
   public OptionalDouble average() {
-    return inner.average();
+    final OptionalDouble average = inner.average();
+    close();
+    return average;
   }
 
   @Override
@@ -98,41 +107,46 @@ public class RefDoubleStream implements DoubleStream {
     track(supplier);
     track(accumulator);
     track(combiner);
-    return inner.collect(
+    final R collect = inner.collect(
         () -> storeRef(supplier.get()),
         (R t1, double u1) -> accumulator.accept(RefUtil.addRef(t1), u1),
         (R t, R u) -> combiner.accept(getRef(t), getRef(u))
     );
+    close();
+    return collect;
   }
 
   @Override
   public long count() {
     final long count = inner.count();
+    close();
     return count;
   }
 
   @NotNull
   @Override
   public RefDoubleStream distinct() {
-    inner = inner.distinct();
-    return this;
+    return new RefDoubleStream(inner.distinct(), lambdas, refs);
   }
 
   @NotNull
   public RefDoubleStream filter(@NotNull DoublePredicate predicate) {
     track(predicate);
-    inner = inner.filter((double t) -> predicate.test(RefUtil.addRef(t)));
-    return this;
+    return new RefDoubleStream(inner.filter((double t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
   }
 
   @Override
   public OptionalDouble findAny() {
-    return inner.findAny();
+    final OptionalDouble any = inner.findAny();
+    close();
+    return any;
   }
 
   @Override
   public OptionalDouble findFirst() {
-    return inner.findFirst();
+    final OptionalDouble first = inner.findFirst();
+    close();
+    return first;
   }
 
   @NotNull
@@ -152,6 +166,7 @@ public class RefDoubleStream implements DoubleStream {
   public void forEachOrdered(@NotNull DoubleConsumer action) {
     track(action);
     inner.forEachOrdered(action::accept);
+    close();
   }
 
   private <U> U getRef(U u) {
@@ -170,15 +185,19 @@ public class RefDoubleStream implements DoubleStream {
 
   @NotNull
   @Override
-  public PrimitiveIterator.OfDouble iterator() {
-    return inner.iterator();
+  public RefPrimitiveIterator.OfDouble iterator() {
+    return new RefPrimitiveIterator.OfDouble(inner.iterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        RefDoubleStream.this.close();
+      }
+    });
   }
 
   @NotNull
   @Override
   public RefDoubleStream limit(long maxSize) {
-    inner = inner.limit(maxSize);
-    return this;
+    return new RefDoubleStream(inner.limit(maxSize), lambdas, refs);
   }
 
   @NotNull
@@ -207,80 +226,89 @@ public class RefDoubleStream implements DoubleStream {
 
   @Override
   public OptionalDouble max() {
-    return inner.max();
+    final OptionalDouble max = inner.max();
+    close();
+    return max;
   }
 
   @Override
   public OptionalDouble min() {
-    return inner.min();
+    final OptionalDouble min = inner.min();
+    close();
+    return min;
   }
 
   @Override
   public boolean noneMatch(@NotNull DoublePredicate predicate) {
     track(predicate);
-    return inner.noneMatch((double t) -> predicate.test(getRef(t)));
+    final boolean match = inner.noneMatch((double t) -> predicate.test(getRef(t)));
+    close();
+    return match;
   }
 
   @NotNull
   @Override
   public RefDoubleStream onClose(Runnable closeHandler) {
-    inner = inner.onClose(closeHandler);
     track(closeHandler);
-    return this;
+    return new RefDoubleStream(inner.onClose(closeHandler), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefDoubleStream parallel() {
-    inner = inner.parallel();
-    return this;
+    return new RefDoubleStream(inner.parallel(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefDoubleStream peek(@NotNull DoubleConsumer action) {
     track(action);
-    inner = inner.peek((double t) -> action.accept(getRef(t)));
-    return this;
+    return new RefDoubleStream(inner.peek((double t) -> action.accept(getRef(t))), lambdas, refs);
   }
 
   @Override
   public double reduce(double identity, @NotNull DoubleBinaryOperator accumulator) {
     track(accumulator);
-    return inner.reduce(storeRef(identity), (double t, double u) -> storeRef(accumulator.applyAsDouble(getRef(t), getRef(u))));
+    final double reduce = inner.reduce(storeRef(identity), (double t, double u) -> storeRef(accumulator.applyAsDouble(getRef(t), getRef(u))));
+    close();
+    return reduce;
   }
 
   @Override
   public OptionalDouble reduce(@NotNull DoubleBinaryOperator accumulator) {
     track(accumulator);
-    return inner.reduce((double t, double u) -> storeRef(accumulator.applyAsDouble(getRef(t), getRef(u))));
+    final OptionalDouble optionalDouble = inner.reduce((double t, double u) -> storeRef(accumulator.applyAsDouble(getRef(t), getRef(u))));
+    close();
+    return optionalDouble;
   }
 
   @NotNull
   @Override
   public RefDoubleStream sequential() {
-    inner = inner.sequential();
-    return this;
+    return new RefDoubleStream(inner.sequential(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefDoubleStream skip(long n) {
-    inner = inner.skip(n);
-    return this;
+    return new RefDoubleStream(inner.skip(n), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefDoubleStream sorted() {
-    inner = inner.sorted();
-    return this;
+    return new RefDoubleStream(inner.sorted(), lambdas, refs);
   }
 
   @NotNull
   @Override
-  public Spliterator.OfDouble spliterator() {
-    return inner.spliterator();
+  public RefSpliterator.OfDouble spliterator() {
+    return new RefSpliterator.OfDouble(inner.spliterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        RefDoubleStream.this.close();
+      }
+    });
   }
 
   private <U> U storeRef(U u) {
@@ -292,17 +320,23 @@ public class RefDoubleStream implements DoubleStream {
 
   @Override
   public double sum() {
-    return inner.sum();
+    final double sum = inner.sum();
+    close();
+    return sum;
   }
 
   @Override
   public DoubleSummaryStatistics summaryStatistics() {
-    return inner.summaryStatistics();
+    final DoubleSummaryStatistics statistics = inner.summaryStatistics();
+    close();
+    return statistics;
   }
 
   @Override
   public double[] toArray() {
-    return inner.map(this::getRef).toArray();
+    final double[] array = inner.map(this::getRef).toArray();
+    close();
+    return array;
   }
 
   private void track(Object... lambda) {
@@ -314,8 +348,7 @@ public class RefDoubleStream implements DoubleStream {
   @NotNull
   @Override
   public RefDoubleStream unordered() {
-    inner = inner.unordered();
-    return this;
+    return new RefDoubleStream(inner.unordered(), lambdas, refs);
   }
 
 }

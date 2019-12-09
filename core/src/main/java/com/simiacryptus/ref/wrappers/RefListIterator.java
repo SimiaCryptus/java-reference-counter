@@ -20,17 +20,21 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCounting;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ListIterator;
 
 @RefAware
-@RefCoderIgnore
-public class RefListIterator<T> extends RefIterator<T> implements ListIterator<T> {
+@RefIgnore
+public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterator<T> {
+
+  private final ListIterator<T> inner;
 
   public RefListIterator(ListIterator<T> inner) {
-    super(inner);
+    this.inner = inner;
   }
 
   @Override
@@ -39,7 +43,7 @@ public class RefListIterator<T> extends RefIterator<T> implements ListIterator<T
   }
 
   public ListIterator<T> getInner() {
-    return (ListIterator<T>) inner;
+    return inner;
   }
 
   @Override
@@ -68,5 +72,10 @@ public class RefListIterator<T> extends RefIterator<T> implements ListIterator<T
     getInner().set(t);
     RefUtil.freeRef(current);
     current = null;
+  }
+
+  public @NotNull RefListIterator<T> track(ReferenceCounting obj) {
+    super.track(obj);
+    return this;
   }
 }

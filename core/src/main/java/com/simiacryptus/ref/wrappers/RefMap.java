@@ -20,14 +20,20 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ConcurrentModificationException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   public static <K, V> RefMap<K, V>[] addRefs(@NotNull RefMap<K, V>[] array) {
@@ -36,4 +42,57 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   }
 
   RefMap<K, V> addRef();
+
+  @Override
+  default V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    V value = get(RefUtil.addRef(key));
+    if (value == null) {
+      value = mappingFunction.apply(RefUtil.addRef(key));
+      if (value != null) {
+        RefUtil.freeRef(mappingFunction);
+        RefUtil.freeRef(put(key, RefUtil.addRef(value)));
+        return value;
+      }
+    }
+    RefUtil.freeRef(mappingFunction);
+    RefUtil.freeRef(key);
+    return value;
+  }
+
+  @NotNull
+  @Override
+  RefSet<Entry<K, V>> entrySet();
+
+  @Override
+  default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> fn) {
+    V oldValue = get(RefUtil.addRef(key));
+    V newValue;
+    if (oldValue == null) {
+      newValue = value;
+    } else {
+      newValue = fn.apply(oldValue, value);
+    }
+    RefUtil.freeRef(fn);
+    if (newValue == null) {
+      RefUtil.freeRef(remove(key));
+    } else {
+      RefUtil.freeRef(put(key, RefUtil.addRef(newValue)));
+    }
+    return newValue;
+  }
+
+  default void forEach(BiConsumer<? super K, ? super V> action) {
+    final RefSet<Entry<K, V>> entries = entrySet();
+    entries.forEach(entry -> {
+      final K key = entry.getKey();
+      final V value = entry.getValue();
+      RefUtil.freeRef(entry);
+      action.accept(key, value);
+    });
+    entries.freeRef();
+  }
+
+  @NotNull
+  @Override
+  RefCollection<V> values();
 }

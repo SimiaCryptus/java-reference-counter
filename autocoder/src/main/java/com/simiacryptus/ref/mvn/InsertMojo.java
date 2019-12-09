@@ -20,11 +20,11 @@
 package com.simiacryptus.ref.mvn;
 
 import com.simiacryptus.ref.RefAutoCoder;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 
-@RefCoderIgnore
+@RefIgnore
 @Mojo(name = "insert")
 public class InsertMojo extends BaseMojo {
   public void execute() throws MojoExecutionException {

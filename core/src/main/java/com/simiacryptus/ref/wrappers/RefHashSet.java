@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefHashSet<T> extends RefAbstractSet<T> {
 
   private final Map<T, T> inner;
@@ -43,7 +43,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
   RefHashSet(@Nonnull HashMap<T, T> inner) {
     if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
-    this.getInner().keySet().forEach(RefUtil::addRef);
+    this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
   public RefHashSet(@NotNull Collection<T> values) {
@@ -63,7 +63,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
   }
 
   @Override
-  public Map<T, T> getInner() {
+  public Map<T, T> getInnerMap() {
     return inner;
   }
 

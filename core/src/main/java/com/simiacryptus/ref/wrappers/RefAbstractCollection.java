@@ -20,16 +20,14 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.Iterator;
 
-public abstract class RefAbstractCollection<T> extends ReferenceCountingBase implements Collection<T>, Cloneable, Serializable {
+public abstract class RefAbstractCollection<T> extends ReferenceCountingBase implements RefCollection<T>, Cloneable, Serializable {
 
   @NotNull
   public @Override
@@ -38,13 +36,14 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   }
 
   @Override
-  public synchronized final void clear() {
+  public synchronized void clear() {
     getInner().forEach(RefUtil::freeRef);
     getInner().clear();
   }
 
   @Override
   public final boolean contains(Object o) {
+    assertAlive();
     final boolean returnValue = getInner().contains(o);
     RefUtil.freeRef(o);
     return returnValue;
@@ -52,65 +51,100 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
 
   @Override
   public final boolean containsAll(@NotNull Collection<?> c) {
-    if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().filter(o -> {
-        final boolean b = !getInner().contains(o);
-        RefUtil.freeRef(o);
-        return b;
-      }).count() == 0;
-      ((ReferenceCounting) c).freeRef();
-      return returnValue;
+    assertAlive();
+    final Collection<?> c_inner;
+    if (c instanceof RefAbstractCollection) {
+      c_inner = ((RefAbstractCollection<?>) c).getInner();
     } else {
-      return c.stream().filter(o -> {
-        final boolean b = !getInner().contains(o);
-        RefUtil.freeRef(o);
-        return b;
-      }).count() == 0;
+      c_inner = c;
     }
+    final Collection<T> inner = getInner();
+    final boolean b = !c_inner.stream().anyMatch(o -> !inner.contains(o));
+    RefUtil.freeRef(c);
+    return b;
   }
 
-  protected abstract Collection<T> getInner();
+  public abstract Collection<T> getInner();
 
   @Override
   public final boolean isEmpty() {
+    assertAlive();
     return getInner().isEmpty();
   }
 
   @NotNull
   @Override
   public final RefIterator<T> iterator() {
-    return new RefIterator<>(getInner().iterator());
+    assertAlive();
+    return new RefIterator<>(getInner().iterator()).track(this.addRef());
   }
 
   @Override
-  public synchronized final boolean removeAll(@NotNull Collection<?> c) {
-    if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().map(o -> remove(o)).reduce((a, b) -> a || b).orElse(false);
-      ((ReferenceCounting) c).freeRef();
-      return returnValue;
+  public synchronized boolean removeAll(@NotNull Collection<?> c) {
+    assertAlive();
+    final Collection<?> c_inner;
+    if (c instanceof RefAbstractCollection) {
+      c_inner = ((RefAbstractCollection<?>) c).getInner();
     } else {
-      return c.stream().map(o -> remove(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
+      c_inner = c;
     }
+    boolean b = false;
+    final Iterator<T> iterator = getInner().iterator();
+    while (iterator.hasNext()) {
+      final T next = iterator.next();
+      if (c_inner.contains(next)) {
+        iterator.remove();
+        RefUtil.freeRef(next);
+        b = true;
+      }
+    }
+    RefUtil.freeRef(c);
+    return b;
+  }
+
+  @Override
+  public boolean retainAll(@NotNull Collection<?> c) {
+    assertAlive();
+    final Collection<?> c_inner;
+    if (c instanceof RefAbstractCollection) {
+      c_inner = ((RefAbstractCollection<?>) c).getInner();
+    } else {
+      c_inner = c;
+    }
+    boolean b = false;
+    final Iterator<T> iterator = getInner().iterator();
+    while (iterator.hasNext()) {
+      final T next = iterator.next();
+      if (!c_inner.contains(next)) {
+        iterator.remove();
+        RefUtil.freeRef(next);
+        b = true;
+      }
+    }
+    RefUtil.freeRef(c);
+    return b;
   }
 
   @Override
   public final int size() {
+    assertAlive();
     return getInner().size();
   }
 
   @Override
   public RefSpliterator<T> spliterator() {
-    return new RefSpliterator<>(Spliterators.spliterator(getInner(), Spliterator.ORDERED));
+    return RefCollection.super.spliterator();
   }
 
   @Override
   public RefStream<T> stream() {
-    return new RefStream<T>(getInner().stream());
+    return RefCollection.super.stream();
   }
 
   @NotNull
   @Override
   public final Object[] toArray() {
+    assertAlive();
     final @NotNull Object[] returnValue = getInner().toArray();
     for (Object x : returnValue) {
       RefUtil.addRef(x);
@@ -121,6 +155,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   @NotNull
   @Override
   public final <T1> T1[] toArray(@NotNull T1[] a) {
+    assertAlive();
     final @NotNull T1[] returnValue = getInner().toArray(a);
     for (T1 x : returnValue) {
       RefUtil.addRef(x);
