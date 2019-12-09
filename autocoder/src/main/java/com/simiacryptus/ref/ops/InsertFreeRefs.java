@@ -73,7 +73,8 @@ public class InsertFreeRefs extends RefFileAstVisitor {
       ASTNode parent = declaration.getParent();
       if (parent instanceof MethodDeclaration) {
         final MethodDeclaration node = (MethodDeclaration) parent;
-        insertFreeRefs(typeBinding, name, node.getBody(), 0);
+        final Block body = node.getBody();
+        if(null != body) insertFreeRefs(typeBinding, name, body, 0);
       } else if (parent instanceof LambdaExpression) {
         final LambdaExpression node = (LambdaExpression) parent;
         final ASTNode lambdaParent = node.getParent();

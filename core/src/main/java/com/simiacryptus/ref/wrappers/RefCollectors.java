@@ -276,7 +276,7 @@ public class RefCollectors {
     return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);
   }
 
-  static class RefCollector<T, A, R> extends ReferenceCountingBase implements Collector<T, A, R> {
+  public static class RefCollector<T, A, R> extends ReferenceCountingBase implements Collector<T, A, R> {
     private final Supplier<A> supplier;
     private final BiConsumer<A, T> accumulator;
     private final BinaryOperator<A> combiner;

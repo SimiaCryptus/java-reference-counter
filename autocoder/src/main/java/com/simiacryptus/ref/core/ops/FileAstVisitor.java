@@ -588,13 +588,13 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt) {
-    return lastMention(block, variable, startAt, block.statements().size());
+    return lastMention(block, variable, startAt, block.statements().size(), 2);
   }
 
-  protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt, int endAt) {
+  protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt, int endAt, int frames) {
     IBinding binding = variable.resolveBinding();
     if (null == binding) {
-      warn(1, variable, "Unresolved binding");
+      warn(frames, variable, "Unresolved binding");
       return null;
     } else {
       final List statements = block.statements();
@@ -607,9 +607,9 @@ public abstract class FileAstVisitor extends ASTVisitor {
       }
       final StatementOfInterest lastMention = lastMention1;
       if (null == lastMention) {
-        info(1, variable, "No mentions of %s", variable);
+        info(frames, variable, "No mentions of %s", variable);
       } else {
-        info(1, variable, "Last mentions of %s: %s at line %s\"",
+        info(frames, variable, "Last mentions of %s: %s at line %s\"",
             variable,
             lastMention.statement.toString().trim(),
             lastMention.line);
