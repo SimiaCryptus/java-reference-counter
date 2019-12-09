@@ -71,7 +71,7 @@ public class OptimizeRefs extends RefFileAstVisitor {
         warn(freeRefNode, "Could not find statement in block");
         return;
       }
-      final StatementOfInterest lastMention = lastMention(parentBlock, variable, 0, freeRefLineNumber);
+      final StatementOfInterest lastMention = lastMention(parentBlock, variable, 0, freeRefLineNumber, 1);
       if (lastMention.line > addRefLineNumber) {
         info(freeRefNode, "Value used at line %s, after prior addRef at line %s", lastMention.line, addRefLineNumber);
         return;

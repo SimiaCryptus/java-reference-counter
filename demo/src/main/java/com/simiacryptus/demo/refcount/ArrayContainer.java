@@ -1,92 +1,54 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import com.simiacryptus.ref.wrappers.RefConsumer;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
-public @com.simiacryptus.ref.lang.RefAware class ArrayContainer extends ReferenceCountingBase {
+public class ArrayContainer extends ReferenceCountingBase {
   public BasicType[] values;
 
   public ArrayContainer(BasicType... values) {
-    if (null != this.values)
-      com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(this.values);
-    this.values = com.simiacryptus.demo.refcount.BasicType.addRefs(values);
-    com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(values);
+    this.values = values;
   }
 
   public @Override void _free() {
-    if (null != values)
-      com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(values);
     super._free();
   }
 
   @Override
   public String toString() {
-    return "ArrayContainer{" + "values="
-        + com.simiacryptus.ref.wrappers.RefArrays.toString(com.simiacryptus.demo.refcount.BasicType.addRefs(values))
-        + '}';
+    return "ArrayContainer{" + "values=" + java.util.Arrays.toString(values) + '}';
   }
 
-  public void use() {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
-        .forEach(x -> {
-          x.value++;
-          x.freeRef();
-        });
+  public void test() {
+    java.util.Arrays.stream(this.values).forEach(x -> {
+      x.setValue(x.getValue() + 1);
+    });
   }
 
   public void useClosures1(BasicType right) {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
-        .forEach(
-            (java.util.function.Consumer<? super com.simiacryptus.demo.refcount.BasicType>) com.simiacryptus.ref.lang.RefUtil
-                .wrapInterface((java.util.function.Consumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
-                  x.value += right.value;
-                  x.freeRef();
-                }, right));
+    java.util.Arrays.stream(this.values)
+        .forEach((java.util.function.Consumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
+          x.setValue(x.getValue() + right.getValue());
+        });
   }
 
   public void useClosures2(BasicType right) {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
-        .forEach(com.simiacryptus.ref.lang.RefUtil.wrapInterface(new Consumer<BasicType>() {
-          @Override
-          public void accept(BasicType x) {
-            x.value += right.value;
-            x.freeRef();
-          }
-        }, right));
+    java.util.Arrays.stream(this.values).forEach(new Consumer<BasicType>() {
+      @Override
+      public void accept(BasicType x) {
+        x.setValue(x.getValue() + right.getValue());
+      }
+    });
   }
 
   public void useClosures3(BasicType right) {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
-        .forEach(new RefAwareConsumer<BasicType>() {
-          @Override
-          public void accept(BasicType x) {
-            x.value += right.value;
-            x.freeRef();
-          }
-
-          public @Override void _free() {
-            right.freeRef();
-            super._free();
-          }
-
-          {
-            right.addRef();
-          }
-        });
-    right.freeRef();
-  }
-
-  public @Override ArrayContainer addRef() {
-    return (ArrayContainer) super.addRef();
-  }
-
-  public static ArrayContainer[] addRefs(ArrayContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRef)
-        .toArray((x) -> new ArrayContainer[x]);
-  }
-
-  public static ArrayContainer[][] addRefs(ArrayContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRefs)
-        .toArray((x) -> new ArrayContainer[x][]);
+    java.util.Arrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
+      @Override
+      public void accept(BasicType x) {
+        x.setValue(x.getValue() + right.getValue());
+      }
+    });
   }
 }
