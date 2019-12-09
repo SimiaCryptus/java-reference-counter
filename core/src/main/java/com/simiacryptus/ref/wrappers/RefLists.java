@@ -21,15 +21,28 @@ package com.simiacryptus.ref.wrappers;
 
 import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefLists {
   public static <T> RefList<RefList<T>> partition(List<T> list, int size) {
-    return new RefStream<>(Lists.partition(list, size).stream())
-        .map(RefArrayList::new).collect(RefCollectors.toList());
+    final List<T> inner;
+    if(list instanceof RefList) {
+      inner = ((RefList) list).getInner();
+    } else {
+      inner = list;
+    }
+    final List<RefList<T>> innerPartitions = Lists.partition(inner, size).stream()
+        .map(RefArrayList::new).collect(Collectors.toList());
+    final RefArrayList<RefList<T>> refLists = new RefArrayList<>(innerPartitions);
+    innerPartitions.forEach(ReferenceCounting::freeRef);
+    RefUtil.freeRef(list);
+    return refLists;
   }
 }

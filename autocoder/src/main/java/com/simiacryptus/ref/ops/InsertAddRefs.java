@@ -19,7 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 
-@RefCoderIgnore
+@RefIgnore
 public class InsertAddRefs extends RefFileAstVisitor {
 
   public InsertAddRefs(CompilationUnit compilationUnit, File file) {
@@ -38,15 +38,8 @@ public class InsertAddRefs extends RefFileAstVisitor {
   public void apply(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
-      if (arg instanceof ClassInstanceCreation) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
-      } else if (arg instanceof AnonymousClassDeclaration) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
-      } else if (arg instanceof MethodInvocation) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
-      } else if (arg instanceof ArrayCreation) {
-        debug(node, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
-      } else if (arg instanceof Expression) {
+      boolean wrap = shouldWrap(arg, name);
+      if (wrap) {
         final Expression expression = (Expression) arg;
         final ITypeBinding resolveTypeBinding = expression.resolveTypeBinding();
         if (null == resolveTypeBinding) {
@@ -59,8 +52,6 @@ public class InsertAddRefs extends RefFileAstVisitor {
         } else {
           info(node, "Non-refcounted arg %s in %s", expression, name);
         }
-      } else {
-        warn(node, "Unexpected type %s in %s", arg.getClass().getSimpleName(), name);
       }
     }
   }
@@ -141,6 +132,34 @@ public class InsertAddRefs extends RefFileAstVisitor {
 
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
     return isRefAware(declaringClass);
+  }
+
+  private boolean shouldWrap(ASTNode arg, String name) {
+    if (arg instanceof ClassInstanceCreation) {
+      debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
+      return false;
+    } else if (arg instanceof AnonymousClassDeclaration) {
+      debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
+      return false;
+    } else if (arg instanceof LambdaExpression) {
+      debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
+      return false;
+    } else if (arg instanceof MethodInvocation) {
+      debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
+      return false;
+    } else if (arg instanceof ArrayCreation) {
+      debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
+      return false;
+    } else if (arg instanceof CastExpression) {
+      return shouldWrap(((CastExpression) arg).getExpression(), name);
+    } else if (arg instanceof ParenthesizedExpression) {
+      return shouldWrap(((ParenthesizedExpression) arg).getExpression(), name);
+    } else if (arg instanceof Expression) {
+      return true;
+    } else {
+      warn(arg, "Unexpected type %s in %s", arg.getClass().getSimpleName(), name);
+      return false;
+    }
   }
 
   @Nullable

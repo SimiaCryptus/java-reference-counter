@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.IndexSymbols;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
 
@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RefCoderIgnore
+@RefIgnore
 public class InstrumentClosures extends RefFileAstVisitor {
 
   private final IndexSymbols.SymbolIndex index;

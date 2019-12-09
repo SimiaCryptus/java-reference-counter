@@ -19,7 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-@RefCoderIgnore
+@RefIgnore
 public abstract class FileAstVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(FileAstVisitor.class);
   @NotNull
@@ -250,21 +250,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return list;
   }
 
-  protected List<StatementOfInterest> exits(@NotNull Block block, SimpleName variable, int startAt, int endAt) {
-    IBinding binding = variable.resolveBinding();
-    if (null == binding) {
-      warn(variable, "Unresolved binding");
-      return Arrays.asList();
-    } else {
-      final List<StatementOfInterest> exits = exits(block, startAt, endAt);
-      info(variable, "Last mentions of %s: \n\t%s", variable, exits.stream().map(x ->
-          String.format("%s at line %s", x.statement.toString().trim(), x.line)
-      ).reduce((a, b) -> a + "\n\t" + b).orElse(""));
-      return exits;
-    }
-  }
-
-  private List<StatementOfInterest> exits(@NotNull Block block, int startAt, int endAt) {
+  protected List<StatementOfInterest> exits(@NotNull Block block, int startAt, int endAt) {
     final List statements = block.statements();
     final ArrayList<StatementOfInterest> exits = new ArrayList<>();
     StatementOfInterest lastMention = null;
@@ -298,6 +284,9 @@ public abstract class FileAstVisitor extends ASTVisitor {
       }
     }
     if (null != lastMention) exits.add(lastMention);
+    info(1, block, "Exits: \n\t%s", exits.stream().map(x ->
+        String.format("%s at line %s", x.statement.toString().trim(), x.line)
+    ).reduce((a, b) -> a + "\n\t" + b).orElse(""));
     return exits;
   }
 
@@ -605,7 +594,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   protected StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt, int endAt) {
     IBinding binding = variable.resolveBinding();
     if (null == binding) {
-      warn(variable, "Unresolved binding");
+      warn(1, variable, "Unresolved binding");
       return null;
     } else {
       final List statements = block.statements();
@@ -618,9 +607,9 @@ public abstract class FileAstVisitor extends ASTVisitor {
       }
       final StatementOfInterest lastMention = lastMention1;
       if (null == lastMention) {
-        info(variable, "No mentions of %s", variable);
+        info(1, variable, "No mentions of %s", variable);
       } else {
-        info(variable, "Last mentions of %s: %s at line %s\"",
+        info(1, variable, "Last mentions of %s: %s at line %s\"",
             variable,
             lastMention.statement.toString().trim(),
             lastMention.line);

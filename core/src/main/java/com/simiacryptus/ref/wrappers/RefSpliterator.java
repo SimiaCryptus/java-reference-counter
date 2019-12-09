@@ -19,43 +19,219 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 @RefAware
-@RefCoderIgnore
-public class RefSpliterator<T> implements Spliterator<T> {
+@RefIgnore
+public class RefSpliterator<T> extends ReferenceCountingBase implements Spliterator<T> {
   private final Spliterator<T> inner;
+  private final StackTraceElement[] createdBy = Thread.currentThread().getStackTrace();
+  private final ArrayList<ReferenceCounting> list = new ArrayList<>();
+  private long size;
 
   public RefSpliterator(Spliterator<T> inner) {
-    this.inner = inner;
+    this(inner, Long.MAX_VALUE);
+
+  }
+
+  public RefSpliterator(Spliterator<T> inner, long size) {
+    if (inner instanceof RefSpliterator) {
+      this.inner = ((RefSpliterator) inner).getInner();
+      this.size = size;
+    } else {
+      this.inner = inner;
+      this.size = size;
+    }
+  }
+
+  public static <T> RefSpliterator<T>[] addRefs(@NotNull RefSpliterator<T>[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
+        .toArray((x) -> new RefSpliterator[x]);
+  }
+
+  @Override
+  protected void _free() {
+    list.forEach(ReferenceCounting::freeRef);
+    list.clear();
+    //RefUtil.freeInternals(inner);
+    super._free();
+  }
+
+  public RefSpliterator<T> addRef() {
+    return (RefSpliterator<T>) super.addRef();
   }
 
   @Override
   public int characteristics() {
-    return this.inner.characteristics();
+    return this.getInner().characteristics();
   }
 
   @Override
   public long estimateSize() {
-    return this.inner.estimateSize();
+    return size;
+  }
+
+  public Spliterator<T> getInner() {
+    return inner;
+  }
+
+  public RefSpliterator<T> track(ReferenceCounting obj) {
+    list.add(obj);
+    return this;
   }
 
   @Override
   public boolean tryAdvance(@NotNull Consumer<? super T> action) {
-    return inner.tryAdvance(t -> action.accept(RefUtil.addRef(t)));
+    return getInner().tryAdvance(t -> action.accept(RefUtil.addRef(t)));
   }
 
   @Nullable
   @Override
   public Spliterator<T> trySplit() {
-    final Spliterator<T> trySplit = this.inner.trySplit();
-    return null == trySplit ? null : new RefSpliterator<>(trySplit);
+    return this.getInner().trySplit();
+//    final Spliterator<T> trySplit = this.inner.trySplit();
+//    return null == trySplit ? null : new RefSpliterator<>(trySplit, size).track(this.addRef());
+  }
+
+  public static class OfDouble<T> extends ReferenceCountingBase implements Spliterator.OfDouble {
+
+    private final Spliterator.OfDouble inner;
+    private final ArrayList<ReferenceCounting> list = new ArrayList<>();
+
+    public OfDouble(OfDouble inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
+    }
+
+    @Override
+    public int characteristics() {
+      return this.inner.characteristics();
+    }
+
+    @Override
+    public long estimateSize() {
+      return this.inner.estimateSize();
+    }
+
+    public RefSpliterator.OfDouble track(ReferenceCounting obj) {
+      list.add(obj);
+      return this;
+    }
+
+    @Override
+    public boolean tryAdvance(DoubleConsumer action) {
+      return this.inner.tryAdvance(action);
+    }
+
+    @Override
+    public RefSpliterator.OfDouble trySplit() {
+      return new RefSpliterator.OfDouble(this.inner.trySplit());
+    }
+
+  }
+
+  public static class OfLong extends ReferenceCountingBase implements Spliterator.OfLong {
+
+    private final Spliterator.OfLong inner;
+    private final ArrayList<ReferenceCounting> list = new ArrayList<>();
+
+    public OfLong(OfLong inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
+    }
+
+    @Override
+    public int characteristics() {
+      return this.inner.characteristics();
+    }
+
+    @Override
+    public long estimateSize() {
+      return this.inner.estimateSize();
+    }
+
+    ;
+
+    public RefSpliterator.OfLong track(ReferenceCounting obj) {
+      list.add(obj);
+      return this;
+    }
+
+    @Override
+    public boolean tryAdvance(LongConsumer action) {
+      return this.inner.tryAdvance(action);
+    }
+
+    @Override
+    public RefSpliterator.OfLong trySplit() {
+      return new RefSpliterator.OfLong(this.inner.trySplit());
+    }
+
+
+  }
+
+  public static class OfInt extends ReferenceCountingBase implements Spliterator.OfInt {
+
+    private final Spliterator.OfInt inner;
+    private final ArrayList<ReferenceCounting> list = new ArrayList<>();
+
+    public OfInt(OfInt inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
+    }
+
+    @Override
+    public int characteristics() {
+      return this.inner.characteristics();
+    }
+
+    @Override
+    public long estimateSize() {
+      return this.inner.estimateSize();
+    }
+
+    public RefSpliterator.OfInt track(ReferenceCounting obj) {
+      list.add(obj);
+      return this;
+    }
+
+    @Override
+    public boolean tryAdvance(IntConsumer action) {
+      return this.inner.tryAdvance(action);
+    }
+
+    @Override
+    public RefSpliterator.OfInt trySplit() {
+      return new RefSpliterator.OfInt(this.inner.trySplit());
+    }
+
+
   }
 }

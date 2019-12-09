@@ -19,10 +19,7 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -30,11 +27,11 @@ import java.util.function.*;
 import java.util.stream.LongStream;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefLongStream implements LongStream {
-  private LongStream inner;
-  private List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
-  private List<ReferenceCounting> lambdas;
+  private final LongStream inner;
+  private final List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
+  private final List<ReferenceCounting> lambdas;
 
   RefLongStream(LongStream stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
@@ -52,6 +49,10 @@ public class RefLongStream implements LongStream {
     this.inner = stream;
   }
 
+  public static RefLongStream range(long startInclusive, final long endExclusive) {
+    return new RefLongStream(LongStream.range(startInclusive, endExclusive));
+  }
+
   public static RefLongStream of(long x) {
     return new RefLongStream(LongStream.of(x));
   }
@@ -62,16 +63,24 @@ public class RefLongStream implements LongStream {
     }));
   }
 
+  public static RefLongStream generate(LongSupplier s) {
+    return new RefLongStream(LongStream.generate(s));
+  }
+
   @Override
   public boolean allMatch(@NotNull LongPredicate predicate) {
     track(predicate);
-    return inner.allMatch((long t) -> predicate.test(getRef(t)));
+    final boolean allMatch = inner.allMatch((long t) -> predicate.test(getRef(t)));
+    close();
+    return allMatch;
   }
 
   @Override
   public boolean anyMatch(@NotNull LongPredicate predicate) {
     track(predicate);
-    return inner.anyMatch((long t) -> predicate.test(getRef(t)));
+    final boolean anyMatch = inner.anyMatch((long t) -> predicate.test(getRef(t)));
+    close();
+    return anyMatch;
   }
 
   @Override
@@ -81,7 +90,9 @@ public class RefLongStream implements LongStream {
 
   @Override
   public OptionalDouble average() {
-    return inner.average();
+    final OptionalDouble average = inner.average();
+    close();
+    return average;
   }
 
   @Override
@@ -99,41 +110,46 @@ public class RefLongStream implements LongStream {
     track(supplier);
     track(accumulator);
     track(combiner);
-    return inner.collect(
+    final R collect = inner.collect(
         () -> storeRef(supplier.get()),
         (R t1, long u1) -> accumulator.accept(RefUtil.addRef(t1), u1),
         (R t, R u) -> combiner.accept(getRef(t), getRef(u))
     );
+    close();
+    return collect;
   }
 
   @Override
   public long count() {
     final long count = inner.count();
+    close();
     return count;
   }
 
   @NotNull
   @Override
   public RefLongStream distinct() {
-    inner = inner.distinct();
-    return this;
+    return new RefLongStream(inner.distinct(), lambdas, refs);
   }
 
   @NotNull
   public RefLongStream filter(@NotNull LongPredicate predicate) {
-    inner = inner.filter((long t) -> predicate.test(RefUtil.addRef(t)));
     track(predicate);
-    return this;
+    return new RefLongStream(inner.filter((long t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
   }
 
   @Override
   public OptionalLong findAny() {
-    return inner.findAny();
+    final OptionalLong any = inner.findAny();
+    close();
+    return any;
   }
 
   @Override
   public OptionalLong findFirst() {
-    return inner.findFirst();
+    final OptionalLong first = inner.findFirst();
+    close();
+    return first;
   }
 
   @NotNull
@@ -145,21 +161,18 @@ public class RefLongStream implements LongStream {
     ), lambdas, refs);
   }
 
-  public void forEach(@NotNull Consumer action) {
+  @Override
+  public void forEach(LongConsumer action) {
     track(action);
     inner.forEach((long t) -> action.accept(getRef(t)));
     close();
   }
 
   @Override
-  public void forEach(LongConsumer action) {
-
-  }
-
-  @Override
   public void forEachOrdered(@NotNull LongConsumer action) {
     track(action);
     inner.forEachOrdered((long t) -> action.accept(getRef(t)));
+    close();
   }
 
   private <U> U getRef(U u) {
@@ -179,14 +192,19 @@ public class RefLongStream implements LongStream {
   @NotNull
   @Override
   public PrimitiveIterator.OfLong iterator() {
-    return inner.iterator();
+    return new RefPrimitiveIterator.OfLong(inner.iterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        RefLongStream.this.close();
+      }
+    });
+
   }
 
   @NotNull
   @Override
   public RefLongStream limit(long maxSize) {
-    inner = inner.limit(maxSize);
-    return this;
+    return new RefLongStream(inner.limit(maxSize), lambdas, refs);
   }
 
   @NotNull
@@ -215,80 +233,89 @@ public class RefLongStream implements LongStream {
 
   @Override
   public OptionalLong max() {
-    return inner.max();
+    final OptionalLong max = inner.max();
+    close();
+    return max;
   }
 
   @Override
   public OptionalLong min() {
-    return inner.min();
+    final OptionalLong min = inner.min();
+    close();
+    return min;
   }
 
   @Override
   public boolean noneMatch(@NotNull LongPredicate predicate) {
     track(predicate);
-    return inner.noneMatch((long t) -> predicate.test(getRef(t)));
+    final boolean match = inner.noneMatch((long t) -> predicate.test(getRef(t)));
+    close();
+    return match;
   }
 
   @NotNull
   @Override
   public RefLongStream onClose(Runnable closeHandler) {
-    inner = inner.onClose(closeHandler);
     track(closeHandler);
-    return this;
+    return new RefLongStream(inner.onClose(closeHandler), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefLongStream parallel() {
-    inner = inner.parallel();
-    return this;
+    return new RefLongStream(inner.parallel(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefLongStream peek(@NotNull LongConsumer action) {
     track(action);
-    inner = inner.peek((long t) -> action.accept(getRef(t)));
-    return this;
+    return new RefLongStream(inner.peek((long t) -> action.accept(getRef(t))), lambdas, refs);
   }
 
   @Override
   public long reduce(long identity, @NotNull LongBinaryOperator accumulator) {
     track(accumulator);
-    return inner.reduce(storeRef(identity), (long t, long u) -> storeRef(accumulator.applyAsLong(getRef(t), getRef(u))));
+    final long reduce = inner.reduce(storeRef(identity), (long t, long u) -> storeRef(accumulator.applyAsLong(getRef(t), getRef(u))));
+    close();
+    return reduce;
   }
 
   @Override
   public OptionalLong reduce(@NotNull LongBinaryOperator accumulator) {
     track(accumulator);
-    return inner.reduce((long t, long u) -> storeRef(accumulator.applyAsLong(getRef(t), getRef(u))));
+    final OptionalLong optionalLong = inner.reduce((long t, long u) -> storeRef(accumulator.applyAsLong(getRef(t), getRef(u))));
+    close();
+    return optionalLong;
   }
 
   @NotNull
   @Override
   public RefLongStream sequential() {
-    inner = inner.sequential();
-    return this;
+    return new RefLongStream(inner.sequential(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefLongStream skip(long n) {
-    inner = inner.skip(n);
-    return this;
+    return new RefLongStream(inner.skip(n), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefLongStream sorted() {
-    inner = inner.sorted();
-    return this;
+    return new RefLongStream(inner.sorted(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public Spliterator.OfLong spliterator() {
-    return inner.spliterator();
+    return new RefSpliterator.OfLong(inner.spliterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        RefLongStream.this.close();
+      }
+    });
   }
 
   private <U> U storeRef(U u) {
@@ -300,17 +327,23 @@ public class RefLongStream implements LongStream {
 
   @Override
   public long sum() {
-    return 0;
+    final long sum = inner.sum();
+    close();
+    return sum;
   }
 
   @Override
   public LongSummaryStatistics summaryStatistics() {
-    return inner.summaryStatistics();
+    final LongSummaryStatistics statistics = inner.summaryStatistics();
+    close();
+    return statistics;
   }
 
   @Override
   public long[] toArray() {
-    return inner.map(this::getRef).toArray();
+    final long[] longs = inner.toArray();
+    close();
+    return longs;
   }
 
   private void track(Object... lambda) {
@@ -322,8 +355,7 @@ public class RefLongStream implements LongStream {
   @NotNull
   @Override
   public RefLongStream unordered() {
-    inner = inner.unordered();
-    return this;
+    return new RefLongStream(inner.unordered(), lambdas, refs);
   }
 
 }

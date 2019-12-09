@@ -19,13 +19,13 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 import java.util.regex.Pattern;
 
-@RefCoderIgnore
+@RefIgnore
 public class InlineTempVars extends RefFileAstVisitor {
 
   public InlineTempVars(CompilationUnit compilationUnit, File file) {

@@ -21,7 +21,7 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.lang.Settings;
 import com.simiacryptus.ref.lang.PersistanceMode;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RefCoderIgnore
+@RefIgnore
 public class RefSettings implements Settings {
 
   private static final Logger logger = LoggerFactory.getLogger(RefSettings.class);

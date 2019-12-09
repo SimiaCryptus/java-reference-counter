@@ -19,10 +19,7 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -30,11 +27,11 @@ import java.util.function.*;
 import java.util.stream.IntStream;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefIntStream implements IntStream {
-  private IntStream inner;
-  private List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
-  private List<ReferenceCounting> lambdas;
+  private final IntStream inner;
+  private final List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
+  private final List<ReferenceCounting> lambdas;
 
   RefIntStream(IntStream stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
@@ -74,13 +71,17 @@ public class RefIntStream implements IntStream {
   @Override
   public boolean allMatch(@NotNull IntPredicate predicate) {
     track(predicate);
-    return inner.allMatch((int t) -> predicate.test(getRef(t)));
+    final boolean match = inner.allMatch((int t) -> predicate.test(getRef(t)));
+    close();
+    return match;
   }
 
   @Override
   public boolean anyMatch(@NotNull IntPredicate predicate) {
     track(predicate);
-    return inner.anyMatch((int t) -> predicate.test(getRef(t)));
+    final boolean match = inner.anyMatch((int t) -> predicate.test(getRef(t)));
+    close();
+    return match;
   }
 
   @Override
@@ -95,7 +96,9 @@ public class RefIntStream implements IntStream {
 
   @Override
   public OptionalDouble average() {
-    return inner.average();
+    final OptionalDouble average = inner.average();
+    close();
+    return average;
   }
 
   @Override
@@ -113,41 +116,46 @@ public class RefIntStream implements IntStream {
     track(supplier);
     track(accumulator);
     track(combiner);
-    return inner.collect(
+    final R collect = inner.collect(
         () -> storeRef(supplier.get()),
         (R t1, int u1) -> accumulator.accept(RefUtil.addRef(t1), u1),
         (R t, R u) -> combiner.accept(getRef(t), getRef(u))
     );
+    close();
+    return collect;
   }
 
   @Override
   public long count() {
     final long count = inner.count();
+    close();
     return count;
   }
 
   @NotNull
   @Override
   public RefIntStream distinct() {
-    inner = inner.distinct();
-    return this;
+    return new RefIntStream(inner.distinct(), lambdas, refs);
   }
 
   @NotNull
   public RefIntStream filter(@NotNull IntPredicate predicate) {
-    inner = inner.filter((int t) -> predicate.test(RefUtil.addRef(t)));
     track(predicate);
-    return this;
+    return new RefIntStream(inner.filter((int t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
   }
 
   @Override
   public OptionalInt findAny() {
-    return inner.findAny();
+    final OptionalInt any = inner.findAny();
+    close();
+    return any;
   }
 
   @Override
   public OptionalInt findFirst() {
-    return inner.findFirst();
+    final OptionalInt first = inner.findFirst();
+    close();
+    return first;
   }
 
   @NotNull
@@ -170,6 +178,7 @@ public class RefIntStream implements IntStream {
   public void forEachOrdered(@NotNull IntConsumer action) {
     track(action);
     inner.forEachOrdered((int t) -> action.accept(getRef(t)));
+    close();
   }
 
   private <U> U getRef(U u) {
@@ -189,14 +198,19 @@ public class RefIntStream implements IntStream {
   @NotNull
   @Override
   public PrimitiveIterator.OfInt iterator() {
-    return inner.iterator();
+    return new RefPrimitiveIterator.OfInt(inner.iterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        RefIntStream.this.close();
+      }
+    });
+
   }
 
   @NotNull
   @Override
   public RefIntStream limit(long maxSize) {
-    inner = inner.limit(maxSize);
-    return this;
+    return new RefIntStream(inner.limit(maxSize), lambdas, refs);
   }
 
   @NotNull
@@ -225,80 +239,90 @@ public class RefIntStream implements IntStream {
 
   @Override
   public OptionalInt max() {
-    return inner.max();
+    final OptionalInt max = inner.max();
+    close();
+    return max;
   }
 
   @Override
   public OptionalInt min() {
-    return inner.min();
+    final OptionalInt min = inner.min();
+    close();
+    return min;
   }
 
   @Override
   public boolean noneMatch(@NotNull IntPredicate predicate) {
     track(predicate);
-    return inner.noneMatch((int t) -> predicate.test(getRef(t)));
+    final boolean match = inner.noneMatch((int t) -> predicate.test(getRef(t)));
+    close();
+    return match;
   }
 
   @NotNull
   @Override
   public RefIntStream onClose(Runnable closeHandler) {
-    inner = inner.onClose(closeHandler);
     track(closeHandler);
-    return this;
+    return new RefIntStream(inner.onClose(closeHandler), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefIntStream parallel() {
-    inner = inner.parallel();
-    return this;
+    return new RefIntStream(inner.parallel(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefIntStream peek(@NotNull IntConsumer action) {
     track(action);
-    inner = inner.peek((int t) -> action.accept(getRef(t)));
-    return this;
+    return new RefIntStream(inner.peek((int t) -> action.accept(getRef(t))), lambdas, refs);
   }
 
   @Override
   public int reduce(int identity, @NotNull IntBinaryOperator accumulator) {
     track(accumulator);
-    return inner.reduce(storeRef(identity), (int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
+    final int reduce = inner.reduce(storeRef(identity), (int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
+    close();
+    return reduce;
   }
 
   @Override
   public OptionalInt reduce(@NotNull IntBinaryOperator accumulator) {
     track(accumulator);
-    return inner.reduce((int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
+    final OptionalInt reduce = inner.reduce((int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
+    close();
+    return reduce;
   }
 
   @NotNull
   @Override
   public RefIntStream sequential() {
-    inner = inner.sequential();
-    return this;
+    return new RefIntStream(inner.sequential(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefIntStream skip(long n) {
-    inner = inner.skip(n);
-    return this;
+    return new RefIntStream(inner.skip(n), lambdas, refs);
   }
 
   @NotNull
   @Override
   public RefIntStream sorted() {
-    inner = inner.sorted();
-    return this;
+    return new RefIntStream(inner.sorted(), lambdas, refs);
   }
 
   @NotNull
   @Override
   public Spliterator.OfInt spliterator() {
-    return inner.spliterator();
+    return new RefSpliterator.OfInt(inner.spliterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        RefIntStream.this.close();
+      }
+    });
+
   }
 
   private <U> U storeRef(U u) {
@@ -310,17 +334,23 @@ public class RefIntStream implements IntStream {
 
   @Override
   public int sum() {
-    return 0;
+    final int sum = inner.sum();
+    close();
+    return sum;
   }
 
   @Override
   public IntSummaryStatistics summaryStatistics() {
-    return inner.summaryStatistics();
+    final IntSummaryStatistics statistics = inner.summaryStatistics();
+    close();
+    return statistics;
   }
 
   @Override
   public int[] toArray() {
-    return inner.toArray();
+    final int[] ints = inner.toArray();
+    close();
+    return ints;
   }
 
   private void track(Object... lambda) {
@@ -332,8 +362,7 @@ public class RefIntStream implements IntStream {
   @NotNull
   @Override
   public RefIntStream unordered() {
-    inner = inner.unordered();
-    return this;
+    return new RefIntStream(inner.unordered(), lambdas, refs);
   }
 
 }

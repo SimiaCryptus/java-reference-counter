@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implements RefList<T> {
   @Override
   protected void _free() {
@@ -41,16 +41,19 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   public void add(int index, T element) {
+    assertAlive();
     getInner().add(index, element);
   }
 
   @Override
   public final boolean add(T o) {
+    assertAlive();
     return getInner().add(o);
   }
 
   @Override
   public boolean addAll(int index, @NotNull Collection<? extends T> c) {
+    assertAlive();
     final boolean changed = getInner().addAll(index, c);
     RefUtil.freeRef(c);
     return changed;
@@ -58,24 +61,26 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   public final boolean addAll(@NotNull Collection<? extends T> c) {
-    if (c instanceof ReferenceCounting) {
-      final boolean returnValue = c.stream().map(o -> add(o)).reduce((a, b) -> a || b).orElse(false);
-      ((ReferenceCounting) c).freeRef();
-      return returnValue;
-    } else {
-      return c.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
-    }
+    assertAlive();
+    final Boolean returnValue = RefCollections.getInnerStream(c)
+        .map(o -> add(RefUtil.addRef(o)))
+        .reduce((a, b) -> a || b)
+        .orElse(false);
+    RefUtil.freeRef(c);
+    return returnValue;
 
   }
 
   @NotNull
   public @Override
   RefAbstractList<T> addRef() {
+    assertAlive();
     return (RefAbstractList<T>) super.addRef();
   }
 
   @Override
   public T get(int index) {
+    assertAlive();
     return RefUtil.addRef(getInner().get(index));
   }
 
@@ -83,6 +88,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   public int indexOf(Object o) {
+    assertAlive();
     final int index = getInner().indexOf(o);
     RefUtil.freeRef(o);
     return index;
@@ -90,6 +96,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   public int lastIndexOf(Object o) {
+    assertAlive();
     final int index = getInner().lastIndexOf(o);
     RefUtil.freeRef(o);
     return index;
@@ -98,22 +105,27 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   @NotNull
   @Override
   public RefListIterator<T> listIterator() {
-    return new RefListIterator<>(getInner().listIterator());
+    assertAlive();
+    return new RefListIterator<>(getInner().listIterator()).track(this.addRef());
   }
+
 
   @NotNull
   @Override
   public RefListIterator<T> listIterator(int index) {
+    assertAlive();
     return new RefListIterator<>(getInner().listIterator(index));
   }
 
   @Override
   public T remove(int index) {
+    assertAlive();
     return getInner().remove(index);
   }
 
   @Override
   public final boolean remove(Object item) {
+    assertAlive();
     final int index = getInner().indexOf(item);
     if (index >= 0) {
       final T remove = getInner().remove(index);
@@ -129,7 +141,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   public synchronized final boolean retainAll(@NotNull Collection<?> c) {
-    final Object[] toRemove;
+    assertAlive();
     final int[] indicesToRemove;
     if (c instanceof ReferenceCounting) {
       indicesToRemove = IntStream.range(0, size()).filter(idx -> {
@@ -147,12 +159,14 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   public T set(int index, T element) {
+    assertAlive();
     return getInner().set(index, element);
   }
 
   @NotNull
   @Override
   public RefArrayList<T> subList(int fromIndex, int toIndex) {
+    assertAlive();
     return new RefArrayList<T>(getInner().subList(fromIndex, toIndex));
   }
 

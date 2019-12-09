@@ -20,7 +20,7 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ops.StatementOfInterest;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +35,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RefCoderIgnore
+@RefIgnore
 public class InsertFreeRefs extends RefFileAstVisitor {
 
   public InsertFreeRefs(CompilationUnit compilationUnit, File file) {
@@ -508,17 +508,17 @@ public class InsertFreeRefs extends RefFileAstVisitor {
       final int mainBodySize = body.statements().size();
       //final List<StatementOfInterest> allExits = exits(body, node, 0, mainBodySize);
       //final List<StatementOfInterest> postExits = exits(body, node, lastMention.line + 1, mainBodySize);
-      final List<StatementOfInterest> inScopeExits = exits(body, node, declaredAt, lastMention.line);
+      final List<StatementOfInterest> inScopeExits = exits(body, declaredAt, lastMention.line);
       //final boolean hasReturns = allExits.stream().filter(x -> x.isReturn()).findAny().isPresent();
       if (lastMention.isComplexReturn()) {
         insertFreeRef_ComplexReturn(typeBinding, node, lastMention.block, lastMention.line);
       } else if (!lastMention.isReturn()) {
-        if (lastMention.line == mainBodySize - 1) {
-          info(node, "Last reference at %s past all exits", lastMention.line);
-        } else {
-          info(node, "Adding freeRef after last reference at %s", lastMention.line);
-          insertFreeRef(typeBinding, node, lastMention.block, lastMention.line);
-        }
+//        if (lastMention.line == mainBodySize - 1) {
+//          info(node, "Last reference at %s past all exits", lastMention.line);
+//        } else {
+//        }
+        info(node, "Adding freeRef after last reference at %s", lastMention.line);
+        insertFreeRef(typeBinding, node, lastMention.block, lastMention.line);
       } else {
         info(node, "Last usage returns reference");
       }

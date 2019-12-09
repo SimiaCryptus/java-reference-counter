@@ -19,10 +19,7 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -32,13 +29,21 @@ import java.util.Map;
 import java.util.TreeMap;
 
 @RefAware
-@RefCoderIgnore
+@RefIgnore
 public class RefTreeSet<T> extends RefAbstractSet<T> {
 
   private final TreeMap<T, T> inner;
 
   public RefTreeSet() {
-    this(new TreeMap<>());
+    this((a, b) -> {
+      final int result;
+      if (a instanceof ReferenceCountingBase) {
+        result = ((Comparable<T>) a).compareTo(RefUtil.addRef(b));
+      } else {
+        result = ((Comparable<T>) a).compareTo(b);
+      }
+      return result;
+    });
   }
 
   public RefTreeSet(Comparator<? super T> comparator) {
@@ -48,7 +53,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
   RefTreeSet(@Nonnull TreeMap<T, T> inner) {
     if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
-    this.getInner().keySet().forEach(RefUtil::addRef);
+    this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
   public RefTreeSet(@NotNull Collection<T> values) {
@@ -68,7 +73,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
   }
 
   @Override
-  public Map<T, T> getInner() {
+  public Map<T, T> getInnerMap() {
     return inner;
   }
 

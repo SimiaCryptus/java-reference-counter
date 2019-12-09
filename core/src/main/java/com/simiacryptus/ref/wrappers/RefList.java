@@ -20,20 +20,23 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefCoderIgnore;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 
 @RefAware
-@RefCoderIgnore
-public interface RefList<T> extends ReferenceCounting, List<T> {
+@RefIgnore
+public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {
 
   public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
         .toArray((x) -> new RefList[x]);
   }
+
+  List<T> getInner();
 
   RefList<T> addRef();
 
