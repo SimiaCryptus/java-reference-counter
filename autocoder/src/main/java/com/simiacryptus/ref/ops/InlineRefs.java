@@ -42,7 +42,7 @@ public class InlineRefs extends RefFileAstVisitor {
     if (node.statements().size() == 1 && node.getParent() instanceof Block) {
       final Block parent = (Block) node.getParent();
       parent.statements().set(parent.statements().indexOf(node),
-          copySubtree(node.getAST(), (ASTNode) node.statements().get(0)));
+          copyIfAttached((ASTNode) node.statements().get(0)));
     }
   }
 
@@ -65,7 +65,7 @@ public class InlineRefs extends RefFileAstVisitor {
           }
           if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
             info(node, "Inlining %s", fragment.getName());
-            node.setRightHandSide((Expression) copySubtree(node.getAST(), fragment.getInitializer()));
+            node.setRightHandSide(copyIfAttached(fragment.getInitializer()));
             info(previousStatement, "delete %s", previousStatement);
             previousStatement.delete();
           } else {
@@ -100,7 +100,7 @@ public class InlineRefs extends RefFileAstVisitor {
             }
             if (fragment.getName().toString().equals(node.getExpression().toString())) {
               info(node, "Inlining %s", fragment.getName());
-              node.setExpression((Expression) copySubtree(node.getAST(), fragment.getInitializer()));
+              node.setExpression(copyIfAttached((Expression) fragment.getInitializer()));
               info(previousStatement, "delete %s", previousStatement);
               previousStatement.delete();
             }

@@ -31,10 +31,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * The type Ref util.
+ */
 @RefAware
 @RefIgnore
 public class RefUtil {
 
+  /**
+   * Free ref.
+   *
+   * @param <T>   the type parameter
+   * @param value the value
+   */
   public static <T> void freeRef(@Nullable T value) {
     if (null != value) {
       if (value instanceof ReferenceCounting) {
@@ -49,12 +58,27 @@ public class RefUtil {
     }
   }
 
+  /**
+   * Add ref t.
+   *
+   * @param <T>   the type parameter
+   * @param value the value
+   * @return the t
+   */
   @Nullable
   public static <T> T addRef(@Nullable T value) {
     if (null != value && value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
     return value;
   }
 
+  /**
+   * Wrap interface t.
+   *
+   * @param <T>  the type parameter
+   * @param obj  the obj
+   * @param refs the refs
+   * @return the t
+   */
   public static <T> T wrapInterface(T obj, @NotNull Object... refs) {
     final Class<?> objClass = obj.getClass();
     final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
@@ -80,14 +104,33 @@ public class RefUtil {
     });
   }
 
+  /**
+   * Free refs.
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   */
   public static <T> void freeRefs(@NotNull T[] array) {
     java.util.Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
   }
 
+  /**
+   * Free internals.
+   *
+   * @param <T> the type parameter
+   * @param obj the obj
+   */
   public static <T> void freeInternals(Object obj) {
     freeInternals(obj, obj.getClass());
   }
 
+  /**
+   * Free internals.
+   *
+   * @param <T>      the type parameter
+   * @param obj      the obj
+   * @param objClass the obj class
+   */
   public static <T> void freeInternals(Object obj, Class<?> objClass) {
     for (Field field : objClass.getDeclaredFields()) {
       field.setAccessible(true);

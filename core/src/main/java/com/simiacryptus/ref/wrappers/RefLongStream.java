@@ -26,6 +26,9 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.LongStream;
 
+/**
+ * The type Ref long stream.
+ */
 @RefAware
 @RefIgnore
 public class RefLongStream implements LongStream {
@@ -33,6 +36,11 @@ public class RefLongStream implements LongStream {
   private final List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
   private final List<ReferenceCounting> lambdas;
 
+  /**
+   * Instantiates a new Ref long stream.
+   *
+   * @param stream the stream
+   */
   RefLongStream(LongStream stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
     onClose(() -> {
@@ -42,6 +50,13 @@ public class RefLongStream implements LongStream {
     });
   }
 
+  /**
+   * Instantiates a new Ref long stream.
+   *
+   * @param stream  the stream
+   * @param lambdas the lambdas
+   * @param refs    the refs
+   */
   RefLongStream(LongStream stream, List<ReferenceCounting> lambdas, List<RefStream.IdentityWrapper<ReferenceCounting>> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
@@ -49,20 +64,45 @@ public class RefLongStream implements LongStream {
     this.inner = stream;
   }
 
+  /**
+   * Range ref long stream.
+   *
+   * @param startInclusive the start inclusive
+   * @param endExclusive   the end exclusive
+   * @return the ref long stream
+   */
   public static RefLongStream range(long startInclusive, final long endExclusive) {
     return new RefLongStream(LongStream.range(startInclusive, endExclusive));
   }
 
+  /**
+   * Of ref long stream.
+   *
+   * @param x the x
+   * @return the ref long stream
+   */
   public static RefLongStream of(long x) {
     return new RefLongStream(LongStream.of(x));
   }
 
+  /**
+   * Of ref long stream.
+   *
+   * @param array the array
+   * @return the ref long stream
+   */
   public static RefLongStream of(long... array) {
     return new RefLongStream(LongStream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
   }
 
+  /**
+   * Generate ref long stream.
+   *
+   * @param s the s
+   * @return the ref long stream
+   */
   public static RefLongStream generate(LongSupplier s) {
     return new RefLongStream(LongStream.generate(s));
   }

@@ -30,6 +30,9 @@ import java.util.OptionalDouble;
 import java.util.function.*;
 import java.util.stream.DoubleStream;
 
+/**
+ * The type Ref double stream.
+ */
 @RefAware
 @RefIgnore
 public class RefDoubleStream implements DoubleStream {
@@ -37,6 +40,11 @@ public class RefDoubleStream implements DoubleStream {
   private final List<IdentityWrapper<ReferenceCounting>> refs;
   private final List<ReferenceCounting> lambdas;
 
+  /**
+   * Instantiates a new Ref double stream.
+   *
+   * @param stream the stream
+   */
   RefDoubleStream(DoubleStream stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
     onClose(() -> {
@@ -46,6 +54,13 @@ public class RefDoubleStream implements DoubleStream {
     });
   }
 
+  /**
+   * Instantiates a new Ref double stream.
+   *
+   * @param stream  the stream
+   * @param lambdas the lambdas
+   * @param refs    the refs
+   */
   RefDoubleStream(DoubleStream stream, List<ReferenceCounting> lambdas, List<IdentityWrapper<ReferenceCounting>> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
@@ -53,18 +68,43 @@ public class RefDoubleStream implements DoubleStream {
     this.inner = stream;
   }
 
+  /**
+   * Generate ref double stream.
+   *
+   * @param s the s
+   * @return the ref double stream
+   */
   public static RefDoubleStream generate(DoubleSupplier s) {
     return new RefDoubleStream(DoubleStream.generate(s));
   }
 
+  /**
+   * Iterate ref double stream.
+   *
+   * @param seed the seed
+   * @param f    the f
+   * @return the ref double stream
+   */
   public static RefDoubleStream iterate(final double seed, final DoubleUnaryOperator f) {
     return new RefDoubleStream(DoubleStream.iterate(seed, f));
   }
 
+  /**
+   * Of ref double stream.
+   *
+   * @param x the x
+   * @return the ref double stream
+   */
   public static RefDoubleStream of(double x) {
     return new RefDoubleStream(DoubleStream.of(x));
   }
 
+  /**
+   * Of ref double stream.
+   *
+   * @param array the array
+   * @return the ref double stream
+   */
   public static RefDoubleStream of(double... array) {
     return new RefDoubleStream(DoubleStream.of(array));
   }

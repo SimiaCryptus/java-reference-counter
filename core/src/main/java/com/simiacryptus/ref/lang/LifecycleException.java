@@ -21,11 +21,22 @@ package com.simiacryptus.ref.lang;
 
 import javax.annotation.Nonnull;
 
+/**
+ * The type Lifecycle exception.
+ */
 @RefIgnore
 public class LifecycleException extends RuntimeException {
+  /**
+   * The Obj.
+   */
   @Nonnull
   public final ReferenceCounting obj;
 
+  /**
+   * Instantiates a new Lifecycle exception.
+   *
+   * @param obj the obj
+   */
   public LifecycleException(@Nonnull ReferenceCountingBase obj) {
     super("Lifecycle Exception: " + ReferenceCountingBase.referenceReport(obj, false));
     this.obj = obj;

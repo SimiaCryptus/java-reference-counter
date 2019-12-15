@@ -26,10 +26,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Queue;
 
+/**
+ * The interface Ref queue.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
+  /**
+   * Add refs ref queue [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref queue [ ]
+   */
   public static <T> RefQueue<T>[] addRefs(@NotNull RefQueue<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefQueue::addRef)
         .toArray((x) -> new RefQueue[x]);

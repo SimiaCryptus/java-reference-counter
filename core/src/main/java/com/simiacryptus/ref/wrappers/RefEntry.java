@@ -26,6 +26,12 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
 
+/**
+ * The type Ref entry.
+ *
+ * @param <K> the type parameter
+ * @param <V> the type parameter
+ */
 @RefAware
 @RefIgnore
 public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
@@ -33,10 +39,21 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
   private final K key;
   private V value;
 
+  /**
+   * Instantiates a new Ref entry.
+   *
+   * @param inner the inner
+   */
   public RefEntry(Map.Entry<K, V> inner) {
     this(RefUtil.addRef(inner.getKey()), RefUtil.addRef(inner.getValue()));
   }
 
+  /**
+   * Instantiates a new Ref entry.
+   *
+   * @param key   the key
+   * @param value the value
+   */
   public RefEntry(K key, V value) {
     this.key = key;
     this.value = value;

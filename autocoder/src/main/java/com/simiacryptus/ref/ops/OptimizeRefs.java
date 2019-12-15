@@ -78,8 +78,7 @@ public class OptimizeRefs extends RefFileAstVisitor {
         return;
       }
       info(freeRefNode, "Consolidating freeRef of %s at line %s with addRef at line %s", variable, freeRefLineNumber, addRefLineNumber);
-      final AST ast = freeRefNode.getAST();
-      replace(addRefNode, copySubtree(ast, variable));
+      replace(addRefNode, copyIfAttached(variable));
       parentBlock.statements().remove(freeRefLineNumber);
     }
   }

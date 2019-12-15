@@ -30,10 +30,22 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 
+/**
+ * The interface Ref collection.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
 
+  /**
+   * Add refs ref collection [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref collection [ ]
+   */
   public static <T> RefCollection<T>[] addRefs(@NotNull RefCollection<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefCollection::addRef)
         .toArray((x) -> new RefCollection[x]);
@@ -50,6 +62,11 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
     iterator.freeRef();
   }
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
   Collection<T> getInner();
 
   @NotNull

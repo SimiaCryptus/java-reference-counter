@@ -29,10 +29,19 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 
+/**
+ * The type Ref comparator.
+ */
 @RefAware
 @RefIgnore
 public class RefComparator {
 
+  /**
+   * Natural order comparator.
+   *
+   * @param <T> the type parameter
+   * @return the comparator
+   */
   public static <T extends Comparable<T>> Comparator<? super T> naturalOrder() {
     return (a, b) -> {
       final int result = a.compareTo(RefUtil.addRef(b));
@@ -42,20 +51,49 @@ public class RefComparator {
     };
   }
 
+  /**
+   * Comparing comparator.
+   *
+   * @param <T> the type parameter
+   * @param <U> the type parameter
+   * @param fn  the fn
+   * @return the comparator
+   */
   public static <T, U extends Comparable<? super U>> Comparator<? super T> comparing(Function<? super T, ? extends U> fn) {
     return (a, b) -> {
       return fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b)));
     };
   }
 
+  /**
+   * Comparing int comparator.
+   *
+   * @param <T>          the type parameter
+   * @param keyExtractor the key extractor
+   * @return the comparator
+   */
   public static <T> Comparator<T> comparingInt(ToIntFunction<? super T> keyExtractor) {
     return Comparator.comparingInt(keyExtractor);
   }
 
+  /**
+   * Comparing long comparator.
+   *
+   * @param <T>          the type parameter
+   * @param keyExtractor the key extractor
+   * @return the comparator
+   */
   public static <T> Comparator<T> comparingLong(ToLongFunction<? super T> keyExtractor) {
     return Comparator.comparingLong(keyExtractor);
   }
 
+  /**
+   * Comparing double comparator.
+   *
+   * @param <T>          the type parameter
+   * @param keyExtractor the key extractor
+   * @return the comparator
+   */
   public static <T> Comparator<T> comparingDouble(ToDoubleFunction<? super T> keyExtractor) {
     return Comparator.comparingDouble(keyExtractor);
   }

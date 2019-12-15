@@ -26,21 +26,43 @@ import org.jetbrains.annotations.NotNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * The type Ref linked hash map.
+ *
+ * @param <K> the type parameter
+ * @param <V> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, KeyValue<K, V>> inner;
 
+  /**
+   * Instantiates a new Ref linked hash map.
+   */
   public RefLinkedHashMap() {
     this.inner = new LinkedHashMap<>();
   }
 
+  /**
+   * Instantiates a new Ref linked hash map.
+   *
+   * @param values the values
+   */
   public RefLinkedHashMap(Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }
 
+  /**
+   * Add refs ref linked hash map [ ].
+   *
+   * @param <K>   the type parameter
+   * @param <V>   the type parameter
+   * @param array the array
+   * @return the ref linked hash map [ ]
+   */
   public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@NotNull RefLinkedHashMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
         .toArray((x) -> new RefLinkedHashMap[x]);

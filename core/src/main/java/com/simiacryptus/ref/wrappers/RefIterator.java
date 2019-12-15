@@ -26,12 +26,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 
+/**
+ * The type Ref iterator.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefIterator<T> extends RefIteratorBase<T> {
 
   private final Iterator<T> inner;
 
+  /**
+   * Instantiates a new Ref iterator.
+   *
+   * @param inner the inner
+   */
   public RefIterator(Iterator<T> inner) {
     if (inner instanceof RefIterator) {
       this.inner = ((RefIterator<T>) inner).getInner();

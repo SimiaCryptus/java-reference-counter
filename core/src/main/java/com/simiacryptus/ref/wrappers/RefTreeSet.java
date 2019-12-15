@@ -28,12 +28,20 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * The type Ref tree set.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefTreeSet<T> extends RefAbstractSet<T> {
 
   private final TreeMap<T, T> inner;
 
+  /**
+   * Instantiates a new Ref tree set.
+   */
   public RefTreeSet() {
     this((a, b) -> {
       final int result;
@@ -46,21 +54,43 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
     });
   }
 
+  /**
+   * Instantiates a new Ref tree set.
+   *
+   * @param comparator the comparator
+   */
   public RefTreeSet(Comparator<? super T> comparator) {
     this(new TreeMap<>(comparator));
   }
 
+  /**
+   * Instantiates a new Ref tree set.
+   *
+   * @param inner the inner
+   */
   RefTreeSet(@Nonnull TreeMap<T, T> inner) {
     if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
     this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
+  /**
+   * Instantiates a new Ref tree set.
+   *
+   * @param values the values
+   */
   public RefTreeSet(@NotNull Collection<T> values) {
     this();
     addAll(values);
   }
 
+  /**
+   * Add refs ref tree set [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref tree set [ ]
+   */
   public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
         .toArray((x) -> new RefTreeSet[x]);
@@ -77,6 +107,11 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
     return inner;
   }
 
+  /**
+   * Poll first t.
+   *
+   * @return the t
+   */
   public T pollFirst() {
     return RefUtil.addRef(inner.pollFirstEntry().getKey());
   }

@@ -28,9 +28,18 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
 
+/**
+ * The type Ref collectors.
+ */
 @RefAware
 @RefIgnore
 public class RefCollectors {
+  /**
+   * To list ref collector.
+   *
+   * @param <T> the type parameter
+   * @return the ref collector
+   */
   public static <T> RefCollector<T, ?, RefList<T>> toList() {
     return new RefCollector<>(
         RefArrayList::new,
@@ -47,6 +56,12 @@ public class RefCollectors {
     );
   }
 
+  /**
+   * To set ref collector.
+   *
+   * @param <T> the type parameter
+   * @return the ref collector
+   */
   public static <T> RefCollector<T, ?, RefSet<T>> toSet() {
     return new RefCollector<>(
         RefHashSet::new,
@@ -63,6 +78,16 @@ public class RefCollectors {
     );
   }
 
+  /**
+   * To map ref collector.
+   *
+   * @param <T>         the type parameter
+   * @param <K>         the type parameter
+   * @param <U>         the type parameter
+   * @param keyMapper   the key mapper
+   * @param valueMapper the value mapper
+   * @return the ref collector
+   */
   public static <T, K, U>
   RefCollector<T, ?, RefMap<K, U>> toMap(Function<? super T, ? extends K> keyMapper,
                                          Function<? super T, ? extends U> valueMapper) {
@@ -71,6 +96,19 @@ public class RefCollectors {
     }, RefHashMap::new);
   }
 
+  /**
+   * To map ref collector.
+   *
+   * @param <T>           the type parameter
+   * @param <K>           the type parameter
+   * @param <U>           the type parameter
+   * @param <M>           the type parameter
+   * @param keyMapper     the key mapper
+   * @param valueMapper   the value mapper
+   * @param mergeFunction the merge function
+   * @param mapSupplier   the map supplier
+   * @return the ref collector
+   */
   public static <T, K, U, M extends RefMap<K, U>>
   RefCollector<T, ?, M> toMap(Function<? super T, ? extends K> keyMapper,
                               Function<? super T, ? extends U> valueMapper,
@@ -97,17 +135,49 @@ public class RefCollectors {
     );
   }
 
+  /**
+   * Grouping by ref collector.
+   *
+   * @param <T>        the type parameter
+   * @param <K>        the type parameter
+   * @param classifier the classifier
+   * @return the ref collector
+   */
   public static <T, K> RefCollector<T, ?, RefMap<K, RefList<T>>>
   groupingBy(Function<? super T, ? extends K> classifier) {
     return groupingBy(classifier, toList());
   }
 
+  /**
+   * Grouping by ref collector.
+   *
+   * @param <T>        the type parameter
+   * @param <K>        the type parameter
+   * @param <A>        the type parameter
+   * @param <D>        the type parameter
+   * @param classifier the classifier
+   * @param downstream the downstream
+   * @return the ref collector
+   */
   public static <T, K, A, D>
   RefCollector<T, ?, RefMap<K, D>> groupingBy(Function<? super T, ? extends K> classifier,
                                               Collector<? super T, A, D> downstream) {
     return groupingBy(classifier, RefHashMap::new, downstream);
   }
 
+  /**
+   * Grouping by ref collector.
+   *
+   * @param <T>        the type parameter
+   * @param <K>        the type parameter
+   * @param <D>        the type parameter
+   * @param <A>        the type parameter
+   * @param <M>        the type parameter
+   * @param classifier the classifier
+   * @param mapFactory the map factory
+   * @param downstream the downstream
+   * @return the ref collector
+   */
   public static <T, K, D, A, M extends RefMap<K, D>>
   RefCollector<T, ?, M> groupingBy(Function<? super T, ? extends K> classifier,
                                    Supplier<M> mapFactory,
@@ -162,6 +232,17 @@ public class RefCollectors {
     }, mergeFunction);
   }
 
+  /**
+   * Mapping ref collector.
+   *
+   * @param <T>        the type parameter
+   * @param <U>        the type parameter
+   * @param <A>        the type parameter
+   * @param <R>        the type parameter
+   * @param mapper     the mapper
+   * @param downstream the downstream
+   * @return the ref collector
+   */
   public static <T, U, A, R>
   RefCollector<T, ?, R> mapping(Function<? super T, ? extends U> mapper,
                                 Collector<? super U, A, R> downstream) {
@@ -180,6 +261,17 @@ public class RefCollectors {
     return collector;
   }
 
+  /**
+   * Collecting and then ref collector.
+   *
+   * @param <T>        the type parameter
+   * @param <A>        the type parameter
+   * @param <R>        the type parameter
+   * @param <RR>       the type parameter
+   * @param downstream the downstream
+   * @param finisher   the finisher
+   * @return the ref collector
+   */
   public static <T, A, R, RR> RefCollector<T, A, RR> collectingAndThen(Collector<T, A, R> downstream,
                                                                        Function<R, RR> finisher) {
     Set<Collector.Characteristics> characteristics = downstream.characteristics();
@@ -204,6 +296,13 @@ public class RefCollectors {
     return collector;
   }
 
+  /**
+   * Reducing ref collector.
+   *
+   * @param <T> the type parameter
+   * @param op  the op
+   * @return the ref collector
+   */
   public static <T> RefCollector<T, ?, Optional<T>>
   reducing(BinaryOperator<T> op) {
     class OptionalBox extends ReferenceCountingBase implements Consumer<T> {
@@ -247,6 +346,12 @@ public class RefCollectors {
     );
   }
 
+  /**
+   * Counting ref collector.
+   *
+   * @param <T> the type parameter
+   * @return the ref collector
+   */
   public static <T> RefCollector<T, ?, Long>
   counting() {
     return reducing(0L, e -> {
@@ -255,6 +360,16 @@ public class RefCollectors {
     }, Long::sum);
   }
 
+  /**
+   * Reducing ref collector.
+   *
+   * @param <T>      the type parameter
+   * @param <U>      the type parameter
+   * @param identity the identity
+   * @param mapper   the mapper
+   * @param op       the op
+   * @return the ref collector
+   */
   public static <T, U>
   RefCollector<T, ?, U> reducing(U identity,
                                  Function<? super T, ? extends U> mapper,
@@ -276,6 +391,13 @@ public class RefCollectors {
     return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);
   }
 
+  /**
+   * The type Ref collector.
+   *
+   * @param <T> the type parameter
+   * @param <A> the type parameter
+   * @param <R> the type parameter
+   */
   public static class RefCollector<T, A, R> extends ReferenceCountingBase implements Collector<T, A, R> {
     private final Supplier<A> supplier;
     private final BiConsumer<A, T> accumulator;
@@ -283,6 +405,15 @@ public class RefCollectors {
     private final Function<A, R> finisher;
     private final Set<Characteristics> characteristics;
 
+    /**
+     * Instantiates a new Ref collector.
+     *
+     * @param supplier        the supplier
+     * @param accumulator     the accumulator
+     * @param combiner        the combiner
+     * @param finisher        the finisher
+     * @param characteristics the characteristics
+     */
     RefCollector(Supplier<A> supplier,
                  BiConsumer<A, T> accumulator,
                  BinaryOperator<A> combiner,
@@ -295,6 +426,14 @@ public class RefCollectors {
       this.characteristics = characteristics;
     }
 
+    /**
+     * Instantiates a new Ref collector.
+     *
+     * @param supplier        the supplier
+     * @param accumulator     the accumulator
+     * @param combiner        the combiner
+     * @param characteristics the characteristics
+     */
     RefCollector(Supplier<A> supplier,
                  BiConsumer<A, T> accumulator,
                  BinaryOperator<A> combiner,

@@ -63,16 +63,16 @@ public class RemoveRefs extends RefFileAstVisitor {
       final AST ast = node.getAST();
       Expression subject;
       if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
-        subject = (Expression) copySubtree(ast, (ASTNode) node.arguments().get(0));
+        subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
       } else if (declaringClass.equals(RefUtil.class.getCanonicalName())) {
-        subject = (Expression) copySubtree(ast, (ASTNode) node.arguments().get(0));
+        subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
       } else {
         final Expression expression = node.getExpression();
         if (null == expression) {
           warn(node, "Naked method call. Cannot remove.");
           return;
         }
-        subject = (Expression) copySubtree(ast, expression);
+        subject = copyIfAttached(expression);
       }
       info(node, "Removing %s and replacing with %s", methodName, subject);
       //        replace(node, subject);
@@ -90,7 +90,7 @@ public class RemoveRefs extends RefFileAstVisitor {
         subject = unwrap(subject);
         if (isEvaluable(subject)) {
           info(subject, "%s replaced with %s", parent, subject);
-          replace(parent, ast.newExpressionStatement((Expression) copySubtree(ast, subject)));
+          replace(parent, ast.newExpressionStatement(copyIfAttached(subject)));
         } else {
           info(subject, "%s removed", parent);
           delete((ExpressionStatement) parent);
@@ -114,7 +114,7 @@ public class RemoveRefs extends RefFileAstVisitor {
       } else {
         subject = unwrap(subject);
         info(subject, "%s replaced with %s", parent, subject);
-        replace(node, (Expression) copySubtree(ast, subject));
+        replace(node, copyIfAttached(subject));
       }
     }
   }

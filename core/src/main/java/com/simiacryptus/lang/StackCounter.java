@@ -29,12 +29,26 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * The type Stack counter.
+ */
 @RefIgnore
 public class StackCounter {
 
+  /**
+   * The Stats.
+   */
   @Nonnull
   Map<StackFrame, DoubleStatistics> stats = new ConcurrentHashMap<>();
 
+  /**
+   * To string string.
+   *
+   * @param left  the left
+   * @param right the right
+   * @param fn    the fn
+   * @return the string
+   */
   public static String toString(@Nonnull final StackCounter left, @Nonnull final StackCounter right, @Nonnull final BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     Comparator<StackFrame> comparing = Comparator.comparing(key -> {
       return -fn.apply(left.stats.get(key), right.stats.get(key)).doubleValue();
@@ -50,6 +64,11 @@ public class StackCounter {
         .orElse("");
   }
 
+  /**
+   * Increment.
+   *
+   * @param length the length
+   */
   public void increment(final long length) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     for (@Nonnull final StackTraceElement frame : stackTrace) {
@@ -57,6 +76,12 @@ public class StackCounter {
     }
   }
 
+  /**
+   * Summary stat number.
+   *
+   * @param value the value
+   * @return the number
+   */
   @Nonnull
   protected Number summaryStat(@Nonnull final DoubleStatistics value) {
     return (int) value.getSum();
@@ -67,6 +92,12 @@ public class StackCounter {
     return toString(this::summaryStat);
   }
 
+  /**
+   * To string string.
+   *
+   * @param fn the fn
+   * @return the string
+   */
   public String toString(@Nonnull final Function<DoubleStatistics, Number> fn) {
     Comparator<Map.Entry<StackFrame, DoubleStatistics>> comparing = Comparator.comparing(e -> -fn.apply(e.getValue()).doubleValue());
     comparing = comparing.thenComparing(Comparator.comparing(e -> e.getKey().toString()));
@@ -76,20 +107,55 @@ public class StackCounter {
         .limit(100).reduce((a, b) -> a + "\n" + b).orElse(super.toString());
   }
 
+  /**
+   * To string char sequence.
+   *
+   * @param other the other
+   * @param fn    the fn
+   * @return the char sequence
+   */
   public CharSequence toString(@Nonnull final StackCounter other, @Nonnull final BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     return StackCounter.toString(this, other, fn);
   }
 
+  /**
+   * The type Stack frame.
+   */
   public static class StackFrame {
+    /**
+     * The Declaring class.
+     */
     public final String declaringClass;
+    /**
+     * The File name.
+     */
     public final String fileName;
+    /**
+     * The Line number.
+     */
     public final int lineNumber;
+    /**
+     * The Method name.
+     */
     public final String methodName;
 
+    /**
+     * Instantiates a new Stack frame.
+     *
+     * @param frame the frame
+     */
     public StackFrame(@Nonnull final StackTraceElement frame) {
       this(frame.getClassName(), frame.getMethodName(), frame.getFileName(), frame.getLineNumber());
     }
 
+    /**
+     * Instantiates a new Stack frame.
+     *
+     * @param declaringClass the declaring class
+     * @param methodName     the method name
+     * @param fileName       the file name
+     * @param lineNumber     the line number
+     */
     public StackFrame(final String declaringClass, final String methodName, final String fileName, final int lineNumber) {
       this.declaringClass = declaringClass;
       this.methodName = methodName;

@@ -48,7 +48,7 @@ public class InsertGCs extends FileAstVisitor {
         public void endVisit(ReturnStatement node) {
           final Block block = ast.newBlock();
           block.statements().add(newGCCall(ast));
-          block.statements().add(copySubtree(ast, node));
+          block.statements().add(copyIfAttached(node));
           replace(node, block);
           returnStatements.add(node);
         }
