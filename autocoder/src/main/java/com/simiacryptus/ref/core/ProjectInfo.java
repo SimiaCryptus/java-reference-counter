@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 @RefIgnore
 public class ProjectInfo {
@@ -47,23 +47,10 @@ public class ProjectInfo {
     this.classpathEntries = classpathEntries;
   }
 
-  public List<String> getClasspathEntries() {
-    return Arrays.asList(classpathEntries);
-  }
-
-  public String getProjectRoot() {
-    return projectRoot;
-  }
-
-  public List<String> getSourcepathEntries() {
-    return Arrays.asList(sourcepathEntries);
-  }
-
   @NotNull
-  public HashMap<File, CompilationUnit> parse() {
+  public ASTParser getAstParser() {
     HashMap<String, String> compilerOptions = new HashMap<>();
     compilerOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8));
-    compilerOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
     ASTParser astParser = ASTParser.newParser(AST.JLS11);
     astParser.setCompilerOptions(compilerOptions);
     astParser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -71,14 +58,23 @@ public class ProjectInfo {
     astParser.setBindingsRecovery(true);
     astParser.setStatementsRecovery(true);
     astParser.setEnvironment(classpathEntries, sourcepathEntries, null, true);
+    return astParser;
+  }
+
+  @NotNull
+  public HashMap<File, CompilationUnit> parse() {
+    return read(sourceFiles());
+  }
+
+  public @NotNull HashMap<File, CompilationUnit> read(File... files) {
+    final Map<String, File> fileMap = new HashMap<>();
+    for (File file : files) {
+      fileMap.put(file.getAbsolutePath(), file);
+    }
+    final ASTParser astParser = getAstParser();
     HashMap<File, CompilationUnit> results = new HashMap<>();
-    HashMap<String, File> fileMap = new HashMap<>();
     astParser.createASTs(
-        FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true).stream().map(file -> {
-          final String absolutePath = file.getAbsolutePath();
-          fileMap.put(absolutePath, file);
-          return absolutePath;
-        }).toArray(i -> new String[i]),
+        fileMap.keySet().toArray(new String[]{}),
         null,
         new String[]{},
         new FileASTRequestor() {
@@ -90,6 +86,12 @@ public class ProjectInfo {
         new NullProgressMonitor()
     );
     return results;
+  }
+
+  @NotNull
+  public File[] sourceFiles() {
+    return FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true)
+        .stream().map(File::getAbsoluteFile).distinct().toArray(i -> new File[i]);
   }
 
   @Override

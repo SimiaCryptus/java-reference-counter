@@ -33,10 +33,14 @@ public class RefCollections {
   }
 
   public static <T> Collection<T> getInnerCollection(@NotNull Collection<T> c) {
-    if(c instanceof RefCollection) {
+    if (c instanceof RefCollection) {
       return ((RefCollection<T>) c).getInner();
     } else {
       return c;
     }
+  }
+
+  public static <K, V> RefMap<K, V> unmodifiableMap(RefMap<K, V> map) {
+    throw new RuntimeException();
   }
 }

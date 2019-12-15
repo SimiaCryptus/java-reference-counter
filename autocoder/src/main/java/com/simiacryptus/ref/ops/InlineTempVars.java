@@ -19,17 +19,17 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 @RefIgnore
 public class InlineTempVars extends RefFileAstVisitor {
 
-  public InlineTempVars(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public InlineTempVars(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override
@@ -39,27 +39,17 @@ public class InlineTempVars extends RefFileAstVisitor {
     if (head instanceof VariableDeclarationFragment) {
       final VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) head;
       final SimpleName name = variableDeclarationFragment.getName();
-      if (Pattern.matches("temp\\d{0,4}", name.toString())) {
+      if (isTempIdentifier(name)) {
         final Expression expression = variableDeclarationFragment.getInitializer();
-        final ASTNode parent = node.getParent();
-        info(node, "delete %s", node);
+        final Block block = getBlock(node);
+        final AST ast = node.getAST();
         delete(node);
-        if (parent instanceof Block) {
-          final Block block = (Block) parent;
-          block.accept(new ASTVisitor() {
-            @Override
-            public void endVisit(SimpleName simpleName) {
-              if (contains(node, simpleName)) return;
-              if (name.toString().equals(simpleName.toString())) {
-                replace(simpleName, ASTNode.copySubtree(simpleName.getAST(), expression));
-              }
-            }
-          });
-        } else {
-          warn(node, "Statement not in block");
+        for (SimpleName match : findExpressions(block, name)) {
+          replace(match, copySubtree(ast, expression));
         }
       }
     }
   }
+
 
 }

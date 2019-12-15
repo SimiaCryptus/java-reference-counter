@@ -31,11 +31,15 @@ public class RefStreamSupport {
   public static <T> RefStream<T> stream(Spliterator<T> spliterator, boolean parallel) {
     if (spliterator instanceof RefSpliterator) {
       final RefSpliterator refSpliterator = (RefSpliterator) spliterator;
-      final RefStream refStream = new RefStream<>(StreamSupport.stream(refSpliterator.getInner(), parallel));
-      refSpliterator.freeRef();
-      return refStream;
+      final Spliterator inner = refSpliterator.getInner();
+      final RefStream<T> refStream = new RefStream<>(StreamSupport.stream(inner, parallel)).onClose(() -> {
+        refSpliterator.freeRef();
+      });
+//      return refStream.peek(u -> refStream.storeRef(RefUtil.addRef(u)));
+      return refStream.peek(refStream::storeRef);
     } else {
-      return new RefStream<>(StreamSupport.stream(spliterator, parallel));
+      final RefStream<T> refStream = new RefStream<>(StreamSupport.stream(spliterator, parallel));
+      return refStream.peek(refStream::storeRef);
     }
   }
 }

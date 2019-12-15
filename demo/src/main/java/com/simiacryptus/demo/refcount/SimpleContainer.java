@@ -13,16 +13,17 @@ public class SimpleContainer extends ReferenceCountingBase {
     this.value = value;
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
+  }
+
+  public void test() {
+    this.value.setValue(this.value.getValue() + 1);
   }
 
   @Override
   public String toString() {
     return "SimpleContainer{" + "values=" + value + '}';
-  }
-
-  public void test() {
-    this.value.setValue(this.value.getValue() + 1);
   }
 }

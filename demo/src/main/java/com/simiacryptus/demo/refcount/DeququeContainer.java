@@ -1,10 +1,10 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import com.simiacryptus.ref.wrappers.RefConsumer;
 
 public class DeququeContainer extends ReferenceCountingBase {
-  private static void testOperations(RefConsumer<java.util.concurrent.ConcurrentLinkedDeque<BasicType>> fn) {
+  private static void testOperations(
+      java.util.function.Consumer<java.util.concurrent.ConcurrentLinkedDeque<BasicType>> fn) {
     java.util.concurrent.ConcurrentLinkedDeque<BasicType> values = new java.util.concurrent.ConcurrentLinkedDeque<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -21,8 +21,9 @@ public class DeququeContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length)
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
+    }
   }
 
   private static void testElementOperations(java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
@@ -71,8 +72,9 @@ public class DeququeContainer extends ReferenceCountingBase {
     testArrayOperations(values);
     values.removeAll(list);
     values.clear();
-    if (!values.isEmpty())
+    if (!values.isEmpty()) {
       throw new RuntimeException();
+    }
   }
 
   public static void test() {
@@ -373,7 +375,8 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

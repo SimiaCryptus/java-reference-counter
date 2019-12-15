@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -31,8 +32,8 @@ import java.util.Iterator;
 @RefIgnore
 public class RemoveAnnotations extends RefFileAstVisitor {
 
-  public RemoveAnnotations(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public RemoveAnnotations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override

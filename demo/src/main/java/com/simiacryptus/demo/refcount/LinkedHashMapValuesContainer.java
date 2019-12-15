@@ -1,9 +1,8 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import com.simiacryptus.ref.wrappers.RefConsumer;
+
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
   public static void testBasicOperations(java.util.LinkedHashMap<Integer, BasicType> valuesMap) {
@@ -27,8 +26,9 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     if (valuesMap.containsKey(12)) {
       throw new AssertionError();
     }
-    if (!valuesMap.containsValue(valuesMap.get(32)))
+    if (!valuesMap.containsValue(valuesMap.get(32))) {
       throw new AssertionError();
+    }
   }
 
   public static void testStreamOperations(java.util.LinkedHashMap<Integer, BasicType> values) {
@@ -37,7 +37,7 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     });
   }
 
-  private static void test(RefConsumer<java.util.LinkedHashMap<Integer, BasicType>> fn) {
+  private static void test(java.util.function.Consumer<java.util.LinkedHashMap<Integer, BasicType>> fn) {
     final java.util.LinkedHashMap<Integer, BasicType> hashMap = new java.util.LinkedHashMap<>();
     fn.accept(hashMap);
   }
@@ -55,17 +55,17 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     test(values -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
-        if (1 == ((int) fooEntry2.getKey())) {
-          if (null == fooEntry2.getValue()) {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry81 -> {
+        if (1 == ((int) fooEntry81.getKey())) {
+          if (null == fooEntry81.getValue()) {
             throw new AssertionError();
           }
         } else {
-          if (null == fooEntry2.getValue()) {
+          if (null == fooEntry81.getValue()) {
             return;
           }
         }
-        fooEntry2.setValue(new BasicType());
+        fooEntry81.setValue(new BasicType());
       };
       values.entrySet().forEach(entryConsumer);
     });
@@ -73,7 +73,7 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
       final java.util.LinkedHashMap<Integer, BasicType> closureMap = new java.util.LinkedHashMap<>();
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (Consumer<Map.Entry<Integer, BasicType>>) lambdaParameter -> {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<Map.Entry<Integer, BasicType>>) lambdaParameter -> {
         if (1 == ((int) lambdaParameter.getKey())) {
           if (null == lambdaParameter.getValue()) {
             throw new AssertionError();
@@ -92,7 +92,7 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
       final java.util.LinkedHashMap<Integer, BasicType> closureMap = new java.util.LinkedHashMap<>();
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new java.util.function.Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
         public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == ((int) anonymousParameter.getKey())) {
@@ -120,7 +120,8 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

@@ -28,7 +28,7 @@ import java.util.Set;
 
 @RefAware
 @RefIgnore
-public interface RefSet<T> extends ReferenceCounting, Set<T> {
+public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {
 
   public static <T> RefSet<T>[] addRefs(@NotNull RefSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSet::addRef)
@@ -36,4 +36,9 @@ public interface RefSet<T> extends ReferenceCounting, Set<T> {
   }
 
   RefSet<T> addRef();
+
+  @Override
+  default RefSpliterator<T> spliterator() {
+    return RefCollection.super.spliterator();
+  }
 }

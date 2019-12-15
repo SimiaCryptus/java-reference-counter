@@ -19,8 +19,11 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,19 +35,25 @@ import java.util.stream.Stream;
 @RefIgnore
 public class InsertMethods extends RefFileAstVisitor {
 
-  public InsertMethods(CompilationUnit cu, File file) {
-    super(cu, file);
+  public InsertMethods(ProjectInfo projectInfo, CompilationUnit cu, File file) {
+    super(projectInfo, cu, file);
   }
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
-    final boolean isInterface = node.isInterface();
-    if (derives(node.resolveBinding(), ReferenceCounting.class)) {
+    final ITypeBinding typeBinding = FileAstVisitor.resolveBinding(node);
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    if (derives(typeBinding, ReferenceCounting.class)) {
+      final boolean isInterface = node.isInterface();
+      final boolean isOverride = !derives(typeBinding, ReferenceCountingBase.class);
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       final Optional<MethodDeclaration> freeMethod = findMethod(node, "_free");
       if (!freeMethod.isPresent()) {
-        declarations.add(method_free(ast, isInterface));
+        declarations.add(method_free(ast, isInterface, isOverride));
       } else {
         final MethodDeclaration methodDeclaration = freeMethod.get();
         final int modifiers = methodDeclaration.getModifiers();
@@ -59,14 +68,14 @@ public class InsertMethods extends RefFileAstVisitor {
       final TypeParameter[] typeParameters = ((Stream<TypeParameter>) node.typeParameters().stream()).toArray(i -> new TypeParameter[i]);
       declarations.add(method_addRef(node, node.getName(), isInterface, typeParameters));
       declarations.add(method_addRefs(ast, node.getName()));
-      declarations.add(method_addRefs2(ast, node.getName()));
+      if (typeBinding.isTopLevel()) declarations.add(method_addRefs2(ast, node.getName()));
       //declarations.add(method_freeRefs(ast, node.getName()));
     }
   }
 
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
-    final ITypeBinding typeBinding = node.resolveBinding();
+    final ITypeBinding typeBinding = resolveBinding(node);
     if (null == typeBinding) {
       warn(node, "Unresolved binding");
       return;
@@ -74,7 +83,7 @@ public class InsertMethods extends RefFileAstVisitor {
     if (derives(typeBinding, ReferenceCounting.class)) {
       final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
-      declarations.add(method_free(ast, false));
+      declarations.add(method_free(ast, false, derives(typeBinding, ReferenceCountingBase.class)));
     }
   }
 
@@ -85,7 +94,7 @@ public class InsertMethods extends RefFileAstVisitor {
       final AST ast = node.getAST();
       final ParameterizedType parameterizedType = ast.newParameterizedType(baseType);
       for (TypeParameter typeParameter : typeParameters) {
-        final ITypeBinding binding = typeParameter.resolveBinding();
+        final ITypeBinding binding = resolveBinding(typeParameter);
         if (binding == null) {
           warn(typeParameter, "Unresolved Binding %s", typeParameter);
           parameterizedType.typeArguments().add(ast.newWildcardType());
@@ -264,16 +273,18 @@ public class InsertMethods extends RefFileAstVisitor {
     return methodDeclaration;
   }
 
-  public MethodDeclaration method_free(@NotNull AST ast, boolean isInterface) {
+  public MethodDeclaration method_free(@NotNull AST ast, boolean isAbstract, boolean isOverride) {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("_free"));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-    if (!isInterface) {
-      methodDeclaration.modifiers().add(annotation_override(ast));
+    if (!isAbstract) {
+      if (isOverride) methodDeclaration.modifiers().add(annotation_override(ast));
       final Block body = ast.newBlock();
-      final SuperMethodInvocation superCall = ast.newSuperMethodInvocation();
-      superCall.setName(ast.newSimpleName("_free"));
-      body.statements().add(ast.newExpressionStatement(superCall));
+      if (isOverride) {
+        final SuperMethodInvocation superCall = ast.newSuperMethodInvocation();
+        superCall.setName(ast.newSimpleName("_free"));
+        body.statements().add(ast.newExpressionStatement(superCall));
+      }
       methodDeclaration.setBody(body);
     }
     return methodDeclaration;

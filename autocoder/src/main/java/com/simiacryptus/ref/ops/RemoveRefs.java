@@ -19,6 +19,8 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
@@ -32,13 +34,13 @@ import java.util.List;
 @RefIgnore
 public class RemoveRefs extends RefFileAstVisitor {
 
-  public RemoveRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public RemoveRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
-    final ITypeBinding typeBinding = node.resolveBinding();
+    final ITypeBinding typeBinding = FileAstVisitor.resolveBinding(node);
     if (derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "addRef");
       removeMethods(node, "freeRef");
@@ -51,7 +53,7 @@ public class RemoveRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull final MethodInvocation node) {
     final String methodName = node.getName().toString();
-    final IMethodBinding methodBinding = node.resolveMethodBinding();
+    final IMethodBinding methodBinding = resolveMethodBinding(node);
     if (null == methodBinding) {
       warn(node, "Unresolved method binding %s", node);
       return;
@@ -61,16 +63,16 @@ public class RemoveRefs extends RefFileAstVisitor {
       final AST ast = node.getAST();
       Expression subject;
       if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
-        subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
+        subject = (Expression) copySubtree(ast, (ASTNode) node.arguments().get(0));
       } else if (declaringClass.equals(RefUtil.class.getCanonicalName())) {
-        subject = (Expression) ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0));
+        subject = (Expression) copySubtree(ast, (ASTNode) node.arguments().get(0));
       } else {
         final Expression expression = node.getExpression();
         if (null == expression) {
           warn(node, "Naked method call. Cannot remove.");
           return;
         }
-        subject = (Expression) ASTNode.copySubtree(ast, expression);
+        subject = (Expression) copySubtree(ast, expression);
       }
       info(node, "Removing %s and replacing with %s", methodName, subject);
       //        replace(node, subject);
@@ -88,7 +90,7 @@ public class RemoveRefs extends RefFileAstVisitor {
         subject = unwrap(subject);
         if (isEvaluable(subject)) {
           info(subject, "%s replaced with %s", parent, subject);
-          replace(parent, ast.newExpressionStatement((Expression) ASTNode.copySubtree(ast, subject)));
+          replace(parent, ast.newExpressionStatement((Expression) copySubtree(ast, subject)));
         } else {
           info(subject, "%s removed", parent);
           delete((ExpressionStatement) parent);
@@ -109,23 +111,17 @@ public class RemoveRefs extends RefFileAstVisitor {
         final int index = arguments.indexOf(node);
         arguments.set(index, subject);
         info(node, "%s removed as argument %s of %s", node, index, parent);
-      } else if (parent instanceof ConditionalExpression) {
-        subject = unwrap(subject);
-        info(subject, "%s replaced with %s", parent, subject);
-        replace(node, (Expression) ASTNode.copySubtree(ast, subject));
-      } else if (parent instanceof CastExpression) {
-        subject = unwrap(subject);
-        info(subject, "%s replaced with %s", parent, subject);
-        replace(node, (Expression) ASTNode.copySubtree(ast, subject));
       } else {
-        warn(node, "Cannot remove %s called in %s: %s", node, parent.getClass(), parent);
+        subject = unwrap(subject);
+        info(subject, "%s replaced with %s", parent, subject);
+        replace(node, (Expression) copySubtree(ast, subject));
       }
     }
   }
 
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
-    final ITypeBinding typeBinding = node.resolveBinding();
+    final ITypeBinding typeBinding = resolveBinding(node);
     if (null == typeBinding) {
       warn(node, "Unresolved binding");
       return;

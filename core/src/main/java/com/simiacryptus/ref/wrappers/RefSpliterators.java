@@ -19,30 +19,25 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Iterator;
+import java.util.Spliterators;
 
 @RefAware
-@RefIgnore
-public class RefLists {
-  public static <T> RefList<RefList<T>> partition(List<T> list, int size) {
-    final List<T> inner;
-    if (list instanceof RefList) {
-      inner = ((RefList) list).getInner();
+public class RefSpliterators {
+  public static <T> RefSpliterator<T> spliterator(Iterator<T> iterator, int size, int characteristics) {
+    if (iterator instanceof RefIterator) {
+      Iterator<T> inner = ((RefIterator<T>) iterator).getInner();
+      assert null != inner;
+      return new RefSpliterator<>(Spliterators.spliterator(inner, size, characteristics)).track((ReferenceCounting) iterator);
     } else {
-      inner = list;
+      RefSpliterator<T> refSpliterator = new RefSpliterator<>(Spliterators.spliterator(iterator, size, characteristics));
+      if (iterator instanceof ReferenceCounting) {
+        refSpliterator.track((ReferenceCounting) iterator);
+      }
+      return refSpliterator;
     }
-    final List<RefList<T>> innerPartitions = Lists.partition(inner, size).stream()
-        .map(RefArrayList::new).collect(Collectors.toList());
-    final RefArrayList<RefList<T>> refLists = new RefArrayList<>(innerPartitions);
-    innerPartitions.forEach(ReferenceCounting::freeRef);
-    RefUtil.freeRef(list);
-    return refLists;
   }
 }

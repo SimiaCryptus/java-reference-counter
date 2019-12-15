@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.AST;
@@ -31,8 +32,8 @@ import java.io.File;
 @RefIgnore
 public class InsertAnnotations extends RefFileAstVisitor {
 
-  public InsertAnnotations(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public InsertAnnotations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override

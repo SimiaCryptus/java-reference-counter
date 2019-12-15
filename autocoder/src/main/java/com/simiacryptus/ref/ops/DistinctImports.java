@@ -17,34 +17,33 @@
  * under the License.
  */
 
-package com.simiacryptus.ref.core.ops;
+package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Iterator;
 
 @RefIgnore
-class RemoveGC extends FileAstVisitor {
+public class DistinctImports extends RefFileAstVisitor {
 
-  RemoveGC(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public DistinctImports(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull MethodInvocation node) {
-    final Expression expression = node.getExpression();
-    if (null == expression) return;
-    final ITypeBinding typeBinding = resolveTypeBinding(expression);
-    final String binaryName = typeBinding.getBinaryName();
-    if (null != binaryName && binaryName.equals(System.class.getCanonicalName())) {
-      node.getParent().delete();
+  public void endVisit(CompilationUnit node) {
+    final Iterator iterator = node.imports().iterator();
+    final HashSet<String> set = new HashSet<>();
+    while (iterator.hasNext()) {
+      if (!set.add(iterator.next().toString())) {
+        iterator.remove();
+      }
     }
   }
+
 
 }

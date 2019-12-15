@@ -1,7 +1,6 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import com.simiacryptus.ref.wrappers.RefConsumer;
 
 public class TreeSetContainer extends ReferenceCountingBase {
   private static void testStreamOperations() {
@@ -23,10 +22,10 @@ public class TreeSetContainer extends ReferenceCountingBase {
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[] {}).length) {
+      if (values.size() != values.toArray(new BasicType[]{}).length) {
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[] {});
+      values.toArray(new BasicType[]{});
     });
   }
 
@@ -59,12 +58,13 @@ public class TreeSetContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
       values.clear();
-      if (!values.isEmpty())
+      if (!values.isEmpty()) {
         throw new RuntimeException();
+      }
     });
   }
 
-  private static void testOperations(RefConsumer<java.util.TreeSet<BasicType>> setRefConsumer) {
+  private static void testOperations(java.util.function.Consumer<java.util.TreeSet<BasicType>> setRefConsumer) {
     java.util.TreeSet<BasicType> values = new java.util.TreeSet<>();
     setRefConsumer.accept(values);
   }
@@ -93,12 +93,14 @@ public class TreeSetContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
       setValues.removeAll(list);
-      if (!setValues.isEmpty())
+      if (!setValues.isEmpty()) {
         throw new RuntimeException();
+      }
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
@@ -31,17 +32,30 @@ import java.util.List;
 @RefIgnore
 public class InsertAddRefs extends RefFileAstVisitor {
 
-  public InsertAddRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public InsertAddRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
+  }
+
+  protected void addRef(Expression expression) {
+    final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
+    if (null == resolveTypeBinding) {
+      warn(expression, "Unresolved binding for %s", expression);
+      return;
+    }
+    if (isRefCounted(expression, resolveTypeBinding)) {
+      replace(expression, wrapAddRef(expression, resolveTypeBinding));
+      info(expression, "%s.addRef", expression);
+    } else {
+      info(expression, "Non-refcounted %s", expression);
+    }
   }
 
   public void apply(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
-      boolean wrap = shouldWrap(arg, name);
-      if (wrap) {
+      if (shouldWrap(arg, name)) {
         final Expression expression = (Expression) arg;
-        final ITypeBinding resolveTypeBinding = expression.resolveTypeBinding();
+        final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
         if (null == resolveTypeBinding) {
           warn(arg, "Unresolved binding");
           return;
@@ -59,7 +73,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull ArrayInitializer node) {
     if (skip(node)) return;
-    final ITypeBinding typeBinding = node.resolveTypeBinding();
+    final ITypeBinding typeBinding = resolveTypeBinding(node);
     if (null != typeBinding) {
       if (modifyArgs(typeBinding.getElementType())) {
         final List expressions = node.expressions();
@@ -80,7 +94,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
     final Expression expression = node.getExpression();
     info(node, "Processing method %s.%s", null == expression ? "?" : expression.toString(), node.getName());
     if (skip(node)) return;
-    final IMethodBinding methodBinding = node.resolveMethodBinding();
+    final IMethodBinding methodBinding = resolveMethodBinding(node);
     if (null == methodBinding) {
       warn(node, "Unresolved binding on %s", node);
       return;
@@ -91,7 +105,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
     } else {
       targetLabel = methodBinding.getDeclaringClass().getQualifiedName() + "::" + node.getName();
     }
-    if (consumesRefs(methodBinding, null == expression ? null : expression.resolveTypeBinding())) {
+    if (consumesRefs(methodBinding, null == expression ? null : resolveTypeBinding(expression))) {
       apply(node, node.arguments(), targetLabel);
     } else {
       info(node, "Ignored method %s", targetLabel);
@@ -99,9 +113,21 @@ public class InsertAddRefs extends RefFileAstVisitor {
   }
 
   @Override
+  public void endVisit(Assignment node) {
+    final Expression expression = node.getRightHandSide();
+    if (isInstanceAccessor(expression)) addRef(expression);
+  }
+
+  @Override
+  public void endVisit(ReturnStatement node) {
+    final Expression expression = node.getExpression();
+    if (isInstanceAccessor(expression)) addRef(expression);
+  }
+
+  @Override
   public void endVisit(@NotNull ConstructorInvocation node) {
     if (skip(node)) return;
-    final IMethodBinding methodBinding = node.resolveConstructorBinding();
+    final IMethodBinding methodBinding = resolveConstructorBinding(node);
     if (null == methodBinding) {
       warn(node, "Cannot resolve " + node);
       return;
@@ -114,12 +140,12 @@ public class InsertAddRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull ClassInstanceCreation node) {
     if (skip(node)) return;
-    final IMethodBinding methodBinding = node.resolveConstructorBinding();
+    final IMethodBinding methodBinding = resolveConstructorBinding(node);
     if (null == methodBinding) {
       warn(node, "Cannot resolve %s", node);
       return;
     }
-    if (consumesRefs(methodBinding, node.resolveTypeBinding())) {
+    if (consumesRefs(methodBinding, resolveTypeBinding(node))) {
       if (node.arguments().size() > 0) {
         apply(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
       } else {
@@ -128,6 +154,16 @@ public class InsertAddRefs extends RefFileAstVisitor {
     } else {
       info(node, "Non-refcounted constructor %s", node);
     }
+  }
+
+  protected boolean isInstanceAccessor(Expression expression) {
+    if (expression instanceof ThisExpression) return true;
+    if (expression instanceof SimpleName) {
+      if (isField((SimpleName) expression)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
@@ -166,8 +202,8 @@ public class InsertAddRefs extends RefFileAstVisitor {
   public MethodInvocation wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
       final SimpleName name = (SimpleName) node;
-      if (derives(name.resolveTypeBinding(), ReferenceCounting.class)) {
-        return (MethodInvocation) wrapAddRef(name, name.resolveTypeBinding());
+      if (derives(resolveTypeBinding(name), ReferenceCounting.class)) {
+        return (MethodInvocation) wrapAddRef(name, resolveTypeBinding(name));
       }
     }
     return null;

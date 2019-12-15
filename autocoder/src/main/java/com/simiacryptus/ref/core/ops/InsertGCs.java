@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -29,8 +30,8 @@ import java.util.ArrayList;
 @RefIgnore
 public class InsertGCs extends FileAstVisitor {
 
-  public InsertGCs(CompilationUnit cu, File file) {
-    super(cu, file);
+  public InsertGCs(ProjectInfo projectInfo, CompilationUnit cu, File file) {
+    super(projectInfo, cu, file);
   }
 
   @Override
@@ -47,7 +48,7 @@ public class InsertGCs extends FileAstVisitor {
         public void endVisit(ReturnStatement node) {
           final Block block = ast.newBlock();
           block.statements().add(newGCCall(ast));
-          block.statements().add(ASTNode.copySubtree(ast, node));
+          block.statements().add(copySubtree(ast, node));
           replace(node, block);
           returnStatements.add(node);
         }

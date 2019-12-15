@@ -74,7 +74,8 @@ public class RefAutoCoder extends AutoCoder {
     while (rewrite(RemoveRefs::new) > 0) {
       logger.info("Re-running RemoveRefs");
     }
-    rewrite((cu, file) -> new ReplaceTypes(cu, file, true));
+    rewrite((projectInfo, cu, file) -> new ReplaceTypes(projectInfo, cu, file, true));
+    rewrite(DistinctImports::new);
     rewrite(FixVariableDeclarations::new);
     while (rewrite(InlineRefs::new) > 0) {
       logger.info("Re-running InlineRefs");
@@ -84,14 +85,16 @@ public class RefAutoCoder extends AutoCoder {
     }
     if (isAddRefcounting()) {
       rewrite(InsertAnnotations::new);
-      rewrite((cu, file) -> new ReplaceTypes(cu, file, false));
-      rewrite(NarrowVariableDeclarations::new);
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes(projectInfo, cu, file, false));
+      rewrite(DistinctImports::new);
+      rewrite(FixCustomImplementations::new);
+      rewrite(FixVariableDeclarations::new);
       rewrite(InsertMethods::new);
       rewrite(InsertAddRefs::new);
       rewrite(ModifyFieldSets::new);
       rewrite(InsertFreeRefs::new);
       IndexSymbols.SymbolIndex index = getSymbolIndex();
-      rewrite((cu, file) -> new InstrumentClosures(cu, file, index));
+      rewrite((projectInfo, cu, file) -> new InstrumentClosures(projectInfo, cu, file, index));
       rewrite(OptimizeRefs::new);
     }
   }
