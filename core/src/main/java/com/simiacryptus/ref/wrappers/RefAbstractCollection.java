@@ -27,6 +27,11 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * The type Ref abstract collection.
+ *
+ * @param <T> the type parameter
+ */
 public abstract class RefAbstractCollection<T> extends ReferenceCountingBase implements RefCollection<T>, Cloneable, Serializable {
 
   @NotNull

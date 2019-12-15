@@ -28,9 +28,19 @@ import java.util.Spliterator;
 import java.util.function.*;
 import java.util.stream.*;
 
+/**
+ * The type Stream wrapper.
+ *
+ * @param <T> the type parameter
+ */
 public class StreamWrapper<T> implements Stream<T> {
   private final Stream<T> inner;
 
+  /**
+   * Instantiates a new Stream wrapper.
+   *
+   * @param inner the inner
+   */
   public StreamWrapper(Stream<T> inner) {
     this.inner = inner;
   }
@@ -115,6 +125,11 @@ public class StreamWrapper<T> implements Stream<T> {
     getInner().forEachOrdered(action);
   }
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
   public Stream<T> getInner() {
     return inner;
   }

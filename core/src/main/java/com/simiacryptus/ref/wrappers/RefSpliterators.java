@@ -25,8 +25,20 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 import java.util.Iterator;
 import java.util.Spliterators;
 
+/**
+ * The type Ref spliterators.
+ */
 @RefAware
 public class RefSpliterators {
+  /**
+   * Spliterator ref spliterator.
+   *
+   * @param <T>             the type parameter
+   * @param iterator        the iterator
+   * @param size            the size
+   * @param characteristics the characteristics
+   * @return the ref spliterator
+   */
   public static <T> RefSpliterator<T> spliterator(Iterator<T> iterator, int size, int characteristics) {
     if (iterator instanceof RefIterator) {
       Iterator<T> inner = ((RefIterator<T>) iterator).getInner();

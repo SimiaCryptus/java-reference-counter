@@ -26,6 +26,9 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
+/**
+ * The type Ref int stream.
+ */
 @RefAware
 @RefIgnore
 public class RefIntStream implements IntStream {
@@ -33,6 +36,11 @@ public class RefIntStream implements IntStream {
   private final List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
   private final List<ReferenceCounting> lambdas;
 
+  /**
+   * Instantiates a new Ref int stream.
+   *
+   * @param stream the stream
+   */
   RefIntStream(IntStream stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
     onClose(() -> {
@@ -42,6 +50,13 @@ public class RefIntStream implements IntStream {
     });
   }
 
+  /**
+   * Instantiates a new Ref int stream.
+   *
+   * @param stream  the stream
+   * @param lambdas the lambdas
+   * @param refs    the refs
+   */
   RefIntStream(IntStream stream, List<ReferenceCounting> lambdas, List<RefStream.IdentityWrapper<ReferenceCounting>> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
@@ -50,18 +65,43 @@ public class RefIntStream implements IntStream {
   }
 
 
+  /**
+   * Generate ref int stream.
+   *
+   * @param s the s
+   * @return the ref int stream
+   */
   public static RefIntStream generate(IntSupplier s) {
     return new RefIntStream(IntStream.generate(s));
   }
 
+  /**
+   * Range ref int stream.
+   *
+   * @param startInclusive the start inclusive
+   * @param endExclusive   the end exclusive
+   * @return the ref int stream
+   */
   public static RefIntStream range(int startInclusive, int endExclusive) {
     return new RefIntStream(IntStream.range(startInclusive, endExclusive));
   }
 
+  /**
+   * Of ref int stream.
+   *
+   * @param x the x
+   * @return the ref int stream
+   */
   public static RefIntStream of(int x) {
     return new RefIntStream(IntStream.of(x));
   }
 
+  /**
+   * Of ref int stream.
+   *
+   * @param array the array
+   * @return the ref int stream
+   */
   public static RefIntStream of(int... array) {
     return new RefIntStream(IntStream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);

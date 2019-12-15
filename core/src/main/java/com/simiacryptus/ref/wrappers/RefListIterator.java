@@ -27,12 +27,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ListIterator;
 
+/**
+ * The type Ref list iterator.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterator<T> {
 
   private final ListIterator<T> inner;
 
+  /**
+   * Instantiates a new Ref list iterator.
+   *
+   * @param inner the inner
+   */
   public RefListIterator(ListIterator<T> inner) {
     this.inner = inner;
   }

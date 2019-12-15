@@ -24,12 +24,24 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
+/**
+ * The type Lazy val.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCountingBase implements Supplier<T> {
   @Nullable
   private volatile T val = null;
 
+  /**
+   * Wrap lazy val.
+   *
+   * @param <T> the type parameter
+   * @param fn  the fn
+   * @return the lazy val
+   */
   public static <T extends ReferenceCounting> LazyVal<T> wrap(@NotNull Supplier<T> fn) {
     return new LazyVal<T>() {
       @NotNull
@@ -49,6 +61,11 @@ public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCoun
     super._free();
   }
 
+  /**
+   * Build t.
+   *
+   * @return the t
+   */
   @NotNull
   protected abstract T build();
 

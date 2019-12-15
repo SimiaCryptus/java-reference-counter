@@ -25,10 +25,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Deque;
 
+/**
+ * The interface Ref deque.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
+  /**
+   * Add refs ref deque [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref deque [ ]
+   */
   public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
         .toArray((x) -> new RefDeque[x]);

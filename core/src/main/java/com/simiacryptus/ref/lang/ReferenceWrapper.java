@@ -22,18 +22,41 @@ package com.simiacryptus.ref.lang;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+/**
+ * The type Reference wrapper.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class ReferenceWrapper<T> {
+  /**
+   * The Obj.
+   */
   final T obj;
+  /**
+   * The Destructor.
+   */
   final Consumer<T> destructor;
+  /**
+   * The Is finalized.
+   */
   final AtomicBoolean isFinalized = new AtomicBoolean(false);
 
+  /**
+   * Instantiates a new Reference wrapper.
+   *
+   * @param obj        the obj
+   * @param destructor the destructor
+   */
   public ReferenceWrapper(final T obj, final Consumer<T> destructor) {
     this.obj = obj;
     this.destructor = destructor;
   }
 
+  /**
+   * Destroy.
+   */
   public void destroy() {
     if (!isFinalized.getAndSet(true)) {
       destructor.accept(obj);
@@ -46,10 +69,20 @@ public class ReferenceWrapper<T> {
     super.finalize();
   }
 
+  /**
+   * Peek t.
+   *
+   * @return the t
+   */
   public T peek() {
     return obj;
   }
 
+  /**
+   * Unwrap t.
+   *
+   * @return the t
+   */
   public T unwrap() {
     if (isFinalized.getAndSet(true)) {
       throw new IllegalStateException();

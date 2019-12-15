@@ -22,6 +22,9 @@ package com.simiacryptus.ref.lang;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+/**
+ * The interface Ref aware.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RefAware {
 }

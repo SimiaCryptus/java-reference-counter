@@ -30,10 +30,24 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * The interface Ref map.
+ *
+ * @param <K> the type parameter
+ * @param <V> the type parameter
+ */
 @RefAware
 @RefIgnore
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
+  /**
+   * Add refs ref map [ ].
+   *
+   * @param <K>   the type parameter
+   * @param <V>   the type parameter
+   * @param array the array
+   * @return the ref map [ ]
+   */
   public static <K, V> RefMap<K, V>[] addRefs(@NotNull RefMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef)
         .toArray((x) -> new RefMap[x]);

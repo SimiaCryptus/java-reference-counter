@@ -25,10 +25,21 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import java.util.ArrayList;
 import java.util.PrimitiveIterator;
 
+/**
+ * The type Ref primitive iterator.
+ *
+ * @param <T>      the type parameter
+ * @param <T_CONS> the type parameter
+ */
 public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   private final PrimitiveIterator<T, T_CONS> inner;
 
+  /**
+   * Instantiates a new Ref primitive iterator.
+   *
+   * @param inner the inner
+   */
   public RefPrimitiveIterator(PrimitiveIterator<T, T_CONS> inner) {
     this.inner = inner;
   }
@@ -38,10 +49,18 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     return inner;
   }
 
+  /**
+   * The type Of int.
+   */
   public static class OfInt extends ReferenceCountingBase implements PrimitiveIterator.OfInt {
     private final PrimitiveIterator.OfInt inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
+    /**
+     * Instantiates a new Of int.
+     *
+     * @param inner the inner
+     */
     public OfInt(OfInt inner) {
       this.inner = inner;
     }
@@ -63,6 +82,12 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return inner.nextInt();
     }
 
+    /**
+     * Track ref primitive iterator . of int.
+     *
+     * @param obj the obj
+     * @return the ref primitive iterator . of int
+     */
     public RefPrimitiveIterator.OfInt track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -70,10 +95,18 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   }
 
+  /**
+   * The type Of long.
+   */
   public static class OfLong extends ReferenceCountingBase implements PrimitiveIterator.OfLong {
     private final PrimitiveIterator.OfLong inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
+    /**
+     * Instantiates a new Of long.
+     *
+     * @param inner the inner
+     */
     public OfLong(OfLong inner) {
       this.inner = inner;
     }
@@ -95,6 +128,12 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return inner.nextLong();
     }
 
+    /**
+     * Track ref primitive iterator . of long.
+     *
+     * @param obj the obj
+     * @return the ref primitive iterator . of long
+     */
     public RefPrimitiveIterator.OfLong track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -102,10 +141,18 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   }
 
+  /**
+   * The type Of double.
+   */
   public static class OfDouble extends ReferenceCountingBase implements PrimitiveIterator.OfDouble {
     private final PrimitiveIterator.OfDouble inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
+    /**
+     * Instantiates a new Of double.
+     *
+     * @param inner the inner
+     */
     public OfDouble(OfDouble inner) {
       this.inner = inner;
     }
@@ -127,6 +174,12 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return inner.nextDouble();
     }
 
+    /**
+     * Track ref primitive iterator . of double.
+     *
+     * @param obj the obj
+     * @return the ref primitive iterator . of double
+     */
     public RefPrimitiveIterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
       return this;

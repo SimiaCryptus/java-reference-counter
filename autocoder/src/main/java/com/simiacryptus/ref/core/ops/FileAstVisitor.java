@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -60,7 +59,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   protected final ProjectInfo projectInfo;
   protected final String initialContent;
   private CompilationUnit reparsed = null;
-  ;
 
   public FileAstVisitor(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     this.projectInfo = projectInfo;
@@ -136,16 +134,14 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return declaredMethods.distinct();
   }
 
-  protected final boolean contains(@Nonnull ASTNode expression, @Nonnull IBinding variableBinding) {
-    final AtomicBoolean found = new AtomicBoolean(false);
-    expression.accept(new ASTVisitor() {
-      @Override
-      public void endVisit(@NotNull SimpleName node) {
-        final IBinding binding = resolveBinding(node);
-        if (null != binding && binding.equals(variableBinding)) found.set(true);
-      }
-    });
-    return found.get();
+  @NotNull
+  protected <T extends ASTNode> T copyIfAttached(@NotNull T node) {
+    if (node.getParent() == null) {
+      return node;
+    } else {
+      info(1, node, "Copy node %s", node);
+      return (T) ASTNode.copySubtree(node.getAST(), node);
+    }
   }
 
   @Nullable
@@ -180,7 +176,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
           final Block tryStatementFinally = tryStatement.getFinally();
           if (null != tryStatementFinally && block.equals(tryStatementFinally) && tryStatement.catchClauses().isEmpty()) {
             info(statement, "Unwrapping try statement %s", tryStatement);
-            replace(tryStatement, copySubtree(ast, tryStatement.getBody()));
+            replace(tryStatement, copyIfAttached(tryStatement.getBody()));
             return;
           }
         } else {
@@ -232,9 +228,9 @@ public abstract class FileAstVisitor extends ASTVisitor {
         if (null != elseStatement) {
           info(statement, "Deleting if-then; inverting %s", ifStatement);
           ifStatement.setElseStatement(null);
-          ifStatement.setThenStatement((Statement) copySubtree(ast, elseStatement));
+          ifStatement.setThenStatement(copyIfAttached(elseStatement));
           final PrefixExpression prefixExpression = ast.newPrefixExpression();
-          prefixExpression.setOperand((Expression) copySubtree(ast, condition));
+          prefixExpression.setOperand(copyIfAttached(condition));
           prefixExpression.setOperator(PrefixExpression.Operator.NOT);
           ifStatement.setExpression(prefixExpression);
           return;
@@ -328,7 +324,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     Statement body = supplier.get();
     if (!(body instanceof Block) && isExit(body)) {
       final Block newBlock = ast.newBlock();
-      newBlock.statements().add(copySubtree(ast, body));
+      newBlock.statements().add(copyIfAttached(body));
       consumer.accept(newBlock);
       body = newBlock;
     }
@@ -442,7 +438,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
         }
       } else {
         final AST ast = expression.getAST();
-        statements.add(ast.newExpressionStatement((Expression) copySubtree(ast, expression)));
+        statements.add(ast.newExpressionStatement(copyIfAttached(expression)));
       }
     }
     return statements;
@@ -763,7 +759,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     AST ast = expression.getAST();
     final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
     variableDeclarationFragment.setName(ast.newSimpleName(identifier));
-    variableDeclarationFragment.setInitializer((Expression) copySubtree(ast, expression));
+    variableDeclarationFragment.setInitializer(copyIfAttached(expression));
     final VariableDeclarationStatement variableDeclarationStatement = ast.newVariableDeclarationStatement(variableDeclarationFragment);
     variableDeclarationStatement.setType(type);
     return variableDeclarationStatement;
@@ -835,8 +831,8 @@ public abstract class FileAstVisitor extends ASTVisitor {
         if (!(newChild instanceof Name) && (newChild instanceof Expression)) {
           final AST ast = child.getAST();
           final FieldAccess fieldAccess = ast.newFieldAccess();
-          fieldAccess.setExpression((Expression) copySubtree(ast, newChild));
-          fieldAccess.setName((SimpleName) copySubtree(ast, qualifiedName.getName()));
+          fieldAccess.setExpression(copyIfAttached((Expression) newChild));
+          fieldAccess.setName(copyIfAttached(qualifiedName.getName()));
           info(child, "Replacing %s with %s", child, newChild);
           replace(parent, fieldAccess);
           return;
@@ -846,7 +842,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     StructuralPropertyDescriptor location = child.getLocationInParent();
     if (location != null) {
       if (location.isChildProperty()) {
-        info(1, child, "Replace %s with %s within %s (%s)", child, newChild, parent, parent.getClass().getSimpleName());
+        info(1, child, "Replace %s with %s within %s of (%s)", child, newChild, location.getId(), parent.getClass().getSimpleName());
         parent.setStructuralProperty(location, newChild);
       } else {
         if (location.isChildListProperty()) {
@@ -950,10 +946,10 @@ public abstract class FileAstVisitor extends ASTVisitor {
       final Block block = ast.newBlock();
       if (hasReturnValue(lambdaExpression)) {
         final ReturnStatement returnStatement = ast.newReturnStatement();
-        returnStatement.setExpression((Expression) copySubtree(ast, body));
+        returnStatement.setExpression(copyIfAttached((Expression) body));
         block.statements().add(returnStatement);
       } else {
-        block.statements().add(ast.newExpressionStatement((Expression) copySubtree(ast, body)));
+        block.statements().add(ast.newExpressionStatement(copyIfAttached((Expression) body)));
       }
       info(lambdaExpression, "Replace lambda %s with block %s", lambdaExpression, block);
       lambdaExpression.setBody(block);
@@ -978,8 +974,10 @@ public abstract class FileAstVisitor extends ASTVisitor {
 
   public boolean write(boolean format) throws IOException {
     Document document = new Document(initialContent);
-    final DocumentRewriteSession rewriteSession = document.startRewriteSession(DocumentRewriteSessionType.STRICTLY_SEQUENTIAL);
-    final TextEdit textEdit = compilationUnit.rewrite(document, JavaCore.getOptions());
+    final DocumentRewriteSession rewriteSession = document.startRewriteSession(DocumentRewriteSessionType.UNRESTRICTED);
+    final Hashtable<String, String> options = JavaCore.getOptions();
+    //options.put(JavaCore.)
+    final TextEdit textEdit = compilationUnit.rewrite(document, options);
     try {
       textEdit.apply(document);
     } catch (BadLocationException e) {

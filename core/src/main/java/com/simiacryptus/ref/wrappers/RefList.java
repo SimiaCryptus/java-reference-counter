@@ -26,10 +26,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * The interface Ref list.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {
 
+  /**
+   * Add refs ref list [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref list [ ]
+   */
   public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
         .toArray((x) -> new RefList[x]);

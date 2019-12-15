@@ -26,21 +26,41 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The type Ref array list.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefArrayList<T> extends RefAbstractList<T> {
   @NotNull
   private final List<T> inner;
 
+  /**
+   * Instantiates a new Ref array list.
+   */
   public RefArrayList() {
     this.inner = new ArrayList<>();
   }
 
+  /**
+   * Instantiates a new Ref array list.
+   *
+   * @param list the list
+   */
   public RefArrayList(@NotNull List<T> list) {
     this();
     addAll(list);
   }
 
+  /**
+   * Add refs ref array list [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref array list [ ]
+   */
   public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
         .toArray((x) -> new RefArrayList[x]);

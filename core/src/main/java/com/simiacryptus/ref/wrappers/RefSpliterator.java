@@ -30,6 +30,11 @@ import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
 
+/**
+ * The type Ref spliterator.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefSpliterator<T> extends ReferenceCountingBase implements Spliterator<T> {
@@ -38,11 +43,22 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   private final ArrayList<ReferenceCounting> list = new ArrayList<>();
   private long size;
 
+  /**
+   * Instantiates a new Ref spliterator.
+   *
+   * @param inner the inner
+   */
   public RefSpliterator(Spliterator<T> inner) {
     this(inner, Long.MAX_VALUE);
 
   }
 
+  /**
+   * Instantiates a new Ref spliterator.
+   *
+   * @param inner the inner
+   * @param size  the size
+   */
   public RefSpliterator(Spliterator<T> inner, long size) {
     if (inner instanceof RefSpliterator) {
       this.inner = ((RefSpliterator) inner).getInner();
@@ -54,6 +70,13 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     }
   }
 
+  /**
+   * Add refs ref spliterator [ ].
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref spliterator [ ]
+   */
   public static <T> RefSpliterator<T>[] addRefs(@NotNull RefSpliterator<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
         .toArray((x) -> new RefSpliterator[x]);
@@ -81,10 +104,21 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     return size;
   }
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
   public Spliterator<T> getInner() {
     return inner;
   }
 
+  /**
+   * Track ref spliterator.
+   *
+   * @param obj the obj
+   * @return the ref spliterator
+   */
   public RefSpliterator<T> track(ReferenceCounting obj) {
     list.add(obj);
     return this;
@@ -103,11 +137,21 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 //    return null == trySplit ? null : new RefSpliterator<>(trySplit, size).track(this.addRef());
   }
 
+  /**
+   * The type Of double.
+   *
+   * @param <T> the type parameter
+   */
   public static class OfDouble<T> extends ReferenceCountingBase implements Spliterator.OfDouble {
 
     private final Spliterator.OfDouble inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
+    /**
+     * Instantiates a new Of double.
+     *
+     * @param inner the inner
+     */
     public OfDouble(OfDouble inner) {
       this.inner = inner;
     }
@@ -129,6 +173,12 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.estimateSize();
     }
 
+    /**
+     * Track ref spliterator . of double.
+     *
+     * @param obj the obj
+     * @return the ref spliterator . of double
+     */
     public RefSpliterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -146,11 +196,19 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   }
 
+  /**
+   * The type Of long.
+   */
   public static class OfLong extends ReferenceCountingBase implements Spliterator.OfLong {
 
     private final Spliterator.OfLong inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
+    /**
+     * Instantiates a new Of long.
+     *
+     * @param inner the inner
+     */
     public OfLong(OfLong inner) {
       this.inner = inner;
     }
@@ -174,6 +232,12 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
     ;
 
+    /**
+     * Track ref spliterator . of long.
+     *
+     * @param obj the obj
+     * @return the ref spliterator . of long
+     */
     public RefSpliterator.OfLong track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -192,11 +256,19 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   }
 
+  /**
+   * The type Of int.
+   */
   public static class OfInt extends ReferenceCountingBase implements Spliterator.OfInt {
 
     private final Spliterator.OfInt inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
+    /**
+     * Instantiates a new Of int.
+     *
+     * @param inner the inner
+     */
     public OfInt(OfInt inner) {
       this.inner = inner;
     }
@@ -218,6 +290,12 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.estimateSize();
     }
 
+    /**
+     * Track ref spliterator . of int.
+     *
+     * @param obj the obj
+     * @return the ref spliterator . of int
+     */
     public RefSpliterator.OfInt track(ReferenceCounting obj) {
       list.add(obj);
       return this;

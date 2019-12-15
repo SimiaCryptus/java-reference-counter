@@ -53,7 +53,7 @@ public class InstrumentClosures extends RefFileAstVisitor {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           if (isRefCounted(node, type)) {
-            final SimpleName name = (SimpleName) copySubtree(ast, singleVariableDeclaration.getName());
+            final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
             freeMethodOpt.get().getBody().statements().add(0, ast.newExpressionStatement(newFreeRef(name, type)));
           }
         } else {
@@ -68,7 +68,7 @@ public class InstrumentClosures extends RefFileAstVisitor {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
         final ITypeBinding type = resolveBinding(singleVariableDeclaration).getType();
         if (isRefCounted(node, type)) {
-          final SimpleName name = (SimpleName) copySubtree(ast, singleVariableDeclaration.getName());
+          final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
           initializerBlock.statements().add(ast.newExpressionStatement(newAddRef(name, type)));
         }
       } else {
@@ -141,38 +141,60 @@ public class InstrumentClosures extends RefFileAstVisitor {
 
   public void wrapInterface(Expression node, Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures) {
     AST ast = node.getAST();
-    final MethodInvocation methodInvocation = ast.newMethodInvocation();
-    methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-    methodInvocation.setName(ast.newSimpleName("wrapInterface"));
-    final CastExpression castExpression = ast.newCastExpression();
-    final Type castType = getType(node, false);
-    if (null != castType) {
-      warn(node, "Unresolved binding");
-      castExpression.setType(castType);
-      castExpression.setExpression((Expression) copySubtree(ast, node));
-      methodInvocation.arguments().add(castExpression);
-    } else {
-      methodInvocation.arguments().add(copySubtree(ast, node));
-    }
-    closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
-      if (closureNode instanceof SingleVariableDeclaration) {
-        final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
+    final List<ASTNode> refClosures = closures.entrySet().stream().filter(entry -> {
+      final ASTNode definition = index.definitionNodes.get(entry.getKey());
+      if (definition == null) {
+        warn(node, "Cannot find definition for %s", entry.getKey());
+        return false;
+      } else if (definition instanceof SingleVariableDeclaration) {
+        final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) definition;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
-          methodInvocation.arguments().add(wrapAddRef((Expression) copySubtree(ast, singleVariableDeclaration.getName()), type));
+          return true;
+        } else {
+          return false;
         }
-      } else if (closureNode instanceof VariableDeclarationFragment) {
-        final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) closureNode;
+      } else if (definition instanceof VariableDeclarationFragment) {
+        final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) definition;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
-          methodInvocation.arguments().add(wrapAddRef((Expression) copySubtree(ast, singleVariableDeclaration.getName()), type));
+          return true;
+        } else {
+          return false;
         }
       } else {
-        warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());
+        warn(node, "Cannot handle " + definition.getClass().getSimpleName());
+        return false;
       }
-    });
-    if (methodInvocation.arguments().size() > 1) {
+    }).map(Map.Entry::getKey).map(index.definitionNodes::get).collect(Collectors.toList());
+    if (!refClosures.isEmpty()) {
+      final MethodInvocation methodInvocation = ast.newMethodInvocation();
+      final Type castType = getType(node, false);
+      methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
+      methodInvocation.setName(ast.newSimpleName("wrapInterface"));
       replace(node, methodInvocation);
+      final CastExpression castExpression = ast.newCastExpression();
+      if (null != castType) {
+        warn(node, "Unresolved binding");
+        castExpression.setType(castType);
+        castExpression.setExpression(node);
+        methodInvocation.arguments().add(castExpression);
+      } else {
+        methodInvocation.arguments().add(node);
+      }
+      refClosures.stream().filter(x -> x != null).forEach(closureNode -> {
+        if (closureNode instanceof SingleVariableDeclaration) {
+          final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
+          final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
+          final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
+          methodInvocation.arguments().add(wrapAddRef(name, type));
+        } else if (closureNode instanceof VariableDeclarationFragment) {
+          final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) closureNode;
+          final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
+          final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
+          methodInvocation.arguments().add(wrapAddRef(name, type));
+        }
+      });
     }
   }
 

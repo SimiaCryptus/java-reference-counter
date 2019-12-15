@@ -34,59 +34,59 @@ public class ModifyFieldSets extends RefFileAstVisitor {
   }
 
   @Override
-  public void endVisit(@NotNull Assignment node) {
-
-    if (node.getLeftHandSide() instanceof FieldAccess) {
-      final FieldAccess fieldAccess = (FieldAccess) node.getLeftHandSide();
-      final IVariableBinding fieldBinding = resolveFieldBinding(fieldAccess);
+  public void endVisit(@NotNull Assignment assignment) {
+    final Expression leftHandSide = assignment.getLeftHandSide();
+    final boolean isFieldSet = (leftHandSide instanceof FieldAccess) ||
+        ((leftHandSide instanceof SimpleName) && isField((SimpleName) leftHandSide));
+    final boolean isFinal;
+    if(leftHandSide instanceof FieldAccess) {
+      final IVariableBinding fieldBinding = resolveFieldBinding((FieldAccess) leftHandSide);
       if (null == fieldBinding) {
-        warn(node, "Unresolved binding: %s", fieldAccess);
+        warn(assignment, "Unresolved binding: %s", leftHandSide);
         return;
       }
-      final boolean isFinal = 0 != (fieldBinding.getModifiers() & Modifier.FINAL);
-//      if (isFinal) {
-//        warn(node, "Final field");
-//        return;
-//      }
-      final ITypeBinding typeBinding = fieldBinding.getType();
+      isFinal = 0 != (fieldBinding.getModifiers() & Modifier.FINAL);
+    } else {
+      isFinal = false;
+    }
+    if (isFieldSet) {
+      final ITypeBinding typeBinding = resolveTypeBinding(leftHandSide);
       if (null == typeBinding) {
-        warn(node, "Unresolved binding: %s", fieldBinding);
+        warn(assignment, "Unresolved binding: %s", typeBinding);
         return;
       }
-      if (!isRefCounted(fieldAccess, typeBinding)) return;
-      final ASTNode parent = node.getParent();
+      if (!isRefCounted(leftHandSide, typeBinding)) return;
+      final ASTNode parent = assignment.getParent();
       if (parent instanceof ExpressionStatement) {
-        final ASTNode parent2 = parent.getParent();
+        final ExpressionStatement expressionStatement = (ExpressionStatement) parent;
+        final ASTNode parent2 = expressionStatement.getParent();
         if (parent2 instanceof Block) {
           final Block block = (Block) parent2;
-          final int lineNumber = block.statements().indexOf(parent);
-          final Expression rightHandSide = node.getRightHandSide();
-          final AST ast = node.getAST();
+          final int lineNumber = block.statements().indexOf(expressionStatement);
+          final Expression rightHandSide = assignment.getRightHandSide();
+          final AST ast = assignment.getAST();
           if (rightHandSide instanceof Name) {
-            if (!isFinal) block.statements().add(lineNumber, freeRefStatement(fieldAccess, resolveTypeBinding(fieldAccess)));
-            node.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
-            info(node, "Simple field-set statement at line " + lineNumber);
+            if (!isFinal) block.statements().add(lineNumber, freeRefStatement(leftHandSide, typeBinding));
+            assignment.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
+            info(assignment, "Simple field-set statement at line " + lineNumber);
           } else {
             final Block exchangeBlock = ast.newBlock();
-            final String identifier = getTempIdentifier(node);
-            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(node, typeBinding.getQualifiedName(), true)));
-            if (!isFinal) exchangeBlock.statements().add(freeRefStatement(fieldAccess, resolveTypeBinding(fieldAccess)));
-            final Assignment assignment = ast.newAssignment();
-            assignment.setLeftHandSide((Expression) copySubtree(ast, fieldAccess));
-            assignment.setOperator(Assignment.Operator.ASSIGN);
+            replace(expressionStatement, exchangeBlock);
+            final String identifier = getTempIdentifier(assignment);
+            exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(assignment, typeBinding.getQualifiedName(), true)));
+            if (!isFinal) exchangeBlock.statements().add(freeRefStatement(leftHandSide, typeBinding));
             assignment.setRightHandSide(wrapAddRef(ast.newSimpleName(identifier), typeBinding));
-            exchangeBlock.statements().add(ast.newExpressionStatement(assignment));
-            block.statements().set(lineNumber, exchangeBlock);
-            info(node, "Complex field-set statement at line " + lineNumber);
+            exchangeBlock.statements().add(expressionStatement);
+            info(assignment, "Complex field-set statement at line " + lineNumber);
           }
         } else {
-          warn(node, "Non-block field-set statement: %s (%s)", parent.getClass(), parent);
+          warn(assignment, "Non-block field-set statement: %s (%s)", parent.getClass(), parent);
         }
       } else {
-        warn(node, "Non-ExpressionStatement field-set statement: %s (%s)", parent.getClass(), parent);
+        warn(assignment, "Non-ExpressionStatement field-set statement: %s (%s)", parent.getClass(), parent);
       }
     }
-    super.endVisit(node);
+    super.endVisit(assignment);
   }
 
 }

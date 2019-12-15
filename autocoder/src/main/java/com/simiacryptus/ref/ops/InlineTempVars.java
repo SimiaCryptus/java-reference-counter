@@ -45,7 +45,7 @@ public class InlineTempVars extends RefFileAstVisitor {
         final AST ast = node.getAST();
         delete(node);
         for (SimpleName match : findExpressions(block, name)) {
-          replace(match, copySubtree(ast, expression));
+          replace(match, copyIfAttached(expression));
         }
       }
     }

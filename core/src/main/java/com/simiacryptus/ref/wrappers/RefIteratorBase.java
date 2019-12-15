@@ -27,8 +27,19 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+/**
+ * The type Ref iterator base.
+ *
+ * @param <T> the type parameter
+ */
 public abstract class RefIteratorBase<T> extends ReferenceCountingBase implements Iterator<T> {
+  /**
+   * The List.
+   */
   protected final ArrayList<ReferenceCounting> list = new ArrayList<>();
+  /**
+   * The Current.
+   */
   protected T current;
 
   @Override
@@ -38,6 +49,11 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
     super._free();
   }
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
   public abstract Iterator<T> getInner();
 
   @Override
@@ -58,6 +74,12 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
     current = null;
   }
 
+  /**
+   * Track ref iterator base.
+   *
+   * @param obj the obj
+   * @return the ref iterator base
+   */
   public @NotNull RefIteratorBase<T> track(ReferenceCounting obj) {
     list.add(obj);
     return this;

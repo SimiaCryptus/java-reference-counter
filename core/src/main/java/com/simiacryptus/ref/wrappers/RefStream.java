@@ -26,13 +26,29 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
+/**
+ * The type Ref stream.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefStream<T> implements Stream<T> {
   private final Stream<T> inner;
+  /**
+   * The Lambdas.
+   */
   public List<ReferenceCounting> lambdas;
+  /**
+   * The Refs.
+   */
   public List<IdentityWrapper<ReferenceCounting>> refs;
 
+  /**
+   * Instantiates a new Ref stream.
+   *
+   * @param stream the stream
+   */
   RefStream(Stream<T> stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
     onClose(() -> {
@@ -42,6 +58,13 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
+  /**
+   * Instantiates a new Ref stream.
+   *
+   * @param stream  the stream
+   * @param lambdas the lambdas
+   * @param refs    the refs
+   */
   RefStream(Stream<T> stream, List<ReferenceCounting> lambdas, List<IdentityWrapper<ReferenceCounting>> refs) {
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = stream;
@@ -49,18 +72,40 @@ public class RefStream<T> implements Stream<T> {
     this.refs = refs;
   }
 
+  /**
+   * Of ref stream.
+   *
+   * @param <T> the type parameter
+   * @param x   the x
+   * @return the ref stream
+   */
   public static <T> RefStream<T> of(T x) {
     return new RefStream<>(Stream.of(x)).onClose(() -> {
       RefUtil.freeRef(x);
     });
   }
 
+  /**
+   * Of ref stream.
+   *
+   * @param <T>   the type parameter
+   * @param array the array
+   * @return the ref stream
+   */
   public static <T> RefStream<T> of(T... array) {
     return new RefStream<>(Stream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
   }
 
+  /**
+   * Concat ref stream.
+   *
+   * @param <T> the type parameter
+   * @param a   the a
+   * @param b   the b
+   * @return the ref stream
+   */
   public static <T> RefStream<T> concat(Stream<? extends T> a, Stream<? extends T> b) {
     return new RefStream<>(Stream.concat(a, b));
   }
@@ -205,6 +250,11 @@ public class RefStream<T> implements Stream<T> {
     return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
   }
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
   public Stream<T> getInner() {
     return new StreamWrapper<T>(inner) {
       @Override
@@ -398,6 +448,13 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
+  /**
+   * Store ref u.
+   *
+   * @param <U> the type parameter
+   * @param u   the u
+   * @return the u
+   */
   public <U> U storeRef(U u) {
     if (u instanceof ReferenceCounting) {
       refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
@@ -432,9 +489,22 @@ public class RefStream<T> implements Stream<T> {
     return new RefStream(getInner().unordered(), lambdas, refs);
   }
 
+  /**
+   * The type Identity wrapper.
+   *
+   * @param <T> the type parameter
+   */
   public static class IdentityWrapper<T> {
+    /**
+     * The Inner.
+     */
     public final T inner;
 
+    /**
+     * Instantiates a new Identity wrapper.
+     *
+     * @param inner the inner
+     */
     public IdentityWrapper(T inner) {
       this.inner = inner;
     }

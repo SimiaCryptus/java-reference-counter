@@ -63,19 +63,19 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final IfStatement freeRefStatement(@NotNull ASTNode node, ITypeBinding typeBinding) {
+    if (null == typeBinding) {
+      warn(1, node, "Cannot add freeRef (binding not resolved)");
+      return null;
+    }
     AST ast = node.getAST();
     final IfStatement ifStatement = ast.newIfStatement();
     final InfixExpression infixExpression = ast.newInfixExpression();
     infixExpression.setLeftOperand(ast.newNullLiteral());
-    infixExpression.setRightOperand((Expression) copySubtree(ast, node));
     infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
+    infixExpression.setRightOperand(copyIfAttached((Expression) node));
     ifStatement.setExpression(infixExpression);
-    if (null == typeBinding) {
-      info(1, node, "Cannot add freeRef (binding not resolved)");
-    } else {
-      ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(node, typeBinding)));
-      info(1, node, "Added freeRef");
-    }
+    ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(node, typeBinding)));
+    info(1, node, "Added freeRef");
     return ifStatement;
   }
 
@@ -151,12 +151,12 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRefs"));
       methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
-      methodInvocation.arguments().add(copySubtree(ast, name));
+      methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     } else {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRef"));
-      methodInvocation.setExpression((Expression) copySubtree(ast, name));
+      methodInvocation.setExpression(copyIfAttached((Expression) name));
       return methodInvocation;
     }
   }
@@ -169,25 +169,25 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("freeRefs"));
         methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
-        methodInvocation.arguments().add(copySubtree(ast, node));
+        methodInvocation.arguments().add(copyIfAttached(node));
         return methodInvocation;
       } else {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("freeRefs"));
         methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-        methodInvocation.arguments().add(copySubtree(ast, node));
+        methodInvocation.arguments().add(copyIfAttached(node));
         return methodInvocation;
       }
     } else if (derives(typeBinding, ReferenceCounting.class)) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRef"));
-      methodInvocation.setExpression((Expression) copySubtree(ast, node));
+      methodInvocation.setExpression(copyIfAttached((Expression) node));
       return methodInvocation;
     } else {
       final MethodInvocation freeInvocation = ast.newMethodInvocation();
       freeInvocation.setName(ast.newSimpleName("freeRef"));
       freeInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-      freeInvocation.arguments().add((Expression) copySubtree(ast, node));
+      freeInvocation.arguments().add(copyIfAttached((Expression) node));
       return freeInvocation;
     }
   }
@@ -199,13 +199,13 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRefs"));
       methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
-      methodInvocation.arguments().add(copySubtree(ast, name));
+      methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     } else {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRef"));
       methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-      methodInvocation.arguments().add(copySubtree(ast, name));
+      methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     }
   }
@@ -239,13 +239,13 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     AST ast = expression.getAST();
     if (null == type) {
       warn(1, expression, "No type for %s; cannot addRef", expression);
-      return (Expression) copySubtree(ast, expression);
+      return copyIfAttached(expression);
     } else if (type.isArray()) {
       final String qualifiedName = type.getElementType().getQualifiedName();
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRefs"));
       methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
-      methodInvocation.arguments().add(copySubtree(ast, expression));
+      methodInvocation.arguments().add(copyIfAttached(expression));
       info(1, expression, "AddRef for %s", expression);
       return methodInvocation;
     }
@@ -253,13 +253,13 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRef"));
       methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-      methodInvocation.arguments().add(copySubtree(ast, expression));
+      methodInvocation.arguments().add(copyIfAttached(expression));
       info(1, expression, "AddRef for %s", expression);
       return methodInvocation;
     } else {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRef"));
-      methodInvocation.setExpression((Expression) copySubtree(ast, expression));
+      methodInvocation.setExpression(copyIfAttached(expression));
       info(1, expression, "AddRef for %s", expression);
       return methodInvocation;
     }
