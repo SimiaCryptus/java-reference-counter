@@ -48,4 +48,9 @@ public class StatementOfInterest {
     return statement instanceof ReturnStatement;
   }
 
+  public boolean isReturnValue() {
+    if (!isReturn()) return false;
+    return (((ReturnStatement) statement).getExpression() != null);
+  }
+
 }

@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
@@ -36,8 +37,8 @@ public class IndexSymbols extends FileAstVisitor {
   SymbolIndex index;
   private boolean verbose = true;
 
-  public IndexSymbols(CompilationUnit compilationUnit, File file, SymbolIndex index) {
-    super(compilationUnit, file);
+  public IndexSymbols(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, SymbolIndex index) {
+    super(projectInfo, compilationUnit, file);
     this.index = index;
   }
 
@@ -46,17 +47,19 @@ public class IndexSymbols extends FileAstVisitor {
     final ASTNode parent = node.getParent();
     if (parent != null) list.putAll(context(parent, locator));
     if (node instanceof MethodDeclaration) {
-      list.put(index.describe(((MethodDeclaration) node).resolveBinding()), locator.apply(node));
+      final MethodDeclaration methodDeclaration = (MethodDeclaration) node;
+      list.put(index.describe(resolveBinding(methodDeclaration)), locator.apply(node));
     } else if (node instanceof LambdaExpression) {
       final LambdaExpression lambdaExpression = (LambdaExpression) node;
-      final IMethodBinding methodBinding = lambdaExpression.resolveMethodBinding();
+      final IMethodBinding methodBinding = resolveMethodBinding(lambdaExpression);
       if (methodBinding == null) {
         warn(node, "Unresolved binding for %s", node);
       } else {
         list.put(index.describe(methodBinding).setType("Lambda"), locator.apply(node));
       }
     } else if (node instanceof TypeDeclaration) {
-      final ITypeBinding typeBinding = ((TypeDeclaration) node).resolveBinding();
+      final TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+      final ITypeBinding typeBinding = resolveBinding(typeDeclaration);
       if (typeBinding == null) {
         warn(node, "Unresolved binding for %s", node);
       } else {
@@ -68,28 +71,28 @@ public class IndexSymbols extends FileAstVisitor {
 
   @Override
   public void endVisit(LambdaExpression node) {
-    indexDef(node, node.resolveMethodBinding());
+    indexDef(node, resolveMethodBinding(node));
   }
 
   @Override
   public void endVisit(MethodDeclaration node) {
-    indexDef(node, node.resolveBinding());
+    indexDef(node, resolveBinding(node));
   }
 
   @Override
   public void endVisit(TypeDeclaration node) {
-    indexDef(node, node.resolveBinding());
+    indexDef(node, resolveBinding(node));
   }
 
   @Override
   public void endVisit(SingleVariableDeclaration node) {
-    indexDef(node, node.resolveBinding());
+    indexDef(node, resolveBinding(node));
   }
 
   @Override
   public void endVisit(VariableDeclarationFragment node) {
     if (!(node.getParent() instanceof FieldDeclaration)) {
-      indexDef(node, node.resolveBinding());
+      indexDef(node, resolveBinding(node));
     }
   }
 
@@ -98,7 +101,8 @@ public class IndexSymbols extends FileAstVisitor {
     final List fragments = node.fragments();
     for (Object fragment : fragments) {
       if (fragment instanceof VariableDeclarationFragment) {
-        indexDef(node, ((VariableDeclarationFragment) fragment).resolveBinding());
+        final VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
+        indexDef(node, resolveBinding(variableDeclarationFragment));
       } else {
         if (isVerbose()) info(node, "Other fragment type %s", fragment.getClass().getSimpleName());
       }
@@ -107,9 +111,9 @@ public class IndexSymbols extends FileAstVisitor {
 
   @Override
   public void endVisit(QualifiedName node) {
-    final ITypeBinding qualifierType = node.getQualifier().resolveTypeBinding();
+    final ITypeBinding qualifierType = resolveTypeBinding(node.getQualifier());
     if (null != qualifierType && qualifierType.isArray()) return;
-    final IBinding binding = node.resolveBinding();
+    final IBinding binding = resolveBinding(node);
     if (null != binding) {
       indexReference(node, binding);
     }
@@ -119,7 +123,7 @@ public class IndexSymbols extends FileAstVisitor {
   @Override
   public void endVisit(SimpleName node) {
     if (!(node.getParent() instanceof QualifiedName)) {
-      final IBinding binding = node.resolveBinding();
+      final IBinding binding = resolveBinding(node);
       if (null != binding) {
         indexReference(node, binding);
       }

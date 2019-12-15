@@ -19,56 +19,88 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
+import java.util.List;
 
 @RefIgnore
 public class FixVariableDeclarations extends RefFileAstVisitor {
 
-  public FixVariableDeclarations(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public FixVariableDeclarations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
+  }
+
+  private Type apply(Type type, Expression initializer) {
+    final ITypeBinding typeBinding = resolveBinding(type);
+    if (null == typeBinding) {
+      warn(type, "Unresolved binding for %s", type);
+      return null;
+    }
+    if (null == initializer) {
+      info(type, "No initializer");
+      return null;
+    }
+    final ITypeBinding initializerType = resolveTypeBinding(initializer);
+    if (null == initializerType) {
+      warn(type, "Unresolved binding");
+      return null;
+    }
+    if (initializerType.isAssignmentCompatible(typeBinding)) {
+      return null;
+    }
+    Type newType = commonSuperclass(type, typeBinding, initializerType);
+    warn(type, "Replaced variable type %s to %s", type, newType);
+    return newType;
+  }
+
+  private Type commonInterface(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
+    if (initializerType.isAssignmentCompatible(typeBinding)) {
+      return getType(node, typeBinding.getQualifiedName(), true);
+    }
+    for (ITypeBinding interfaceBinding : initializerType.getInterfaces()) {
+      final Type commonInterface = commonInterface(node, interfaceBinding, initializerType);
+      if (null != commonInterface) return commonInterface;
+    }
+    return null;
+  }
+
+  private Type commonSuperclass(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
+    if (initializerType.isAssignmentCompatible(typeBinding)) {
+      return getType(node, typeBinding.getQualifiedName(), true);
+    }
+    final ITypeBinding superclass = initializerType.getSuperclass();
+    if (null != superclass && !superclass.getQualifiedName().equals(Object.class)) {
+      final Type commonSuperclass = commonSuperclass(node, superclass, initializerType);
+      if (null != commonSuperclass) return commonSuperclass;
+    }
+    return commonInterface(node, superclass, initializerType);
   }
 
   @Override
   public void endVisit(VariableDeclarationStatement node) {
-    final Type nodeType = node.getType();
-    ITypeBinding typeBinding = nodeType.resolveBinding();
-    if (null == typeBinding) {
-      warn(node, "Unresolved binding");
+    final Type type = node.getType();
+    final List fragments = node.fragments();
+    if (1 != fragments.size()) {
+      warn(node, "%s fragments", fragments.size());
       return;
     }
-    if (1 != node.fragments().size()) {
-      warn(node, "%s fragments", node.fragments().size());
+    final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+    if (null != newType && type != newType) node.setType(newType);
+  }
+
+  @Override
+  public void endVisit(FieldDeclaration node) {
+    final Type type = node.getType();
+    final List fragments = node.fragments();
+    if (1 != fragments.size()) {
+      warn(node, "%s fragments", fragments.size());
       return;
     }
-    VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
-    final Expression initializer = fragment.getInitializer();
-    if (null == initializer) {
-      info(node, "No initializer");
-      return;
-    }
-    ITypeBinding initializerType = initializer.resolveTypeBinding();
-    if (null == initializerType) {
-      warn(node, "Unresolved binding");
-      return;
-    }
-    if (typeBinding.isArray() != initializerType.isArray()) {
-      warn(node, "Array mismatch: %s != %s", typeBinding.getQualifiedName(), initializerType.getQualifiedName());
-      return;
-    }
-    if (initializerType.isArray()) {
-      initializerType = initializerType.getElementType();
-    }
-    if (typeBinding.isArray()) {
-      typeBinding = typeBinding.getElementType();
-    }
-    if (!initializerType.isAssignmentCompatible(typeBinding)) {
-      final Type newType = getType(node, initializerType.getQualifiedName(), true);
-      info(node, "Fixing variable type %s to %s for %s", nodeType, newType, fragment.getName());
-      node.setType(newType);
-    }
+    final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+    if (null != newType && type != newType) node.setType(newType);
   }
 
   @Override

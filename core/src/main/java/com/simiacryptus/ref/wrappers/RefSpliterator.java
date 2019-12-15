@@ -46,6 +46,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   public RefSpliterator(Spliterator<T> inner, long size) {
     if (inner instanceof RefSpliterator) {
       this.inner = ((RefSpliterator) inner).getInner();
+      assert !(this.inner instanceof ReferenceCounting);
       this.size = size;
     } else {
       this.inner = inner;

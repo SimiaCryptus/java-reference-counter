@@ -30,8 +30,8 @@ import java.util.stream.*;
 @RefIgnore
 public class RefStream<T> implements Stream<T> {
   private final Stream<T> inner;
-  private List<ReferenceCounting> lambdas;
-  private List<IdentityWrapper<ReferenceCounting>> refs;
+  public List<ReferenceCounting> lambdas;
+  public List<IdentityWrapper<ReferenceCounting>> refs;
 
   RefStream(Stream<T> stream) {
     this(stream, new ArrayList<>(), new ArrayList<>());
@@ -398,7 +398,7 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  private <U> U storeRef(U u) {
+  public <U> U storeRef(U u) {
     if (u instanceof ReferenceCounting) {
       refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
     }

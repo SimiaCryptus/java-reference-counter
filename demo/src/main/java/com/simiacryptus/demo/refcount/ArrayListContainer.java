@@ -1,15 +1,15 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import com.simiacryptus.ref.wrappers.RefConsumer;
 import org.jetbrains.annotations.NotNull;
-import java.util.stream.Collectors;
+
+import java.util.function.Predicate;
 
 public class ArrayListContainer extends ReferenceCountingBase {
   public ArrayListContainer() {
   }
 
-  private static void testOperations(RefConsumer<java.util.ArrayList<BasicType>> fn) {
+  private static void testOperations(java.util.function.Consumer<java.util.ArrayList<BasicType>> fn) {
     java.util.ArrayList<BasicType> values = new java.util.ArrayList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -26,13 +26,16 @@ public class ArrayListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length)
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
+    }
   }
 
   private static void testElementOperations() {
     testOperations(values -> {
+      // Test
       values.clear();
+      // Test
       if (!values.isEmpty()) {
         throw new RuntimeException();
       }
@@ -70,7 +73,7 @@ public class ArrayListContainer extends ReferenceCountingBase {
       if (!values.isEmpty()) {
         throw new RuntimeException();
       }
-      final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
+      final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
       values.addAll(java.util.Arrays.asList(basicTypeN));
       values.add(1, basicType1);
       values.addAll(1, java.util.Arrays.asList(basicTypeN));
@@ -87,8 +90,9 @@ public class ArrayListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
       values.clear();
-      if (!values.isEmpty())
+      if (!values.isEmpty()) {
         throw new RuntimeException();
+      }
     });
   }
 
@@ -99,9 +103,9 @@ public class ArrayListContainer extends ReferenceCountingBase {
       }).collect(java.util.stream.Collectors.toList()).size();
     });
     testOperations(values101 -> {
-      assert values101.size() == values101.stream().map(x102 -> {
+      assert values101.size() == values101.stream().map(x156 -> {
         if (1 == 1) {
-          return x102.getValue();
+          return x156.getValue();
         } else {
           throw new RuntimeException();
         }
@@ -116,6 +120,83 @@ public class ArrayListContainer extends ReferenceCountingBase {
         }
       }).collect(java.util.stream.Collectors.toList()).size();
     });
+    testOperations(values110 -> {
+      assert values110.size() == values110.stream().map(x111 -> {
+        try {
+          return x111.getSelf().getValue();
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }).collect(java.util.stream.Collectors.toList()).size();
+    });
+    if (false)
+      testOperations(values110 -> {
+        assert values110.size() == values110.stream().map(x111 -> {
+          try {
+            return x111.getSelf().wrap();
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }).map(x -> {
+          return x.getInner();
+        }).collect(java.util.stream.Collectors.toList()).size();
+      });
+    testOperations(values110 -> {
+      assert values110.size() == values110.stream().filter(x111 -> {
+        try {
+          return x111.getSelf().value > 0;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }).collect(java.util.stream.Collectors.toList()).size();
+    });
+    testOperations(values110 -> {
+      assert values110.size() == values110.stream().filter(x111 -> {
+        try {
+          return -1 != x111.getSelf().value;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }).collect(java.util.stream.Collectors.toList()).size();
+    });
+    if (false)
+      testOperations(values110 -> {
+        assert values110.size() == getCount(values110.iterator());
+      });
+  }
+
+  private static long getCount(java.util.Iterator<BasicType> iterator) {
+    return java.util.stream.StreamSupport
+        .stream(java.util.Spliterators.spliterator(new java.util.Iterator<BasicType>() {
+          @Override
+          public boolean hasNext() {
+            return iterator.hasNext();
+          }
+
+          @Override
+          public BasicType next() {
+            return iterator.next();
+          }
+        }, -1, 0), false).filter(x -> {
+          return test1(x);
+        }).filter(ArrayListContainer::test2).filter(x -> {
+          return x.getValue() >= 0;
+        }).filter(x -> {
+          return x != null;
+        }).count();
+  }
+
+  private static boolean test1(BasicType x) {
+    return 0 < x.value;
+  }
+
+  private static boolean test2(BasicType x) {
+    return null != getTest();
+  }
+
+  @NotNull
+  private static Predicate<BasicType> getTest() {
+    return ArrayListContainer::test1;
   }
 
   private static void testCollectionOperations() {
@@ -126,8 +207,8 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toList(), x -> {
-            return new java.util.HashSet(x);
+          .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toList(), x191 -> {
+            return new java.util.HashSet(x191);
           })).size();
     });
     testOperations(values -> {
@@ -175,8 +256,9 @@ public class ArrayListContainer extends ReferenceCountingBase {
       testArrayOperations(values);
       values.removeAll(list);
       values.clear();
-      if (!values.isEmpty())
+      if (!values.isEmpty()) {
         throw new RuntimeException();
+      }
     });
   }
 
@@ -422,7 +504,8 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

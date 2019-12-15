@@ -2,10 +2,11 @@ package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.Random;
 
 public class TestOperations extends ReferenceCountingBase {
-  public static final int count = 5;
+  public static final int count = 1;
   public static final Random random = new Random(143892);
   private SimpleContainer simpleContainer;
   private ArrayContainer arrayContainer;
@@ -23,7 +24,8 @@ public class TestOperations extends ReferenceCountingBase {
     testOperations2424.run();
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -35,7 +37,7 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void test(BasicType datum1) {
     testList();
-    testArray(new BasicType[] { datum1 });
+    testArray(new BasicType[]{datum1});
     testSet();
     testDeque();
     testMap();

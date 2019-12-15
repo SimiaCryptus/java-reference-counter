@@ -1,9 +1,8 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import com.simiacryptus.ref.wrappers.RefConsumer;
+
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class HashMapValuesContainer extends ReferenceCountingBase {
   public static void testBasicOperations(java.util.HashMap<Integer, BasicType> valuesMap) {
@@ -27,8 +26,9 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     if (valuesMap.containsKey(12)) {
       throw new AssertionError();
     }
-    if (!valuesMap.containsValue(valuesMap.get(32)))
+    if (!valuesMap.containsValue(valuesMap.get(32))) {
       throw new AssertionError();
+    }
   }
 
   public static void testStreamOperations(java.util.HashMap<Integer, BasicType> values) {
@@ -37,7 +37,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     });
   }
 
-  private static void test(RefConsumer<java.util.HashMap<Integer, BasicType>> fn) {
+  private static void test(java.util.function.Consumer<java.util.HashMap<Integer, BasicType>> fn) {
     final java.util.HashMap<Integer, BasicType> hashMap = new java.util.HashMap<>();
     fn.accept(hashMap);
   }
@@ -55,7 +55,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     test(values -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
         if (1 == ((int) fooEntry2.getKey())) {
           if (null == fooEntry2.getValue()) {
             throw new AssertionError();
@@ -73,7 +73,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
       final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<java.util.Map.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<com.simiacryptus.ref.wrappers.RefMap.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
         if (1 == ((int) lambdaParameter.getKey())) {
           if (null == lambdaParameter.getValue()) {
             throw new AssertionError();
@@ -92,7 +92,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
       final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new java.util.function.Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
         public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == ((int) anonymousParameter.getKey())) {
@@ -120,7 +120,8 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

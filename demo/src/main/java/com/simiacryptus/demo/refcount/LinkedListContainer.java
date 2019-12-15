@@ -2,15 +2,15 @@ package com.simiacryptus.demo.refcount;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import com.simiacryptus.ref.wrappers.RefConsumer;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.PrimitiveIterator;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class LinkedListContainer extends ReferenceCountingBase {
-  private static void testOperations(RefConsumer<java.util.LinkedList<BasicType>> fn) {
+  private static void testOperations(java.util.function.Consumer<java.util.LinkedList<BasicType>> fn) {
     java.util.LinkedList<BasicType> values = new java.util.LinkedList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -27,8 +27,9 @@ public class LinkedListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length)
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
+    }
   }
 
   private static void testElementOperations(java.util.LinkedList<BasicType> values) {
@@ -69,7 +70,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
-    final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
+    final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
     values.addAll(java.util.Arrays.asList(basicTypeN));
     values.add(1, basicType1);
     values.addAll(1, java.util.Arrays.asList(basicTypeN));
@@ -86,8 +87,9 @@ public class LinkedListContainer extends ReferenceCountingBase {
       throw new RuntimeException();
     }
     values.clear();
-    if (!values.isEmpty())
+    if (!values.isEmpty()) {
       throw new RuntimeException();
+    }
   }
 
   private static void testCollectionOperations(java.util.LinkedList<BasicType> values) {
@@ -106,8 +108,9 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testArrayOperations(values);
     values.removeAll(list);
     values.clear();
-    if (!values.isEmpty())
+    if (!values.isEmpty()) {
       throw new RuntimeException();
+    }
   }
 
   public static void test() {
@@ -458,8 +461,8 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      final java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> spliterator = values.spliterator();
-      while (spliterator.tryAdvance(x -> {
+      final java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> spliterator647 = values.spliterator();
+      while (spliterator647.tryAdvance(x -> {
         assert null != x;
       })) {
       }
@@ -528,22 +531,22 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
-      }).filter(i -> i > 0).mapToInt(i -> (int) (Math.random() * 10000)).distinct().count();
+      }).filter(i -> i > 0).mapToInt(i -> (int) (Math.random() * Integer.MAX_VALUE)).distinct().count();
     });
     testOperations(values -> {
       assert values.size() == values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
-      }).filter(i -> i > 0).mapToObj(i -> (int) (Math.random() * 10000)).distinct().count();
+      }).filter(i -> i > 0).mapToObj(i -> (int) (Math.random() * Integer.MAX_VALUE)).distinct().count();
     });
     testOperations(values -> {
       assert values.size() == values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
-      }).filter(i -> i > 0).mapToDouble(i -> (Math.random() * 10000)).distinct().count();
+      }).filter(i -> i > 0).mapToDouble(i -> Math.random()).distinct().count();
     });
     testOperations(values -> {
       assert values.size() == values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
-      }).filter(i -> i > 0).map(i -> (long) (Math.random() * 10000)).distinct().count();
+      }).filter(i -> i > 0).map(i -> (long) (Math.random() * Long.MAX_VALUE)).distinct().count();
     });
     testOperations(values -> {
       assert values.stream().mapToLong(foobar1 -> {
@@ -736,9 +739,9 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       @NotNull
-      java.util.ListIterator<com.simiacryptus.demo.refcount.BasicType> iter = values.listIterator();
-      while (iter.hasNext()) {
-        assert iter.next() != null;
+      java.util.ListIterator<com.simiacryptus.demo.refcount.BasicType> iter1056 = values.listIterator();
+      while (iter1056.hasNext()) {
+        assert iter1056.next() != null;
       }
     });
     testOperations(values -> {
@@ -804,7 +807,8 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testLongStream();
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

@@ -25,9 +25,7 @@ import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ConcurrentModificationException;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -63,6 +61,21 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   @Override
   RefSet<Entry<K, V>> entrySet();
 
+  default void forEach(BiConsumer<? super K, ? super V> action) {
+    final RefSet<Entry<K, V>> entries = entrySet();
+    entries.forEach(entry -> {
+      final K key = entry.getKey();
+      final V value = entry.getValue();
+      RefUtil.freeRef(entry);
+      action.accept(key, value);
+    });
+    entries.freeRef();
+  }
+
+  @NotNull
+  @Override
+  RefSet<K> keySet();
+
   @Override
   default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> fn) {
     V oldValue = get(RefUtil.addRef(key));
@@ -79,17 +92,6 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
       RefUtil.freeRef(put(key, RefUtil.addRef(newValue)));
     }
     return newValue;
-  }
-
-  default void forEach(BiConsumer<? super K, ? super V> action) {
-    final RefSet<Entry<K, V>> entries = entrySet();
-    entries.forEach(entry -> {
-      final K key = entry.getKey();
-      final V value = entry.getValue();
-      RefUtil.freeRef(entry);
-      action.accept(key, value);
-    });
-    entries.freeRef();
   }
 
   @NotNull

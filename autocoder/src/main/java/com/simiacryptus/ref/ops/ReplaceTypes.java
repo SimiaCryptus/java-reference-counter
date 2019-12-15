@@ -22,6 +22,7 @@ package com.simiacryptus.ref.ops;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.*;
 import org.eclipse.jdt.core.dom.*;
@@ -31,6 +32,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Consumer;
 import java.util.stream.*;
 
 @RefIgnore
@@ -38,12 +40,12 @@ public class ReplaceTypes extends RefFileAstVisitor {
 
   private Map<String, String> replacements;
 
-  public ReplaceTypes(CompilationUnit compilationUnit, File file, boolean invert) {
-    this(compilationUnit, file, classMapping(invert));
+  public ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+    this(projectInfo, compilationUnit, file, classMapping(invert));
   }
 
-  ReplaceTypes(CompilationUnit compilationUnit, File file, Map<String, String> classMapping) {
-    super(compilationUnit, file);
+  ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, Map<String, String> classMapping) {
+    super(projectInfo, compilationUnit, file);
     this.replacements = classMapping;
   }
 
@@ -57,31 +59,94 @@ public class ReplaceTypes extends RefFileAstVisitor {
   @NotNull
   public static BiMap<Class<?>, Class<?>> classMapping() {
     BiMap<Class<?>, Class<?>> replacements = HashBiMap.create();
-    replacements.put(Stream.class, RefStream.class);
-    replacements.put(IntStream.class, RefIntStream.class);
-    replacements.put(LongStream.class, RefLongStream.class);
-    replacements.put(DoubleStream.class, RefDoubleStream.class);
-    replacements.put(ConcurrentLinkedDeque.class, RefConcurrentLinkedDeque.class);
-    replacements.put(Arrays.class, RefArrays.class);
+    replacements.put(AbstractCollection.class, RefAbstractCollection.class);
+    replacements.put(AbstractList.class, RefAbstractList.class);
+    replacements.put(AbstractMap.class, RefAbstractMap.class);
+    replacements.put(AbstractSet.class, RefAbstractSet.class);
     replacements.put(ArrayList.class, RefArrayList.class);
-    replacements.put(List.class, RefList.class);
-    replacements.put(HashMap.class, RefHashMap.class);
-    replacements.put(ConcurrentHashMap.class, RefConcurrentHashMap.class);
-    replacements.put(LinkedHashMap.class, RefLinkedHashMap.class);
-    replacements.put(LinkedList.class, RefLinkedList.class);
-    replacements.put(HashSet.class, RefHashSet.class);
-    replacements.put(TreeSet.class, RefTreeSet.class);
+    replacements.put(Arrays.class, RefArrays.class);
+    replacements.put(Collection.class, RefCollection.class);
+    replacements.put(Collections.class, RefCollections.class);
     replacements.put(Collectors.class, RefCollectors.class);
     replacements.put(Comparator.class, RefComparator.class);
-    replacements.put(StreamSupport.class, RefStreamSupport.class);
+    replacements.put(ConcurrentHashMap.class, RefConcurrentHashMap.class);
+    replacements.put(ConcurrentLinkedDeque.class, RefConcurrentLinkedDeque.class);
+    replacements.put(Consumer.class, RefConsumer.class);
+    replacements.put(Deque.class, RefDeque.class);
+    replacements.put(DoubleStream.class, RefDoubleStream.class);
+    replacements.put(Map.Entry.class, RefEntry.class);
+    replacements.put(HashMap.class, RefHashMap.class);
+    replacements.put(HashSet.class, RefHashSet.class);
+    replacements.put(IntStream.class, RefIntStream.class);
+    replacements.put(Iterator.class, RefIterator.class);
+    replacements.put(LinkedHashMap.class, RefLinkedHashMap.class);
+    replacements.put(LinkedList.class, RefLinkedList.class);
+    replacements.put(List.class, RefList.class);
+    replacements.put(ListIterator.class, RefListIterator.class);
     replacements.put(Lists.class, RefLists.class);
+    replacements.put(LongStream.class, RefLongStream.class);
+    replacements.put(Map.class, RefMap.class);
+    replacements.put(PrimitiveIterator.class, RefPrimitiveIterator.class);
+    replacements.put(Queue.class, RefQueue.class);
+    replacements.put(Set.class, RefSet.class);
+    replacements.put(Spliterator.class, RefSpliterator.class);
+    replacements.put(Spliterators.class, RefSpliterators.class);
+    replacements.put(Stream.class, RefStream.class);
+    replacements.put(StreamSupport.class, RefStreamSupport.class);
+    replacements.put(TreeSet.class, RefTreeSet.class);
     return replacements;
   }
 
-
   public void apply(Name node) {
+    if (node.getParent() instanceof ImportDeclaration) {
+      return;
+    }
+    final Name replace = replace(node);
+    if (null != replace && !node.toString().equals(replace.toString())) {
+      replace(node, replace);
+      info(node, "Replaced %s with %s", node, replace);
+    }
+  }
+
+  @Override
+  public void endVisit(CompilationUnit node) {
+    final Iterator<ImportDeclaration> iterator = node.imports().iterator();
+    ArrayList<ImportDeclaration> newImports = new ArrayList<>();
+    while (iterator.hasNext()) {
+      final ImportDeclaration importDeclaration = iterator.next();
+      final Name name = importDeclaration.getName();
+      final Name replace = replace(name);
+      if (null != replace && !name.toString().equals(replace.toString())) {
+        final ImportDeclaration newImportDeclaration = node.getAST().newImportDeclaration();
+        newImportDeclaration.setName(replace);
+        newImports.add(newImportDeclaration);
+      }
+    }
+    node.imports().addAll(newImports);
+  }
+
+  @Override
+  public void endVisit(TypeParameter node) {
     if (skip(node)) return;
-    final IBinding binding = node.resolveBinding();
+    apply(node.getName());
+  }
+
+  @Override
+  public void endVisit(SimpleName node) {
+    if (skip(node)) return;
+    if (node.getParent() instanceof QualifiedName) return;
+    apply(node);
+  }
+
+  @Override
+  public void endVisit(QualifiedName node) {
+    if (skip(node)) return;
+    if (node.getParent() instanceof QualifiedName) return;
+    apply(node);
+  }
+
+  private Name replace(Name node) {
+    final IBinding binding = resolveBinding(node);
     if (null == binding) {
       warn(node, "Unresolved binding: %s", node);
     }
@@ -90,29 +155,13 @@ public class ReplaceTypes extends RefFileAstVisitor {
       final String replacement = replacements.get(className);
       if (null != replacement) {
         try {
-          replace(node, newQualifiedName(node.getAST(), Class.forName(replacement)));
-          info(node, "Replaced %s with %s", className, replacement);
+          return newQualifiedName(node.getAST(), Class.forName(replacement));
         } catch (ClassNotFoundException e) {
           warn(node, e.getMessage());
         }
       }
     }
-  }
-
-  @Override
-  public void endVisit(TypeParameter node) {
-    apply(node.getName());
-  }
-
-  @Override
-  public void endVisit(SimpleName node) {
-    if (node.getParent() instanceof QualifiedName) return;
-    apply(node);
-  }
-
-  @Override
-  public void endVisit(QualifiedName node) {
-    apply(node);
+    return null;
   }
 
 }

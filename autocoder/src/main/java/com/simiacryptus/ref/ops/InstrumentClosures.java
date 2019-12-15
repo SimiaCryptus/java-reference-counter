@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
@@ -38,8 +39,8 @@ public class InstrumentClosures extends RefFileAstVisitor {
 
   private final IndexSymbols.SymbolIndex index;
 
-  public InstrumentClosures(CompilationUnit compilationUnit, File file, IndexSymbols.SymbolIndex index) {
-    super(compilationUnit, file);
+  public InstrumentClosures(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, IndexSymbols.SymbolIndex index) {
+    super(projectInfo, compilationUnit, file);
     this.index = index;
   }
 
@@ -52,7 +53,7 @@ public class InstrumentClosures extends RefFileAstVisitor {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           if (isRefCounted(node, type)) {
-            final SimpleName name = (SimpleName) ASTNode.copySubtree(ast, singleVariableDeclaration.getName());
+            final SimpleName name = (SimpleName) copySubtree(ast, singleVariableDeclaration.getName());
             freeMethodOpt.get().getBody().statements().add(0, ast.newExpressionStatement(newFreeRef(name, type)));
           }
         } else {
@@ -65,9 +66,9 @@ public class InstrumentClosures extends RefFileAstVisitor {
     closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
       if (closureNode instanceof SingleVariableDeclaration) {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
-        final ITypeBinding type = singleVariableDeclaration.resolveBinding().getType();
+        final ITypeBinding type = resolveBinding(singleVariableDeclaration).getType();
         if (isRefCounted(node, type)) {
-          final SimpleName name = (SimpleName) ASTNode.copySubtree(ast, singleVariableDeclaration.getName());
+          final SimpleName name = (SimpleName) copySubtree(ast, singleVariableDeclaration.getName());
           initializerBlock.statements().add(ast.newExpressionStatement(newAddRef(name, type)));
         }
       } else {
@@ -83,7 +84,7 @@ public class InstrumentClosures extends RefFileAstVisitor {
     final IndexSymbols.Span lambdaLocation = getSpan(node);
     final Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures = getClosures(node, lambdaLocation, getSymbolIndex(node));
     if (closures.size() > 0) {
-      final ITypeBinding typeBinding = node.resolveBinding();
+      final ITypeBinding typeBinding = resolveBinding(node);
       final IndexSymbols.BindingId bindingId = index.describe(typeBinding);
       if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object") && typeBinding.getInterfaces().length > 0) {
         info(node, String.format("Closures in anonymous interface %s at %s: %s",
@@ -108,7 +109,7 @@ public class InstrumentClosures extends RefFileAstVisitor {
 
   @Override
   public void endVisit(LambdaExpression node) {
-    final IMethodBinding methodBinding = node.resolveMethodBinding();
+    final IMethodBinding methodBinding = resolveMethodBinding(node);
     if (null == methodBinding) return;
     final IndexSymbols.BindingId bindingId = index.describe(methodBinding).setType("Lambda");
     final IndexSymbols.Span lambdaLocation = getSpan(node);
@@ -148,23 +149,23 @@ public class InstrumentClosures extends RefFileAstVisitor {
     if (null != castType) {
       warn(node, "Unresolved binding");
       castExpression.setType(castType);
-      castExpression.setExpression((Expression) ASTNode.copySubtree(ast, node));
+      castExpression.setExpression((Expression) copySubtree(ast, node));
       methodInvocation.arguments().add(castExpression);
     } else {
-      methodInvocation.arguments().add(ASTNode.copySubtree(ast, node));
+      methodInvocation.arguments().add(copySubtree(ast, node));
     }
     closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
       if (closureNode instanceof SingleVariableDeclaration) {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
-          methodInvocation.arguments().add(wrapAddRef((Expression) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()), type));
+          methodInvocation.arguments().add(wrapAddRef((Expression) copySubtree(ast, singleVariableDeclaration.getName()), type));
         }
       } else if (closureNode instanceof VariableDeclarationFragment) {
         final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) closureNode;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
         if (isRefCounted(node, type)) {
-          methodInvocation.arguments().add(wrapAddRef((Expression) ASTNode.copySubtree(ast, singleVariableDeclaration.getName()), type));
+          methodInvocation.arguments().add(wrapAddRef((Expression) copySubtree(ast, singleVariableDeclaration.getName()), type));
         }
       } else {
         warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());

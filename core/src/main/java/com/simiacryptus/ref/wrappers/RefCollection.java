@@ -26,7 +26,6 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -41,6 +40,15 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
   }
 
   RefCollection<T> addRef();
+
+  default void forEach(Consumer<? super T> action) {
+    final RefIterator<T> iterator = iterator();
+    while (iterator.hasNext()) {
+      action.accept(iterator.next());
+    }
+    RefUtil.freeRef(action);
+    iterator.freeRef();
+  }
 
   Collection<T> getInner();
 
@@ -69,15 +77,6 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
   default RefStream<T> stream() {
     assertAlive();
     return RefStreamSupport.stream(spliterator(), false);
-  }
-
-  default void forEach(Consumer<? super T> action) {
-    final RefIterator<T> iterator = iterator();
-    while (iterator.hasNext()) {
-      action.accept(iterator.next());
-    }
-    RefUtil.freeRef(action);
-    iterator.freeRef();
   }
 
 }

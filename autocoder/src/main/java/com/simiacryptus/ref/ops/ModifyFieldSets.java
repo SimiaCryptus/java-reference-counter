@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -28,8 +29,8 @@ import java.io.File;
 @RefIgnore
 public class ModifyFieldSets extends RefFileAstVisitor {
 
-  public ModifyFieldSets(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public ModifyFieldSets(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override
@@ -37,18 +38,19 @@ public class ModifyFieldSets extends RefFileAstVisitor {
 
     if (node.getLeftHandSide() instanceof FieldAccess) {
       final FieldAccess fieldAccess = (FieldAccess) node.getLeftHandSide();
-      final IVariableBinding fieldBinding = fieldAccess.resolveFieldBinding();
+      final IVariableBinding fieldBinding = resolveFieldBinding(fieldAccess);
       if (null == fieldBinding) {
-        warn(node, "Unresolved binding");
+        warn(node, "Unresolved binding: %s", fieldAccess);
         return;
       }
-      if (0 != (fieldBinding.getModifiers() & Modifier.FINAL)) {
-        warn(node, "Final field");
-        return;
-      }
+      final boolean isFinal = 0 != (fieldBinding.getModifiers() & Modifier.FINAL);
+//      if (isFinal) {
+//        warn(node, "Final field");
+//        return;
+//      }
       final ITypeBinding typeBinding = fieldBinding.getType();
       if (null == typeBinding) {
-        warn(node, "Unresolved binding");
+        warn(node, "Unresolved binding: %s", fieldBinding);
         return;
       }
       if (!isRefCounted(fieldAccess, typeBinding)) return;
@@ -61,16 +63,16 @@ public class ModifyFieldSets extends RefFileAstVisitor {
           final Expression rightHandSide = node.getRightHandSide();
           final AST ast = node.getAST();
           if (rightHandSide instanceof Name) {
-            if (0 == (fieldBinding.getModifiers() & Modifier.FINAL)) block.statements().add(lineNumber, freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
+            if (!isFinal) block.statements().add(lineNumber, freeRefStatement(fieldAccess, resolveTypeBinding(fieldAccess)));
             node.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
             info(node, "Simple field-set statement at line " + lineNumber);
           } else {
             final Block exchangeBlock = ast.newBlock();
-            final String identifier = randomIdentifier(node);
+            final String identifier = getTempIdentifier(node);
             exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(node, typeBinding.getQualifiedName(), true)));
-            if (0 == (fieldBinding.getModifiers() & Modifier.FINAL)) exchangeBlock.statements().add(freeRefStatement(fieldAccess, fieldAccess.resolveTypeBinding()));
+            if (!isFinal) exchangeBlock.statements().add(freeRefStatement(fieldAccess, resolveTypeBinding(fieldAccess)));
             final Assignment assignment = ast.newAssignment();
-            assignment.setLeftHandSide((Expression) ASTNode.copySubtree(ast, fieldAccess));
+            assignment.setLeftHandSide((Expression) copySubtree(ast, fieldAccess));
             assignment.setOperator(Assignment.Operator.ASSIGN);
             assignment.setRightHandSide(wrapAddRef(ast.newSimpleName(identifier), typeBinding));
             exchangeBlock.statements().add(ast.newExpressionStatement(assignment));

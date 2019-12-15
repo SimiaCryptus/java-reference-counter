@@ -5,8 +5,8 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 public class BasicType extends ReferenceCountingBase implements Comparable<BasicType> {
-  private final String label;
-  private int value;
+  public final String label;
+  public int value;
 
   public BasicType() {
     this(Long.toHexString(TestOperations.random.nextLong()));
@@ -17,7 +17,9 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     this.label = label;
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
+    value = -1;
     super._free();
   }
 
@@ -40,7 +42,12 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     return label == basicType.label;
   }
 
+  public BasicType getSelf() {
+    return this;
+  }
+
   public int getValue() {
+    assertAlive();
     return value;
   }
 
@@ -61,5 +68,9 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
 
   public void use() {
     this.setValue(this.getValue() + 1);
+  }
+
+  public WrapperType<BasicType> wrap() {
+    return new WrapperType<>(this);
   }
 }

@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.ops.StatementOfInterest;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
@@ -30,14 +31,14 @@ import java.util.ArrayList;
 @RefIgnore
 public class OptimizeRefs extends RefFileAstVisitor {
 
-  public OptimizeRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public OptimizeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override
   public void endVisit(MethodInvocation freeRefNode) {
     if (freeRefNode.getName().toString().equals("freeRef")) {
-      final IMethodBinding methodBinding = freeRefNode.resolveMethodBinding();
+      final IMethodBinding methodBinding = resolveMethodBinding(freeRefNode);
       if (null == methodBinding) {
         warn(freeRefNode, "Unresolved binding");
         return;
@@ -78,7 +79,7 @@ public class OptimizeRefs extends RefFileAstVisitor {
       }
       info(freeRefNode, "Consolidating freeRef of %s at line %s with addRef at line %s", variable, freeRefLineNumber, addRefLineNumber);
       final AST ast = freeRefNode.getAST();
-      replace(addRefNode, ASTNode.copySubtree(ast, variable));
+      replace(addRefNode, copySubtree(ast, variable));
       parentBlock.statements().remove(freeRefLineNumber);
     }
   }

@@ -19,10 +19,10 @@
 
 package com.simiacryptus.ref.core;
 
+import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
@@ -39,10 +39,9 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 @RefIgnore
-public abstract class AutoCoder extends ASTVisitor {
+public abstract class AutoCoder {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
   @NotNull
   protected final ProjectInfo projectInfo;
@@ -83,7 +82,7 @@ public abstract class AutoCoder extends ASTVisitor {
     }
   }
 
-  protected String format(@NotNull String finalSrc) {
+  public static String format(@NotNull String finalSrc) {
     final Document document = new Document();
     document.set(finalSrc);
     try {
@@ -103,7 +102,7 @@ public abstract class AutoCoder extends ASTVisitor {
   }
 
   @NotNull
-  protected DefaultCodeFormatterOptions formattingSettings() {
+  public static DefaultCodeFormatterOptions formattingSettings() {
     final DefaultCodeFormatterOptions javaConventionsSettings = DefaultCodeFormatterOptions.getJavaConventionsSettings();
     javaConventionsSettings.align_with_spaces = true;
     javaConventionsSettings.tab_char = DefaultCodeFormatterOptions.SPACE;
@@ -111,47 +110,64 @@ public abstract class AutoCoder extends ASTVisitor {
     return javaConventionsSettings;
   }
 
+  public static String read(File file) {
+    String prevSrc;
+    try {
+      prevSrc = FileUtils.readFileToString(file, "UTF-8");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return prevSrc;
+  }
+
   @NotNull
   protected IndexSymbols.SymbolIndex getSymbolIndex() {
     final IndexSymbols.SymbolIndex index = new IndexSymbols.SymbolIndex();
-    scan((cu, file) -> new IndexSymbols(cu, file, index));
+    scan((projectInfo, cu, file) -> new IndexSymbols(projectInfo, cu, file, index));
     return index;
   }
 
   @Nonnull
   public abstract void rewrite();
 
-  protected int rewrite(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+  protected int rewrite(@NotNull VisitorFactory visitorFactory) {
     return projectInfo.parse().entrySet().stream().mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      final String prevSrc = compilationUnit.toString();
-      final ASTVisitor astVisitor = visitor.apply(compilationUnit, file);
+      compilationUnit.recordModifications();
+      final FileAstVisitor astVisitor = visitorFactory.apply(projectInfo, compilationUnit, file);
       compilationUnit.accept(astVisitor);
-      final String finalSrc = compilationUnit.toString();
-      if (!prevSrc.equals(finalSrc)) {
-        logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
-        try {
-          FileUtils.write(file, format(finalSrc), "UTF-8");
+      try {
+        if (astVisitor.write(true)) {
+          logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
           return 1;
-        } catch (IOException e) {
-          throw new RuntimeException(e);
+        } else {
+          logger.info("Not Touched: " + file);
+          return 0;
         }
-      } else {
-        logger.debug("Not Touched: " + file);
-        return 0;
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     }).sum();
   }
 
-  protected void scan(@NotNull BiFunction<CompilationUnit, File, ASTVisitor> visitor) {
+  protected void scan(@NotNull VisitorFactory visitor) {
     projectInfo.parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      compilationUnit.accept(visitor.apply(compilationUnit, file));
+      compilationUnit.recordModifications();
+      final FileAstVisitor fileAstVisitor = visitor.apply(projectInfo, compilationUnit, file);
+      compilationUnit.accept(fileAstVisitor);
+      if (fileAstVisitor.revert()) {
+        logger.warn("File modified in scan: " + file);
+      }
     });
+  }
+
+  public interface VisitorFactory {
+    FileAstVisitor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
   }
 
 }

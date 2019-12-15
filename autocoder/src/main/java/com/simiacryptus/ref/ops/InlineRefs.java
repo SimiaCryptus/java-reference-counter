@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.ops.StatementOfInterest;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
@@ -32,8 +33,8 @@ import java.util.List;
 @RefIgnore
 public class InlineRefs extends RefFileAstVisitor {
 
-  public InlineRefs(CompilationUnit compilationUnit, File file) {
-    super(compilationUnit, file);
+  public InlineRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    super(projectInfo, compilationUnit, file);
   }
 
   @Override
@@ -41,7 +42,7 @@ public class InlineRefs extends RefFileAstVisitor {
     if (node.statements().size() == 1 && node.getParent() instanceof Block) {
       final Block parent = (Block) node.getParent();
       parent.statements().set(parent.statements().indexOf(node),
-          ASTNode.copySubtree(node.getAST(), (ASTNode) node.statements().get(0)));
+          copySubtree(node.getAST(), (ASTNode) node.statements().get(0)));
     }
   }
 
@@ -64,7 +65,7 @@ public class InlineRefs extends RefFileAstVisitor {
           }
           if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
             info(node, "Inlining %s", fragment.getName());
-            node.setRightHandSide((Expression) ASTNode.copySubtree(node.getAST(), fragment.getInitializer()));
+            node.setRightHandSide((Expression) copySubtree(node.getAST(), fragment.getInitializer()));
             info(previousStatement, "delete %s", previousStatement);
             previousStatement.delete();
           } else {
@@ -99,7 +100,7 @@ public class InlineRefs extends RefFileAstVisitor {
             }
             if (fragment.getName().toString().equals(node.getExpression().toString())) {
               info(node, "Inlining %s", fragment.getName());
-              node.setExpression((Expression) ASTNode.copySubtree(node.getAST(), fragment.getInitializer()));
+              node.setExpression((Expression) copySubtree(node.getAST(), fragment.getInitializer()));
               info(previousStatement, "delete %s", previousStatement);
               previousStatement.delete();
             }
