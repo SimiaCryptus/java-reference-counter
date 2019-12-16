@@ -67,7 +67,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       warn(1, node, "Cannot add freeRef (binding not resolved)");
       return null;
     }
-    AST ast = node.getAST();
     final IfStatement ifStatement = ast.newIfStatement();
     final InfixExpression infixExpression = ast.newInfixExpression();
     infixExpression.setLeftOperand(ast.newNullLiteral());
@@ -81,7 +80,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final Statement freeRefUtilStatement(@NotNull ASTNode node, ITypeBinding typeBinding) {
-    final AST ast = node.getAST();
     return ast.newExpressionStatement(newFreeRefUtil(node, typeBinding));
   }
 
@@ -145,7 +143,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final MethodInvocation newAddRef(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
-    AST ast = name.getAST();
     if (typeBinding.isArray()) {
       final String qualifiedName = typeBinding.getElementType().getQualifiedName();
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
@@ -163,7 +160,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final MethodInvocation newFreeRef(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
-    AST ast = node.getAST();
     if (typeBinding.isArray()) {
       if (derives(typeBinding.getElementType(), ReferenceCounting.class)) {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
@@ -194,7 +190,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final MethodInvocation newFreeRefUtil(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
-    AST ast = name.getAST();
     if (typeBinding.isArray()) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRefs"));
@@ -236,7 +231,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final Expression wrapAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
-    AST ast = expression.getAST();
     if (null == type) {
       warn(1, expression, "No type for %s; cannot addRef", expression);
       return copyIfAttached(expression);

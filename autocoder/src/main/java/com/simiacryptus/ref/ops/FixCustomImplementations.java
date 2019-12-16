@@ -47,7 +47,6 @@ public class FixCustomImplementations extends RefFileAstVisitor {
   protected boolean replace(AnonymousClassDeclaration node, ITypeBinding typeBinding, Class<RefIterator> match, Class<Iterator> replace) {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
       info(node, "RefIterator anonymous class");
-      final AST ast = node.getAST();
       final ClassInstanceCreation parent = (ClassInstanceCreation) node.getParent();
       final SimpleType simpleType = ast.newSimpleType(newQualifiedName(ast, replace));
       final Type parentType = parent.getType();

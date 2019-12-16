@@ -64,7 +64,6 @@ public class ModifyFieldSets extends RefFileAstVisitor {
           final Block block = (Block) parent2;
           final int lineNumber = block.statements().indexOf(expressionStatement);
           final Expression rightHandSide = assignment.getRightHandSide();
-          final AST ast = assignment.getAST();
           if (rightHandSide instanceof Name) {
             if (!isFinal) block.statements().add(lineNumber, freeRefStatement(leftHandSide, typeBinding));
             assignment.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));

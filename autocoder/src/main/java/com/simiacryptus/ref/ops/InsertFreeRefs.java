@@ -60,9 +60,8 @@ public class InsertFreeRefs extends RefFileAstVisitor {
         if (body instanceof Block) {
           insertFreeRefs(typeBinding, name, (Block) body, -1);
         } else {
-          lambdaExpression.setBody(null);
-          final AST ast = lambdaExpression.getAST();
           final Block block = ast.newBlock();
+          lambdaExpression.setBody(block);
           final IMethodBinding methodBinding = resolveMethodBinding(lambdaExpression);
           if (hasReturnValue(lambdaExpression, lambdaExpression.getParent(), methodBinding)) {
             final ReturnStatement returnStatement = ast.newReturnStatement();
@@ -72,7 +71,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
             block.statements().add(ast.newExpressionStatement(copyIfAttached((Expression) body)));
           }
           info(lambdaExpression, "Replace lambda %s with block %s", lambdaExpression, block);
-          lambdaExpression.setBody(block);
           insertFreeRefs(typeBinding, name, block, -1);
         }
       } else if (parent instanceof VariableDeclarationStatement) {
@@ -101,7 +99,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
       final TypeDeclaration typeDeclaration = (TypeDeclaration) fieldParent;
       final Optional<MethodDeclaration> freeMethodOpt = findMethod(typeDeclaration, "_free");
       if (freeMethodOpt.isPresent()) {
-        final AST ast = name.getAST();
         final IfStatement ifStatement = ast.newIfStatement();
         final InfixExpression nullTest = ast.newInfixExpression();
         nullTest.setLeftOperand(ast.newNullLiteral());
@@ -297,7 +294,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
     }
 
     final ASTNode statementParent = statement.getParent();
-    AST ast = node.getAST();
     if (!(statementParent instanceof Block)) {
       Block block = ast.newBlock();
       replace(statement, block);
@@ -394,7 +390,7 @@ public class InsertFreeRefs extends RefFileAstVisitor {
   }
 
   public void insertFreeRef(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, Block body, int line) {
-    final ExpressionStatement statement = body.getAST().newExpressionStatement(newFreeRef(node, typeBinding));
+    final ExpressionStatement statement = ast.newExpressionStatement(newFreeRef(node, typeBinding));
     if (line < 0) {
       body.statements().add(0, statement);
     } else {
@@ -406,7 +402,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
   private void insertFreeRef_ComplexReturn(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, Block block, int line) {
     info(1, node, "Adding freeRef for %s at %s", node, line);
     ReturnStatement returnStatement = (ReturnStatement) block.statements().get(line);
-    AST ast = node.getAST();
     final String identifier = getTempIdentifier(node);
     final List statements = block.statements();
     final Expression expression = returnStatement.getExpression();
@@ -428,7 +423,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
 
   private void insertFreeRef_ComplexThrow(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, Block block, int line) {
     ThrowStatement throwStatement = (ThrowStatement) block.statements().get(line);
-    AST ast = block.getAST();
     final String identifier = getTempIdentifier(block);
     final List statements = block.statements();
     final Expression expression = throwStatement.getExpression();

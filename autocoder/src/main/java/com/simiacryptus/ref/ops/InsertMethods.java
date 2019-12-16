@@ -49,7 +49,6 @@ public class InsertMethods extends RefFileAstVisitor {
     if (derives(typeBinding, ReferenceCounting.class)) {
       final boolean isInterface = node.isInterface();
       final boolean isOverride = !derives(typeBinding, ReferenceCountingBase.class);
-      final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       final Optional<MethodDeclaration> freeMethod = findMethod(node, "_free");
       if (!freeMethod.isPresent()) {
@@ -81,7 +80,6 @@ public class InsertMethods extends RefFileAstVisitor {
       return;
     }
     if (derives(typeBinding, ReferenceCounting.class)) {
-      final AST ast = node.getAST();
       final List declarations = node.bodyDeclarations();
       declarations.add(method_free(ast, false, derives(typeBinding, ReferenceCountingBase.class)));
     }
@@ -91,7 +89,6 @@ public class InsertMethods extends RefFileAstVisitor {
   private Type getType(@NotNull ASTNode node, String fqTypeName, TypeParameter... typeParameters) {
     final Type baseType = getType(node, fqTypeName, false);
     if (typeParameters.length > 0) {
-      final AST ast = node.getAST();
       final ParameterizedType parameterizedType = ast.newParameterizedType(baseType);
       for (TypeParameter typeParameter : typeParameters) {
         final ITypeBinding binding = resolveBinding(typeParameter);
@@ -109,7 +106,6 @@ public class InsertMethods extends RefFileAstVisitor {
   }
 
   public MethodDeclaration method_addRef(@NotNull ASTNode node, @NotNull SimpleName name, boolean isInterface, TypeParameter... typeParameters) {
-    final AST ast = node.getAST();
     final String fqTypeName = name.getFullyQualifiedName();
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRef"));

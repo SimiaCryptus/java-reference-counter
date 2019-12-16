@@ -117,7 +117,7 @@ public class ReplaceTypes extends RefFileAstVisitor {
       final Name name = importDeclaration.getName();
       final Name replace = replace(name);
       if (null != replace && !name.toString().equals(replace.toString())) {
-        final ImportDeclaration newImportDeclaration = node.getAST().newImportDeclaration();
+        final ImportDeclaration newImportDeclaration = ast.newImportDeclaration();
         newImportDeclaration.setName(replace);
         newImports.add(newImportDeclaration);
       }
@@ -155,7 +155,7 @@ public class ReplaceTypes extends RefFileAstVisitor {
       final String replacement = replacements.get(className);
       if (null != replacement) {
         try {
-          return newQualifiedName(node.getAST(), Class.forName(replacement));
+          return newQualifiedName(ast, Class.forName(replacement));
         } catch (ClassNotFoundException e) {
           warn(node, e.getMessage());
         }

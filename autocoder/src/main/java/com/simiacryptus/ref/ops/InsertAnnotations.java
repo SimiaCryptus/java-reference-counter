@@ -38,7 +38,6 @@ public class InsertAnnotations extends RefFileAstVisitor {
 
   @Override
   public void endVisit(TypeDeclaration node) {
-    final AST ast = node.getAST();
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
     annotation.setTypeName(newQualifiedName(ast, RefAware.class));
     node.modifiers().add(annotation);

@@ -60,7 +60,6 @@ public class RemoveRefs extends RefFileAstVisitor {
     }
     final String declaringClass = methodBinding.getDeclaringClass().getQualifiedName();
     if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
-      final AST ast = node.getAST();
       Expression subject;
       if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
         subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));

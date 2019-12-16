@@ -167,7 +167,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
       return node;
     } else {
       info(1, node, "Copy node %s", node);
-      return (T) ASTNode.copySubtree(node.getAST(), node);
+      return (T) ASTNode.copySubtree(ast, node);
     }
   }
 
@@ -183,13 +183,12 @@ public abstract class FileAstVisitor extends ASTVisitor {
   protected final void debug(int frames, ASTNode node, String formatString, Object... args) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
-    logger.debug(String.format(getFormatString(node, formatString, caller), args));
+    logger.debug(String.format(getLogPrefix(node, caller) + formatString, args));
   }
 
   protected final void delete(@NotNull Statement statement) {
     info(1, statement, "Deleting %s", statement);
     final ASTNode parent = statement.getParent();
-    final AST ast = statement.getAST();
     if (parent instanceof Block) {
       final Block block = (Block) parent;
       if (block.statements().size() == 1) {
@@ -315,7 +314,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   private ArrayList<StatementOfInterest> exits_(@NotNull Block block, int startAt, int endAt) {
     final List statements = block.statements();
     final ArrayList<StatementOfInterest> exits = new ArrayList<>();
-    final AST ast = block.getAST();
     for (int j = Math.max(0, startAt); j <= endAt; j++) {
       final Statement statement = (Statement) statements.get(j);
       if (statement instanceof IfStatement) {
@@ -406,7 +404,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     final ASTMapping align = align(compilationUnit, reparse);
     setReparsed(align);
     reparsed = align;
-    reparsed.errors.stream().forEach(x -> warn(node, x));
+    reparsed.errors.stream().forEach(x -> warnRaw(0, node, x));
     if (null == reparsed) return Optional.empty();
     any = (T) reparsed.matches.get(node);
     if (null == any) any = (T) reparsed.mismatches.get(node);
@@ -470,15 +468,15 @@ public abstract class FileAstVisitor extends ASTVisitor {
           statements.addAll(getEvaluableStatements(castExpression.getLeftOperand()));
         }
       } else {
-        final AST ast = expression.getAST();
         statements.add(ast.newExpressionStatement(copyIfAttached(expression)));
       }
     }
     return statements;
   }
 
-  protected final String getFormatString(@Nonnull ASTNode node, @Nonnull String formatString, @Nonnull StackTraceElement caller) {
-    return String.format("(%s) (%s) - %s", toString(caller), getLocation(node), formatString);
+  @NotNull
+  private String getLogPrefix(@Nonnull ASTNode node, @Nonnull StackTraceElement caller) {
+    return "(" + toString(caller) + ") (" + getLocation(node) + ") - ";
   }
 
   protected final LambdaExpression getLambda(ASTNode node) {
@@ -567,7 +565,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected final Type getType(ASTNode node, @NotNull String name, boolean isDeclaration) {
-    @Nonnull AST ast = node.getAST();
     if (name.endsWith("[]")) {
       int rank = 0;
       while (name.endsWith("[]")) {
@@ -647,7 +644,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   private Type getTypeParameter(ASTNode node, String name, boolean isDeclaration) {
-    final AST ast = node.getAST();
     final String extendsPrefix = "? extends ";
     final String superPrefix = "? super ";
     if (name.startsWith(extendsPrefix)) {
@@ -715,7 +711,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   protected final void info(int frames, @Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
-    logger.info(String.format(getFormatString(node, formatString, caller), Arrays.stream(args).map(o -> o == null ? null : o.toString().trim()).toArray()));
+    logger.info(String.format(getLogPrefix(node, caller) + formatString, Arrays.stream(args).map(o -> o == null ? null : o.toString().trim()).toArray()));
   }
 
   protected final boolean isEvaluable(Expression node) {
@@ -795,7 +791,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected final VariableDeclarationStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression, @NotNull Type type) {
-    AST ast = expression.getAST();
     final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
     variableDeclarationFragment.setName(ast.newSimpleName(identifier));
     variableDeclarationFragment.setInitializer(copyIfAttached(expression));
@@ -914,7 +909,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
       final QualifiedName qualifiedName = (QualifiedName) parent;
       if (qualifiedName.getQualifier().equals(child)) {
         if (!(newChild instanceof Name) && (newChild instanceof Expression)) {
-          final AST ast = child.getAST();
           final FieldAccess fieldAccess = ast.newFieldAccess();
           fieldAccess.setExpression(copyIfAttached((Expression) newChild));
           fieldAccess.setName(copyIfAttached(qualifiedName.getName()));
@@ -1027,7 +1021,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
     if (body instanceof Block) {
       return (Block) body;
     } else {
-      final AST ast = lambdaExpression.getAST();
       final Block block = ast.newBlock();
       if (hasReturnValue(lambdaExpression)) {
         final ReturnStatement returnStatement = ast.newReturnStatement();
@@ -1052,9 +1045,13 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected final void warn(int frames, ASTNode node, String formatString, Object... args) {
+    warnRaw(frames+1, node, String.format(formatString, args));
+  }
+
+  protected void warnRaw(int frames, ASTNode node, String format) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
-    logger.warn(String.format(getFormatString(node, formatString, caller), args));
+    logger.warn(getLogPrefix(node, caller) + format);
   }
 
   public boolean writeFinal(boolean format) throws IOException {
@@ -1062,7 +1059,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
     final String initialWrite = AutoCoder.read(this.file);
     final ASTMapping align = align(compilationUnit, reparse);
     if (!align.errors.isEmpty()) {
-      align.errors.stream().forEach(x -> warn(compilationUnit, x));
+      align.errors.stream().forEach(x -> warnRaw(0, compilationUnit, x));
       reparse.recordModifications();
       align.mismatches.forEach((from, to) -> {
         replace(to, ASTNode.copySubtree(to.getAST(), from));

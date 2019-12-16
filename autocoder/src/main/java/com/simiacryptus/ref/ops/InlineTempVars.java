@@ -42,7 +42,6 @@ public class InlineTempVars extends RefFileAstVisitor {
       if (isTempIdentifier(name)) {
         final Expression expression = variableDeclarationFragment.getInitializer();
         final Block block = getBlock(node);
-        final AST ast = node.getAST();
         delete(node);
         for (SimpleName match : findExpressions(block, name)) {
           replace(match, copyIfAttached(expression));

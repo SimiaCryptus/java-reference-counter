@@ -45,7 +45,6 @@ public class InstrumentClosures extends RefFileAstVisitor {
   }
 
   public void addRefcounting(@Nonnull AnonymousClassDeclaration node, Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures) {
-    final AST ast = node.getAST();
     final Optional<MethodDeclaration> freeMethodOpt = findMethod(node, "_free");
     if (freeMethodOpt.isPresent()) {
       closures.keySet().stream().map(index.definitionNodes::get).filter(x -> x != null).forEach(closureNode -> {
@@ -140,7 +139,6 @@ public class InstrumentClosures extends RefFileAstVisitor {
   }
 
   public void wrapInterface(Expression node, Map<IndexSymbols.BindingId, List<IndexSymbols.Span>> closures) {
-    AST ast = node.getAST();
     final List<ASTNode> refClosures = closures.entrySet().stream().filter(entry -> {
       final ASTNode definition = index.definitionNodes.get(entry.getKey());
       if (definition == null) {

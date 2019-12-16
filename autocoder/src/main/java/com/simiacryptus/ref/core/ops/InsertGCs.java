@@ -36,7 +36,6 @@ public class InsertGCs extends FileAstVisitor {
 
   @Override
   public void endVisit(MethodDeclaration node) {
-    final AST ast = node.getAST();
     final Block body = node.getBody();
     if (!node.isConstructor()) {
       body.statements().add(0, newGCCall(ast));
