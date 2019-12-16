@@ -24,6 +24,7 @@ import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
@@ -135,11 +136,10 @@ public abstract class AutoCoder {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      compilationUnit.recordModifications();
       final FileAstVisitor astVisitor = visitorFactory.apply(projectInfo, compilationUnit, file);
       compilationUnit.accept(astVisitor);
       try {
-        if (astVisitor.write(true)) {
+        if (astVisitor.writeFinal(true)) {
           logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
           return 1;
         } else {
@@ -157,7 +157,6 @@ public abstract class AutoCoder {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      compilationUnit.recordModifications();
       final FileAstVisitor fileAstVisitor = visitor.apply(projectInfo, compilationUnit, file);
       compilationUnit.accept(fileAstVisitor);
       if (fileAstVisitor.revert()) {

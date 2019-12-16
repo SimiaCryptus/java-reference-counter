@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -38,7 +39,7 @@ public class IndexSymbols extends FileAstVisitor {
   private boolean verbose = true;
 
   public IndexSymbols(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, SymbolIndex index) {
-    super(projectInfo, compilationUnit, file);
+    super(projectInfo, compilationUnit, file, false);
     this.index = index;
   }
 
@@ -107,6 +108,15 @@ public class IndexSymbols extends FileAstVisitor {
         if (isVerbose()) info(node, "Other fragment type %s", fragment.getClass().getSimpleName());
       }
     }
+  }
+
+  protected ASTMapping reparseAndAlign() {
+    return null;
+  }
+
+  @Override
+  public boolean write(boolean format) throws IOException {
+    return false;
   }
 
   @Override

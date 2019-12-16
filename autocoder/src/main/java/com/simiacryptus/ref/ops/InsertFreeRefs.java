@@ -36,8 +36,6 @@ import java.util.Optional;
 @RefIgnore
 public class InsertFreeRefs extends RefFileAstVisitor {
 
-  final ArrayList<Runnable> onComplete = new ArrayList<>();
-
   public InsertFreeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
@@ -276,6 +274,7 @@ public class InsertFreeRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(@NotNull MethodInvocation node) {
     if (skip(node)) return;
+    //astRewrite.track(node);
     if (Arrays.asList("addRef", "addRefs").contains(node.getName().toString())) return;
     final IMethodBinding methodBinding = resolveMethodBinding(node);
     if (null == methodBinding) {
@@ -283,11 +282,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
       return;
     }
     apply(node, methodBinding.getReturnType());
-  }
-
-  @Override
-  public final void endVisit(CompilationUnit node) {
-    onComplete.forEach(Runnable::run);
   }
 
   private void freeRefs(@NotNull Expression node, ITypeBinding typeBinding) {
@@ -340,8 +334,6 @@ public class InsertFreeRefs extends RefFileAstVisitor {
     statements.add(lineNumber+1, ast.newExpressionStatement(newFreeRef(ast.newSimpleName(identifier), typeBinding)));
     statements.add(lineNumber, newLocalVariable(identifier, node, type));
     info(node, "Wrapped method call with freeref at line %s", lineNumber);
-    onComplete.add(0, () -> {
-    });
   }
 
   private Type getType(@NotNull Expression node, ITypeBinding typeBinding, boolean isDeclaration) {

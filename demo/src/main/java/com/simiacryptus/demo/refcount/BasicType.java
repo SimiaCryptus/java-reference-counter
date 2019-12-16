@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The type Basic type.
  */
-public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCountingBase
+public class BasicType extends ReferenceCountingBase
     implements Comparable<BasicType> {
   /**
    * The Label.
@@ -61,9 +61,7 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
 
   @Override
   public int compareTo(@NotNull BasicType o) {
-    int temp3910 = this.label.compareTo(o.label);
-    o.freeRef();
-    return temp3910;
+    return this.label.compareTo(o.label);
   }
 
   @RefIgnore
@@ -86,7 +84,7 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
    * @return the self
    */
   public BasicType getSelf() {
-    return this.addRef();
+    return this;
   }
 
   /**
@@ -132,20 +130,6 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
    * @return the wrapper type
    */
   public WrapperType<BasicType> wrap() {
-    return new WrapperType<>(this.addRef());
-  }
-
-  public @Override BasicType addRef() {
-    return (BasicType) super.addRef();
-  }
-
-  public static BasicType[] addRefs(BasicType[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
-        .toArray((x) -> new BasicType[x]);
-  }
-
-  public static BasicType[][] addRefs(BasicType[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
-        .toArray((x) -> new BasicType[x][]);
+    return new WrapperType<>(this);
   }
 }
