@@ -34,9 +34,7 @@ public class SimpleContainer extends ReferenceCountingBase {
    * Instantiates a new Simple container.
    */
   public SimpleContainer() {
-    {
-		value = new BasicType();
-	}
+    value = new BasicType();
   }
 
   /**
@@ -48,7 +46,8 @@ public class SimpleContainer extends ReferenceCountingBase {
     this.value = value;
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 

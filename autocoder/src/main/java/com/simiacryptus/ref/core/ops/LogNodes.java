@@ -20,14 +20,12 @@
 package com.simiacryptus.ref.core.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-@RefIgnore
 public class LogNodes extends FileAstVisitor {
 
   public LogNodes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {

@@ -20,7 +20,6 @@
 package com.simiacryptus.ref.core.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -28,12 +27,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-@RefIgnore
-public class IndexSymbols extends FileAstVisitor {
+public class IndexSymbols extends FileAstScanner {
 
   SymbolIndex index;
   private boolean verbose = true;
@@ -110,15 +107,6 @@ public class IndexSymbols extends FileAstVisitor {
     }
   }
 
-  protected ASTMapping reparseAndAlign() {
-    return null;
-  }
-
-  @Override
-  public boolean write(boolean format) throws IOException {
-    return false;
-  }
-
   @Override
   public void endVisit(QualifiedName node) {
     final ITypeBinding qualifierType = resolveTypeBinding(node.getQualifier());
@@ -143,8 +131,7 @@ public class IndexSymbols extends FileAstVisitor {
 
   @NotNull
   public ContextLocation getContextLocation(ASTNode node, Function<ASTNode, Span> locator) {
-    final LinkedHashMap<BindingId, Span> context = context(node, locator);
-    return new ContextLocation(locator.apply(node), context);
+    return new ContextLocation(locator.apply(node), context(node, locator));
   }
 
   private void indexDef(ASTNode node, IBinding binding) {
@@ -156,7 +143,6 @@ public class IndexSymbols extends FileAstVisitor {
     final ContextLocation replaced = index.definitionLocations.put(bindingId, contextLocation);
     if (null != replaced) {
       warn(node, "Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location);
-      //throw new RuntimeException(String.format("Duplicate declaration of %s in %s and %s", bindingId, replaced.location, contextLocation.location));
     }
     index.definitionNodes.put(bindingId, node);
   }

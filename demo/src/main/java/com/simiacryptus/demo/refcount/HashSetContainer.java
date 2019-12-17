@@ -44,10 +44,10 @@ public class HashSetContainer extends ReferenceCountingBase {
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[] {}).length) {
+      if (values.size() != values.toArray(new BasicType[]{}).length) {
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[] {});
+      values.toArray(new BasicType[]{});
     });
   }
 
@@ -126,7 +126,8 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

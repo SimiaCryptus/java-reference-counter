@@ -27,8 +27,6 @@ import java.util.PrimitiveIterator;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import com.simiacryptus.ref.wrappers.RefPrimitiveIterator;
-import com.simiacryptus.ref.wrappers.RefSpliterator;
 
 /**
  * The type Linked list container.
@@ -52,7 +50,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length) {
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
     }
   }
@@ -95,7 +93,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
-    final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
+    final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
     values.addAll(
         java.util.Arrays.asList(basicTypeN));
     values.add(1, basicType1);
@@ -878,7 +876,8 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testLongStream();
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 }

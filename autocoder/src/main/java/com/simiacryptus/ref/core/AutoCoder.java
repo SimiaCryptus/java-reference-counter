@@ -21,10 +21,9 @@ package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
-import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
@@ -41,20 +40,8 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Optional;
 
-@RefIgnore
-public abstract class AutoCoder {
+public abstract class AutoCoder extends BaseMojo {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
-  @NotNull
-  protected final ProjectInfo projectInfo;
-
-  public AutoCoder(ProjectInfo projectInfo) {
-    try {
-      this.projectInfo = projectInfo;
-    } catch (@NotNull Exception e) {
-      throw new RuntimeException(e);
-    }
-
-  }
 
   @NotNull
   public static Field getField(@NotNull Class<?> nodeClass, String name) {
@@ -121,6 +108,10 @@ public abstract class AutoCoder {
     return prevSrc;
   }
 
+  public void execute() throws MojoExecutionException {
+    rewrite();
+  }
+
   @NotNull
   protected IndexSymbols.SymbolIndex getSymbolIndex() {
     final IndexSymbols.SymbolIndex index = new IndexSymbols.SymbolIndex();
@@ -128,15 +119,12 @@ public abstract class AutoCoder {
     return index;
   }
 
-  @Nonnull
-  public abstract void rewrite();
-
   protected int rewrite(@NotNull VisitorFactory visitorFactory) {
-    return projectInfo.parse().entrySet().stream().mapToInt(entry -> {
+    return getProjectInfo().parse().entrySet().stream().mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      final FileAstVisitor astVisitor = visitorFactory.apply(projectInfo, compilationUnit, file);
+      final FileAstVisitor astVisitor = visitorFactory.apply(getProjectInfo(), compilationUnit, file);
       compilationUnit.accept(astVisitor);
       try {
         if (astVisitor.writeFinal(true)) {
@@ -152,12 +140,15 @@ public abstract class AutoCoder {
     }).sum();
   }
 
+  @Nonnull
+  public abstract void rewrite();
+
   protected void scan(@NotNull VisitorFactory visitor) {
-    projectInfo.parse().entrySet().stream().forEach(entry -> {
+    getProjectInfo().parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      final FileAstVisitor fileAstVisitor = visitor.apply(projectInfo, compilationUnit, file);
+      final FileAstVisitor fileAstVisitor = visitor.apply(getProjectInfo(), compilationUnit, file);
       compilationUnit.accept(fileAstVisitor);
       if (fileAstVisitor.revert()) {
         logger.warn("File modified in scan: " + file);

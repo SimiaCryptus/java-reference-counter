@@ -19,7 +19,6 @@
 
 package com.simiacryptus.ref.core;
 
-import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.dom.AST;
@@ -35,7 +34,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-@RefIgnore
 public class ProjectInfo {
   private final String projectRoot;
   private final String[] sourcepathEntries;

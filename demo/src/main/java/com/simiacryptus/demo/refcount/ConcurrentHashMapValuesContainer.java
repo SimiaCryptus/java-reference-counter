@@ -22,7 +22,6 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
-import com.simiacryptus.ref.wrappers.RefMap;
 
 /**
  * The type Concurrent hash map values container.
@@ -118,17 +117,17 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       values.put(2, new BasicType());
       final java.util.concurrent.ConcurrentHashMap<Integer, BasicType> closureMap = new java.util.concurrent.ConcurrentHashMap<>();
       final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<Map.Entry<Integer, BasicType>>) lambdaParameter -> {
-	    if (1 == ((int) lambdaParameter.getKey())) {
-	      if (null == lambdaParameter.getValue()) {
-	        throw new AssertionError();
-	      }
-	    } else {
-	      if (null == lambdaParameter.getValue()) {
-	        return;
-	      }
-	    }
-	    closureMap.put(lambdaParameter.getKey(), lambdaParameter.getValue());
-	  };
+        if (1 == ((int) lambdaParameter.getKey())) {
+          if (null == lambdaParameter.getValue()) {
+            throw new AssertionError();
+          }
+        } else {
+          if (null == lambdaParameter.getValue()) {
+            return;
+          }
+        }
+        closureMap.put(lambdaParameter.getKey(), lambdaParameter.getValue());
+      };
       values
           .entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();
@@ -138,27 +137,28 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       values.put(2, new BasicType());
       final java.util.concurrent.ConcurrentHashMap<Integer, BasicType> closureMap = new java.util.concurrent.ConcurrentHashMap<>();
       final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new java.util.function.Consumer<Map.Entry<Integer, BasicType>>() {
-	    @Override
-	    public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
-	      if (1 == ((int) anonymousParameter.getKey())) {
-	        if (null == anonymousParameter.getValue()) {
-	          throw new AssertionError();
-	        }
-	      } else {
-	        if (null == anonymousParameter.getValue()) {
-	          return;
-	        }
-	      }
-	      closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
-	    }
-	  };
+        @Override
+        public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
+          if (1 == ((int) anonymousParameter.getKey())) {
+            if (null == anonymousParameter.getValue()) {
+              throw new AssertionError();
+            }
+          } else {
+            if (null == anonymousParameter.getValue()) {
+              return;
+            }
+          }
+          closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
+        }
+      };
       values
           .entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 

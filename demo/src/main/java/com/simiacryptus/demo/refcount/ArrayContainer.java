@@ -39,7 +39,8 @@ public class ArrayContainer extends ReferenceCountingBase {
     this.values = values;
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -69,8 +70,8 @@ public class ArrayContainer extends ReferenceCountingBase {
     java.util.Arrays.stream(this.values)
         .forEach(
             (java.util.function.Consumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
-			  x.setValue(x.getValue() + right.getValue());
-			});
+              x.setValue(x.getValue() + right.getValue());
+            });
   }
 
   /**

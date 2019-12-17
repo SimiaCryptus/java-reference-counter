@@ -25,10 +25,10 @@
         <groupId>com.simiacryptus</groupId>
         <artifactId>java-parent</artifactId>
         <version>1.8.1-SNAPSHOT</version>
-        <relativePath>../../java-parent</relativePath>
+        <relativePath>../../mvn-parents/java-parent</relativePath>
     </parent>
 
-    <artifactId>refcount-util-java</artifactId>
+    <artifactId>autocoder-core</artifactId>
     <description>Java 8 Reference Counting Code Utilities</description>
     <url>https://simiacryptus.github.io/${github.project}/</url>
     <packaging>maven-plugin</packaging>
@@ -115,17 +115,6 @@
             <version>${maven.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.simiacryptus</groupId>
-            <artifactId>refcount-core</artifactId>
-            <version>1.8.1-SNAPSHOT</version>
-        </dependency>
-		<!--
-        <dependency>
-            <groupId>com.simiacryptus</groupId>
-            <artifactId>java-util</artifactId>
-        </dependency>
-		-->
     </dependencies>
 
     <build>

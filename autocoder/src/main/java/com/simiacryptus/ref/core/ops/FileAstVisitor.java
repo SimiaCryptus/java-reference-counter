@@ -21,7 +21,6 @@ package com.simiacryptus.ref.core.ops;
 
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
@@ -40,16 +39,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RefIgnore
 public abstract class FileAstVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(FileAstVisitor.class);
   @NotNull
@@ -61,7 +57,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
   //  protected final ASTRewrite astRewrite;
   protected final AST ast;
   private ASTMapping reparsed = null;
-  private String tempVarPrefix = "temp";
 
   public FileAstVisitor(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     this(projectInfo, compilationUnit, file, true);
@@ -148,6 +143,45 @@ public abstract class FileAstVisitor extends ASTVisitor {
 
   protected final static ITypeBinding resolveBinding(TypeDeclaration typeDeclaration) {
     return typeDeclaration.resolveBinding();
+  }
+
+  public static ASTMapping align(ASTNode from, ASTNode to) {
+    final ASTMapping mapping = new ASTMapping();
+    if (!from.getClass().equals(to.getClass())) {
+      final CompilationUnit root = (CompilationUnit) to.getRoot();
+      mapping.errors.add(String.format("%s does not match class of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
+      mapping.mismatches.put(from, to);
+    } else {
+      final List<ASTNode> fromChildren = children(from);
+      final List<ASTNode> toChildren = children(to);
+      if (fromChildren.size() != toChildren.size()) {
+        final CompilationUnit root = (CompilationUnit) to.getRoot();
+        mapping.errors.add(String.format("%s does not match size of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
+        mapping.mismatches.put(from, to);
+      } else if (fromChildren.isEmpty() && !from.toString().equals(to.toString())) {
+        final CompilationUnit root = (CompilationUnit) to.getRoot();
+        mapping.errors.add(String.format("%s does not match content of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
+        mapping.mismatches.put(from, to);
+      } else {
+        mapping.matches.put(from, to);
+        for (int i = 0; i < fromChildren.size(); i++) {
+          mapping.putAll(align(fromChildren.get(i), toChildren.get(i)));
+        }
+      }
+    }
+    return mapping;
+  }
+
+  public static List<ASTNode> children(ASTNode node) {
+    Collection<StructuralPropertyDescriptor> properties = new TreeSet<>(Comparator.comparing(x -> x.toString()));
+    properties.addAll(invokeMethod(node, "internalStructuralPropertiesForType", AST.JLS11));
+    return ((Stream<ASTNode>) properties.stream().flatMap(property -> {
+      if (property.isChildListProperty()) {
+        return ((List) node.getStructuralProperty(property)).stream();
+      } else {
+        return Stream.of(node.getStructuralProperty(property));
+      }
+    }).filter(x -> x instanceof ASTNode)).collect(Collectors.toList());
   }
 
   @NotNull
@@ -474,11 +508,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return statements;
   }
 
-  @NotNull
-  private String getLogPrefix(@Nonnull ASTNode node, @Nonnull StackTraceElement caller) {
-    return "(" + toString(caller) + ") (" + getLocation(node) + ") - ";
-  }
-
   protected final LambdaExpression getLambda(ASTNode node) {
     if (node == null) return null;
     if (node instanceof LambdaExpression) return (LambdaExpression) node;
@@ -495,8 +524,17 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return file.getName() + ":" + lineNumber;
   }
 
+  @NotNull
+  private String getLogPrefix(@Nonnull ASTNode node, @Nonnull StackTraceElement caller) {
+    return "(" + toString(caller) + ") (" + getLocation(node) + ") - ";
+  }
+
   public ASTMapping getReparsed() {
     return reparsed;
+  }
+
+  protected void setReparsed(ASTMapping reparsed) {
+    this.reparsed = reparsed;
   }
 
   @NotNull
@@ -536,14 +574,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
       }
     }.setVerbose(false));
     return lambdaIndex;
-  }
-
-  private static Map<File, AtomicInteger> identifierCounters = new HashMap<>();
-
-  protected final String getTempIdentifier(ASTNode node) {
-    final String id = String.format(tempVarPrefix + "%04d", (long) identifierCounters.computeIfAbsent(file, x -> new AtomicInteger(0)).incrementAndGet());
-    info(1, node, "Creating %s", id);
-    return id;
   }
 
   @Nullable
@@ -756,10 +786,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return isField;
   }
 
-  protected final boolean isTempIdentifier(SimpleName name) {
-    return Pattern.matches(tempVarPrefix + "\\d{0,4}", name.toString());
-  }
-
   protected final StatementOfInterest lastMention(@NotNull Block block, SimpleName variable, int startAt) {
     return lastMention(block, variable, startAt, block.statements().size(), 2);
   }
@@ -834,65 +860,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
     }
   }
 
-  public static class ASTMapping {
-    final HashMap<ASTNode, ASTNode> matches = new HashMap<>();
-    final HashMap<ASTNode, ASTNode> mismatches = new HashMap<>();
-    final List<String> errors = new ArrayList<>();
-
-    public ASTMapping putAll(ASTMapping other) {
-      matches.putAll(other.matches);
-      mismatches.putAll(other.mismatches);
-      errors.addAll(other.errors);
-      return this;
-    }
-  }
-
-  public static ASTMapping align(ASTNode from, ASTNode to) {
-    final ASTMapping mapping = new ASTMapping();
-    if (!from.getClass().equals(to.getClass())) {
-      final CompilationUnit root = (CompilationUnit) to.getRoot();
-      mapping.errors.add(String.format("%s does not match class of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
-      mapping.mismatches.put(from, to);
-    } else {
-      final List<ASTNode> fromChildren = children(from);
-      final List<ASTNode> toChildren = children(to);
-      if (fromChildren.size() != toChildren.size()) {
-        final CompilationUnit root = (CompilationUnit) to.getRoot();
-        mapping.errors.add(String.format("%s does not match size of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
-        mapping.mismatches.put(from, to);
-      } else if (fromChildren.isEmpty() && !from.toString().equals(to.toString())) {
-        final CompilationUnit root = (CompilationUnit) to.getRoot();
-        mapping.errors.add(String.format("%s does not match content of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
-        mapping.mismatches.put(from, to);
-      } else {
-        mapping.matches.put(from, to);
-        for (int i = 0; i < fromChildren.size(); i++) {
-          mapping.putAll(align(fromChildren.get(i), toChildren.get(i)));
-        }
-      }
-    }
-    return mapping;
-  }
-
-  public static List<ASTNode> children(ASTNode node) {
-    Collection<StructuralPropertyDescriptor> properties = new TreeSet<>(Comparator.comparing(x -> x.toString()));
-    properties.addAll(invokeMethod(node, "internalStructuralPropertiesForType", AST.JLS11));
-    return ((Stream<ASTNode>) properties.stream().flatMap(property -> {
-      if (property.isChildListProperty()) {
-        return ((List) node.getStructuralProperty(property)).stream();
-      } else {
-        return Stream.of(node.getStructuralProperty(property));
-      }
-    }).filter(x -> x instanceof ASTNode)).collect(Collectors.toList());
-  }
-
-  protected ASTMapping reparseAndAlign() {
-    final CompilationUnit reparse = reparse();
-    final ASTMapping align = align(compilationUnit, reparse);
-    setReparsed(align);
-    return align;
-  }
-
   protected final CompilationUnit reparse() {
     logger.info(String.format("Writing intermediate changes to %s", file));
     try {
@@ -901,6 +868,13 @@ public abstract class FileAstVisitor extends ASTVisitor {
       throw new RuntimeException(e);
     }
     return projectInfo.read(file).values().iterator().next();
+  }
+
+  protected ASTMapping reparseAndAlign() {
+    final CompilationUnit reparse = reparse();
+    final ASTMapping align = align(compilationUnit, reparse);
+    setReparsed(align);
+    return align;
   }
 
   protected final void replace(ASTNode child, ASTNode newChild) {
@@ -1007,10 +981,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return true;
   }
 
-  protected void setReparsed(ASTMapping reparsed) {
-    this.reparsed = reparsed;
-  }
-
   private <T extends ASTNode> boolean strEquals(@NotNull T a, @NotNull T b) {
     return b.toString().replaceAll("\\s+", " ").equals(a.toString().replaceAll("\\s+", " "));
   }
@@ -1045,13 +1015,27 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected final void warn(int frames, ASTNode node, String formatString, Object... args) {
-    warnRaw(frames+1, node, String.format(formatString, args));
+    warnRaw(frames + 1, node, String.format(formatString, args));
   }
 
   protected void warnRaw(int frames, ASTNode node, String format) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
     logger.warn(getLogPrefix(node, caller) + format);
+  }
+
+  public boolean write(boolean format) throws IOException {
+    Document document = new Document(initialContent);
+    final Hashtable<String, String> options = JavaCore.getOptions();
+    try {
+      compilationUnit.rewrite(document, options).apply(document);
+    } catch (BadLocationException e) {
+      throw new RuntimeException(e);
+    }
+    final String finalSrc = document.get();
+    if (initialContent.equals(finalSrc)) return false;
+    FileUtils.write(file, format ? AutoCoder.format(finalSrc) : finalSrc, "UTF-8");
+    return true;
   }
 
   public boolean writeFinal(boolean format) throws IOException {
@@ -1079,18 +1063,43 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return !initialWrite.equals(initialContent);
   }
 
-  public boolean write(boolean format) throws IOException {
-    Document document = new Document(initialContent);
-    final Hashtable<String, String> options = JavaCore.getOptions();
-    try {
-      compilationUnit.rewrite(document, options).apply(document);
-    } catch (BadLocationException e) {
-      throw new RuntimeException(e);
+  public static class ASTMapping {
+    final HashMap<ASTNode, ASTNode> matches = new HashMap<>();
+    final HashMap<ASTNode, ASTNode> mismatches = new HashMap<>();
+    final List<String> errors = new ArrayList<>();
+
+    public ASTMapping putAll(ASTMapping other) {
+      matches.putAll(other.matches);
+      mismatches.putAll(other.mismatches);
+      errors.addAll(other.errors);
+      return this;
     }
-    final String finalSrc = document.get();
-    if (initialContent.equals(finalSrc)) return false;
-    FileUtils.write(file, format ? AutoCoder.format(finalSrc) : finalSrc, "UTF-8");
-    return true;
   }
 
+  public static class StatementOfInterest {
+    public final int line;
+    public final Statement statement;
+    public final Block block;
+
+    public StatementOfInterest(@Nonnull Statement statement, int line) {
+      this.statement = statement;
+      this.block = (Block) this.statement.getParent();
+      this.line = line;
+    }
+
+    public boolean isComplexReturn() {
+      if (!isReturn()) return false;
+      return !(((ReturnStatement) statement).getExpression() instanceof SimpleName);
+    }
+
+    public boolean isReturn() {
+      return statement instanceof ReturnStatement;
+    }
+
+    public boolean isReturnValue() {
+      if (!isReturn()) return false;
+      return (((ReturnStatement) statement).getExpression() != null);
+    }
+
+  }
 }

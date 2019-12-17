@@ -54,7 +54,8 @@ public class BasicType extends ReferenceCountingBase
     this.label = label;
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     value = -1;
     super._free();
   }

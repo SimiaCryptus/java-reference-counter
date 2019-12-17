@@ -57,7 +57,8 @@ public class TestOperations extends ReferenceCountingBase {
     testOperations2424.run();
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -69,7 +70,7 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void test(BasicType datum1) {
     testList();
-    testArray(new BasicType[] { datum1 });
+    testArray(new BasicType[]{datum1});
     testSet();
     testDeque();
     testMap();
@@ -77,10 +78,8 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void testArray(BasicType[] values) {
     {
-      {
-		this.arrayContainer = new ArrayContainer(
-		    values);
-	}
+      this.arrayContainer = new ArrayContainer(
+          values);
       for (int i = 0; i < count; i++) {
         arrayContainer.test();
       }
@@ -106,9 +105,7 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void testDeque() {
     {
-      {
-		this.deququeContainer = new DeququeContainer();
-	}
+      this.deququeContainer = new DeququeContainer();
       for (int i = 0; i < count; i++) {
         deququeContainer.test();
       }
@@ -117,17 +114,13 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void testList() {
     {
-      {
-		this.arrayListContainer = new ArrayListContainer();
-	}
+      this.arrayListContainer = new ArrayListContainer();
       for (int i = 0; i < count; i++) {
         arrayListContainer.test();
       }
     }
     {
-      {
-		this.linkedListContainer = new LinkedListContainer();
-	}
+      this.linkedListContainer = new LinkedListContainer();
       for (int i = 0; i < count; i++) {
         linkedListContainer.test();
       }
@@ -136,25 +129,19 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void testMap() {
     {
-      {
-		this.hashMapValuesContainer = new HashMapValuesContainer();
-	}
+      this.hashMapValuesContainer = new HashMapValuesContainer();
       for (int i = 0; i < count; i++) {
         hashMapValuesContainer.test();
       }
     }
     {
-      {
-		this.linkedHashMapValuesContainer = new LinkedHashMapValuesContainer();
-	}
+      this.linkedHashMapValuesContainer = new LinkedHashMapValuesContainer();
       for (int i = 0; i < count; i++) {
         linkedHashMapValuesContainer.test();
       }
     }
     {
-      {
-		this.concurrentHashMapValuesContainer = new ConcurrentHashMapValuesContainer();
-	}
+      this.concurrentHashMapValuesContainer = new ConcurrentHashMapValuesContainer();
       for (int i = 0; i < count; i++) {
         concurrentHashMapValuesContainer.test();
       }
@@ -163,17 +150,13 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void testSet() {
     {
-      {
-		this.hashSetContainer = new HashSetContainer();
-	}
+      this.hashSetContainer = new HashSetContainer();
       for (int i = 0; i < count; i++) {
         hashSetContainer.test();
       }
     }
     {
-      {
-		this.treeSetContainer = new TreeSetContainer();
-	}
+      this.treeSetContainer = new TreeSetContainer();
       for (int i = 0; i < count; i++) {
         treeSetContainer.test();
       }
@@ -181,9 +164,7 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testSimpleContainer() {
-    {
-		this.simpleContainer = new SimpleContainer();
-	}
+    this.simpleContainer = new SimpleContainer();
     for (int i = 0; i < count; i++) {
       simpleContainer.test();
     }
