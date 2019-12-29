@@ -25,13 +25,17 @@ import org.apache.maven.plugins.annotations.Mojo;
 import javax.annotation.Nonnull;
 
 @Mojo(name = "printAST")
-public class PrintAST extends AutoCoder {
+public class PrintAST extends AutoCoderMojo {
 
   @Override
-  @Nonnull
-  public void rewrite() {
-    rewrite(LogNodes::new);
+  public AutoCoder getAutoCoder(ProjectInfo projectInfo) {
+    return new AutoCoder(projectInfo) {
+      @Nonnull
+      @Override
+      public void rewrite() {
+        rewrite(LogNodes::new);
+      }
+    };
   }
-
 
 }

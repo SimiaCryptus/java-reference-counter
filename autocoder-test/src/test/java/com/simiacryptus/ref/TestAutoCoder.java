@@ -38,17 +38,8 @@ public class TestAutoCoder {
   }
 
   @Test
-  public void print() {
-    new PrintAST() {
-      @Override
-      public @NotNull ProjectInfo getProjectInfo() {
-        try {
-          return TestAutoCoder.this.getProjectInfo();
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }.rewrite();
+  public void print() throws ComponentLookupException, PlexusContainerException, ProjectBuildingException, DependencyResolutionException, IOException {
+    new PrintAST().getAutoCoder(TestAutoCoder.this.getProjectInfo()).rewrite();
   }
 
 }

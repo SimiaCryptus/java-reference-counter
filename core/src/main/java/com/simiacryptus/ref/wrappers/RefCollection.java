@@ -25,10 +25,9 @@ import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * The interface Ref collection.
@@ -83,11 +82,7 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
   default RefSpliterator<T> spliterator() {
     assertAlive();
     final Spliterator<T> spliterator = Spliterators.spliterator(getInner(), 0);
-    if (spliterator instanceof RefSpliterator) {
-      return ((RefSpliterator<T>) spliterator).addRef();
-    } else {
-      return new RefSpliterator<>(spliterator, size()).track(this.addRef());
-    }
+    return new RefSpliterator<>(spliterator, size()).track(this.addRef());
   }
 
   @Override
@@ -96,4 +91,18 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
     return RefStreamSupport.stream(spliterator(), false);
   }
 
+  default boolean removeIf(Predicate<? super T> filter) {
+    Objects.requireNonNull(filter);
+    boolean removed = false;
+    final Iterator<T> each = getInner().iterator();
+    while (each.hasNext()) {
+      final T next = each.next();
+      if (filter.test(RefUtil.addRef(next))) {
+        RefUtil.freeRef(next);
+        each.remove();
+        removed = true;
+      }
+    }
+    return removed;
+  }
 }

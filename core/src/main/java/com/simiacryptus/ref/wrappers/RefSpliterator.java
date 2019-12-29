@@ -62,7 +62,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   public RefSpliterator(Spliterator<T> inner, long size) {
     if (inner instanceof RefSpliterator) {
       this.inner = ((RefSpliterator) inner).getInner();
-      assert !(this.inner instanceof ReferenceCounting);
+      assert !(this.inner instanceof RefSpliterator);
       this.size = size;
     } else {
       this.inner = inner;
@@ -86,6 +86,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   protected void _free() {
     list.forEach(ReferenceCounting::freeRef);
     list.clear();
+    RefUtil.freeRef(this.inner);
     //RefUtil.freeInternals(inner);
     super._free();
   }
@@ -126,7 +127,12 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   @Override
   public boolean tryAdvance(@NotNull Consumer<? super T> action) {
-    return getInner().tryAdvance(t -> action.accept(RefUtil.addRef(t)));
+    return getInner().tryAdvance(t -> action.accept(getRef(t)));
+  }
+
+  @Nullable
+  protected T getRef(T t) {
+    return RefUtil.addRef(t);
   }
 
   @Nullable

@@ -49,7 +49,6 @@ public class RefCollectors {
         },
         (RefArrayList<T> left, RefArrayList<T> right) -> {
           left.addAll(right);
-          right.freeRef();
           return left;
         },
         Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH))

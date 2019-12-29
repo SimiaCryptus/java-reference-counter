@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -49,7 +50,7 @@ public class RefArrayList<T> extends RefAbstractList<T> {
    *
    * @param list the list
    */
-  public RefArrayList(@NotNull List<T> list) {
+  public RefArrayList(@NotNull Collection<T> list) {
     this();
     addAll(list);
   }

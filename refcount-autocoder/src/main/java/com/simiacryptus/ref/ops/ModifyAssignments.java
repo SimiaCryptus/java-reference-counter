@@ -27,9 +27,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 
 @RefIgnore
-public class ModifyFieldSets extends RefFileAstVisitor {
+public class ModifyAssignments extends RefFileAstVisitor {
 
-  public ModifyFieldSets(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public ModifyAssignments(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
@@ -38,18 +38,28 @@ public class ModifyFieldSets extends RefFileAstVisitor {
     final Expression leftHandSide = assignment.getLeftHandSide();
     final boolean isFieldSet = (leftHandSide instanceof FieldAccess) ||
         ((leftHandSide instanceof SimpleName) && isField((SimpleName) leftHandSide));
+    final boolean isArraySet = (leftHandSide instanceof ArrayAccess);
     final boolean isFinal;
-    if (leftHandSide instanceof FieldAccess) {
-      final IVariableBinding fieldBinding = resolveFieldBinding((FieldAccess) leftHandSide);
-      if (null == fieldBinding) {
-        warn(assignment, "Unresolved binding: %s", leftHandSide);
-        return;
+    if (isFieldSet) {
+      if(leftHandSide instanceof SimpleName) {
+        final IBinding binding = resolveBinding((SimpleName) leftHandSide);
+        if (null == binding) {
+          warn(assignment, "Unresolved binding: %s", leftHandSide);
+          return;
+        }
+        isFinal = 0 != (binding.getModifiers() & Modifier.FINAL);
+      } else {
+        final IVariableBinding binding = resolveFieldBinding((FieldAccess) leftHandSide);
+        if (null == binding) {
+          warn(assignment, "Unresolved binding: %s", leftHandSide);
+          return;
+        }
+        isFinal = 0 != (binding.getModifiers() & Modifier.FINAL);
       }
-      isFinal = 0 != (fieldBinding.getModifiers() & Modifier.FINAL);
     } else {
       isFinal = false;
     }
-    if (isFieldSet) {
+    if (isFieldSet || isArraySet) {
       final ITypeBinding typeBinding = resolveTypeBinding(leftHandSide);
       if (null == typeBinding) {
         warn(assignment, "Unresolved binding: %s", typeBinding);
@@ -59,9 +69,9 @@ public class ModifyFieldSets extends RefFileAstVisitor {
       final ASTNode parent = assignment.getParent();
       if (parent instanceof ExpressionStatement) {
         final ExpressionStatement expressionStatement = (ExpressionStatement) parent;
-        final ASTNode parent2 = expressionStatement.getParent();
-        if (parent2 instanceof Block) {
-          final Block block = (Block) parent2;
+        final ASTNode statementParent = expressionStatement.getParent();
+        if (statementParent instanceof Block) {
+          final Block block = (Block) statementParent;
           final int lineNumber = block.statements().indexOf(expressionStatement);
           final Expression rightHandSide = assignment.getRightHandSide();
           if (rightHandSide instanceof Name) {

@@ -23,12 +23,12 @@ import com.simiacryptus.ref.lang.*;
 import com.simiacryptus.ref.wrappers.RefStream.IdentityWrapper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
-import java.util.OptionalDouble;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.DoubleStream;
+import java.util.stream.LongStream;
 
 /**
  * The type Ref double stream.
@@ -37,7 +37,7 @@ import java.util.stream.DoubleStream;
 @RefIgnore
 public class RefDoubleStream implements DoubleStream {
   private final DoubleStream inner;
-  private final List<IdentityWrapper<ReferenceCounting>> refs;
+  private final Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
   /**
@@ -46,10 +46,10 @@ public class RefDoubleStream implements DoubleStream {
    * @param stream the stream
    */
   RefDoubleStream(DoubleStream stream) {
-    this(stream, new ArrayList<>(), new ArrayList<>());
+    this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
-      this.refs.forEach(x -> x.inner.freeRef());
+      RefStream.freeAll(this.refs);
       this.lambdas.clear();
     });
   }
@@ -61,7 +61,7 @@ public class RefDoubleStream implements DoubleStream {
    * @param lambdas the lambdas
    * @param refs    the refs
    */
-  RefDoubleStream(DoubleStream stream, List<ReferenceCounting> lambdas, List<IdentityWrapper<ReferenceCounting>> refs) {
+  RefDoubleStream(DoubleStream stream, List<ReferenceCounting> lambdas, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
@@ -210,12 +210,7 @@ public class RefDoubleStream implements DoubleStream {
   }
 
   private <U> U getRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      if (!refs.remove(new IdentityWrapper(u))) {
-        RefUtil.addRef(u);
-      }
-    }
-    return u;
+    return RefStream.getRef(u, this.refs);
   }
 
   @Override
@@ -352,10 +347,7 @@ public class RefDoubleStream implements DoubleStream {
   }
 
   private <U> U storeRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
-    }
-    return u;
+    return RefStream.storeRef(u, refs);
   }
 
   @Override
@@ -389,6 +381,10 @@ public class RefDoubleStream implements DoubleStream {
   @Override
   public RefDoubleStream unordered() {
     return new RefDoubleStream(inner.unordered(), lambdas, refs);
+  }
+
+  public static RefDoubleStream concat(RefDoubleStream a, RefDoubleStream b) {
+    return new RefDoubleStream(DoubleStream.concat(a.inner,b.inner));
   }
 
 }

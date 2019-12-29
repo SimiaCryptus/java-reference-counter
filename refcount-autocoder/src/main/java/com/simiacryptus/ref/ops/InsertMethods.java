@@ -81,7 +81,20 @@ public class InsertMethods extends RefFileAstVisitor {
     }
     if (derives(typeBinding, ReferenceCounting.class)) {
       final List declarations = node.bodyDeclarations();
-      declarations.add(method_free(ast, false, derives(typeBinding, ReferenceCountingBase.class)));
+      final Optional<MethodDeclaration> freeMethod = findMethod(node, "_free");
+      if (!freeMethod.isPresent()) {
+        declarations.add(method_free(ast, false, !derives(typeBinding, ReferenceCountingBase.class)));
+      } else {
+        final MethodDeclaration methodDeclaration = freeMethod.get();
+        final int modifiers = methodDeclaration.getModifiers();
+        if (0 == (modifiers & Modifier.PUBLIC)) {
+          methodDeclaration.modifiers().clear();
+          methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+          if (0 != (modifiers & Modifier.ABSTRACT)) {
+            methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.ABSTRACT_KEYWORD));
+          }
+        }
+      }
     }
   }
 

@@ -39,43 +39,43 @@ public class RemoveRefs extends RefFileAstVisitor {
   }
 
   @Override
-  public void endVisit(@NotNull TypeDeclaration node) {
-    final ITypeBinding typeBinding = FileAstVisitor.resolveBinding(node);
-    if (derives(typeBinding, ReferenceCounting.class)) {
-      removeMethods(node, "addRef");
-      removeMethods(node, "freeRef");
-      //removeMethods(node, "_free");
-      removeMethods(node, "addRefs");
-      removeMethods(node, "freeRefs");
-    }
-  }
-
-  @Override
   public void endVisit(@NotNull final MethodInvocation node) {
     final String methodName = node.getName().toString();
-    final IMethodBinding methodBinding = resolveMethodBinding(node);
-    if (null == methodBinding) {
-      warn(node, "Unresolved method binding %s", node);
-      return;
-    }
-    final String declaringClass = methodBinding.getDeclaringClass().getQualifiedName();
     if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
       Expression subject;
       if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
         subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
-      } else if (declaringClass.equals(RefUtil.class.getCanonicalName())) {
-        subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
       } else {
-        final Expression expression = node.getExpression();
-        if (null == expression) {
-          warn(node, "Naked method call. Cannot remove.");
-          return;
+        if (isRefUtil(node)) {
+          subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
+        } else {
+          final Expression expression = node.getExpression();
+          if (null == expression) {
+            warn(node, "Naked method call. Cannot remove.");
+            return;
+          }
+          subject = copyIfAttached(expression);
         }
-        subject = copyIfAttached(expression);
       }
       info(node, "Removing %s and replacing with %s", methodName, subject);
       //        replace(node, subject);
-      final ASTNode parent = node.getParent();
+      ASTNode parent = node.getParent();
+      if(parent instanceof ConditionalExpression) {
+        final ConditionalExpression conditionalExpression = (ConditionalExpression) parent;
+        if (conditionalExpression.getThenExpression() instanceof NullLiteral) {
+          if (conditionalExpression.getExpression() instanceof InfixExpression) {
+            final InfixExpression infixExpression = (InfixExpression) conditionalExpression.getExpression();
+            if (infixExpression.getLeftOperand().toString().equals(subject.toString())) {
+              if (infixExpression.getRightOperand() instanceof NullLiteral) {
+                if (infixExpression.getOperator().equals(InfixExpression.Operator.EQUALS)) {
+                  replace(conditionalExpression, subject);
+                  parent = conditionalExpression.getParent();
+                }
+              }
+            }
+          }
+        }
+      }
       if (parent instanceof MethodInvocation) {
         final List arguments = ((MethodInvocation) parent).arguments();
         final int index = arguments.indexOf(node);
@@ -118,15 +118,21 @@ public class RemoveRefs extends RefFileAstVisitor {
     }
   }
 
-  @Override
-  public void endVisit(AnonymousClassDeclaration node) {
-    final ITypeBinding typeBinding = resolveBinding(node);
-    if (null == typeBinding) {
-      warn(node, "Unresolved binding");
-      return;
-    }
-    if (derives(typeBinding, ReferenceCounting.class)) {
-      removeMethods(node, "_free");
+  private boolean isRefUtil(@NotNull MethodInvocation node) {
+    final Expression expression = node.getExpression();
+    if(expression instanceof SimpleName) {
+      return ((SimpleName)expression).getFullyQualifiedName().equals("RefUtil");
+    } else if(expression instanceof QualifiedName) {
+      return ((QualifiedName)expression).getFullyQualifiedName().equals(RefUtil.class.getCanonicalName());
+    } else {
+      final IMethodBinding methodBinding = resolveMethodBinding(node);
+      if (null == methodBinding) {
+        warn(node, "Unresolved method binding %s", node);
+        return false;
+      } else {
+        final String declaringClass = methodBinding.getDeclaringClass().getQualifiedName();
+        return declaringClass.equals(RefUtil.class.getCanonicalName());
+      }
     }
   }
 

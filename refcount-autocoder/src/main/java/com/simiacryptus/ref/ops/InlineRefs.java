@@ -98,8 +98,16 @@ public class InlineRefs extends RefFileAstVisitor {
               return;
             }
             if (fragment.getName().toString().equals(node.getExpression().toString())) {
-              info(node, "Inlining %s", fragment.getName());
-              node.setExpression(copyIfAttached((Expression) fragment.getInitializer()));
+              final Expression initializer = fragment.getInitializer();
+              info(node, "Inlining %s initialized by %s", fragment.getName(), initializer.getClass().getSimpleName());
+              if(initializer instanceof ArrayInitializer) {
+                final ArrayCreation arrayCreation = ast.newArrayCreation();
+                arrayCreation.setType(ast.newArrayType(getType(initializer, initializer.resolveTypeBinding().getElementType().getQualifiedName(), false)));
+                arrayCreation.setInitializer(copyIfAttached((ArrayInitializer) initializer));
+                node.setExpression(arrayCreation);
+              } else {
+                node.setExpression(copyIfAttached(initializer));
+              }
               info(previousStatement, "delete %s", previousStatement);
               previousStatement.delete();
             }

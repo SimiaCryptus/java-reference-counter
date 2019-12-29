@@ -26,43 +26,35 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 
 @RefIgnore
 public class TestRefAutoCoder {
-  @Test
-  public void add() {
-    new Insert() {
-      @Override
-      public @NotNull ProjectInfo getProjectInfo() {
-        try {
-          return TestRefAutoCoder.this.getProjectInfo();
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
+  public static class Add {
+    public static void main(String[] args) {
+      try {
+        new com.simiacryptus.ref.Insert.Coder(TestRefAutoCoder.getProjectInfo(), false).rewrite();
+      } catch (Exception e) {
+        e.printStackTrace();
       }
-    }.rewrite();
+    }
+  }
+
+  public static class Remove {
+    public static void main(String[] args) {
+      try {
+        new com.simiacryptus.ref.Remove.Coder(TestRefAutoCoder.getProjectInfo(), false).rewrite();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   @NotNull
-  private ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
+  public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }
 
-  @Test
-  public void remove() {
-    new Remove() {
-      @Override
-      public @NotNull ProjectInfo getProjectInfo() {
-        try {
-          return TestRefAutoCoder.this.getProjectInfo();
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }.rewrite();
-  }
 }

@@ -51,7 +51,19 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
   @Nullable
   public static IMethodBinding getAddRefMethod(@NotNull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
-        method.getName().equals("addRef") && (0 != (method.getModifiers() & Modifier.PUBLIC)) && method.getParameterTypes().length == 0
+        method.getName().equals("addRef")
+            && (0 != (method.getModifiers() & Modifier.PUBLIC))
+            && method.getParameterTypes().length == 0
+    ).findAny().orElse(null);
+  }
+
+  @Nullable
+  public static IMethodBinding getAddRefsMethod(@NotNull ITypeBinding type) {
+    return Arrays.stream(type.getDeclaredMethods()).filter(method ->
+        method.getName().equals("addRefs")
+            && (0 != (method.getModifiers() & Modifier.PUBLIC))
+            && (0 != (method.getModifiers() & Modifier.STATIC))
+            && method.getParameterTypes().length == 1
     ).findAny().orElse(null);
   }
 
@@ -68,7 +80,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
   }
 
   @NotNull
-  protected final IfStatement freeRefStatement(@NotNull ASTNode node, ITypeBinding typeBinding) {
+  protected final Statement freeRefStatement(@NotNull ASTNode node, ITypeBinding typeBinding) {
     if (null == typeBinding) {
       warn(1, node, "Cannot add freeRef (binding not resolved)");
       return null;
@@ -79,7 +91,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
     infixExpression.setRightOperand(copyIfAttached((Expression) node));
     ifStatement.setExpression(infixExpression);
-    ifStatement.setThenStatement(ast.newExpressionStatement(newFreeRef(node, typeBinding)));
+    ifStatement.setThenStatement(newFreeRef(node, typeBinding));
     info(1, node, "Added freeRef");
     return ifStatement;
   }
@@ -122,10 +134,6 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     if (type.isArray()) {
       type = type.getElementType();
     }
-    if (type.isInterface() && !(node instanceof LambdaExpression)) {
-      info(1, node, "Is potentially refcounted interface: %s (%s)", node, type.getQualifiedName());
-      return true;
-    }
     if (derives(type, ReferenceCounting.class)) {
       info(1, node, "Derives ReferenceCounting: %s (%s)", node, type.getQualifiedName());
       return true;
@@ -134,6 +142,10 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       info(1, node, "Derives Map.Entry: %s (%s)", node, type.getQualifiedName());
       return true;
     }
+//    if (type.isInterface() && !(node instanceof LambdaExpression)) {
+//      info(1, node, "Is potentially refcounted interface: %s (%s)", node, type.getQualifiedName());
+//      return true;
+//    }
 //    if (isRefAware(typeBinding)) {
 //      info(1, node, "Marked with @RefAware: %s (%s)", node, type);
 //      return true;
@@ -174,33 +186,32 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     }
   }
 
-  @NotNull
-  protected final MethodInvocation newFreeRef(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
+  protected final Statement newFreeRef(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
       if (derives(typeBinding.getElementType(), ReferenceCounting.class)) {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("freeRefs"));
         methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
         methodInvocation.arguments().add(copyIfAttached(node));
-        return methodInvocation;
+        return ast.newExpressionStatement(methodInvocation);
       } else {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("freeRefs"));
         methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
         methodInvocation.arguments().add(copyIfAttached(node));
-        return methodInvocation;
+        return ast.newExpressionStatement(methodInvocation);
       }
     } else if (derives(typeBinding, ReferenceCounting.class)) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRef"));
       methodInvocation.setExpression(copyIfAttached((Expression) node));
-      return methodInvocation;
+      return ast.newExpressionStatement(methodInvocation);
     } else {
       final MethodInvocation freeInvocation = ast.newMethodInvocation();
       freeInvocation.setName(ast.newSimpleName("freeRef"));
       freeInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
       freeInvocation.arguments().add(copyIfAttached((Expression) node));
-      return freeInvocation;
+      return ast.newExpressionStatement(freeInvocation);
     }
   }
 
@@ -247,31 +258,55 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final Expression wrapAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
+    if(expression instanceof CastExpression) {
+      final ParenthesizedExpression parenthesizedExpression = ast.newParenthesizedExpression();
+      replace(expression, parenthesizedExpression);
+      parenthesizedExpression.setExpression(expression);
+      return wrapAddRef(parenthesizedExpression, type);
+    }
     if (null == type) {
       warn(1, expression, "No type for %s; cannot addRef", expression);
       return copyIfAttached(expression);
     } else if (type.isArray()) {
-      final String qualifiedName = type.getElementType().getQualifiedName();
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRefs"));
-      methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
-      methodInvocation.arguments().add(copyIfAttached(expression));
-      info(1, expression, "AddRef for %s", expression);
-      return methodInvocation;
-    }
-    if (null == getAddRefMethod(type)) {
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRef"));
-      methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
-      methodInvocation.arguments().add(copyIfAttached(expression));
-      info(1, expression, "AddRef for %s", expression);
-      return methodInvocation;
+      if (null == getAddRefsMethod(type.getElementType())) {
+        warn(1, expression, "No AddRefs method defined for %s", expression);
+        return copyIfAttached(expression);
+      } else {
+        final String qualifiedName = type.getElementType().getQualifiedName();
+        final MethodInvocation methodInvocation = ast.newMethodInvocation();
+        methodInvocation.setName(ast.newSimpleName("addRefs"));
+        methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("<")[0].split("\\.")));
+        methodInvocation.arguments().add(copyIfAttached(expression));
+        info(1, expression, "AddRef for %s", expression);
+        return methodInvocation;
+      }
     } else {
-      final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRef"));
-      methodInvocation.setExpression(copyIfAttached(expression));
-      info(1, expression, "AddRef for %s", expression);
-      return methodInvocation;
+      if (null == getAddRefMethod(type)) {
+        final MethodInvocation methodInvocation = ast.newMethodInvocation();
+        methodInvocation.setName(ast.newSimpleName("addRef"));
+        methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
+        methodInvocation.arguments().add(copyIfAttached(expression));
+        info(1, expression, "AddRef for %s", expression);
+        return methodInvocation;
+      } else {
+        final MethodInvocation methodInvocation = ast.newMethodInvocation();
+        methodInvocation.setName(ast.newSimpleName("addRef"));
+        methodInvocation.setExpression(copyIfAttached(expression));
+        info(1, expression, "AddRef for %s", expression);
+        if(expression instanceof SimpleName) {
+          final InfixExpression infixExpression = ast.newInfixExpression();
+          infixExpression.setLeftOperand(copyIfAttached(expression));
+          infixExpression.setOperator(InfixExpression.Operator.EQUALS);
+          infixExpression.setRightOperand(ast.newNullLiteral());
+          final ConditionalExpression conditionalExpression = ast.newConditionalExpression();
+          conditionalExpression.setExpression(infixExpression);
+          conditionalExpression.setElseExpression(methodInvocation);
+          conditionalExpression.setThenExpression(ast.newNullLiteral());
+          return conditionalExpression;
+        } else {
+          return methodInvocation;
+        }
+    }
     }
   }
 

@@ -21,7 +21,10 @@ package com.simiacryptus.ref.wrappers;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -67,5 +70,9 @@ public class RefCollections {
    */
   public static <K, V> RefMap<K, V> unmodifiableMap(RefMap<K, V> map) {
     throw new RuntimeException();
+  }
+
+  public static <T> void shuffle(List<T> list) {
+    Collections.shuffle(list);
   }
 }

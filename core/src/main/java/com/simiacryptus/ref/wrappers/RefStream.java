@@ -23,6 +23,9 @@ import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.*;
 
@@ -42,19 +45,28 @@ public class RefStream<T> implements Stream<T> {
   /**
    * The Refs.
    */
-  public List<IdentityWrapper<ReferenceCounting>> refs;
+  public Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
 
   /**
    * Instantiates a new Ref stream.
    *
    * @param stream the stream
    */
-  RefStream(Stream<T> stream) {
-    this(stream, new ArrayList<>(), new ArrayList<>());
+  public RefStream(Stream<T> stream) {
+    this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
-      this.refs.forEach(x -> x.inner.freeRef());
+      freeAll(this.refs);
       this.lambdas.clear();
+    });
+  }
+
+  static void freeAll(Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    refs.forEach((k, v) -> {
+      final int cnt = v.getAndSet(0);
+      if(cnt>0) for (int i = 0; i < cnt; i++) {
+        k.inner.freeRef();
+      }
     });
   }
 
@@ -65,7 +77,7 @@ public class RefStream<T> implements Stream<T> {
    * @param lambdas the lambdas
    * @param refs    the refs
    */
-  RefStream(Stream<T> stream, List<ReferenceCounting> lambdas, List<IdentityWrapper<ReferenceCounting>> refs) {
+  RefStream(Stream<T> stream, List<ReferenceCounting> lambdas, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = stream;
     this.lambdas = lambdas;
@@ -184,7 +196,7 @@ public class RefStream<T> implements Stream<T> {
   @NotNull
   public RefStream<T> filter(@NotNull Predicate<? super T> predicate) {
     track(predicate);
-    return new RefStream(getInner().filter((T t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
+    return new RefStream(getInner().filter((T t) -> predicate.test(getRef(t))), lambdas, refs);
   }
 
   @Override
@@ -278,8 +290,21 @@ public class RefStream<T> implements Stream<T> {
   }
 
   private <U> U getRef(U u) {
+    return getRef(u, this.refs);
+  }
+
+  static <U> U getRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
-      if (!refs.remove(new IdentityWrapper(u))) {
+      final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
+      final AtomicBoolean obtained = new AtomicBoolean(false);
+      refCnt.updateAndGet(x-> {
+        if (x <= 0) return 0;
+        else {
+          obtained.set(true);
+          return x - 1;
+        }
+      });
+      if (!obtained.get()) {
         RefUtil.addRef(u);
       }
     }
@@ -456,8 +481,20 @@ public class RefStream<T> implements Stream<T> {
    * @return the u
    */
   public <U> U storeRef(U u) {
+    return storeRef(u, refs);
+  }
+
+  /**
+   * Store ref u.
+   *
+   * @param <U> the type parameter
+   * @param u   the u
+   * @param refs
+   * @return the u
+   */
+  static <U> U storeRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
-      refs.add(new IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
+      refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
     }
     return u;
   }

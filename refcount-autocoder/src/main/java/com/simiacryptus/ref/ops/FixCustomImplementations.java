@@ -22,6 +22,7 @@ package com.simiacryptus.ref.ops;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.RefIterator;
+import com.simiacryptus.ref.wrappers.RefIteratorBase;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
@@ -41,10 +42,10 @@ public class FixCustomImplementations extends RefFileAstVisitor {
       warn(node, "Unresolved binding");
       return;
     }
-    if (replace(node, typeBinding, RefIterator.class, Iterator.class)) return;
+    if (replace(node, typeBinding, RefIterator.class, RefIteratorBase.class)) return;
   }
 
-  protected boolean replace(AnonymousClassDeclaration node, ITypeBinding typeBinding, Class<RefIterator> match, Class<Iterator> replace) {
+  protected boolean replace(AnonymousClassDeclaration node, ITypeBinding typeBinding, Class<?> match, Class<?> replace) {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
       info(node, "RefIterator anonymous class");
       final ClassInstanceCreation parent = (ClassInstanceCreation) node.getParent();

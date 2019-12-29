@@ -59,4 +59,8 @@ public class RefIterator<T> extends RefIteratorBase<T> {
     super.track(obj);
     return this;
   }
+  @Override
+  public RefIterator<T> addRef() {
+    return (RefIterator<T>) super.addRef();
+  }
 }

@@ -24,7 +24,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Hash set container.
  */
-public class HashSetContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class HashSetContainer extends ReferenceCountingBase {
   private static void testStreamOperations() {
     testOperations(values -> {
       values.stream().forEach(x -> {
@@ -44,10 +44,10 @@ public class HashSetContainer extends ReferenceCountingBase {
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[]{}).length) {
+      if (values.size() != values.toArray(new BasicType[] {}).length) {
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[]{});
+      values.toArray(new BasicType[] {});
     });
   }
 
@@ -87,8 +87,8 @@ public class HashSetContainer extends ReferenceCountingBase {
   }
 
   private static void testOperations(
-      java.util.function.Consumer<java.util.HashSet<BasicType>> setRefConsumer) {
-    java.util.HashSet<BasicType> values = new java.util.HashSet<>();
+      com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefHashSet<BasicType>> setRefConsumer) {
+    com.simiacryptus.ref.wrappers.RefHashSet<BasicType> values = new com.simiacryptus.ref.wrappers.RefHashSet<>();
     setRefConsumer.accept(values);
   }
 
@@ -108,7 +108,7 @@ public class HashSetContainer extends ReferenceCountingBase {
     testOperations(setValues -> {
       setValues.add(new BasicType());
       final BasicType basicType = new BasicType();
-      final java.util.List<com.simiacryptus.demo.refcount.BasicType> list = java.util.Arrays
+      final com.simiacryptus.ref.wrappers.RefList<com.simiacryptus.demo.refcount.BasicType> list = com.simiacryptus.ref.wrappers.RefArrays
           .asList(basicType);
       if (!setValues.addAll(list)) {
         throw new RuntimeException();
@@ -126,8 +126,21 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
+  }
+
+  public @Override HashSetContainer addRef() {
+    return (HashSetContainer) super.addRef();
+  }
+
+  public static HashSetContainer[] addRefs(HashSetContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRef)
+        .toArray((x) -> new HashSetContainer[x]);
+  }
+
+  public static HashSetContainer[][] addRefs(HashSetContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRefs)
+        .toArray((x) -> new HashSetContainer[x][]);
   }
 }

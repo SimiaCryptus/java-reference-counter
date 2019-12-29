@@ -19,32 +19,49 @@
 
 package com.simiacryptus.ref;
 
+import com.simiacryptus.ref.core.AutoCoder;
+import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.ops.*;
+import com.simiacryptus.ref.ops.InlineRefs;
+import com.simiacryptus.ref.ops.InlineTempVars;
+import com.simiacryptus.ref.ops.RemoveRefs;
 import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
 @Mojo(name = "remove")
-public class Remove extends RefAutoCoder {
-
+public class Remove extends RefAutoCoderMojo {
   @Override
-  @Nonnull
-  public void rewrite() {
-    rewrite(RemoveAnnotations::new);
-    while (rewrite(RemoveRefs::new) > 0) {
-      logger.info("Re-running RemoveRefs");
-    }
-    rewrite((projectInfo, cu, file) -> new ReplaceTypes(projectInfo, cu, file, true));
-    rewrite(DistinctImports::new);
-    rewrite(FixVariableDeclarations::new);
-    while (rewrite(InlineRefs::new) > 0) {
-      logger.info("Re-running InlineRefs");
-    }
-    while (rewrite(InlineTempVars::new) > 0) {
-      logger.info("Re-running InlineRefs");
-    }
+  protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
+    return new Coder(projectInfo, getBoolean("modifyAPI", false));
   }
 
+  public static class Coder extends AutoCoder {
+    private final ProjectInfo projectInfo;
+    private final boolean shouldChangeAPI;
+
+    public Coder(ProjectInfo projectInfo, boolean shouldChangeAPI) {
+      super(projectInfo);
+      this.projectInfo = projectInfo;
+      this.shouldChangeAPI = shouldChangeAPI;
+    }
+
+    @Override
+    @Nonnull
+    public void rewrite() {
+      while (rewrite(RemoveRefs::new) > 0) {
+        logger.info("Re-running RemoveRefs");
+      }
+      while (rewrite(InlineRefs::new) > 0) {
+        logger.info("Re-running InlineRefs");
+      }
+      while (rewrite(InlineTempVars::new) > 0) {
+        logger.info("Re-running InlineRefs");
+      }
+      if (shouldChangeAPI) {
+        new RevertAPI.Coder(projectInfo).rewrite();
+      }
+    }
+  }
 }

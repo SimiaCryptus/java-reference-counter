@@ -21,10 +21,14 @@ package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RefIgnore
 public class FixVariableDeclarations extends RefFileAstVisitor {
@@ -43,17 +47,37 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
       info(type, "No initializer");
       return null;
     }
+    if (initializer instanceof NullLiteral) {
+      info(type, "Null initializer");
+      return null;
+    }
     final ITypeBinding initializerType = resolveTypeBinding(initializer);
     if (null == initializerType) {
       warn(type, "Unresolved binding");
       return null;
     }
-    if (initializerType.isAssignmentCompatible(typeBinding)) {
+    final boolean initRefMarked = derives(initializerType, ReferenceCounting.class);
+    if (initializerType.isAssignmentCompatible(typeBinding) && derives(typeBinding, ReferenceCounting.class) == initRefMarked) {
       return null;
     }
-    Type newType = commonSuperclass(type, typeBinding, initializerType);
-    warn(type, "Replaced variable type %s to %s", type, newType);
-    return newType;
+    Optional<ITypeBinding> chooseType = Optional.empty();
+    List<ITypeBinding> typePath = typePath(initializerType);
+    for (int i = typePath.size() - 1; i >= 0; i--) {
+      ITypeBinding candidateBinding = typePath.get(i);
+      if (candidateBinding.isAssignmentCompatible(typeBinding)
+          && derives(candidateBinding, ReferenceCounting.class) == initRefMarked) {
+        chooseType = Optional.of(candidateBinding);
+        break;
+      }
+    }
+    if(chooseType.isPresent()) {
+      Type newType = getType(type, chooseType.get().getQualifiedName(), true);
+      warn(type, "Replaced variable type %s to %s", type, newType);
+      return newType;
+    } else {
+      warn(type, "No candidates fit for %s", type);
+      return null;
+    }
   }
 
   private Type commonInterface(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
@@ -65,6 +89,19 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
       if (null != commonInterface) return commonInterface;
     }
     return null;
+  }
+
+  private List<ITypeBinding> typePath(ITypeBinding typeBinding) {
+    final ArrayList<ITypeBinding> list = new ArrayList<>();
+    list.add(typeBinding);
+    final ITypeBinding superclass = typeBinding.getSuperclass();
+    if(null != superclass) {
+      list.addAll(typePath(superclass));
+    }
+    for (ITypeBinding xface : typeBinding.getInterfaces()) {
+      typePath(xface).forEach(list::add);
+    }
+    return list.stream().distinct().collect(Collectors.toList());
   }
 
   private Type commonSuperclass(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {

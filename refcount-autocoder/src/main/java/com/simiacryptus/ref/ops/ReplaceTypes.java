@@ -23,10 +23,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.*;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
 
 import java.io.File;
 import java.util.*;
@@ -65,6 +68,7 @@ public class ReplaceTypes extends RefFileAstVisitor {
     replacements.put(AbstractSet.class, RefAbstractSet.class);
     replacements.put(ArrayList.class, RefArrayList.class);
     replacements.put(Arrays.class, RefArrays.class);
+    replacements.put(Assert.class, RefAssert.class);
     replacements.put(Collection.class, RefCollection.class);
     replacements.put(Collections.class, RefCollections.class);
     replacements.put(Collectors.class, RefCollectors.class);
@@ -87,6 +91,9 @@ public class ReplaceTypes extends RefFileAstVisitor {
     replacements.put(LongStream.class, RefLongStream.class);
     replacements.put(Map.class, RefMap.class);
     replacements.put(PrimitiveIterator.class, RefPrimitiveIterator.class);
+    replacements.put(PrimitiveIterator.OfDouble.class, RefPrimitiveIterator.OfDouble.class);
+    replacements.put(PrimitiveIterator.OfInt.class, RefPrimitiveIterator.OfInt.class);
+    replacements.put(PrimitiveIterator.OfLong.class, RefPrimitiveIterator.OfLong.class);
     replacements.put(Queue.class, RefQueue.class);
     replacements.put(Set.class, RefSet.class);
     replacements.put(Spliterator.class, RefSpliterator.class);
@@ -101,11 +108,47 @@ public class ReplaceTypes extends RefFileAstVisitor {
     if (node.getParent() instanceof ImportDeclaration) {
       return;
     }
+    final MethodDeclaration methodDeclaration = getMethodDeclaration(node);
+    if(null != methodDeclaration) {
+      final IMethodBinding methodBinding = methodDeclaration.resolveBinding();
+      if(null == methodBinding) {
+        warn(methodDeclaration, "Cannot resolve %s", methodDeclaration);
+      } else {
+        final ITypeBinding declaringClass = methodBinding.getDeclaringClass();
+        if(!hasAnnotation(declaringClass, RefAware.class)) {
+          info(methodDeclaration, "Method %s is defined by %s, which is NOT ref-aware", methodBinding, declaringClass.getQualifiedName());
+          //return;
+        } else {
+          info(methodDeclaration, "Method %s is defined by %s, which is ref-aware", methodBinding, declaringClass.getQualifiedName());
+        }
+      }
+    }
     final Name replace = replace(node);
     if (null != replace && !node.toString().equals(replace.toString())) {
       replace(node, replace);
       info(node, "Replaced %s with %s", node, replace);
     }
+  }
+
+  private ArrayList<Object> getTypes() {
+    final ArrayList<Object> names = new ArrayList<>();
+    compilationUnit.accept(new ASTVisitor() {
+      @Override
+      public void endVisit(TypeDeclarationStatement node) {
+        names.add(node.resolveBinding().getQualifiedName());
+      }
+
+    });
+    return names;
+  }
+
+  public MethodDeclaration getMethodDeclaration(ASTNode node) {
+    if(node instanceof MethodDeclaration) return (MethodDeclaration) node;
+    if(node instanceof Statement) return null;
+    if(node instanceof TypeDeclaration) return null;
+    final ASTNode parent = node.getParent();
+    if (null != parent) return getMethodDeclaration(parent);
+    return null;
   }
 
   @Override

@@ -23,7 +23,10 @@ import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 /**
@@ -33,7 +36,7 @@ import java.util.stream.LongStream;
 @RefIgnore
 public class RefLongStream implements LongStream {
   private final LongStream inner;
-  private final List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
+  private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
   /**
@@ -42,10 +45,10 @@ public class RefLongStream implements LongStream {
    * @param stream the stream
    */
   RefLongStream(LongStream stream) {
-    this(stream, new ArrayList<>(), new ArrayList<>());
+    this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
-      this.refs.forEach(x -> x.inner.freeRef());
+      RefStream.freeAll(this.refs);
       this.lambdas.clear();
     });
   }
@@ -57,7 +60,7 @@ public class RefLongStream implements LongStream {
    * @param lambdas the lambdas
    * @param refs    the refs
    */
-  RefLongStream(LongStream stream, List<ReferenceCounting> lambdas, List<RefStream.IdentityWrapper<ReferenceCounting>> refs) {
+  RefLongStream(LongStream stream, List<ReferenceCounting> lambdas, Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
@@ -216,12 +219,7 @@ public class RefLongStream implements LongStream {
   }
 
   private <U> U getRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      if (!refs.remove(new RefStream.IdentityWrapper(u))) {
-        RefUtil.addRef(u);
-      }
-    }
-    return u;
+    return RefStream.getRef(u, this.refs);
   }
 
   @Override
@@ -231,7 +229,7 @@ public class RefLongStream implements LongStream {
 
   @NotNull
   @Override
-  public PrimitiveIterator.OfLong iterator() {
+  public RefPrimitiveIterator.OfLong iterator() {
     return new RefPrimitiveIterator.OfLong(inner.iterator()).track(new ReferenceCountingBase() {
       @Override
       protected void _free() {
@@ -349,7 +347,7 @@ public class RefLongStream implements LongStream {
 
   @NotNull
   @Override
-  public Spliterator.OfLong spliterator() {
+  public RefSpliterator.OfLong spliterator() {
     return new RefSpliterator.OfLong(inner.spliterator()).track(new ReferenceCountingBase() {
       @Override
       protected void _free() {
@@ -359,10 +357,7 @@ public class RefLongStream implements LongStream {
   }
 
   private <U> U storeRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      refs.add(new RefStream.IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
-    }
-    return u;
+    return RefStream.storeRef(u, refs);
   }
 
   @Override
@@ -396,6 +391,9 @@ public class RefLongStream implements LongStream {
   @Override
   public RefLongStream unordered() {
     return new RefLongStream(inner.unordered(), lambdas, refs);
+  }
+  public static RefLongStream concat(RefLongStream a, RefLongStream b) {
+    return new RefLongStream(LongStream.concat(a.inner,b.inner));
   }
 
 }

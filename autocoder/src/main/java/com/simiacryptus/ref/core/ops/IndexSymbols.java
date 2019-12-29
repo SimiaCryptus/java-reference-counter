@@ -267,7 +267,8 @@ public class IndexSymbols extends FileAstScanner {
             return getPath(methodBinding) + "::" + paramName;
           }
         } else {
-          return getPath(variableBinding.getDeclaringMethod()) + "::" + (null == variableBinding ? "null" : variableBinding.getName());
+          final IMethodBinding declaringMethod = variableBinding.getDeclaringMethod();
+          return (null==declaringMethod?"null":getPath(declaringMethod)) + "::" + (null == variableBinding ? "null" : variableBinding.getName());
         }
       } else if (binding instanceof IMethodBinding) {
         IMethodBinding methodBinding = getImplementation((IMethodBinding) binding);
@@ -276,15 +277,18 @@ public class IndexSymbols extends FileAstScanner {
       } else if (binding instanceof ITypeBinding) {
         final ITypeBinding typeBinding = (ITypeBinding) binding;
         if (typeBinding.isAnonymous()) {
-          return getPath(typeBinding.getDeclaringClass()) + "." + typeBinding.getKey().split("~")[1];
+          final String[] split = typeBinding.getKey().split("~");
+          if(split.length < 2) return getPath(typeBinding.getDeclaringClass()) + "." + typeBinding.getKey();
+          return getPath(typeBinding.getDeclaringClass()) + "." + split[1];
         } else {
           return typeBinding.getQualifiedName();
         }
       } else if (binding instanceof IPackageBinding) {
         return binding.getName();
       } else {
-        logger.warn(String.format("Cannot format path of %s", binding.getClass().getCanonicalName()));
-        throw new RuntimeException(binding.getClass().getCanonicalName());
+        final String msg = String.format("Cannot format path of %s", null==binding?"null":binding.getClass().getCanonicalName());
+        logger.warn(msg);
+        throw new RuntimeException(msg);
       }
     }
 

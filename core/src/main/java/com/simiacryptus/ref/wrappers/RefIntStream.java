@@ -23,6 +23,8 @@ import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
@@ -33,7 +35,7 @@ import java.util.stream.IntStream;
 @RefIgnore
 public class RefIntStream implements IntStream {
   private final IntStream inner;
-  private final List<RefStream.IdentityWrapper<ReferenceCounting>> refs;
+  private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
   /**
@@ -42,10 +44,10 @@ public class RefIntStream implements IntStream {
    * @param stream the stream
    */
   RefIntStream(IntStream stream) {
-    this(stream, new ArrayList<>(), new ArrayList<>());
+    this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
-      this.refs.forEach(x -> x.inner.freeRef());
+      RefStream.freeAll(this.refs);
       this.lambdas.clear();
     });
   }
@@ -57,7 +59,7 @@ public class RefIntStream implements IntStream {
    * @param lambdas the lambdas
    * @param refs    the refs
    */
-  RefIntStream(IntStream stream, List<ReferenceCounting> lambdas, List<RefStream.IdentityWrapper<ReferenceCounting>> refs) {
+  RefIntStream(IntStream stream, List<ReferenceCounting> lambdas, Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
@@ -222,12 +224,7 @@ public class RefIntStream implements IntStream {
   }
 
   private <U> U getRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      if (!refs.remove(new RefStream.IdentityWrapper(u))) {
-        RefUtil.addRef(u);
-      }
-    }
-    return u;
+    return RefStream.getRef(u, this.refs);
   }
 
   @Override
@@ -237,7 +234,7 @@ public class RefIntStream implements IntStream {
 
   @NotNull
   @Override
-  public PrimitiveIterator.OfInt iterator() {
+  public RefPrimitiveIterator.OfInt iterator() {
     return new RefPrimitiveIterator.OfInt(inner.iterator()).track(new ReferenceCountingBase() {
       @Override
       protected void _free() {
@@ -355,7 +352,7 @@ public class RefIntStream implements IntStream {
 
   @NotNull
   @Override
-  public Spliterator.OfInt spliterator() {
+  public RefSpliterator.OfInt spliterator() {
     return new RefSpliterator.OfInt(inner.spliterator()).track(new ReferenceCountingBase() {
       @Override
       protected void _free() {
@@ -366,10 +363,7 @@ public class RefIntStream implements IntStream {
   }
 
   private <U> U storeRef(U u) {
-    if (u instanceof ReferenceCounting) {
-      refs.add(new RefStream.IdentityWrapper<ReferenceCounting>((ReferenceCounting) u));
-    }
-    return u;
+    return RefStream.storeRef(u, refs);
   }
 
   @Override
@@ -403,6 +397,10 @@ public class RefIntStream implements IntStream {
   @Override
   public RefIntStream unordered() {
     return new RefIntStream(inner.unordered(), lambdas, refs);
+  }
+
+  public static RefIntStream concat(RefIntStream a, RefIntStream b) {
+    return new RefIntStream(IntStream.concat(a.inner,b.inner));
   }
 
 }

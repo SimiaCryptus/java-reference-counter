@@ -29,7 +29,7 @@ import java.io.PrintStream;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Test {
+public @com.simiacryptus.ref.lang.RefAware class Test {
   static {
     System.setProperty("DEBUG_LIFECYCLE", "true");
   }

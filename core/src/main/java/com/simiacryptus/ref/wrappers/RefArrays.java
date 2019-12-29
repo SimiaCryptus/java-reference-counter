@@ -25,8 +25,10 @@ import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.IntUnaryOperator;
 
 /**
  * The type Ref arrays.
@@ -143,6 +145,10 @@ public class RefArrays {
     return Arrays.toString(ints);
   }
 
+  public static String toString(byte[] ints) {
+    return Arrays.toString(ints);
+  }
+
   /**
    * To string string.
    *
@@ -163,6 +169,20 @@ public class RefArrays {
     Arrays.parallelSetAll(data, fn);
   }
 
+  public static void parallelSetAll(int[] data, IntUnaryOperator fn) {
+    Arrays.parallelSetAll(data, fn);
+  }
+
+  /**
+   * Parallel set all.
+   *
+   * @param data the data
+   * @param fn   the fn
+   */
+  public static <T> void parallelSetAll(T[] data, IntFunction<T> fn) {
+    Arrays.parallelSetAll(data, fn);
+  }
+
   /**
    * Sets all.
    *
@@ -170,6 +190,16 @@ public class RefArrays {
    * @param fn   the fn
    */
   public static void setAll(double[] data, IntToDoubleFunction fn) {
+    Arrays.setAll(data, fn);
+  }
+
+  /**
+   * Sets all.
+   *
+   * @param data the data
+   * @param fn   the fn
+   */
+  public static void setAll(int[] data, IntUnaryOperator fn) {
     Arrays.setAll(data, fn);
   }
 
@@ -245,4 +275,27 @@ public class RefArrays {
     return Arrays.hashCode(data);
   }
 
+  public static CharSequence deepToString(Object[] a) {
+    return Arrays.deepToString(a);
+  }
+
+  public static boolean deepEquals(Object[] a, Object[] b) {
+    return Arrays.deepEquals(a,b);
+  }
+
+  public static int deepHashCode(Object a[]) {
+    return Arrays.deepHashCode(a);
+  }
+
+  public static <T> T[] copyOfRange(T[] original, int from, int to) {
+    return Arrays.copyOfRange(original, from, to);
+  }
+
+  public static String toString(float[] obj) {
+    return Arrays.toString(obj);
+  }
+
+  public static String toString(long[] obj) {
+    return Arrays.toString(obj);
+  }
 }

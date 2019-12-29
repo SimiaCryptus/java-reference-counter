@@ -1,28 +1,8 @@
-/*
- * Copyright (c) 2019 by Andrew Charneski.
- *
- * The author licenses this file to you under the
- * Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance
- * with the License.  You may obtain a copy
- * of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.FileAstVisitor;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
@@ -40,8 +20,13 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Optional;
 
-public abstract class AutoCoder extends BaseMojo {
-  protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
+public abstract class AutoCoder {
+  protected static final Logger logger = LoggerFactory.getLogger(AutoCoderMojo.class);
+  private final ProjectInfo projectInfo;
+
+  protected AutoCoder(ProjectInfo projectInfo) {
+    this.projectInfo = projectInfo;
+  }
 
   @NotNull
   public static Field getField(@NotNull Class<?> nodeClass, String name) {
@@ -108,8 +93,8 @@ public abstract class AutoCoder extends BaseMojo {
     return prevSrc;
   }
 
-  public void execute() throws MojoExecutionException {
-    rewrite();
+  protected ProjectInfo getProjectInfo() {
+    return projectInfo;
   }
 
   @NotNull
@@ -126,16 +111,12 @@ public abstract class AutoCoder extends BaseMojo {
       logger.debug(String.format("Scanning %s", file));
       final FileAstVisitor astVisitor = visitorFactory.apply(getProjectInfo(), compilationUnit, file);
       compilationUnit.accept(astVisitor);
-      try {
-        if (astVisitor.writeFinal(true)) {
-          logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
-          return 1;
-        } else {
-          logger.info("Not Touched: " + file);
-          return 0;
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+      if (astVisitor.writeFinal(true)) {
+        logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
+        return 1;
+      } else {
+        logger.info("Not Touched: " + file);
+        return 0;
       }
     }).sum();
   }
@@ -159,5 +140,4 @@ public abstract class AutoCoder extends BaseMojo {
   public interface VisitorFactory {
     FileAstVisitor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
   }
-
 }

@@ -19,18 +19,19 @@
 
 package com.simiacryptus.ref;
 
-import com.simiacryptus.ref.core.AutoCoder;
+import com.simiacryptus.ref.core.AutoCoderMojo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.maven.plugin.MojoExecutionException;
 
 @RefIgnore
-public abstract class RefAutoCoder extends AutoCoder {
+public abstract class RefAutoCoderMojo extends AutoCoderMojo {
 
   public void execute() throws MojoExecutionException {
-    if (!resolve().getArtifacts().stream().filter(artifact ->
-        artifact.getGroupId().equals("com.simiacryptus") &&
-            artifact.getArtifactId().equals("refcount-core")).findAny().isPresent()) {
+    if (!findDependency("com.simiacryptus", "refcount-core").isPresent()) {
       getLog().warn("Dependency not found: refcount-core");
+      if(getBoolean("force",false)) {
+        super.execute();
+      }
     } else {
       getLog().warn("Dependency confirmed: refcount-core");
       super.execute();

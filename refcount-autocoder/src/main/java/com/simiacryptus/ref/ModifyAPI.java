@@ -21,7 +21,6 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -29,36 +28,29 @@ import org.apache.maven.plugins.annotations.Mojo;
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "insert")
-public class Insert extends RefAutoCoderMojo {
+@Mojo(name = "modifyAPI")
+public class ModifyAPI extends RefAutoCoderMojo {
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
-    return new Coder(projectInfo, getBoolean("modifyAPI", false));
+    return new Coder(projectInfo);
   }
 
   public static class Coder extends AutoCoder {
-    private final ProjectInfo projectInfo;
-    private final boolean shouldChangeAPI;
-
-    public Coder(ProjectInfo projectInfo, boolean shouldChangeAPI) {
+    public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
-      this.projectInfo = projectInfo;
-      this.shouldChangeAPI = shouldChangeAPI;
     }
 
     @Override
     @Nonnull
     public void rewrite() {
-      new Remove().getAutoCoder(projectInfo).rewrite();
-      if(shouldChangeAPI) {
-        new ModifyAPI.Coder(projectInfo).rewrite();
-      }
-      rewrite(InsertAddRefs::new);
-      rewrite(ModifyAssignments::new);
-      rewrite(InsertFreeRefs::new);
-      IndexSymbols.SymbolIndex index = getSymbolIndex();
-      rewrite((projectInfo, cu, file) -> new InstrumentClosures(projectInfo, cu, file, index));
-      rewrite(OptimizeRefs::new);
+      rewrite(RemoveRefMethods::new);
+      rewrite(RemoveAnnotations::new);
+      rewrite(InsertAnnotations::new);
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes(projectInfo, cu, file, false));
+      rewrite(DistinctImports::new);
+      rewrite(FixCustomImplementations::new);
+      rewrite(FixVariableDeclarations::new);
+      rewrite(InsertMethods::new);
     }
   }
 }

@@ -21,8 +21,11 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.StreamSupport;
 
 /**
@@ -43,11 +46,21 @@ public class RefStreamSupport {
     if (spliterator instanceof RefSpliterator) {
       final RefSpliterator refSpliterator = (RefSpliterator) spliterator;
       final Spliterator inner = refSpliterator.getInner();
-      final RefStream<T> refStream = new RefStream<>(StreamSupport.stream(inner, parallel)).onClose(() -> {
-        refSpliterator.freeRef();
-      });
-//      return refStream.peek(u -> refStream.storeRef(RefUtil.addRef(u)));
-      return refStream.peek(refStream::storeRef);
+      final AtomicReference<RefStream<T>> refStream = new AtomicReference<>();
+      if(inner instanceof ReferenceCounting) {
+        refStream.set(new RefStream<>(StreamSupport.stream(inner, parallel)
+            .peek(u -> refStream.get().storeRef(u))
+        ).onClose(() -> {
+          refSpliterator.freeRef();
+        }));
+      } else {
+        refStream.set(new RefStream<>(StreamSupport.stream(inner, parallel)
+            .peek(u -> refStream.get().storeRef(RefUtil.addRef(u)))
+        ).onClose(() -> {
+          refSpliterator.freeRef();
+        }));
+      }
+      return refStream.get();
     } else {
       final RefStream<T> refStream = new RefStream<>(StreamSupport.stream(spliterator, parallel));
       return refStream.peek(refStream::storeRef);

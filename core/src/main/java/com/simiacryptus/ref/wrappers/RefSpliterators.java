@@ -20,7 +20,9 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Spliterators;
@@ -43,7 +45,15 @@ public class RefSpliterators {
     if (iterator instanceof RefIterator) {
       Iterator<T> inner = ((RefIterator<T>) iterator).getInner();
       assert null != inner;
-      return new RefSpliterator<>(Spliterators.spliterator(inner, size, characteristics)).track((ReferenceCounting) iterator);
+      return new RefSpliterator<T>(Spliterators.spliterator(inner, size, characteristics)).track((ReferenceCounting) iterator);
+    } else if (iterator instanceof RefIteratorBase) {
+      return new RefSpliterator<T>(RefUtil.wrapInterface(Spliterators.spliterator(iterator, size, characteristics))) {
+        @Nullable
+        @Override
+        protected T getRef(T t) {
+          return t;
+        }
+      }.track((ReferenceCounting) iterator);
     } else {
       RefSpliterator<T> refSpliterator = new RefSpliterator<>(Spliterators.spliterator(iterator, size, characteristics));
       if (iterator instanceof ReferenceCounting) {

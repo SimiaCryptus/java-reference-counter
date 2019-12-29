@@ -38,15 +38,21 @@ public class ProjectInfo {
   private final String projectRoot;
   private final String[] sourcepathEntries;
   private final String[] classpathEntries;
+  private ASTParser astParser = null;
 
   public ProjectInfo(String projectRoot, String[] sourcepathEntries, String[] classpathEntries) {
     this.projectRoot = projectRoot;
     this.sourcepathEntries = sourcepathEntries;
     this.classpathEntries = classpathEntries;
+    //this.setAstParser(newAstParser());
+  }
+
+  public ASTParser getAstParser() {
+    return astParser==null?newAstParser():astParser;
   }
 
   @NotNull
-  public ASTParser getAstParser() {
+  public ASTParser newAstParser() {
     HashMap<String, String> compilerOptions = new HashMap<>();
     compilerOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8));
     ASTParser astParser = ASTParser.newParser(AST.JLS11);
@@ -69,9 +75,8 @@ public class ProjectInfo {
     for (File file : files) {
       fileMap.put(file.getAbsolutePath(), file);
     }
-    final ASTParser astParser = getAstParser();
     HashMap<File, CompilationUnit> results = new HashMap<>();
-    astParser.createASTs(
+    getAstParser().createASTs(
         fileMap.keySet().toArray(new String[]{}),
         null,
         new String[]{},
@@ -84,6 +89,10 @@ public class ProjectInfo {
         new NullProgressMonitor()
     );
     return results;
+  }
+
+  public void setAstParser(ASTParser astParser) {
+    this.astParser = astParser;
   }
 
   @NotNull

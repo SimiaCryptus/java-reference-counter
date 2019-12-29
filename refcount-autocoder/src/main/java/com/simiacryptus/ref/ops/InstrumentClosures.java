@@ -53,7 +53,7 @@ public class InstrumentClosures extends RefFileAstVisitor {
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           if (isRefCounted(node, type)) {
             final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
-            freeMethodOpt.get().getBody().statements().add(0, ast.newExpressionStatement(newFreeRef(name, type)));
+            freeMethodOpt.get().getBody().statements().add(0, hasAnnotation(singleVariableDeclaration.resolveBinding(),Nonnull.class)?newFreeRef(name, type):freeRefStatement(name, type));
           }
         } else {
           warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());

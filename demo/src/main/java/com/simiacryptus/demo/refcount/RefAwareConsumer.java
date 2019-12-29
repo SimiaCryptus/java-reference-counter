@@ -26,10 +26,23 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
  *
  * @param <T> the type parameter
  */
-public abstract class RefAwareConsumer<T> extends ReferenceCountingBase
-    implements java.util.function.Consumer<T> {
-  public @Override
-  void _free() {
+public abstract @com.simiacryptus.ref.lang.RefAware class RefAwareConsumer<T> extends ReferenceCountingBase
+    implements com.simiacryptus.ref.wrappers.RefConsumer<T> {
+  public @Override void _free() {
     super._free();
+  }
+
+  public @Override RefAwareConsumer<T> addRef() {
+    return (RefAwareConsumer<T>) super.addRef();
+  }
+
+  public static RefAwareConsumer[] addRefs(RefAwareConsumer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefAwareConsumer::addRef)
+        .toArray((x) -> new RefAwareConsumer[x]);
+  }
+
+  public static RefAwareConsumer[][] addRefs(RefAwareConsumer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefAwareConsumer::addRefs)
+        .toArray((x) -> new RefAwareConsumer[x][]);
   }
 }

@@ -54,7 +54,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
    *
    * @return the inner
    */
-  public abstract Iterator<T> getInner();
+  public Iterator<T> getInner() { return null; }
 
   @Override
   public boolean hasNext() {
@@ -83,5 +83,10 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
   public @NotNull RefIteratorBase<T> track(ReferenceCounting obj) {
     list.add(obj);
     return this;
+  }
+
+  @Override
+  public RefIteratorBase<T> addRef() {
+    return (RefIteratorBase<T>) super.addRef();
   }
 }

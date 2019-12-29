@@ -34,7 +34,11 @@ import java.util.function.ToLongFunction;
  */
 @RefAware
 @RefIgnore
-public class RefComparator {
+public class RefComparator<T> implements Comparator<T> {
+
+  public RefComparator(Comparator<T> inner) {
+    this.inner = inner;
+  }
 
   /**
    * Natural order comparator.
@@ -49,6 +53,12 @@ public class RefComparator {
       RefUtil.freeRef(b);
       return result;
     };
+  }
+
+  private final Comparator<T> inner;
+  @Override
+  public int compare(T o1, T o2) {
+    return inner.compare(o1,o2);
   }
 
   /**
@@ -72,8 +82,8 @@ public class RefComparator {
    * @param keyExtractor the key extractor
    * @return the comparator
    */
-  public static <T> Comparator<T> comparingInt(ToIntFunction<? super T> keyExtractor) {
-    return Comparator.comparingInt(keyExtractor);
+  public static <T> RefComparator<T> comparingInt(ToIntFunction<? super T> keyExtractor) {
+    return new RefComparator<>(Comparator.comparingInt(keyExtractor));
   }
 
   /**
@@ -83,8 +93,8 @@ public class RefComparator {
    * @param keyExtractor the key extractor
    * @return the comparator
    */
-  public static <T> Comparator<T> comparingLong(ToLongFunction<? super T> keyExtractor) {
-    return Comparator.comparingLong(keyExtractor);
+  public static <T> RefComparator<T> comparingLong(ToLongFunction<? super T> keyExtractor) {
+    return new RefComparator<>(Comparator.comparingLong(keyExtractor));
   }
 
   /**
@@ -94,7 +104,7 @@ public class RefComparator {
    * @param keyExtractor the key extractor
    * @return the comparator
    */
-  public static <T> Comparator<T> comparingDouble(ToDoubleFunction<? super T> keyExtractor) {
-    return Comparator.comparingDouble(keyExtractor);
+  public static <T> RefComparator<T> comparingDouble(ToDoubleFunction<? super T> keyExtractor) {
+    return new RefComparator<>(Comparator.comparingDouble(keyExtractor));
   }
 }

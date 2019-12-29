@@ -50,7 +50,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
     }
   }
 
-  public void apply(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
+  public void addRefsToArguments(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
       if (shouldWrap(arg, name)) {
@@ -79,7 +79,7 @@ public class InsertAddRefs extends RefFileAstVisitor {
         final List expressions = node.expressions();
         for (int i = 0; i < expressions.size(); i++) {
           Object next = expressions.get(i);
-          MethodInvocation methodInvocation = wrapAddRef((ASTNode) next);
+          Expression methodInvocation = wrapAddRef((ASTNode) next);
           if (null != methodInvocation) {
             info(node, "Argument addRef for %s", next);
             expressions.set(i, methodInvocation);
@@ -106,7 +106,8 @@ public class InsertAddRefs extends RefFileAstVisitor {
       targetLabel = methodBinding.getDeclaringClass().getQualifiedName() + "::" + node.getName();
     }
     if (consumesRefs(methodBinding, null == expression ? null : resolveTypeBinding(expression))) {
-      apply(node, node.arguments(), targetLabel);
+      info(node, "Refcounted method %s", node);
+      addRefsToArguments(node, node.arguments(), targetLabel);
     } else {
       info(node, "Ignored method %s", targetLabel);
     }
@@ -115,7 +116,22 @@ public class InsertAddRefs extends RefFileAstVisitor {
   @Override
   public void endVisit(Assignment node) {
     final Expression expression = node.getRightHandSide();
-    if (isInstanceAccessor(expression)) addRef(expression);
+    if (shouldAddRef(expression)) addRef(expression);
+  }
+
+  @Override
+  public void endVisit(VariableDeclarationFragment node) {
+    final Expression initializer = node.getInitializer();
+    if(null != initializer && shouldAddRef(initializer)) addRef(initializer);
+  }
+
+  private boolean shouldAddRef(Expression expression) {
+    if(expression instanceof MethodInvocation) return false;
+    if(expression instanceof ClassInstanceCreation) return false;
+    if(expression instanceof CastExpression) return false;
+    if(expression instanceof ArrayCreation) return false;
+    if(expression instanceof ParenthesizedExpression) return shouldAddRef(((ParenthesizedExpression) expression).getExpression());
+    return true;
   }
 
   @Override
@@ -133,7 +149,10 @@ public class InsertAddRefs extends RefFileAstVisitor {
       return;
     }
     if (consumesRefs(methodBinding, methodBinding.getReturnType()) && node.arguments().size() > 0) {
-      apply(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
+      info(node, "Refcounted constructor %s", node);
+      addRefsToArguments(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
+    } else {
+      info(node, "Non-refcounted constructor %s", node);
     }
   }
 
@@ -146,8 +165,9 @@ public class InsertAddRefs extends RefFileAstVisitor {
       return;
     }
     if (consumesRefs(methodBinding, resolveTypeBinding(node))) {
+      info(node, "Refcounted constructor %s", node);
       if (node.arguments().size() > 0) {
-        apply(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
+        addRefsToArguments(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
       } else {
         debug(node, "No args %s", node);
       }
@@ -199,11 +219,11 @@ public class InsertAddRefs extends RefFileAstVisitor {
   }
 
   @Nullable
-  public MethodInvocation wrapAddRef(ASTNode node) {
+  public Expression wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
       final SimpleName name = (SimpleName) node;
       if (derives(resolveTypeBinding(name), ReferenceCounting.class)) {
-        return (MethodInvocation) wrapAddRef(name, resolveTypeBinding(name));
+        return wrapAddRef(name, resolveTypeBinding(name));
       }
     }
     return null;

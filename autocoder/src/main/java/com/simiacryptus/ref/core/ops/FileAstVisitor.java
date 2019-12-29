@@ -22,6 +22,7 @@ package com.simiacryptus.ref.core.ops;
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -48,13 +49,10 @@ import java.util.stream.Stream;
 
 public abstract class FileAstVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(FileAstVisitor.class);
-  @NotNull
-  private static final Random random = new Random();
   protected final CompilationUnit compilationUnit;
   protected final File file;
   protected final ProjectInfo projectInfo;
   protected final String initialContent;
-  //  protected final ASTRewrite astRewrite;
   protected final AST ast;
   private ASTMapping reparsed = null;
 
@@ -69,8 +67,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
     this.initialContent = AutoCoder.read(this.file);
     this.ast = compilationUnit.getAST();
     if (record) compilationUnit.recordModifications();
-//    this.astRewrite = ASTRewrite.create(ast);
-//    this.astRewrite.track()
   }
 
   protected final static <T> T getField(Object obj, String name) {
@@ -87,7 +83,18 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected final static <T> T invokeMethod(Object obj, String name, Object... args) {
-    final Method value = Arrays.stream(obj.getClass().getDeclaredMethods()).filter(x -> x.getName().equals(name)).findFirst().orElse(null);
+    final Method value = Arrays.stream(obj.getClass().getDeclaredMethods())
+        .filter(x -> x.getName().equals(name))
+        .filter(x -> {
+          final Class<?>[] parameterTypes = x.getParameterTypes();
+          if (parameterTypes.length != args.length) return false;
+          for (int i = 0; i < parameterTypes.length; i++) {
+            if (!ClassUtils.isAssignable(parameterTypes[i], args[i].getClass())) return false;
+          }
+          return true;
+        })
+        .findFirst()
+        .orElse(null);
     if (value != null) {
       value.setAccessible(true);
       try {
@@ -98,7 +105,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
         throw new RuntimeException(e);
       }
     }
-    throw new RuntimeException(String.format("Method %s not found in class %s", name, obj.getClass()));
+    throw new RuntimeException(String.format("Method %s.%s(%s) not found", obj.getClass(), name, Arrays.stream(args).map(x -> x.getClass().getSimpleName()).reduce((a, b) -> a + ", " + b).get()));
   }
 
   protected final static boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
@@ -135,6 +142,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   }
 
   protected final static boolean hasAnnotation(IBinding declaringClass, Class<?> aClass) {
+    if (declaringClass == null) return false;
     if (declaringClass.toString().startsWith("Anonymous")) return false;
     return Arrays.stream(declaringClass.getAnnotations())
         .map(annotation -> annotation.getAnnotationType().getQualifiedName())
@@ -145,43 +153,86 @@ public abstract class FileAstVisitor extends ASTVisitor {
     return typeDeclaration.resolveBinding();
   }
 
-  public static ASTMapping align(ASTNode from, ASTNode to) {
+  public static ASTMapping align(@Nonnull ASTNode from, @Nonnull ASTNode to) {
     final ASTMapping mapping = new ASTMapping();
     if (!from.getClass().equals(to.getClass())) {
       final CompilationUnit root = (CompilationUnit) to.getRoot();
-      mapping.errors.add(String.format("%s does not match class of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
+      if (from.toString().equals(to.toString())) {
+        mapping.errors.add(String.format("%s [%s] does not match class of %s [%s] at line %s",
+            from.toString().trim().replaceAll("\\n", "\n\t"), from.getClass().getSimpleName(),
+            to.toString().trim().replaceAll("\\n", "\n\t"), to.getClass().getSimpleName(),
+            root.getLineNumber(to.getStartPosition())));
+        mapping.matches.put(from, to);
+        return mapping;
+      } else {
+        mapping.errors.add(String.format("%s [%s] does not match class of %s [%s] at line %s",
+            from.toString().trim().replaceAll("\\n", "\n\t"), from.getClass().getSimpleName(),
+            to.toString().trim().replaceAll("\\n", "\n\t"), to.getClass().getSimpleName(),
+            root.getLineNumber(to.getStartPosition())));
+        mapping.mismatches.put(from, to);
+        return mapping;
+      }
+    }
+    final LinkedHashMap<String, Object> fromChildren = children(from);
+    final LinkedHashMap<String, Object> toChildren = children(to);
+    if (fromChildren.size() != toChildren.size()) {
+      final CompilationUnit root = (CompilationUnit) to.getRoot();
+      mapping.errors.add(String.format("%s does not match size of %s at line %s",
+          from.toString().trim().replaceAll("\\n", "\n\t"),
+          to.toString().trim().replaceAll("\\n", "\n\t"),
+          root.getLineNumber(to.getStartPosition())));
+      mapping.mismatches.put(from, to);
+    } else if (!fromChildren.keySet().equals(toChildren.keySet())) {
+      final CompilationUnit root = (CompilationUnit) to.getRoot();
+      mapping.errors.add(String.format("%s does not match keys of %s at line %s",
+          from.toString().trim().replaceAll("\\n", "\n\t"),
+          to.toString().trim().replaceAll("\\n", "\n\t"),
+          root.getLineNumber(to.getStartPosition())));
+      mapping.mismatches.put(from, to);
+    } else if (fromChildren.isEmpty() && !from.toString().equals(to.toString())) {
+      final CompilationUnit root = (CompilationUnit) to.getRoot();
+      mapping.errors.add(String.format("%s does not match content of %s at line %s",
+          from.toString().trim().replaceAll("\\n", "\n\t"),
+          to.toString().trim().replaceAll("\\n", "\n\t"),
+          root.getLineNumber(to.getStartPosition())));
       mapping.mismatches.put(from, to);
     } else {
-      final List<ASTNode> fromChildren = children(from);
-      final List<ASTNode> toChildren = children(to);
-      if (fromChildren.size() != toChildren.size()) {
-        final CompilationUnit root = (CompilationUnit) to.getRoot();
-        mapping.errors.add(String.format("%s does not match size of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
-        mapping.mismatches.put(from, to);
-      } else if (fromChildren.isEmpty() && !from.toString().equals(to.toString())) {
-        final CompilationUnit root = (CompilationUnit) to.getRoot();
-        mapping.errors.add(String.format("%s does not match content of %s at line %s", from.toString().trim(), to.toString().trim(), root.getLineNumber(to.getStartPosition())));
-        mapping.mismatches.put(from, to);
-      } else {
-        mapping.matches.put(from, to);
-        for (int i = 0; i < fromChildren.size(); i++) {
-          mapping.putAll(align(fromChildren.get(i), toChildren.get(i)));
+      mapping.matches.put(from, to);
+      fromChildren.forEach((k, v) -> {
+        final Object toValue = toChildren.get(k);
+        final Object fromValue = fromChildren.get(k);
+        if (toValue != null || fromValue != null) {
+          if (toValue != null && fromValue != null) {
+            if (fromValue instanceof ASTNode) mapping.putAll(align((ASTNode) fromValue, (ASTNode) toValue));
+          } else {
+            final CompilationUnit root = (CompilationUnit) to.getRoot();
+            mapping.errors.add(String.format("%s does not match %s within %s at %s",
+                null == fromValue ? null : fromValue.toString().trim().replaceAll("\\n", "\n\t"),
+                null == toValue ? null : toValue.toString().trim().replaceAll("\\n", "\n\t"),
+                from,
+                root.getLineNumber(to.getStartPosition())));
+          }
         }
-      }
+      });
     }
     return mapping;
   }
 
-  public static List<ASTNode> children(ASTNode node) {
+  public static LinkedHashMap<String, Object> children(ASTNode node) {
     Collection<StructuralPropertyDescriptor> properties = new TreeSet<>(Comparator.comparing(x -> x.toString()));
     properties.addAll(invokeMethod(node, "internalStructuralPropertiesForType", AST.JLS11));
-    return ((Stream<ASTNode>) properties.stream().flatMap(property -> {
+    final LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    properties.forEach(property -> {
       if (property.isChildListProperty()) {
-        return ((List) node.getStructuralProperty(property)).stream();
+        final List list = (List) node.getStructuralProperty(property);
+        for (int i = 0; i < list.size(); i++) {
+          map.put(String.format("%s[%d]", property, i), list.get(i));
+        }
       } else {
-        return Stream.of(node.getStructuralProperty(property));
+        map.put(property.toString(), node.getStructuralProperty(property));
       }
-    }).filter(x -> x instanceof ASTNode)).collect(Collectors.toList());
+    });
+    return map;
   }
 
   @NotNull
@@ -203,11 +254,6 @@ public abstract class FileAstVisitor extends ASTVisitor {
       info(1, node, "Copy node %s", node);
       return (T) ASTNode.copySubtree(ast, node);
     }
-  }
-
-  @Nullable
-  protected final ASTNode copySubtree(AST ast, ASTNode node) {
-    return ASTNode.copySubtree(ast, node);
   }
 
   protected final void debug(ASTNode node, String formatString, Object... args) {
@@ -372,6 +418,11 @@ public abstract class FileAstVisitor extends ASTVisitor {
       } else if (statement instanceof SynchronizedStatement) {
         final SynchronizedStatement synchronizedStatement = (SynchronizedStatement) statement;
         exits.addAll(exits_(ast, synchronizedStatement::getBody, synchronizedStatement::setBody));
+      } else if (statement instanceof Block) {
+        final Block synchronizedStatement = (Block) statement;
+        exits.addAll(exits_(ast, () -> synchronizedStatement, x -> {
+          throw new RuntimeException();
+        }));
       } else if (isExit(statement)) {
         exits.add(new StatementOfInterest(statement, j));
       }
@@ -426,25 +477,99 @@ public abstract class FileAstVisitor extends ASTVisitor {
         .filter(methodDeclaration -> ((MethodDeclaration) methodDeclaration).getName().toString().equals(name)).findFirst();
   }
 
-  private <T extends ASTNode> Optional<T> findReparsed(@NotNull T node) {
+  private <T extends ASTNode> Optional<T> findReparsed1(@NotNull T node) {
     ASTMapping reparsed = getReparsed();
-    T any;
+    if (null == reparsed) return Optional.empty();
+    return find(node, reparsed);
+  }
+
+  private <T extends ASTNode> Optional<T> findReparsed2(@NotNull T node) {
+    ASTMapping reparsed = getReparsed();
     if (null != reparsed) {
+      final Optional<T> optional = find(node, reparsed);
+      if (optional.isPresent()) return optional;
+    }
+    reparsed = update(true, false);
+    final Optional<T> optional = find(node, reparsed);
+    if (!optional.isPresent()) warn(node, "Could not find %s at %s in reparsed tree", node, node.getStartPosition());
+    return optional;
+  }
+
+  private <T extends ASTNode> Optional<T> find(@NotNull T node, ASTMapping reparsed) {
+    T any;
+    final Optional<T> optional;
+    if (null == reparsed) {
+      optional = Optional.empty();
+    } else {
       any = (T) reparsed.matches.get(node);
       if (null == any) any = (T) reparsed.mismatches.get(node);
-      if (null != any) return Optional.of(any);
+      if (null != any) {
+        optional = Optional.of(any);
+      } else {
+        optional = Optional.empty();
+      }
     }
-    final CompilationUnit reparse = reparse();
+    return optional;
+  }
+
+
+  private <T extends ASTNode> ASTMapping update(boolean write, boolean format) {
+    if (write) {
+      logger.info(String.format("Writing intermediate changes to %s", file));
+      try {
+        write(format);
+      } catch (Throwable e) {
+        logger.warn("Error writing source", e);
+      }
+    }
+    final CompilationUnit reparse = read();
     final ASTMapping align = align(compilationUnit, reparse);
     setReparsed(align);
-    reparsed = align;
-    reparsed.errors.stream().forEach(x -> warnRaw(0, node, x));
-    if (null == reparsed) return Optional.empty();
-    any = (T) reparsed.matches.get(node);
-    if (null == any) any = (T) reparsed.mismatches.get(node);
-    if (null != any) return Optional.of(any);
-    warn(node, "Could not find %s at %s in reparsed tree", node, node.getStartPosition());
-    return Optional.empty();
+    align.errors.stream().forEach(x -> warnRaw(0, compilationUnit, x));
+    if (!align.mismatches.isEmpty()) {
+      return repairAndUpdate(format, reparse, align);
+    }
+    return align;
+  }
+
+  private ASTMapping repairAndUpdate(boolean format, CompilationUnit compilationUnit0, ASTMapping align0) {
+    return repairAndUpdate(format, compilationUnit0, align0, 3);
+  }
+
+  private ASTMapping repairAndUpdate(boolean format, CompilationUnit compilationUnit0, ASTMapping align0, int retries) {
+    compilationUnit0.recordModifications();
+    align0.mismatches.forEach((from, to) -> {
+      replace(to, ASTNode.copySubtree(to.getAST(), from));
+    });
+    final String content0 = AutoCoder.read(this.file);
+    final String content1 = updateContent(content0, compilationUnit0);
+    if (content0.equals(content1)) {
+      throw new RuntimeException("ASTNode fixups did not change document");
+    }
+    write(format ? AutoCoder.format(content1) : content1);
+    final CompilationUnit compilationUnit1 = read();
+    final ASTMapping align1 = align(this.compilationUnit, compilationUnit1);
+    align1.errors.stream().forEach(x -> warnRaw(0, this.compilationUnit, x));
+    if (!align1.mismatches.isEmpty()) {
+      if (retries <= 0) {
+        throw new RuntimeException("Could not repair");
+      }
+      return repairAndUpdate(format, compilationUnit1, align1, retries - 1);
+    } else {
+      setReparsed(align1);
+      return align1;
+    }
+  }
+
+  protected static String updateContent(String content, CompilationUnit cu) {
+    Document document = new Document(content);
+    final Hashtable<String, String> options = JavaCore.getOptions();
+    try {
+      cu.rewrite(document, options).apply(document);
+    } catch (BadLocationException e) {
+      throw new RuntimeException(e);
+    }
+    return document.get();
   }
 
   @Nullable
@@ -643,12 +768,10 @@ public abstract class FileAstVisitor extends ASTVisitor {
             final int from = i == 0 ? 0 : (delimiters.get(i - 1) + 1);
             final String substring = innerType.substring(from, to);
             if (substring.isEmpty()) {
-              if (isDeclaration) {
-                innerTypes.add(ast.newWildcardType());
-              }
-              continue;
+              innerTypes.add(ast.newWildcardType());
+            } else {
+              innerTypes.add(getTypeParameter(node, substring, isDeclaration));
             }
-            innerTypes.add(getTypeParameter(node, substring, isDeclaration));
           }
           final ParameterizedType parameterizedType = ast.newParameterizedType(ast.newSimpleType(newQualifiedName(ast, mainType.split("\\."))));
           parameterizedType.typeArguments().addAll(innerTypes);
@@ -759,6 +882,8 @@ public abstract class FileAstVisitor extends ASTVisitor {
       return false;
     } else if (node instanceof FieldAccess) {
       return false;
+    } else if (node instanceof ArrayAccess) {
+      return false;
     } else if (node instanceof CastExpression) {
       return isEvaluable(((CastExpression) node).getExpression());
     } else if (node instanceof ParenthesizedExpression) {
@@ -860,21 +985,8 @@ public abstract class FileAstVisitor extends ASTVisitor {
     }
   }
 
-  protected final CompilationUnit reparse() {
-    logger.info(String.format("Writing intermediate changes to %s", file));
-    try {
-      write(false);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  private CompilationUnit read() {
     return projectInfo.read(file).values().iterator().next();
-  }
-
-  protected ASTMapping reparseAndAlign() {
-    final CompilationUnit reparse = reparse();
-    final ASTMapping align = align(compilationUnit, reparse);
-    setReparsed(align);
-    return align;
   }
 
   protected final void replace(ASTNode child, ASTNode newChild) {
@@ -910,8 +1022,20 @@ public abstract class FileAstVisitor extends ASTVisitor {
 
   @Nullable
   protected final <T extends ASTNode, R extends IBinding> R resolve(T node, Function<T, R> function) {
-    return Optional.of(node).map(function).filter(Objects::nonNull).orElseGet(() ->
-        findReparsed(node).map(function).orElseGet(() -> null));
+    if (null == node) return null;
+    R binding = function.apply(node);
+    if (null != binding) return binding;
+    T reparsed = findReparsed1(node).orElse(null);
+    if (null != reparsed) {
+      binding = function.apply(reparsed);
+      if (null != binding) return binding;
+    }
+    reparsed = findReparsed2(node).orElse(null);
+    if (null != reparsed) {
+      binding = function.apply(reparsed);
+      if (null != binding) return binding;
+    }
+    return null;
   }
 
   protected final IBinding resolveBinding(@NotNull Name node) {
@@ -973,11 +1097,7 @@ public abstract class FileAstVisitor extends ASTVisitor {
   public boolean revert() {
     final String currentContent = AutoCoder.read(this.file);
     if (currentContent.equals(initialContent)) return false;
-    try {
-      FileUtils.write(file, initialContent, "UTF-8");
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    write(initialContent);
     return true;
   }
 
@@ -1024,43 +1144,28 @@ public abstract class FileAstVisitor extends ASTVisitor {
     logger.warn(getLogPrefix(node, caller) + format);
   }
 
-  public boolean write(boolean format) throws IOException {
-    Document document = new Document(initialContent);
-    final Hashtable<String, String> options = JavaCore.getOptions();
-    try {
-      compilationUnit.rewrite(document, options).apply(document);
-    } catch (BadLocationException e) {
-      throw new RuntimeException(e);
-    }
-    final String finalSrc = document.get();
+  public boolean write(boolean format) {
+    final String finalSrc = updateContent();
     if (initialContent.equals(finalSrc)) return false;
-    FileUtils.write(file, format ? AutoCoder.format(finalSrc) : finalSrc, "UTF-8");
+    write(format ? AutoCoder.format(finalSrc) : finalSrc);
     return true;
   }
 
-  public boolean writeFinal(boolean format) throws IOException {
-    final CompilationUnit reparse = reparse();
-    final String initialWrite = AutoCoder.read(this.file);
-    final ASTMapping align = align(compilationUnit, reparse);
-    if (!align.errors.isEmpty()) {
-      align.errors.stream().forEach(x -> warnRaw(0, compilationUnit, x));
-      reparse.recordModifications();
-      align.mismatches.forEach((from, to) -> {
-        replace(to, ASTNode.copySubtree(to.getAST(), from));
-      });
+  private String updateContent() {
+    return updateContent(initialContent, compilationUnit);
+  }
 
-      Document document = new Document(initialWrite);
-      final Hashtable<String, String> options = JavaCore.getOptions();
-      try {
-        reparse.rewrite(document, options).apply(document);
-      } catch (BadLocationException e) {
-        throw new RuntimeException(e);
-      }
-      final String finalSrc = document.get();
-      FileUtils.write(file, format ? AutoCoder.format(finalSrc) : finalSrc, "UTF-8");
-      return true;
+  private void write(String data) {
+    try {
+      FileUtils.write(file, data, "UTF-8");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    return !initialWrite.equals(initialContent);
+  }
+
+  public boolean writeFinal(boolean format) {
+    update(true, format);
+    return !AutoCoder.read(this.file).equals(initialContent);
   }
 
   public static class ASTMapping {

@@ -24,7 +24,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Tree set container.
  */
-public class TreeSetContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class TreeSetContainer extends ReferenceCountingBase {
   private static void testStreamOperations() {
     testOperations(values -> {
       values.stream().forEach(x -> {
@@ -44,10 +44,10 @@ public class TreeSetContainer extends ReferenceCountingBase {
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[]{}).length) {
+      if (values.size() != values.toArray(new BasicType[] {}).length) {
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[]{});
+      values.toArray(new BasicType[] {});
     });
   }
 
@@ -87,8 +87,8 @@ public class TreeSetContainer extends ReferenceCountingBase {
   }
 
   private static void testOperations(
-      java.util.function.Consumer<java.util.TreeSet<BasicType>> setRefConsumer) {
-    java.util.TreeSet<BasicType> values = new java.util.TreeSet<>();
+      com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefTreeSet<BasicType>> setRefConsumer) {
+    com.simiacryptus.ref.wrappers.RefTreeSet<BasicType> values = new com.simiacryptus.ref.wrappers.RefTreeSet<>();
     setRefConsumer.accept(values);
   }
 
@@ -108,7 +108,7 @@ public class TreeSetContainer extends ReferenceCountingBase {
     testOperations(setValues -> {
       setValues.add(new BasicType());
       final BasicType basicType = new BasicType();
-      final java.util.List<BasicType> list = java.util.Arrays
+      final com.simiacryptus.ref.wrappers.RefList<BasicType> list = com.simiacryptus.ref.wrappers.RefArrays
           .asList(basicType);
       if (!setValues.addAll(list)) {
         throw new RuntimeException();
@@ -126,8 +126,21 @@ public class TreeSetContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
+  }
+
+  public @Override TreeSetContainer addRef() {
+    return (TreeSetContainer) super.addRef();
+  }
+
+  public static TreeSetContainer[] addRefs(TreeSetContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TreeSetContainer::addRef)
+        .toArray((x) -> new TreeSetContainer[x]);
+  }
+
+  public static TreeSetContainer[][] addRefs(TreeSetContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TreeSetContainer::addRefs)
+        .toArray((x) -> new TreeSetContainer[x][]);
   }
 }

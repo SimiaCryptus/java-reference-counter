@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The type Basic type.
  */
-public class BasicType extends ReferenceCountingBase
+public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCountingBase
     implements Comparable<BasicType> {
   /**
    * The Label.
@@ -54,8 +54,7 @@ public class BasicType extends ReferenceCountingBase
     this.label = label;
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     value = -1;
     super._free();
   }
@@ -132,5 +131,19 @@ public class BasicType extends ReferenceCountingBase
    */
   public WrapperType<BasicType> wrap() {
     return new WrapperType<>(this);
+  }
+
+  public @Override BasicType addRef() {
+    return (BasicType) super.addRef();
+  }
+
+  public static BasicType[] addRefs(BasicType[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
+        .toArray((x) -> new BasicType[x]);
+  }
+
+  public static BasicType[][] addRefs(BasicType[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
+        .toArray((x) -> new BasicType[x][]);
   }
 }

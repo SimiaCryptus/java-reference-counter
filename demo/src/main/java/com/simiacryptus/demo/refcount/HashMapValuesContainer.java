@@ -22,18 +22,19 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
+import com.simiacryptus.ref.wrappers.RefMap;
 
 /**
  * The type Hash map values container.
  */
-public class HashMapValuesContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class HashMapValuesContainer extends ReferenceCountingBase {
   /**
    * Test basic operations.
    *
    * @param valuesMap the values map
    */
-  public static void testBasicOperations(java.util.HashMap<Integer, BasicType> valuesMap) {
-    final java.util.HashMap<Integer, BasicType> copyMap = new java.util.HashMap<>();
+  public static void testBasicOperations(com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> valuesMap) {
+    final com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> copyMap = new com.simiacryptus.ref.wrappers.RefHashMap<>();
     copyMap.putAll(valuesMap);
     valuesMap.clear();
     assert valuesMap.isEmpty();
@@ -63,15 +64,15 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
    *
    * @param values the values
    */
-  public static void testStreamOperations(java.util.HashMap<Integer, BasicType> values) {
+  public static void testStreamOperations(com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
   private static void test(
-      java.util.function.Consumer<java.util.HashMap<Integer, BasicType>> fn) {
-    final java.util.HashMap<Integer, BasicType> hashMap = new java.util.HashMap<>();
+      com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType>> fn) {
+    final com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> hashMap = new com.simiacryptus.ref.wrappers.RefHashMap<>();
     fn.accept(hashMap);
   }
 
@@ -79,8 +80,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     test(values -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      values
-          .entrySet().forEach(fooEntry -> {
+      values.entrySet().forEach(fooEntry -> {
         assert null != fooEntry.getValue();
         assert null != fooEntry.getKey();
         fooEntry.setValue(new BasicType());
@@ -89,7 +89,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     test(values -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
+      final com.simiacryptus.ref.wrappers.RefConsumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
         if (1 == ((int) fooEntry2.getKey())) {
           if (null == fooEntry2.getValue()) {
             throw new AssertionError();
@@ -101,14 +101,13 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
         }
         fooEntry2.setValue(new BasicType());
       };
-      values
-          .entrySet().forEach(entryConsumer);
+      values.entrySet().forEach(entryConsumer);
     });
-    test((java.util.HashMap<Integer, BasicType> values) -> {
+    test((com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<com.simiacryptus.ref.wrappers.RefMap.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
+      final com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> closureMap = new com.simiacryptus.ref.wrappers.RefHashMap<>();
+      final com.simiacryptus.ref.wrappers.RefConsumer<Map.Entry<Integer, BasicType>> entryConsumer = (com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefMap.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
         if (1 == ((int) lambdaParameter.getKey())) {
           if (null == lambdaParameter.getValue()) {
             throw new AssertionError();
@@ -120,15 +119,14 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
         }
         closureMap.put(lambdaParameter.getKey(), lambdaParameter.getValue());
       };
-      values
-          .entrySet().forEach(entryConsumer);
+      values.entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();
     });
-    test((java.util.HashMap<Integer, BasicType> values) -> {
+    test((com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new java.util.function.Consumer<Map.Entry<Integer, BasicType>>() {
+      final com.simiacryptus.ref.wrappers.RefHashMap<Integer, BasicType> closureMap = new com.simiacryptus.ref.wrappers.RefHashMap<>();
+      final com.simiacryptus.ref.wrappers.RefConsumer<Map.Entry<Integer, BasicType>> entryConsumer = new com.simiacryptus.ref.wrappers.RefConsumer<Map.Entry<Integer, BasicType>>() {
         @Override
         public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == ((int) anonymousParameter.getKey())) {
@@ -142,9 +140,12 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
           }
           closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
         }
+
+        public void _free() {
+        }
+
       };
-      values
-          .entrySet().forEach(entryConsumer);
+      values.entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();
     });
   }
@@ -155,13 +156,26 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testEntries();
-      testBasicOperations(new java.util.HashMap<>());
-      testStreamOperations(new java.util.HashMap<>());
+      testBasicOperations(new com.simiacryptus.ref.wrappers.RefHashMap<>());
+      testStreamOperations(new com.simiacryptus.ref.wrappers.RefHashMap<>());
     }
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
+  }
+
+  public @Override HashMapValuesContainer addRef() {
+    return (HashMapValuesContainer) super.addRef();
+  }
+
+  public static HashMapValuesContainer[] addRefs(HashMapValuesContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashMapValuesContainer::addRef)
+        .toArray((x) -> new HashMapValuesContainer[x]);
+  }
+
+  public static HashMapValuesContainer[][] addRefs(HashMapValuesContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashMapValuesContainer::addRefs)
+        .toArray((x) -> new HashMapValuesContainer[x][]);
   }
 }

@@ -24,17 +24,17 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Dequque container.
  */
-public class DeququeContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class DeququeContainer extends ReferenceCountingBase {
   private static void testOperations(
-      java.util.function.Consumer<java.util.concurrent.ConcurrentLinkedDeque<BasicType>> fn) {
-    java.util.concurrent.ConcurrentLinkedDeque<BasicType> values = new java.util.concurrent.ConcurrentLinkedDeque<>();
+      com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType>> fn) {
+    com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType> values = new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
     }
     fn.accept(values);
   }
 
-  private static void testArrayOperations(java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
+  private static void testArrayOperations(com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
     }
@@ -43,12 +43,12 @@ public class DeququeContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[]{}).length) {
+    if (values.size() != values.toArray(new BasicType[] {}).length) {
       throw new RuntimeException();
     }
   }
 
-  private static void testElementOperations(java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
+  private static void testElementOperations(com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
@@ -79,10 +79,10 @@ public class DeququeContainer extends ReferenceCountingBase {
   }
 
   private static void testCollectionOperations(
-      java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
+      com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
-    final java.util.List<BasicType> list = java.util.Arrays
+    final com.simiacryptus.ref.wrappers.RefList<BasicType> list = com.simiacryptus.ref.wrappers.RefArrays
         .asList(basicType);
     if (!values.addAll(list)) {
       throw new RuntimeException();
@@ -106,8 +106,8 @@ public class DeququeContainer extends ReferenceCountingBase {
    */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
-      testCollectionOperations(new java.util.concurrent.ConcurrentLinkedDeque<>());
-      testElementOperations(new java.util.concurrent.ConcurrentLinkedDeque<>());
+      testCollectionOperations(new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>());
+      testElementOperations(new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>());
       testDequeOperations();
       testStreamOperations();
       testIteratorOperations();
@@ -192,7 +192,7 @@ public class DeququeContainer extends ReferenceCountingBase {
 
   private static void testIteratorOperations() {
     testOperations(values -> {
-      final java.util.Iterator<com.simiacryptus.demo.refcount.BasicType> iterator48093 = values
+      final com.simiacryptus.ref.wrappers.RefIterator<com.simiacryptus.demo.refcount.BasicType> iterator48093 = values
           .iterator();
       while (iterator48093.hasNext()) {
         iterator48093.next();
@@ -200,7 +200,7 @@ public class DeququeContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      final java.util.Iterator<com.simiacryptus.demo.refcount.BasicType> iterator48093 = values
+      final com.simiacryptus.ref.wrappers.RefIterator<com.simiacryptus.demo.refcount.BasicType> iterator48093 = values
           .descendingIterator();
       while (iterator48093.hasNext()) {
         iterator48093.next();
@@ -209,7 +209,7 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
     if (false) {
       testOperations(values -> {
-        final java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> spliterator = values
+        final com.simiacryptus.ref.wrappers.RefSpliterator<com.simiacryptus.demo.refcount.BasicType> spliterator = values
             .spliterator();
         while (spliterator.tryAdvance(x -> {
           assert null != x;
@@ -223,14 +223,13 @@ public class DeququeContainer extends ReferenceCountingBase {
     if (false)
       testOperations(values -> {
         assert values.size() == values.stream().flatMap(
-            (java.util.function.Function<? super BasicType, ? extends java.util.stream.Stream<? extends BasicType>>) x -> {
+            (java.util.function.Function<? super BasicType, ? extends com.simiacryptus.ref.wrappers.RefStream<? extends BasicType>>) x -> {
               return values.stream();
             }).distinct().count();
       });
     testOperations(values_conditionalBlock -> {
       if (true) {
-        assert values_conditionalBlock.size() == values_conditionalBlock.stream()
-            .toArray(i -> new BasicType[i]).length;
+        assert values_conditionalBlock.size() == values_conditionalBlock.stream().toArray(i -> new BasicType[i]).length;
       }
     });
     testOperations(values -> {
@@ -242,15 +241,13 @@ public class DeququeContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().flatMap(x -> {
         x.setValue(x.getValue() + 1);
-        return java.util.stream.Stream
-            .of(x);
+        return com.simiacryptus.ref.wrappers.RefStream.of(x);
       }).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       values.stream().flatMap(x -> {
         x.setValue(x.getValue() + 1);
-        return java.util.stream.Stream
-            .of(x, new BasicType());
+        return com.simiacryptus.ref.wrappers.RefStream.of(x, new BasicType());
       }).forEach(x -> {
         assert x != null;
       });
@@ -266,32 +263,27 @@ public class DeququeContainer extends ReferenceCountingBase {
       }).count();
     });
     testOperations(values -> {
-      assert values.stream()
-          .reduce((reduceOpA, reduceOpB) -> {
-            return new BasicType("reduceOp");
-          }).isPresent();
+      assert values.stream().reduce((reduceOpA, reduceOpB) -> {
+        return new BasicType("reduceOp");
+      }).isPresent();
     });
     testOperations(values -> {
-      assert values.stream().reduce(new BasicType("reduceInit"),
-          (reduceOpA, reduceOpB) -> {
-            return new BasicType("reduceOp");
-          }) != null;
+      assert values.stream().reduce(new BasicType("reduceInit"), (reduceOpA, reduceOpB) -> {
+        return new BasicType("reduceOp");
+      }) != null;
     });
     testOperations(values -> {
-      assert values.stream().reduce(new BasicType("reduceInit"),
-          (reduceOpA, reduceOpB) -> {
-            return new BasicType("reduceOp");
-          }, (reduceOpA, reduceOpB) -> {
-            return new BasicType("reduceOp");
-          }) != null;
+      assert values.stream().reduce(new BasicType("reduceInit"), (reduceOpA, reduceOpB) -> {
+        return new BasicType("reduceOp");
+      }, (reduceOpA, reduceOpB) -> {
+        return new BasicType("reduceOp");
+      }) != null;
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .collect(java.util.stream.Collectors.toList()).size();
+      assert values.size() == values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.toList()).size();
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .collect(java.util.stream.Collectors.toSet()).size();
+      assert values.size() == values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.toSet()).size();
     });
     testOperations(values -> {
       assert values.stream().anyMatch(x -> {
@@ -314,14 +306,14 @@ public class DeququeContainer extends ReferenceCountingBase {
       }).findFirst().isPresent();
     });
     testOperations(values -> {
-      java.util.Iterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream()
+      com.simiacryptus.ref.wrappers.RefIterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream()
           .iterator();
       while (iter.hasNext()) {
         assert iter.next() != null;
       }
     });
     testOperations(values -> {
-      java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream()
+      com.simiacryptus.ref.wrappers.RefSpliterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream()
           .spliterator();
       while (iter.tryAdvance(x -> {
         assert x != null;
@@ -329,30 +321,28 @@ public class DeququeContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      assert values.size() == values.stream().sorted(com.simiacryptus.ref.wrappers.RefComparator.naturalOrder())
+          .toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      assert values.size() == values.stream().sorted(com.simiacryptus.ref.wrappers.RefComparator.naturalOrder())
+          .toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
         x.setValue(x.getValue() + 1);
         return x;
-      }).sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      }).sorted(com.simiacryptus.ref.wrappers.RefComparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert null != values.stream()
-          .max(java.util.Comparator.comparing(x -> {
-            return x.getValue();
-          })).get();
+      assert null != values.stream().max(com.simiacryptus.ref.wrappers.RefComparator.comparing(x -> {
+        return x.getValue();
+      })).get();
     });
     testOperations(values -> {
-      assert null != values.stream()
-          .min(java.util.Comparator.comparing(x -> {
-            return x.getValue();
-          })).get();
+      assert null != values.stream().min(com.simiacryptus.ref.wrappers.RefComparator.comparing(x -> {
+        return x.getValue();
+      })).get();
     });
     testOperations(values -> {
       if (values.size() > 4 && values.stream().skip(1).limit(5).count() != 4) {
@@ -368,7 +358,7 @@ public class DeququeContainer extends ReferenceCountingBase {
       });
     });
     testOperations(values -> {
-      final java.util.stream.Stream<BasicType> parallel = values.stream().parallel();
+      final com.simiacryptus.ref.wrappers.RefStream<BasicType> parallel = values.stream().parallel();
       if (!parallel.isParallel())
         throw new AssertionError();
       parallel.close();
@@ -401,27 +391,37 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.size() == values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream
-            .of(foobar1.getValue());
+        return com.simiacryptus.ref.wrappers.RefIntStream.of(foobar1.getValue());
       }).toArray().length;
     });
     testOperations(values -> {
       assert values.size() == values.stream().flatMapToDouble(x -> {
-        return java.util.stream.DoubleStream
-            .of(x.getValue());
+        return com.simiacryptus.ref.wrappers.RefDoubleStream.of(x.getValue());
       }).toArray().length;
     });
     testOperations(values -> {
       final long[] longs = values.stream().flatMapToLong(x -> {
-        return java.util.stream.LongStream
-            .of(x.getValue());
+        return com.simiacryptus.ref.wrappers.RefLongStream.of(x.getValue());
       }).toArray();
       assert values.size() == longs.length;
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
+  }
+
+  public @Override DeququeContainer addRef() {
+    return (DeququeContainer) super.addRef();
+  }
+
+  public static DeququeContainer[] addRefs(DeququeContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(DeququeContainer::addRef)
+        .toArray((x) -> new DeququeContainer[x]);
+  }
+
+  public static DeququeContainer[][] addRefs(DeququeContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(DeququeContainer::addRefs)
+        .toArray((x) -> new DeququeContainer[x][]);
   }
 }
