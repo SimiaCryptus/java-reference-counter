@@ -3,7 +3,9 @@
 buildNumber.properties
 dependency-reduced-pom.xml
 .idea/
+*.iml
 java-reference-counter.iml
+logs/
 .mvn/timing.properties
 !/.mvn/wrapper/maven-wrapper.jar
 pom.xml.next
@@ -12,4 +14,3 @@ pom.xml.tag
 pom.xml.versionsBackup
 release.properties
 target/
-*.iml
