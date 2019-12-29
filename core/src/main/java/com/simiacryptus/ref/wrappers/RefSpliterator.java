@@ -71,6 +71,15 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   }
 
   /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
+  public Spliterator<T> getInner() {
+    return inner;
+  }
+
+  /**
    * Add refs ref spliterator [ ].
    *
    * @param <T>   the type parameter
@@ -80,15 +89,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   public static <T> RefSpliterator<T>[] addRefs(@NotNull RefSpliterator<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
         .toArray((x) -> new RefSpliterator[x]);
-  }
-
-  @Override
-  protected void _free() {
-    list.forEach(ReferenceCounting::freeRef);
-    list.clear();
-    RefUtil.freeRef(this.inner);
-    //RefUtil.freeInternals(inner);
-    super._free();
   }
 
   public RefSpliterator<T> addRef() {
@@ -103,15 +103,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   @Override
   public long estimateSize() {
     return size;
-  }
-
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
-  public Spliterator<T> getInner() {
-    return inner;
   }
 
   /**
@@ -131,16 +122,25 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   }
 
   @Nullable
-  protected T getRef(T t) {
-    return RefUtil.addRef(t);
-  }
-
-  @Nullable
   @Override
   public Spliterator<T> trySplit() {
     return this.getInner().trySplit();
 //    final Spliterator<T> trySplit = this.inner.trySplit();
 //    return null == trySplit ? null : new RefSpliterator<>(trySplit, size).track(this.addRef());
+  }
+
+  @Override
+  protected void _free() {
+    list.forEach(ReferenceCounting::freeRef);
+    list.clear();
+    RefUtil.freeRef(this.inner);
+    //RefUtil.freeInternals(inner);
+    super._free();
+  }
+
+  @Nullable
+  protected T getRef(T t) {
+    return RefUtil.addRef(t);
   }
 
   /**
@@ -160,13 +160,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
      */
     public OfDouble(OfDouble inner) {
       this.inner = inner;
-    }
-
-    @Override
-    protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
-      list.clear();
-      super._free();
     }
 
     @Override
@@ -200,6 +193,13 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return new RefSpliterator.OfDouble(this.inner.trySplit());
     }
 
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
+    }
+
   }
 
   /**
@@ -220,13 +220,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     }
 
     @Override
-    protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
-      list.clear();
-      super._free();
-    }
-
-    @Override
     public int characteristics() {
       return this.inner.characteristics();
     }
@@ -235,8 +228,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     public long estimateSize() {
       return this.inner.estimateSize();
     }
-
-    ;
 
     /**
      * Track ref spliterator . of long.
@@ -249,6 +240,8 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this;
     }
 
+    ;
+
     @Override
     public boolean tryAdvance(LongConsumer action) {
       return this.inner.tryAdvance(action);
@@ -257,6 +250,13 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     @Override
     public RefSpliterator.OfLong trySplit() {
       return new RefSpliterator.OfLong(this.inner.trySplit());
+    }
+
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
     }
 
 
@@ -277,13 +277,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
      */
     public OfInt(OfInt inner) {
       this.inner = inner;
-    }
-
-    @Override
-    protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
-      list.clear();
-      super._free();
     }
 
     @Override
@@ -315,6 +308,13 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     @Override
     public RefSpliterator.OfInt trySplit() {
       return new RefSpliterator.OfInt(this.inner.trySplit());
+    }
+
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
     }
 
 

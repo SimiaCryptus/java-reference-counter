@@ -22,12 +22,12 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
-import com.simiacryptus.ref.wrappers.RefMap;
 
 /**
  * The type Hash map values container.
  */
-public @com.simiacryptus.ref.lang.RefAware class HashMapValuesContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class HashMapValuesContainer extends ReferenceCountingBase {
   /**
    * Test basic operations.
    *
@@ -68,6 +68,27 @@ public @com.simiacryptus.ref.lang.RefAware class HashMapValuesContainer extends 
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
+  }
+
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testEntries();
+      testBasicOperations(new com.simiacryptus.ref.wrappers.RefHashMap<>());
+      testStreamOperations(new com.simiacryptus.ref.wrappers.RefHashMap<>());
+    }
+  }
+
+  public static HashMapValuesContainer[] addRefs(HashMapValuesContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashMapValuesContainer::addRef)
+        .toArray((x) -> new HashMapValuesContainer[x]);
+  }
+
+  public static HashMapValuesContainer[][] addRefs(HashMapValuesContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashMapValuesContainer::addRefs)
+        .toArray((x) -> new HashMapValuesContainer[x][]);
   }
 
   private static void test(
@@ -150,32 +171,13 @@ public @com.simiacryptus.ref.lang.RefAware class HashMapValuesContainer extends 
     });
   }
 
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testEntries();
-      testBasicOperations(new com.simiacryptus.ref.wrappers.RefHashMap<>());
-      testStreamOperations(new com.simiacryptus.ref.wrappers.RefHashMap<>());
-    }
-  }
-
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override HashMapValuesContainer addRef() {
+  public @Override
+  HashMapValuesContainer addRef() {
     return (HashMapValuesContainer) super.addRef();
-  }
-
-  public static HashMapValuesContainer[] addRefs(HashMapValuesContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashMapValuesContainer::addRef)
-        .toArray((x) -> new HashMapValuesContainer[x]);
-  }
-
-  public static HashMapValuesContainer[][] addRefs(HashMapValuesContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashMapValuesContainer::addRefs)
-        .toArray((x) -> new HashMapValuesContainer[x][]);
   }
 }

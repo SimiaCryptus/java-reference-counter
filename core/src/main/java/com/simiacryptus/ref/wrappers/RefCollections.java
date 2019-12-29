@@ -21,7 +21,6 @@ package com.simiacryptus.ref.wrappers;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

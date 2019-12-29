@@ -52,6 +52,19 @@ public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCoun
     };
   }
 
+  @Nullable
+  public T get() {
+    if (null == val) {
+      synchronized (this) {
+        if (null == val) {
+          val = build();
+        }
+      }
+    }
+    val.addRef();
+    return val;
+  }
+
   @Override
   protected void _free() {
     if (null != val) {
@@ -68,17 +81,4 @@ public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCoun
    */
   @NotNull
   protected abstract T build();
-
-  @Nullable
-  public T get() {
-    if (null == val) {
-      synchronized (this) {
-        if (null == val) {
-          val = build();
-        }
-      }
-    }
-    val.addRef();
-    return val;
-  }
 }

@@ -1,6 +1,6 @@
 package com.simiacryptus.ref.core;
 
-import com.simiacryptus.ref.core.ops.FileAstVisitor;
+import com.simiacryptus.ref.core.ops.ASTEditor;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -26,6 +26,17 @@ public abstract class AutoCoder {
 
   protected AutoCoder(ProjectInfo projectInfo) {
     this.projectInfo = projectInfo;
+  }
+
+  protected ProjectInfo getProjectInfo() {
+    return projectInfo;
+  }
+
+  @NotNull
+  protected SymbolIndex getSymbolIndex() {
+    final SymbolIndex index = new SymbolIndex();
+    scan((projectInfo, cu, file) -> new IndexSymbols(projectInfo, cu, file, index));
+    return index;
   }
 
   @NotNull
@@ -93,23 +104,15 @@ public abstract class AutoCoder {
     return prevSrc;
   }
 
-  protected ProjectInfo getProjectInfo() {
-    return projectInfo;
-  }
-
-  @NotNull
-  protected IndexSymbols.SymbolIndex getSymbolIndex() {
-    final IndexSymbols.SymbolIndex index = new IndexSymbols.SymbolIndex();
-    scan((projectInfo, cu, file) -> new IndexSymbols(projectInfo, cu, file, index));
-    return index;
-  }
+  @Nonnull
+  public abstract void rewrite();
 
   protected int rewrite(@NotNull VisitorFactory visitorFactory) {
     return getProjectInfo().parse().entrySet().stream().mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      final FileAstVisitor astVisitor = visitorFactory.apply(getProjectInfo(), compilationUnit, file);
+      final ASTEditor astVisitor = visitorFactory.apply(getProjectInfo(), compilationUnit, file);
       compilationUnit.accept(astVisitor);
       if (astVisitor.writeFinal(true)) {
         logger.info(String.format("Changed: %s with %s", file, astVisitor.getClass().getSimpleName()));
@@ -121,23 +124,20 @@ public abstract class AutoCoder {
     }).sum();
   }
 
-  @Nonnull
-  public abstract void rewrite();
-
   protected void scan(@NotNull VisitorFactory visitor) {
     getProjectInfo().parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
-      final FileAstVisitor fileAstVisitor = visitor.apply(getProjectInfo(), compilationUnit, file);
-      compilationUnit.accept(fileAstVisitor);
-      if (fileAstVisitor.revert()) {
+      final ASTEditor autoCoderOperator = visitor.apply(getProjectInfo(), compilationUnit, file);
+      compilationUnit.accept(autoCoderOperator);
+      if (autoCoderOperator.revert()) {
         logger.warn("File modified in scan: " + file);
       }
     });
   }
 
   public interface VisitorFactory {
-    FileAstVisitor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
+    ASTEditor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
   }
 }

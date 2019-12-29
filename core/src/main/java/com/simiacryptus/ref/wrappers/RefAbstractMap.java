@@ -38,10 +38,16 @@ import java.util.Map;
 @RefIgnore
 public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
+  protected abstract Map<K, KeyValue<K, V>> getInner();
+
   @Override
-  protected void _free() {
-    clear();
-    super._free();
+  public boolean isEmpty() {
+    return getInner().isEmpty();
   }
 
   @NotNull
@@ -93,18 +99,6 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
     return RefUtil.addRef(null == keyValue ? null : keyValue.value);
   }
 
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
-  protected abstract Map<K, KeyValue<K, V>> getInner();
-
-  @Override
-  public boolean isEmpty() {
-    return getInner().isEmpty();
-  }
-
   @NotNull
   @Override
   public RefSet<K> keySet() {
@@ -154,6 +148,12 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
     final RefHashSet<V> hashSet = new RefHashSet<>();
     getInner().values().forEach(x -> hashSet.add(x.value));
     return hashSet;
+  }
+
+  @Override
+  protected void _free() {
+    clear();
+    super._free();
   }
 
   /**

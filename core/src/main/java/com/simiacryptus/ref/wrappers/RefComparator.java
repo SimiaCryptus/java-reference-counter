@@ -36,6 +36,8 @@ import java.util.function.ToLongFunction;
 @RefIgnore
 public class RefComparator<T> implements Comparator<T> {
 
+  private final Comparator<T> inner;
+
   public RefComparator(Comparator<T> inner) {
     this.inner = inner;
   }
@@ -53,12 +55,6 @@ public class RefComparator<T> implements Comparator<T> {
       RefUtil.freeRef(b);
       return result;
     };
-  }
-
-  private final Comparator<T> inner;
-  @Override
-  public int compare(T o1, T o2) {
-    return inner.compare(o1,o2);
   }
 
   /**
@@ -106,5 +102,10 @@ public class RefComparator<T> implements Comparator<T> {
    */
   public static <T> RefComparator<T> comparingDouble(ToDoubleFunction<? super T> keyExtractor) {
     return new RefComparator<>(Comparator.comparingDouble(keyExtractor));
+  }
+
+  @Override
+  public int compare(T o1, T o2) {
+    return inner.compare(o1, o2);
   }
 }

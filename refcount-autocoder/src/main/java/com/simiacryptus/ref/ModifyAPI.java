@@ -46,11 +46,17 @@ public class ModifyAPI extends RefAutoCoderMojo {
       rewrite(RemoveRefMethods::new);
       rewrite(RemoveAnnotations::new);
       rewrite(InsertAnnotations::new);
-      rewrite((projectInfo, cu, file) -> new ReplaceTypes(projectInfo, cu, file, false));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyTypeParameter(projectInfo, cu, file, false));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifySimpleName(projectInfo, cu, file, false));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyQualifiedName(projectInfo, cu, file, false));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyCompilationUnit(projectInfo, cu, file, false));
       rewrite(DistinctImports::new);
       rewrite(FixCustomImplementations::new);
-      rewrite(FixVariableDeclarations::new);
-      rewrite(InsertMethods::new);
+      rewrite(FixVariableDeclarations.ModifyFieldDeclaration::new);
+      rewrite(FixVariableDeclarations.ModifyVariableDeclarationFragment::new);
+      rewrite(FixVariableDeclarations.ModifyVariableDeclarationStatement::new);
+      rewrite(InsertMethods.ModifyAnonymousClassDeclaration::new);
+      rewrite(InsertMethods.ModifyTypeDeclaration::new);
     }
   }
 }

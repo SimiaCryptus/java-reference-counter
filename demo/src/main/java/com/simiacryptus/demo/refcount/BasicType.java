@@ -26,7 +26,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The type Basic type.
  */
-public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCountingBase
+public @com.simiacryptus.ref.lang.RefAware
+class BasicType extends ReferenceCountingBase
     implements Comparable<BasicType> {
   /**
    * The Label.
@@ -52,30 +53,6 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
   public BasicType(String label) {
     this.setValue(1);
     this.label = label;
-  }
-
-  public @Override void _free() {
-    value = -1;
-    super._free();
-  }
-
-  @Override
-  public int compareTo(@NotNull BasicType o) {
-    return this.label.compareTo(o.label);
-  }
-
-  @RefIgnore
-  @Override
-  public boolean equals(Object o) {
-    if (o == null)
-      return false;
-    if (!(o instanceof BasicType))
-      return false;
-    BasicType basicType = (BasicType) o;
-    if (this == basicType) {
-      return true;
-    }
-    return label == basicType.label;
   }
 
   /**
@@ -106,6 +83,41 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
     this.value = value;
   }
 
+  public static BasicType[] addRefs(BasicType[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
+        .toArray((x) -> new BasicType[x]);
+  }
+
+  public static BasicType[][] addRefs(BasicType[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
+        .toArray((x) -> new BasicType[x][]);
+  }
+
+  public @Override
+  void _free() {
+    value = -1;
+    super._free();
+  }
+
+  @Override
+  public int compareTo(@NotNull BasicType o) {
+    return this.label.compareTo(o.label);
+  }
+
+  @RefIgnore
+  @Override
+  public boolean equals(Object o) {
+    if (o == null)
+      return false;
+    if (!(o instanceof BasicType))
+      return false;
+    BasicType basicType = (BasicType) o;
+    if (this == basicType) {
+      return true;
+    }
+    return label == basicType.label;
+  }
+
   @RefIgnore
   @Override
   public int hashCode() {
@@ -133,17 +145,8 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
     return new WrapperType<>(this);
   }
 
-  public @Override BasicType addRef() {
+  public @Override
+  BasicType addRef() {
     return (BasicType) super.addRef();
-  }
-
-  public static BasicType[] addRefs(BasicType[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
-        .toArray((x) -> new BasicType[x]);
-  }
-
-  public static BasicType[][] addRefs(BasicType[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
-        .toArray((x) -> new BasicType[x][]);
   }
 }

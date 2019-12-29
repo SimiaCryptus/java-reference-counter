@@ -19,20 +19,20 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.core.ops.FileAstVisitor;
+import com.simiacryptus.ref.core.ops.ASTOperator;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 
 @RefIgnore
-public class RemoveRefMethods extends RefFileAstVisitor {
+public class RemoveRefMethods extends RefASTOperator {
 
   public RemoveRefMethods(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
@@ -40,8 +40,8 @@ public class RemoveRefMethods extends RefFileAstVisitor {
 
   @Override
   public void endVisit(@NotNull TypeDeclaration node) {
-    final ITypeBinding typeBinding = FileAstVisitor.resolveBinding(node);
-    if (derives(typeBinding, ReferenceCounting.class)) {
+    final ITypeBinding typeBinding = ASTOperator.resolveBinding(node);
+    if (ASTUtil.derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "addRef");
       removeMethods(node, "freeRef");
       //removeMethods(node, "_free");

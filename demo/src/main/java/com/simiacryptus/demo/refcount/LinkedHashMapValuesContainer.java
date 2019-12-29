@@ -22,12 +22,12 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
-import com.simiacryptus.ref.wrappers.RefMap;
 
 /**
  * The type Linked hash map values container.
  */
-public @com.simiacryptus.ref.lang.RefAware class LinkedHashMapValuesContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class LinkedHashMapValuesContainer extends ReferenceCountingBase {
   /**
    * Test basic operations.
    *
@@ -68,6 +68,27 @@ public @com.simiacryptus.ref.lang.RefAware class LinkedHashMapValuesContainer ex
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
+  }
+
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testEntries();
+      testBasicOperations(new com.simiacryptus.ref.wrappers.RefLinkedHashMap<>());
+      testStreamOperations(new com.simiacryptus.ref.wrappers.RefLinkedHashMap<>());
+    }
+  }
+
+  public static LinkedHashMapValuesContainer[] addRefs(LinkedHashMapValuesContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedHashMapValuesContainer::addRef)
+        .toArray((x) -> new LinkedHashMapValuesContainer[x]);
+  }
+
+  public static LinkedHashMapValuesContainer[][] addRefs(LinkedHashMapValuesContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedHashMapValuesContainer::addRefs)
+        .toArray((x) -> new LinkedHashMapValuesContainer[x][]);
   }
 
   private static void test(
@@ -150,32 +171,13 @@ public @com.simiacryptus.ref.lang.RefAware class LinkedHashMapValuesContainer ex
     });
   }
 
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testEntries();
-      testBasicOperations(new com.simiacryptus.ref.wrappers.RefLinkedHashMap<>());
-      testStreamOperations(new com.simiacryptus.ref.wrappers.RefLinkedHashMap<>());
-    }
-  }
-
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override LinkedHashMapValuesContainer addRef() {
+  public @Override
+  LinkedHashMapValuesContainer addRef() {
     return (LinkedHashMapValuesContainer) super.addRef();
-  }
-
-  public static LinkedHashMapValuesContainer[] addRefs(LinkedHashMapValuesContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedHashMapValuesContainer::addRef)
-        .toArray((x) -> new LinkedHashMapValuesContainer[x]);
-  }
-
-  public static LinkedHashMapValuesContainer[][] addRefs(LinkedHashMapValuesContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedHashMapValuesContainer::addRefs)
-        .toArray((x) -> new LinkedHashMapValuesContainer[x][]);
   }
 }

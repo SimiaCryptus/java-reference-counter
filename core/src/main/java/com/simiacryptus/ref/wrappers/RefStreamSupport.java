@@ -47,7 +47,7 @@ public class RefStreamSupport {
       final RefSpliterator refSpliterator = (RefSpliterator) spliterator;
       final Spliterator inner = refSpliterator.getInner();
       final AtomicReference<RefStream<T>> refStream = new AtomicReference<>();
-      if(inner instanceof ReferenceCounting) {
+      if (inner instanceof ReferenceCounting) {
         refStream.set(new RefStream<>(StreamSupport.stream(inner, parallel)
             .peek(u -> refStream.get().storeRef(u))
         ).onClose(() -> {

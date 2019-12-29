@@ -47,13 +47,13 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
     this.inner = inner;
   }
 
+  public ListIterator<T> getInner() {
+    return inner;
+  }
+
   @Override
   public void add(T t) {
     getInner().add(t);
-  }
-
-  public ListIterator<T> getInner() {
-    return inner;
   }
 
   @Override

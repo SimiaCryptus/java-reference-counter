@@ -66,13 +66,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     }
 
     @Override
-    protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
-      list.clear();
-      super._free();
-    }
-
-    @Override
     public boolean hasNext() {
       return inner.hasNext();
     }
@@ -93,6 +86,13 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return this;
     }
 
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
+    }
+
   }
 
   /**
@@ -109,13 +109,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
      */
     public OfLong(OfLong inner) {
       this.inner = inner;
-    }
-
-    @Override
-    protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
-      list.clear();
-      super._free();
     }
 
     @Override
@@ -139,6 +132,13 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return this;
     }
 
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
+    }
+
   }
 
   /**
@@ -155,13 +155,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
      */
     public OfDouble(OfDouble inner) {
       this.inner = inner;
-    }
-
-    @Override
-    protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
-      list.clear();
-      super._free();
     }
 
     @Override
@@ -183,6 +176,13 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     public RefPrimitiveIterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
       return this;
+    }
+
+    @Override
+    protected void _free() {
+      list.forEach(ReferenceCounting::freeRef);
+      list.clear();
+      super._free();
     }
 
   }

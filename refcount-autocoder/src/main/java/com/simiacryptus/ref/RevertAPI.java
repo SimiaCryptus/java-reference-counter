@@ -43,9 +43,14 @@ public class RevertAPI extends RefAutoCoderMojo {
     @Override
     @Nonnull
     public void rewrite() {
-      rewrite((projectInfo, cu, file) -> new ReplaceTypes(projectInfo, cu, file, true));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyTypeParameter(projectInfo, cu, file, true));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifySimpleName(projectInfo, cu, file, true));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyQualifiedName(projectInfo, cu, file, true));
+      rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyCompilationUnit(projectInfo, cu, file, true));
       rewrite(DistinctImports::new);
-      rewrite(FixVariableDeclarations::new);
+      rewrite(FixVariableDeclarations.ModifyFieldDeclaration::new);
+      rewrite(FixVariableDeclarations.ModifyVariableDeclarationFragment::new);
+      rewrite(FixVariableDeclarations.ModifyVariableDeclarationStatement::new);
       rewrite(RemoveAnnotations::new);
       rewrite(RemoveRefMethods::new);
     }

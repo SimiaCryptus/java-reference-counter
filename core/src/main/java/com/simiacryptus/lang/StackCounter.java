@@ -76,17 +76,6 @@ public class StackCounter {
     }
   }
 
-  /**
-   * Summary stat number.
-   *
-   * @param value the value
-   * @return the number
-   */
-  @Nonnull
-  protected Number summaryStat(@Nonnull final DoubleStatistics value) {
-    return (int) value.getSum();
-  }
-
   @Override
   public String toString() {
     return toString(this::summaryStat);
@@ -116,6 +105,17 @@ public class StackCounter {
    */
   public CharSequence toString(@Nonnull final StackCounter other, @Nonnull final BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     return StackCounter.toString(this, other, fn);
+  }
+
+  /**
+   * Summary stat number.
+   *
+   * @param value the value
+   * @return the number
+   */
+  @Nonnull
+  protected Number summaryStat(@Nonnull final DoubleStatistics value) {
+    return (int) value.getSum();
   }
 
   /**

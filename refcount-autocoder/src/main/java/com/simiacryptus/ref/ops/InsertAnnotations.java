@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
@@ -29,7 +30,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import java.io.File;
 
 @RefIgnore
-public class InsertAnnotations extends RefFileAstVisitor {
+public class InsertAnnotations extends RefASTOperator {
 
   public InsertAnnotations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
@@ -38,7 +39,7 @@ public class InsertAnnotations extends RefFileAstVisitor {
   @Override
   public void endVisit(TypeDeclaration node) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
-    annotation.setTypeName(newQualifiedName(ast, RefAware.class));
+    annotation.setTypeName(ASTUtil.newQualifiedName(ast, RefAware.class));
     node.modifiers().add(annotation);
     info(node, "Added @RefAware to %s", node.getName());
     super.endVisit(node);

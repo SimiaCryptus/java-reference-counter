@@ -45,6 +45,20 @@ public class StreamWrapper<T> implements Stream<T> {
     this.inner = inner;
   }
 
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
+  public Stream<T> getInner() {
+    return inner;
+  }
+
+  @Override
+  public boolean isParallel() {
+    return getInner().isParallel();
+  }
+
   @Override
   public boolean allMatch(Predicate<? super T> predicate) {
     return getInner().allMatch(predicate);
@@ -123,20 +137,6 @@ public class StreamWrapper<T> implements Stream<T> {
   @Override
   public void forEachOrdered(Consumer<? super T> action) {
     getInner().forEachOrdered(action);
-  }
-
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
-  public Stream<T> getInner() {
-    return inner;
-  }
-
-  @Override
-  public boolean isParallel() {
-    return getInner().isParallel();
   }
 
   @NotNull

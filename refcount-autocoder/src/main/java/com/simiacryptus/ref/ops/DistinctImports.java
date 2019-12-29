@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 @RefIgnore
-public class DistinctImports extends RefFileAstVisitor {
+public class DistinctImports extends RefASTOperator {
 
   public DistinctImports(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);

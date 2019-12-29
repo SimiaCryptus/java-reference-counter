@@ -21,7 +21,7 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.core.ops.IndexSymbols;
+import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -50,14 +50,25 @@ public class Insert extends RefAutoCoderMojo {
     @Nonnull
     public void rewrite() {
       new Remove().getAutoCoder(projectInfo).rewrite();
-      if(shouldChangeAPI) {
+      if (shouldChangeAPI) {
         new ModifyAPI.Coder(projectInfo).rewrite();
       }
-      rewrite(InsertAddRefs::new);
+      rewrite(InsertAddRefs.ModifyArrayInitializer::new);
+      rewrite(InsertAddRefs.ModifyAssignment::new);
+      rewrite(InsertAddRefs.ModifyAssignment::new);
+      rewrite(InsertAddRefs.ModifyClassInstanceCreation::new);
+      rewrite(InsertAddRefs.ModifyConstructorInvocation::new);
+      rewrite(InsertAddRefs.ModifyMethodInvocation::new);
+      rewrite(InsertAddRefs.ModifyReturnStatement::new);
+      rewrite(InsertAddRefs.ModifyVariableDeclarationFragment::new);
       rewrite(ModifyAssignments::new);
-      rewrite(InsertFreeRefs::new);
-      IndexSymbols.SymbolIndex index = getSymbolIndex();
-      rewrite((projectInfo, cu, file) -> new InstrumentClosures(projectInfo, cu, file, index));
+      rewrite(InsertFreeRefs.ModifySingleVariableDeclaration::new);
+      rewrite(InsertFreeRefs.ModifyClassInstanceCreation::new);
+      rewrite(InsertFreeRefs.ModifyMethodInvocation::new);
+      rewrite(InsertFreeRefs.ModifyVariableDeclarationFragment::new);
+      SymbolIndex index = getSymbolIndex();
+      rewrite((projectInfo, cu, file) -> new InstrumentClosures.ModifyAnonymousClassDeclaration(projectInfo, cu, file, index));
+      rewrite((projectInfo, cu, file) -> new InstrumentClosures.ModifyLambdaExpression(projectInfo, cu, file, index));
       rewrite(OptimizeRefs::new);
     }
   }

@@ -24,7 +24,30 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Hash set container.
  */
-public @com.simiacryptus.ref.lang.RefAware class HashSetContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class HashSetContainer extends ReferenceCountingBase {
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testCollectionOperations();
+      testElementOperations();
+      testStreamOperations();
+      testArrayOperations();
+    }
+  }
+
+  public static HashSetContainer[] addRefs(HashSetContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRef)
+        .toArray((x) -> new HashSetContainer[x]);
+  }
+
+  public static HashSetContainer[][] addRefs(HashSetContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRefs)
+        .toArray((x) -> new HashSetContainer[x][]);
+  }
+
   private static void testStreamOperations() {
     testOperations(values -> {
       values.stream().forEach(x -> {
@@ -44,10 +67,10 @@ public @com.simiacryptus.ref.lang.RefAware class HashSetContainer extends Refere
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[] {}).length) {
+      if (values.size() != values.toArray(new BasicType[]{}).length) {
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[] {});
+      values.toArray(new BasicType[]{});
     });
   }
 
@@ -92,18 +115,6 @@ public @com.simiacryptus.ref.lang.RefAware class HashSetContainer extends Refere
     setRefConsumer.accept(values);
   }
 
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testCollectionOperations();
-      testElementOperations();
-      testStreamOperations();
-      testArrayOperations();
-    }
-  }
-
   private static void testCollectionOperations() {
     testOperations(setValues -> {
       setValues.add(new BasicType());
@@ -126,21 +137,13 @@ public @com.simiacryptus.ref.lang.RefAware class HashSetContainer extends Refere
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override HashSetContainer addRef() {
+  public @Override
+  HashSetContainer addRef() {
     return (HashSetContainer) super.addRef();
-  }
-
-  public static HashSetContainer[] addRefs(HashSetContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRef)
-        .toArray((x) -> new HashSetContainer[x]);
-  }
-
-  public static HashSetContainer[][] addRefs(HashSetContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRefs)
-        .toArray((x) -> new HashSetContainer[x][]);
   }
 }

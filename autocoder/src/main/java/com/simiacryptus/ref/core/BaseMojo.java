@@ -46,28 +46,14 @@ public abstract class BaseMojo extends AbstractMojo {
   @Component
   protected RepositorySystem repositorySystem;
 
-  protected Optional<Dependency> findDependency(String groupId, String artifactId) {
-    return project.getDependencies().stream().filter(artifact ->
-        artifact.getGroupId().equals(groupId) &&
-            artifact.getArtifactId().equals(artifactId)).findAny();
-  }
-
   public String[] getDependencies() {
     return project.getDependencies().stream()
-        .map(x->toArtifact(x))
-        .flatMap(x->resolve(x).getArtifacts().stream())
+        .map(x -> toArtifact(x))
+        .flatMap(x -> resolve(x).getArtifacts().stream())
         .map(org.apache.maven.artifact.Artifact::getFile)
         .map(File::getAbsolutePath)
         .distinct()
         .toArray(i -> new String[i]);
-  }
-
-  @NotNull
-  private Artifact toArtifact(Dependency dependency) {
-    final ProjectArtifact artifact = new ProjectArtifact(project);
-    artifact.setGroupId(dependency.getGroupId());
-    artifact.setArtifactId(dependency.getArtifactId());
-    return artifact;
   }
 
   public String[] getSources() {
@@ -88,5 +74,19 @@ public abstract class BaseMojo extends AbstractMojo {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  protected Optional<Dependency> findDependency(String groupId, String artifactId) {
+    return project.getDependencies().stream().filter(artifact ->
+        artifact.getGroupId().equals(groupId) &&
+            artifact.getArtifactId().equals(artifactId)).findAny();
+  }
+
+  @NotNull
+  private Artifact toArtifact(Dependency dependency) {
+    final ProjectArtifact artifact = new ProjectArtifact(project);
+    artifact.setGroupId(dependency.getGroupId());
+    artifact.setArtifactId(dependency.getArtifactId());
+    return artifact;
   }
 }

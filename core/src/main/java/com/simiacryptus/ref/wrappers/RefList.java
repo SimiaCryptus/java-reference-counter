@@ -35,6 +35,8 @@ import java.util.List;
 @RefIgnore
 public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {
 
+  List<T> getInner();
+
   /**
    * Add refs ref list [ ].
    *
@@ -48,8 +50,6 @@ public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T>
   }
 
   RefList<T> addRef();
-
-  List<T> getInner();
 
   @NotNull
   @Override

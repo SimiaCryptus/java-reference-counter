@@ -219,18 +219,6 @@ public class RefCollectors {
     return collector;
   }
 
-  private static <K, V, M extends RefMap<K, V>>
-  BinaryOperator<M> mapMerger(BinaryOperator<V> mergeFunction) {
-    return RefUtil.wrapInterface((a, b) -> {
-      for (Map.Entry<K, V> e : b.entrySet()) {
-        RefUtil.freeRef(a.merge(e.getKey(), e.getValue(), mergeFunction));
-        RefUtil.freeRef(e);
-      }
-      b.freeRef();
-      return a;
-    }, mergeFunction);
-  }
-
   /**
    * Mapping ref collector.
    *
@@ -309,12 +297,6 @@ public class RefCollectors {
       boolean present = false;
 
       @Override
-      protected void _free() {
-        RefUtil.freeRef(op);
-        super._free();
-      }
-
-      @Override
       public void accept(T t) {
         if (present) {
           value = op.apply(value, t);
@@ -322,6 +304,12 @@ public class RefCollectors {
           value = t;
           present = true;
         }
+      }
+
+      @Override
+      protected void _free() {
+        RefUtil.freeRef(op);
+        super._free();
       }
     }
 
@@ -385,6 +373,18 @@ public class RefCollectors {
         a -> a[0], Collections.emptySet());
   }
 
+  private static <K, V, M extends RefMap<K, V>>
+  BinaryOperator<M> mapMerger(BinaryOperator<V> mergeFunction) {
+    return RefUtil.wrapInterface((a, b) -> {
+      for (Map.Entry<K, V> e : b.entrySet()) {
+        RefUtil.freeRef(a.merge(e.getKey(), e.getValue(), mergeFunction));
+        RefUtil.freeRef(e);
+      }
+      b.freeRef();
+      return a;
+    }, mergeFunction);
+  }
+
   @SuppressWarnings("unchecked")
   private static <T> Supplier<T[]> boxSupplier(T identity) {
     return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);
@@ -441,16 +441,6 @@ public class RefCollectors {
     }
 
     @Override
-    protected void _free() {
-      RefUtil.freeRef(supplier);
-      RefUtil.freeRef(accumulator);
-      RefUtil.freeRef(combiner);
-      RefUtil.freeRef(finisher);
-      RefUtil.freeRef(characteristics);
-      super._free();
-    }
-
-    @Override
     public BiConsumer<A, T> accumulator() {
       return RefUtil.addRef(accumulator);
     }
@@ -473,6 +463,16 @@ public class RefCollectors {
     @Override
     public Supplier<A> supplier() {
       return RefUtil.addRef(supplier);
+    }
+
+    @Override
+    protected void _free() {
+      RefUtil.freeRef(supplier);
+      RefUtil.freeRef(accumulator);
+      RefUtil.freeRef(combiner);
+      RefUtil.freeRef(finisher);
+      RefUtil.freeRef(characteristics);
+      super._free();
     }
   }
 

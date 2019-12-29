@@ -54,6 +54,11 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
     this.addAll(list);
   }
 
+  @Override
+  public List<T> getInner() {
+    return inner;
+  }
+
   /**
    * Add refs ref linked list [ ].
    *
@@ -70,11 +75,6 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
   public @Override
   RefLinkedList<T> addRef() {
     return (RefLinkedList<T>) super.addRef();
-  }
-
-  @Override
-  public List<T> getInner() {
-    return inner;
   }
 
 }

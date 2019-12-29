@@ -77,9 +77,23 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private transient volatile boolean isFinalized = false;
   private transient boolean detached = false;
 
-  @Nonnull
-  private static String getString(@Nullable StackTraceElement[] trace) {
-    return null == trace ? "" : Arrays.stream(trace).map(x -> "at " + x).skip(2).reduce((a, b) -> a + "\n" + b).orElse("");
+  @NotNull
+  @Override
+  public UUID getObjectId() {
+    return objectId;
+  }
+
+  /**
+   * Is detached boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isDetached() {
+    return detached;
+  }
+
+  public final boolean isFinalized() {
+    return isFreed.get();
   }
 
   /**
@@ -145,10 +159,9 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return IntStream.range(0, x.length).map(i -> (x.length - 1) - i).mapToObj(i -> x[i]).collect(Collectors.toList());
   }
 
-  /**
-   * Free.
-   */
-  protected void _free() {
+  @Nonnull
+  private static String getString(@Nullable StackTraceElement[] trace) {
+    return null == trace ? "" : Arrays.stream(trace).map(x -> "at " + x).skip(2).reduce((a, b) -> a + "\n" + b).orElse("");
   }
 
   @Override
@@ -179,27 +192,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   public ReferenceCountingBase detach() {
     this.detached = true;
     return this;
-  }
-
-  @Override
-  protected final void finalize() {
-    isFinalized = true;
-    if (!isFreed.getAndSet(true)) {
-      if (!isDetached() && !supressLog) {
-        if (logger.isDebugEnabled()) {
-          logger.debug(String.format("Instance Reclaimed by GC at %.9f: %s", (System.nanoTime() - LOAD_TIME) / 1e9, referenceReport(false, false)));
-        }
-      }
-      synchronized (freeRefs) {
-        freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
-      }
-      inFinalizer.set(true);
-      try {
-        _free();
-      } finally {
-        inFinalizer.set(false);
-      }
-    }
   }
 
   @Override
@@ -239,36 +231,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   @Override
   public void freeRefAsync() {
     gcPool.submit((Runnable) this::freeRef);
-  }
-
-  @NotNull
-  @Override
-  public UUID getObjectId() {
-    return objectId;
-  }
-
-  /**
-   * Is detached boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isDetached() {
-    return detached;
-  }
-
-  public final boolean isFinalized() {
-    return isFreed.get();
-  }
-
-  /**
-   * Read resolve object.
-   *
-   * @return the object
-   * @throws ObjectStreamException the object stream exception
-   */
-  @NotNull
-  protected final Object readResolve() throws ObjectStreamException {
-    return detach();
   }
 
   /**
@@ -336,6 +298,44 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
     addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
     return true;
+  }
+
+  /**
+   * Free.
+   */
+  protected void _free() {
+  }
+
+  @Override
+  protected final void finalize() {
+    isFinalized = true;
+    if (!isFreed.getAndSet(true)) {
+      if (!isDetached() && !supressLog) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Instance Reclaimed by GC at %.9f: %s", (System.nanoTime() - LOAD_TIME) / 1e9, referenceReport(false, false)));
+        }
+      }
+      synchronized (freeRefs) {
+        freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace() : new StackTraceElement[]{});
+      }
+      inFinalizer.set(true);
+      try {
+        _free();
+      } finally {
+        inFinalizer.set(false);
+      }
+    }
+  }
+
+  /**
+   * Read resolve object.
+   *
+   * @return the object
+   * @throws ObjectStreamException the object stream exception
+   */
+  @NotNull
+  protected final Object readResolve() throws ObjectStreamException {
+    return detach();
   }
 
 }

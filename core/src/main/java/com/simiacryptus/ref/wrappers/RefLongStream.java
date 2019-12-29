@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 /**
@@ -65,6 +64,11 @@ public class RefLongStream implements LongStream {
     this.refs = refs;
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = stream;
+  }
+
+  @Override
+  public boolean isParallel() {
+    return inner.isParallel();
   }
 
   /**
@@ -108,6 +112,10 @@ public class RefLongStream implements LongStream {
    */
   public static RefLongStream generate(LongSupplier s) {
     return new RefLongStream(LongStream.generate(s));
+  }
+
+  public static RefLongStream concat(RefLongStream a, RefLongStream b) {
+    return new RefLongStream(LongStream.concat(a.inner, b.inner));
   }
 
   @Override
@@ -216,15 +224,6 @@ public class RefLongStream implements LongStream {
     track(action);
     inner.forEachOrdered((long t) -> action.accept(getRef(t)));
     close();
-  }
-
-  private <U> U getRef(U u) {
-    return RefStream.getRef(u, this.refs);
-  }
-
-  @Override
-  public boolean isParallel() {
-    return inner.isParallel();
   }
 
   @NotNull
@@ -356,10 +355,6 @@ public class RefLongStream implements LongStream {
     });
   }
 
-  private <U> U storeRef(U u) {
-    return RefStream.storeRef(u, refs);
-  }
-
   @Override
   public long sum() {
     final long sum = inner.sum();
@@ -381,19 +376,24 @@ public class RefLongStream implements LongStream {
     return longs;
   }
 
-  private void track(Object... lambda) {
-    for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
-    }
-  }
-
   @NotNull
   @Override
   public RefLongStream unordered() {
     return new RefLongStream(inner.unordered(), lambdas, refs);
   }
-  public static RefLongStream concat(RefLongStream a, RefLongStream b) {
-    return new RefLongStream(LongStream.concat(a.inner,b.inner));
+
+  private <U> U getRef(U u) {
+    return RefStream.getRef(u, this.refs);
+  }
+
+  private <U> U storeRef(U u) {
+    return RefStream.storeRef(u, refs);
+  }
+
+  private void track(Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
   }
 
 }

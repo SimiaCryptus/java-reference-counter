@@ -19,8 +19,9 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.core.ops.FileAstVisitor;
+import com.simiacryptus.ref.core.ops.ASTOperator;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
@@ -39,12 +40,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 @RefIgnore
-abstract class RefFileAstVisitor extends FileAstVisitor {
+abstract class RefASTOperator extends ASTOperator {
 
   private static Map<File, AtomicInteger> identifierCounters = new HashMap<>();
   private String tempVarPrefix = "temp";
 
-  public RefFileAstVisitor(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public RefASTOperator(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
@@ -67,9 +68,25 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     ).findAny().orElse(null);
   }
 
+  @Override
+  public boolean preVisit2(ASTNode node) {
+    if (node instanceof TypeDeclaration) {
+      final ITypeBinding binding = ASTOperator.resolveBinding((TypeDeclaration) node);
+      if (null == binding) {
+        warn(node, "Unresolved binding");
+        return false;
+      }
+      if (ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
+        warn(node, "Marked with RefIgnore");
+        return false;
+      }
+    }
+    return super.preVisit2(node);
+  }
+
   protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, ITypeBinding expression) {
     final String methodName = methodBinding.getName();
-    if (hasAnnotation(methodBinding, RefIgnore.class)) return false;
+    if (ASTUtil.hasAnnotation(methodBinding, RefIgnore.class)) return false;
     if (methodName.equals("addRefs")) {
       return false;
     }
@@ -118,7 +135,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   protected final boolean isRefAware(ITypeBinding declaringClass) {
     if (declaringClass.getTypeDeclaration().getQualifiedName().equals(Map.Entry.class.getCanonicalName())) return true;
-    return hasAnnotation(declaringClass, RefAware.class);
+    return ASTUtil.hasAnnotation(declaringClass, RefAware.class);
   }
 
   protected final boolean isRefCounted(ASTNode node, @NotNull ITypeBinding type) {
@@ -134,11 +151,11 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     if (type.isArray()) {
       type = type.getElementType();
     }
-    if (derives(type, ReferenceCounting.class)) {
+    if (ASTUtil.derives(type, ReferenceCounting.class)) {
       info(1, node, "Derives ReferenceCounting: %s (%s)", node, type.getQualifiedName());
       return true;
     }
-    if (derives(type, Map.Entry.class)) {
+    if (ASTUtil.derives(type, Map.Entry.class)) {
       info(1, node, "Derives Map.Entry: %s (%s)", node, type.getQualifiedName());
       return true;
     }
@@ -175,7 +192,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       final String qualifiedName = typeBinding.getElementType().getQualifiedName();
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("addRefs"));
-      methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("\\.")));
+      methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, qualifiedName.split("\\.")));
       methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     } else {
@@ -188,20 +205,20 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   protected final Statement newFreeRef(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
-      if (derives(typeBinding.getElementType(), ReferenceCounting.class)) {
+      if (ASTUtil.derives(typeBinding.getElementType(), ReferenceCounting.class)) {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("freeRefs"));
-        methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
+        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, ReferenceCounting.class));
         methodInvocation.arguments().add(copyIfAttached(node));
         return ast.newExpressionStatement(methodInvocation);
       } else {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("freeRefs"));
-        methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
+        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
         methodInvocation.arguments().add(copyIfAttached(node));
         return ast.newExpressionStatement(methodInvocation);
       }
-    } else if (derives(typeBinding, ReferenceCounting.class)) {
+    } else if (ASTUtil.derives(typeBinding, ReferenceCounting.class)) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRef"));
       methodInvocation.setExpression(copyIfAttached((Expression) node));
@@ -209,7 +226,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     } else {
       final MethodInvocation freeInvocation = ast.newMethodInvocation();
       freeInvocation.setName(ast.newSimpleName("freeRef"));
-      freeInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
+      freeInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
       freeInvocation.arguments().add(copyIfAttached((Expression) node));
       return ast.newExpressionStatement(freeInvocation);
     }
@@ -220,37 +237,21 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
     if (typeBinding.isArray()) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRefs"));
-      methodInvocation.setExpression(newQualifiedName(ast, ReferenceCounting.class));
+      methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, ReferenceCounting.class));
       methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     } else {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRef"));
-      methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
+      methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
       methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     }
   }
 
-  @Override
-  public boolean preVisit2(ASTNode node) {
-    if (node instanceof TypeDeclaration) {
-      final ITypeBinding binding = FileAstVisitor.resolveBinding((TypeDeclaration) node);
-      if (null == binding) {
-        warn(node, "Unresolved binding");
-        return false;
-      }
-      if (hasAnnotation(binding, RefIgnore.class)) {
-        warn(node, "Marked with RefIgnore");
-        return false;
-      }
-    }
-    return super.preVisit2(node);
-  }
-
   protected final boolean skip(@NotNull ASTNode node) {
     return enclosingMethods(node).stream().anyMatch(enclosingMethod -> {
-      if (hasAnnotation(enclosingMethod, RefIgnore.class)) return true;
+      if (ASTUtil.hasAnnotation(enclosingMethod, RefIgnore.class)) return true;
       final String methodName = enclosingMethod.getName();
       return methodName.equals("addRefs") || methodName.equals("freeRefs");
     });
@@ -258,7 +259,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
 
   @NotNull
   protected final Expression wrapAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
-    if(expression instanceof CastExpression) {
+    if (expression instanceof CastExpression) {
       final ParenthesizedExpression parenthesizedExpression = ast.newParenthesizedExpression();
       replace(expression, parenthesizedExpression);
       parenthesizedExpression.setExpression(expression);
@@ -275,7 +276,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
         final String qualifiedName = type.getElementType().getQualifiedName();
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("addRefs"));
-        methodInvocation.setExpression(newQualifiedName(ast, qualifiedName.split("<")[0].split("\\.")));
+        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, qualifiedName.split("<")[0].split("\\.")));
         methodInvocation.arguments().add(copyIfAttached(expression));
         info(1, expression, "AddRef for %s", expression);
         return methodInvocation;
@@ -284,7 +285,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
       if (null == getAddRefMethod(type)) {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("addRef"));
-        methodInvocation.setExpression(newQualifiedName(ast, RefUtil.class));
+        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
         methodInvocation.arguments().add(copyIfAttached(expression));
         info(1, expression, "AddRef for %s", expression);
         return methodInvocation;
@@ -293,7 +294,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
         methodInvocation.setName(ast.newSimpleName("addRef"));
         methodInvocation.setExpression(copyIfAttached(expression));
         info(1, expression, "AddRef for %s", expression);
-        if(expression instanceof SimpleName) {
+        if (expression instanceof SimpleName) {
           final InfixExpression infixExpression = ast.newInfixExpression();
           infixExpression.setLeftOperand(copyIfAttached(expression));
           infixExpression.setOperator(InfixExpression.Operator.EQUALS);
@@ -306,7 +307,7 @@ abstract class RefFileAstVisitor extends FileAstVisitor {
         } else {
           return methodInvocation;
         }
-    }
+      }
     }
   }
 

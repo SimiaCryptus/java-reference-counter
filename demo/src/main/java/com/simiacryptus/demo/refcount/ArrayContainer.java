@@ -24,7 +24,8 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Array container.
  */
-public @com.simiacryptus.ref.lang.RefAware class ArrayContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class ArrayContainer extends ReferenceCountingBase {
   /**
    * The Values.
    */
@@ -41,7 +42,18 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayContainer extends Referenc
     }
   }
 
-  public @Override void _free() {
+  public static ArrayContainer[] addRefs(ArrayContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRef)
+        .toArray((x) -> new ArrayContainer[x]);
+  }
+
+  public static ArrayContainer[][] addRefs(ArrayContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRefs)
+        .toArray((x) -> new ArrayContainer[x][]);
+  }
+
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -102,23 +114,15 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayContainer extends Referenc
         x.setValue(x.getValue() + right.getValue());
       }
 
-      public @Override void _free() {
+      public @Override
+      void _free() {
         super._free();
       }
     });
   }
 
-  public @Override ArrayContainer addRef() {
+  public @Override
+  ArrayContainer addRef() {
     return (ArrayContainer) super.addRef();
-  }
-
-  public static ArrayContainer[] addRefs(ArrayContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRef)
-        .toArray((x) -> new ArrayContainer[x]);
-  }
-
-  public static ArrayContainer[][] addRefs(ArrayContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRefs)
-        .toArray((x) -> new ArrayContainer[x][]);
   }
 }

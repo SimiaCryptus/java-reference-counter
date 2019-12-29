@@ -27,7 +27,8 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
  *
  * @param <T> the type parameter
  */
-public @com.simiacryptus.ref.lang.RefAware class WrapperType<T extends ReferenceCounting>
+public @com.simiacryptus.ref.lang.RefAware
+class WrapperType<T extends ReferenceCounting>
     extends ReferenceCountingBase {
   private T inner;
 
@@ -38,9 +39,6 @@ public @com.simiacryptus.ref.lang.RefAware class WrapperType<T extends Reference
    */
   public WrapperType(T inner) {
     this.setInner(inner);
-  }
-
-  public void _free() {
   }
 
   /**
@@ -65,10 +63,6 @@ public @com.simiacryptus.ref.lang.RefAware class WrapperType<T extends Reference
     return this;
   }
 
-  public @Override WrapperType<T> addRef() {
-    return (WrapperType<T>) super.addRef();
-  }
-
   public static WrapperType[] addRefs(WrapperType[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(WrapperType::addRef)
         .toArray((x) -> new WrapperType[x]);
@@ -77,5 +71,13 @@ public @com.simiacryptus.ref.lang.RefAware class WrapperType<T extends Reference
   public static WrapperType[][] addRefs(WrapperType[][] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(WrapperType::addRefs)
         .toArray((x) -> new WrapperType[x][]);
+  }
+
+  public void _free() {
+  }
+
+  public @Override
+  WrapperType<T> addRef() {
+    return (WrapperType<T>) super.addRef();
   }
 }

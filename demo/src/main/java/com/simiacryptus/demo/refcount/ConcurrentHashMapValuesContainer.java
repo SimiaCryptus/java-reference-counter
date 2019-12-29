@@ -22,12 +22,12 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.Map;
-import com.simiacryptus.ref.wrappers.RefMap;
 
 /**
  * The type Concurrent hash map values container.
  */
-public @com.simiacryptus.ref.lang.RefAware class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
   /**
    * Instantiates a new Concurrent hash map values container.
    */
@@ -76,6 +76,16 @@ public @com.simiacryptus.ref.lang.RefAware class ConcurrentHashMapValuesContaine
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
+  }
+
+  public static ConcurrentHashMapValuesContainer[] addRefs(ConcurrentHashMapValuesContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ConcurrentHashMapValuesContainer::addRef)
+        .toArray((x) -> new ConcurrentHashMapValuesContainer[x]);
+  }
+
+  public static ConcurrentHashMapValuesContainer[][] addRefs(ConcurrentHashMapValuesContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ConcurrentHashMapValuesContainer::addRefs)
+        .toArray((x) -> new ConcurrentHashMapValuesContainer[x][]);
   }
 
   private static void test(
@@ -158,7 +168,8 @@ public @com.simiacryptus.ref.lang.RefAware class ConcurrentHashMapValuesContaine
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -173,17 +184,8 @@ public @com.simiacryptus.ref.lang.RefAware class ConcurrentHashMapValuesContaine
     }
   }
 
-  public @Override ConcurrentHashMapValuesContainer addRef() {
+  public @Override
+  ConcurrentHashMapValuesContainer addRef() {
     return (ConcurrentHashMapValuesContainer) super.addRef();
-  }
-
-  public static ConcurrentHashMapValuesContainer[] addRefs(ConcurrentHashMapValuesContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ConcurrentHashMapValuesContainer::addRef)
-        .toArray((x) -> new ConcurrentHashMapValuesContainer[x]);
-  }
-
-  public static ConcurrentHashMapValuesContainer[][] addRefs(ConcurrentHashMapValuesContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ConcurrentHashMapValuesContainer::addRefs)
-        .toArray((x) -> new ConcurrentHashMapValuesContainer[x][]);
   }
 }

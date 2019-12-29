@@ -63,12 +63,6 @@ public class ReferenceWrapper<T> {
     }
   }
 
-  @Override
-  protected void finalize() throws Throwable {
-    destroy();
-    super.finalize();
-  }
-
   /**
    * Peek t.
    *
@@ -88,5 +82,11 @@ public class ReferenceWrapper<T> {
       throw new IllegalStateException();
     }
     return obj;
+  }
+
+  @Override
+  protected void finalize() throws Throwable {
+    destroy();
+    super.finalize();
   }
 }

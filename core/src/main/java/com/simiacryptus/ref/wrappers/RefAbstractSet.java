@@ -38,11 +38,16 @@ import java.util.function.Consumer;
 @RefAware
 @RefIgnore
 public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> implements RefSet<T>, Cloneable, Serializable {
-  @Override
-  protected void _free() {
-    clear();
-    super._free();
+  public Collection<T> getInner() {
+    return getInnerMap().keySet();
   }
+
+  /**
+   * Gets inner map.
+   *
+   * @return the inner map
+   */
+  public abstract Map<T, T> getInnerMap();
 
   @Override
   public final boolean add(T o) {
@@ -90,17 +95,6 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
     }
     RefUtil.freeRef(action);
   }
-
-  public Collection<T> getInner() {
-    return getInnerMap().keySet();
-  }
-
-  /**
-   * Gets inner map.
-   *
-   * @return the inner map
-   */
-  public abstract Map<T, T> getInnerMap();
 
   @Override
   public final boolean remove(Object o) {
@@ -159,6 +153,12 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
     }
     RefUtil.freeRef(c);
     return b;
+  }
+
+  @Override
+  protected void _free() {
+    clear();
+    super._free();
   }
 
 }

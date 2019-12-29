@@ -38,11 +38,7 @@ import java.util.stream.IntStream;
 @RefAware
 @RefIgnore
 public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implements RefList<T> {
-  @Override
-  protected void _free() {
-    clear();
-    super._free();
-  }
+  public abstract List<T> getInner();
 
   @Override
   public void add(int index, T element) {
@@ -89,8 +85,6 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
     return RefUtil.addRef(getInner().get(index));
   }
 
-  public abstract List<T> getInner();
-
   @Override
   public int indexOf(Object o) {
     assertAlive();
@@ -113,7 +107,6 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
     assertAlive();
     return new RefListIterator<>(getInner().listIterator()).track(this.addRef());
   }
-
 
   @NotNull
   @Override
@@ -173,6 +166,12 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   public RefArrayList<T> subList(int fromIndex, int toIndex) {
     assertAlive();
     return new RefArrayList<T>(getInner().subList(fromIndex, toIndex));
+  }
+
+  @Override
+  protected void _free() {
+    clear();
+    super._free();
   }
 
 }

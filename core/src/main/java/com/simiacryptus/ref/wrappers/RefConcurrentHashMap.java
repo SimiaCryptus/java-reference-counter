@@ -55,6 +55,11 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
     putAll(values);
   }
 
+  @Override
+  public Map<K, KeyValue<K, V>> getInner() {
+    return inner;
+  }
+
   /**
    * Add refs ref concurrent hash map [ ].
    *
@@ -66,11 +71,6 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
   public static <K, V> RefConcurrentHashMap<K, V>[] addRefs(@NotNull RefConcurrentHashMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentHashMap::addRef)
         .toArray((x) -> new RefConcurrentHashMap[x]);
-  }
-
-  @Override
-  public Map<K, KeyValue<K, V>> getInner() {
-    return inner;
   }
 
 }

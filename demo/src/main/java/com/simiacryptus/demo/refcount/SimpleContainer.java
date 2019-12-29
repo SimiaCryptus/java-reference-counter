@@ -24,7 +24,8 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Simple container.
  */
-public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class SimpleContainer extends ReferenceCountingBase {
   /**
    * The Value.
    */
@@ -50,7 +51,18 @@ public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends Referen
     }
   }
 
-  public @Override void _free() {
+  public static SimpleContainer[] addRefs(SimpleContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRef)
+        .toArray((x) -> new SimpleContainer[x]);
+  }
+
+  public static SimpleContainer[][] addRefs(SimpleContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRefs)
+        .toArray((x) -> new SimpleContainer[x][]);
+  }
+
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -66,17 +78,8 @@ public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends Referen
     return "SimpleContainer{" + "values=" + value + '}';
   }
 
-  public @Override SimpleContainer addRef() {
+  public @Override
+  SimpleContainer addRef() {
     return (SimpleContainer) super.addRef();
-  }
-
-  public static SimpleContainer[] addRefs(SimpleContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRef)
-        .toArray((x) -> new SimpleContainer[x]);
-  }
-
-  public static SimpleContainer[][] addRefs(SimpleContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRefs)
-        .toArray((x) -> new SimpleContainer[x][]);
   }
 }

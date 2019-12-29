@@ -50,14 +50,14 @@ public class Remove extends RefAutoCoderMojo {
     @Override
     @Nonnull
     public void rewrite() {
-      while (rewrite(RemoveRefs::new) > 0) {
+      while (rewrite(RemoveRefs.ModifyBlock::new) + rewrite(RemoveRefs.ModifyMethodInvocation::new) > 0) {
         logger.info("Re-running RemoveRefs");
       }
-      while (rewrite(InlineRefs::new) > 0) {
+      while (rewrite(InlineRefs.ModifyAssignment::new) + rewrite(InlineRefs.ModifyBlock::new) + rewrite(InlineRefs.ModifyReturnStatement::new) > 0) {
         logger.info("Re-running InlineRefs");
       }
       while (rewrite(InlineTempVars::new) > 0) {
-        logger.info("Re-running InlineRefs");
+        logger.info("Re-running InlineTempVars");
       }
       if (shouldChangeAPI) {
         new RevertAPI.Coder(projectInfo).rewrite();

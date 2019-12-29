@@ -42,19 +42,14 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
    */
   protected T current;
 
-  @Override
-  protected void _free() {
-    list.forEach(ReferenceCounting::freeRef);
-    list.clear();
-    super._free();
-  }
-
   /**
    * Gets inner.
    *
    * @return the inner
    */
-  public Iterator<T> getInner() { return null; }
+  public Iterator<T> getInner() {
+    return null;
+  }
 
   @Override
   public boolean hasNext() {
@@ -88,5 +83,12 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
   @Override
   public RefIteratorBase<T> addRef() {
     return (RefIteratorBase<T>) super.addRef();
+  }
+
+  @Override
+  protected void _free() {
+    list.forEach(ReferenceCounting::freeRef);
+    list.clear();
+    super._free();
   }
 }

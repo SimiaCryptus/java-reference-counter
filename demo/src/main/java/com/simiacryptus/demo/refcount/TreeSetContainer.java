@@ -24,7 +24,30 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Tree set container.
  */
-public @com.simiacryptus.ref.lang.RefAware class TreeSetContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class TreeSetContainer extends ReferenceCountingBase {
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testCollectionOperations();
+      testElementOperations();
+      testStreamOperations();
+      testArrayOperations();
+    }
+  }
+
+  public static TreeSetContainer[] addRefs(TreeSetContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TreeSetContainer::addRef)
+        .toArray((x) -> new TreeSetContainer[x]);
+  }
+
+  public static TreeSetContainer[][] addRefs(TreeSetContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TreeSetContainer::addRefs)
+        .toArray((x) -> new TreeSetContainer[x][]);
+  }
+
   private static void testStreamOperations() {
     testOperations(values -> {
       values.stream().forEach(x -> {
@@ -44,10 +67,10 @@ public @com.simiacryptus.ref.lang.RefAware class TreeSetContainer extends Refere
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[] {}).length) {
+      if (values.size() != values.toArray(new BasicType[]{}).length) {
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[] {});
+      values.toArray(new BasicType[]{});
     });
   }
 
@@ -92,18 +115,6 @@ public @com.simiacryptus.ref.lang.RefAware class TreeSetContainer extends Refere
     setRefConsumer.accept(values);
   }
 
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testCollectionOperations();
-      testElementOperations();
-      testStreamOperations();
-      testArrayOperations();
-    }
-  }
-
   private static void testCollectionOperations() {
     testOperations(setValues -> {
       setValues.add(new BasicType());
@@ -126,21 +137,13 @@ public @com.simiacryptus.ref.lang.RefAware class TreeSetContainer extends Refere
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override TreeSetContainer addRef() {
+  public @Override
+  TreeSetContainer addRef() {
     return (TreeSetContainer) super.addRef();
-  }
-
-  public static TreeSetContainer[] addRefs(TreeSetContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TreeSetContainer::addRef)
-        .toArray((x) -> new TreeSetContainer[x]);
-  }
-
-  public static TreeSetContainer[][] addRefs(TreeSetContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TreeSetContainer::addRefs)
-        .toArray((x) -> new TreeSetContainer[x][]);
   }
 }

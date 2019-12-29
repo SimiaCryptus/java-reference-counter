@@ -25,7 +25,6 @@ import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.IntUnaryOperator;
@@ -280,7 +279,7 @@ public class RefArrays {
   }
 
   public static boolean deepEquals(Object[] a, Object[] b) {
-    return Arrays.deepEquals(a,b);
+    return Arrays.deepEquals(a, b);
   }
 
   public static int deepHashCode(Object a[]) {

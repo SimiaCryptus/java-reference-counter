@@ -59,15 +59,6 @@ public class SimpleMavenProject {
     this.project = MavenUtil.getMavenProject(new File(projectRoot, "pom.xml"), plexusContainer, session);
   }
 
-  @NotNull
-  public static SimpleMavenProject load(String root) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
-    SimpleMavenProject mavenProject = new SimpleMavenProject(root);
-    mavenProject.resolve().getDependencies().forEach((org.eclipse.aether.graph.Dependency dependency) -> {
-      logger.info(String.format("Dependency: %s (%s)", dependency.getArtifact().getFile().getAbsolutePath(), dependency));
-    });
-    return mavenProject;
-  }
-
   public String[] getDependencies() {
     return resolve().getDependencies().stream()
         .map(Dependency::getArtifact)
@@ -86,6 +77,15 @@ public class SimpleMavenProject {
         project.getTestCompileSourceRoots().stream(),
         project.getCompileSourceRoots().stream()
     ).toArray(i -> new String[i]);
+  }
+
+  @NotNull
+  public static SimpleMavenProject load(String root) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
+    SimpleMavenProject mavenProject = new SimpleMavenProject(root);
+    mavenProject.resolve().getDependencies().forEach((org.eclipse.aether.graph.Dependency dependency) -> {
+      logger.info(String.format("Dependency: %s (%s)", dependency.getArtifact().getFile().getAbsolutePath(), dependency));
+    });
+    return mavenProject;
   }
 
   public DependencyResolutionResult resolve() {

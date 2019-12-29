@@ -41,6 +41,18 @@ public interface Settings {
   Logger logger = LoggerFactory.getLogger(Settings.class);
 
   /**
+   * Gets mapper.
+   *
+   * @return the mapper
+   */
+  static ObjectMapper getMapper() {
+    ObjectMapper enable = new ObjectMapper()
+        //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
+        .enable(SerializationFeature.INDENT_OUTPUT);
+    return enable;
+  }
+
+  /**
    * Get boolean.
    *
    * @param key          the key
@@ -119,7 +131,6 @@ public interface Settings {
     return value;
   }
 
-
   /**
    * To json char sequence.
    *
@@ -146,17 +157,5 @@ public interface Settings {
       throw new RuntimeException(e);
     }
     return new String(outputStream.toByteArray(), Charset.forName("UTF-8"));
-  }
-
-  /**
-   * Gets mapper.
-   *
-   * @return the mapper
-   */
-  static ObjectMapper getMapper() {
-    ObjectMapper enable = new ObjectMapper()
-        //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
-        .enable(SerializationFeature.INDENT_OUTPUT);
-    return enable;
   }
 }

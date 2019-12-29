@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
@@ -26,7 +27,7 @@ import org.eclipse.jdt.core.dom.*;
 import java.io.File;
 
 @RefIgnore
-public class InlineTempVars extends RefFileAstVisitor {
+public class InlineTempVars extends RefASTOperator {
 
   public InlineTempVars(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
@@ -41,9 +42,9 @@ public class InlineTempVars extends RefFileAstVisitor {
       final SimpleName name = variableDeclarationFragment.getName();
       if (isTempIdentifier(name)) {
         final Expression expression = variableDeclarationFragment.getInitializer();
-        final Block block = getBlock(node);
+        final Block block = ASTUtil.getBlock(node);
         delete(node);
-        for (SimpleName match : findExpressions(block, name)) {
+        for (SimpleName match : ASTUtil.findExpressions(block, name)) {
           replace(match, copyIfAttached(expression));
         }
       }

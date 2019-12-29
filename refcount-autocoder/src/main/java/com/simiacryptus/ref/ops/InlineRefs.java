@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
@@ -30,95 +31,10 @@ import java.io.File;
 import java.util.List;
 
 @RefIgnore
-public class InlineRefs extends RefFileAstVisitor {
+public class InlineRefs extends RefASTOperator {
 
-  public InlineRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  protected InlineRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
-  }
-
-  @Override
-  public void endVisit(@NotNull Block node) {
-    if (node.statements().size() == 1 && node.getParent() instanceof Block) {
-      final Block parent = (Block) node.getParent();
-      parent.statements().set(parent.statements().indexOf(node),
-          copyIfAttached((ASTNode) node.statements().get(0)));
-    }
-  }
-
-  @Override
-  public void endVisit(@NotNull Assignment node) {
-    Statement previousStatement = previousStatement(node);
-    if (previousStatement != null) {
-      if (previousStatement instanceof VariableDeclarationStatement) {
-        final List fragments = ((VariableDeclarationStatement) previousStatement).fragments();
-        if (1 == fragments.size()) {
-          final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
-          final StatementOfInterest lastMention = lastMention(getBlock(node), fragment.getName(), 0);
-          if (null == lastMention) {
-            warn(node, "No mentions of %s", fragment.getName());
-            return;
-          }
-          if (!lastMention.statement.equals(previousStatement)) {
-            info(node, "Assignment is not last usage of %s", fragment.getName());
-            return;
-          }
-          if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
-            info(node, "Inlining %s", fragment.getName());
-            node.setRightHandSide(copyIfAttached(fragment.getInitializer()));
-            info(previousStatement, "delete %s", previousStatement);
-            previousStatement.delete();
-          } else {
-            warn(node, "previous variable %s is not used in %s", fragment.getName(), node.getRightHandSide());
-          }
-        } else {
-          warn(node, "previous variable has multiple fragments");
-        }
-      } else {
-        warn(node, "previous statement is %s", previousStatement.getClass().getSimpleName());
-      }
-    }
-  }
-
-  @Override
-  public void endVisit(@NotNull ReturnStatement node) {
-    if (node.getExpression() instanceof Name) {
-      Statement previousStatement = previousStatement(node);
-      if (previousStatement != null) {
-        if (previousStatement instanceof VariableDeclarationStatement) {
-          final List fragments = ((VariableDeclarationStatement) previousStatement).fragments();
-          if (1 == fragments.size()) {
-            final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
-            final StatementOfInterest lastMention = lastMention(getBlock(node), fragment.getName(), 0);
-            if (null == lastMention) {
-              warn(node, "No mentions of %s", fragment.getName());
-              return;
-            }
-            if (lastMention.statement.equals(previousStatement)) {
-              info(node, "Assignment is not last usage of %s", fragment.getName());
-              return;
-            }
-            if (fragment.getName().toString().equals(node.getExpression().toString())) {
-              final Expression initializer = fragment.getInitializer();
-              info(node, "Inlining %s initialized by %s", fragment.getName(), initializer.getClass().getSimpleName());
-              if(initializer instanceof ArrayInitializer) {
-                final ArrayCreation arrayCreation = ast.newArrayCreation();
-                arrayCreation.setType(ast.newArrayType(getType(initializer, initializer.resolveTypeBinding().getElementType().getQualifiedName(), false)));
-                arrayCreation.setInitializer(copyIfAttached((ArrayInitializer) initializer));
-                node.setExpression(arrayCreation);
-              } else {
-                node.setExpression(copyIfAttached(initializer));
-              }
-              info(previousStatement, "delete %s", previousStatement);
-              previousStatement.delete();
-            }
-          }
-        } else {
-          info(node, "Cannot inline - Previous statement is %s", previousStatement.getClass().getSimpleName());
-        }
-      } else {
-        info(node, "Cannot inline - No previous statement");
-      }
-    }
   }
 
   @Nullable
@@ -145,6 +61,112 @@ public class InlineRefs extends RefFileAstVisitor {
         return null;
       } else {
         return previousStatement(parent);
+      }
+    }
+  }
+
+  public static class ModifyBlock extends InlineRefs {
+
+    public ModifyBlock(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+      super(projectInfo, compilationUnit, file);
+    }
+
+    @Override
+    public void endVisit(@NotNull Block node) {
+      if (node.statements().size() == 1 && node.getParent() instanceof Block) {
+        final Block parent = (Block) node.getParent();
+        parent.statements().set(parent.statements().indexOf(node),
+            copyIfAttached((ASTNode) node.statements().get(0)));
+      }
+    }
+  }
+
+  public static class ModifyAssignment extends InlineRefs {
+
+    public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+      super(projectInfo, compilationUnit, file);
+    }
+
+    @Override
+    public void endVisit(@NotNull Assignment node) {
+      Statement previousStatement = previousStatement(node);
+      if (previousStatement != null) {
+        if (previousStatement instanceof VariableDeclarationStatement) {
+          final List fragments = ((VariableDeclarationStatement) previousStatement).fragments();
+          if (1 == fragments.size()) {
+            final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
+            final StatementOfInterest lastMention = lastMention(ASTUtil.getBlock(node), fragment.getName(), 0);
+            if (null == lastMention) {
+              warn(node, "No mentions of %s", fragment.getName());
+              return;
+            }
+            if (!lastMention.statement.equals(previousStatement)) {
+              info(node, "Assignment is not last usage of %s", fragment.getName());
+              return;
+            }
+            if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
+              info(node, "Inlining %s", fragment.getName());
+              node.setRightHandSide(copyIfAttached(fragment.getInitializer()));
+              info(previousStatement, "delete %s", previousStatement);
+              previousStatement.delete();
+            } else {
+              warn(node, "previous variable %s is not used in %s", fragment.getName(), node.getRightHandSide());
+            }
+          } else {
+            warn(node, "previous variable has multiple fragments");
+          }
+        } else {
+          warn(node, "previous statement is %s", previousStatement.getClass().getSimpleName());
+        }
+      }
+    }
+  }
+
+  public static class ModifyReturnStatement extends InlineRefs {
+
+    public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+      super(projectInfo, compilationUnit, file);
+    }
+
+    @Override
+    public void endVisit(@NotNull ReturnStatement node) {
+      if (node.getExpression() instanceof Name) {
+        Statement previousStatement = previousStatement(node);
+        if (previousStatement != null) {
+          if (previousStatement instanceof VariableDeclarationStatement) {
+            final List fragments = ((VariableDeclarationStatement) previousStatement).fragments();
+            if (1 == fragments.size()) {
+              final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
+              final StatementOfInterest lastMention = lastMention(ASTUtil.getBlock(node), fragment.getName(), 0);
+              if (null == lastMention) {
+                warn(node, "No mentions of %s", fragment.getName());
+                return;
+              }
+              if (lastMention.statement.equals(previousStatement)) {
+                info(node, "Assignment is not last usage of %s", fragment.getName());
+                return;
+              }
+              if (fragment.getName().toString().equals(node.getExpression().toString())) {
+                final Expression initializer = fragment.getInitializer();
+                info(node, "Inlining %s initialized by %s", fragment.getName(), initializer.getClass().getSimpleName());
+                if (initializer instanceof ArrayInitializer) {
+                  final ArrayCreation arrayCreation = ast.newArrayCreation();
+                  arrayCreation.setType(ast.newArrayType(getType(initializer, initializer.resolveTypeBinding().getElementType().getQualifiedName(), false)));
+                  arrayCreation.setInitializer(copyIfAttached((ArrayInitializer) initializer));
+                  node.setExpression(arrayCreation);
+                } else {
+                  node.setExpression(copyIfAttached(initializer));
+                }
+                info(previousStatement, "delete %s", previousStatement);
+                previousStatement.delete();
+              }
+            }
+          } else {
+            info(node, "Cannot inline - Previous statement is %s", previousStatement.getClass().getSimpleName());
+          }
+        } else {
+          info(node, "Cannot inline - No previous statement");
+        }
       }
     }
   }

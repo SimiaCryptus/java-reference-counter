@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
@@ -31,13 +32,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RefIgnore
-public class FixVariableDeclarations extends RefFileAstVisitor {
+public class FixVariableDeclarations extends RefASTOperator {
 
-  public FixVariableDeclarations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  protected FixVariableDeclarations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  private Type apply(Type type, Expression initializer) {
+  protected Type apply(Type type, Expression initializer) {
     final ITypeBinding typeBinding = resolveBinding(type);
     if (null == typeBinding) {
       warn(type, "Unresolved binding for %s", type);
@@ -56,8 +57,8 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
       warn(type, "Unresolved binding");
       return null;
     }
-    final boolean initRefMarked = derives(initializerType, ReferenceCounting.class);
-    if (initializerType.isAssignmentCompatible(typeBinding) && derives(typeBinding, ReferenceCounting.class) == initRefMarked) {
+    final boolean initRefMarked = ASTUtil.derives(initializerType, ReferenceCounting.class);
+    if (initializerType.isAssignmentCompatible(typeBinding) && ASTUtil.derives(typeBinding, ReferenceCounting.class) == initRefMarked) {
       return null;
     }
     Optional<ITypeBinding> chooseType = Optional.empty();
@@ -65,12 +66,12 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
     for (int i = typePath.size() - 1; i >= 0; i--) {
       ITypeBinding candidateBinding = typePath.get(i);
       if (candidateBinding.isAssignmentCompatible(typeBinding)
-          && derives(candidateBinding, ReferenceCounting.class) == initRefMarked) {
+          && ASTUtil.derives(candidateBinding, ReferenceCounting.class) == initRefMarked) {
         chooseType = Optional.of(candidateBinding);
         break;
       }
     }
-    if(chooseType.isPresent()) {
+    if (chooseType.isPresent()) {
       Type newType = getType(type, chooseType.get().getQualifiedName(), true);
       warn(type, "Replaced variable type %s to %s", type, newType);
       return newType;
@@ -80,7 +81,7 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
     }
   }
 
-  private Type commonInterface(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
+  protected Type commonInterface(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
       return getType(node, typeBinding.getQualifiedName(), true);
     }
@@ -91,11 +92,11 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
     return null;
   }
 
-  private List<ITypeBinding> typePath(ITypeBinding typeBinding) {
+  protected List<ITypeBinding> typePath(ITypeBinding typeBinding) {
     final ArrayList<ITypeBinding> list = new ArrayList<>();
     list.add(typeBinding);
     final ITypeBinding superclass = typeBinding.getSuperclass();
-    if(null != superclass) {
+    if (null != superclass) {
       list.addAll(typePath(superclass));
     }
     for (ITypeBinding xface : typeBinding.getInterfaces()) {
@@ -104,7 +105,7 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
     return list.stream().distinct().collect(Collectors.toList());
   }
 
-  private Type commonSuperclass(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
+  protected Type commonSuperclass(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
       return getType(node, typeBinding.getQualifiedName(), true);
     }
@@ -116,32 +117,50 @@ public class FixVariableDeclarations extends RefFileAstVisitor {
     return commonInterface(node, superclass, initializerType);
   }
 
-  @Override
-  public void endVisit(VariableDeclarationStatement node) {
-    final Type type = node.getType();
-    final List fragments = node.fragments();
-    if (1 != fragments.size()) {
-      warn(node, "%s fragments", fragments.size());
-      return;
+  public static class ModifyVariableDeclarationStatement extends FixVariableDeclarations {
+    public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+      super(projectInfo, compilationUnit, file);
     }
-    final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
-    if (null != newType && type != newType) node.setType(newType);
+
+    @Override
+    public void endVisit(VariableDeclarationStatement node) {
+      final Type type = node.getType();
+      final List fragments = node.fragments();
+      if (1 != fragments.size()) {
+        warn(node, "%s fragments", fragments.size());
+        return;
+      }
+      final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+      if (null != newType && type != newType) node.setType(newType);
+    }
   }
 
-  @Override
-  public void endVisit(FieldDeclaration node) {
-    final Type type = node.getType();
-    final List fragments = node.fragments();
-    if (1 != fragments.size()) {
-      warn(node, "%s fragments", fragments.size());
-      return;
+  public static class ModifyFieldDeclaration extends FixVariableDeclarations {
+    public ModifyFieldDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+      super(projectInfo, compilationUnit, file);
     }
-    final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
-    if (null != newType && type != newType) node.setType(newType);
+
+    @Override
+    public void endVisit(FieldDeclaration node) {
+      final Type type = node.getType();
+      final List fragments = node.fragments();
+      if (1 != fragments.size()) {
+        warn(node, "%s fragments", fragments.size());
+        return;
+      }
+      final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+      if (null != newType && type != newType) node.setType(newType);
+    }
   }
 
-  @Override
-  public void endVisit(VariableDeclarationFragment node) {
-    super.endVisit(node);
+  public static class ModifyVariableDeclarationFragment extends FixVariableDeclarations {
+    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+      super(projectInfo, compilationUnit, file);
+    }
+
+    @Override
+    public void endVisit(VariableDeclarationFragment node) {
+      super.endVisit(node);
+    }
   }
 }

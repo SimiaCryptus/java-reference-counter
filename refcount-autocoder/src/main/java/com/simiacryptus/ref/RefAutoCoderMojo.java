@@ -29,7 +29,7 @@ public abstract class RefAutoCoderMojo extends AutoCoderMojo {
   public void execute() throws MojoExecutionException {
     if (!findDependency("com.simiacryptus", "refcount-core").isPresent()) {
       getLog().warn("Dependency not found: refcount-core");
-      if(getBoolean("force",false)) {
+      if (getBoolean("force", false)) {
         super.execute();
       }
     } else {

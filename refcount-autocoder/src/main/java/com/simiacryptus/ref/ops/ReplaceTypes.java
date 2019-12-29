@@ -22,11 +22,11 @@ package com.simiacryptus.ref.ops;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.*;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -39,17 +39,25 @@ import java.util.function.Consumer;
 import java.util.stream.*;
 
 @RefIgnore
-public class ReplaceTypes extends RefFileAstVisitor {
+public class ReplaceTypes extends RefASTOperator {
 
-  private Map<String, String> replacements;
+  protected Map<String, String> replacements;
 
-  public ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
-    this(projectInfo, compilationUnit, file, classMapping(invert));
+  protected ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+    super(projectInfo, compilationUnit, file);
+    this.replacements = classMapping(invert);
   }
 
-  ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, Map<String, String> classMapping) {
-    super(projectInfo, compilationUnit, file);
-    this.replacements = classMapping;
+  protected ArrayList<Object> getTypes() {
+    final ArrayList<Object> names = new ArrayList<>();
+    compilationUnit.accept(new ASTVisitor() {
+      @Override
+      public void endVisit(TypeDeclarationStatement node) {
+        names.add(node.resolveBinding().getQualifiedName());
+      }
+
+    });
+    return names;
   }
 
   public static Map<String, String> classMapping(boolean invert) {
@@ -109,13 +117,13 @@ public class ReplaceTypes extends RefFileAstVisitor {
       return;
     }
     final MethodDeclaration methodDeclaration = getMethodDeclaration(node);
-    if(null != methodDeclaration) {
+    if (null != methodDeclaration) {
       final IMethodBinding methodBinding = methodDeclaration.resolveBinding();
-      if(null == methodBinding) {
+      if (null == methodBinding) {
         warn(methodDeclaration, "Cannot resolve %s", methodDeclaration);
       } else {
         final ITypeBinding declaringClass = methodBinding.getDeclaringClass();
-        if(!hasAnnotation(declaringClass, RefAware.class)) {
+        if (!ASTUtil.hasAnnotation(declaringClass, RefAware.class)) {
           info(methodDeclaration, "Method %s is defined by %s, which is NOT ref-aware", methodBinding, declaringClass.getQualifiedName());
           //return;
         } else {
@@ -130,65 +138,16 @@ public class ReplaceTypes extends RefFileAstVisitor {
     }
   }
 
-  private ArrayList<Object> getTypes() {
-    final ArrayList<Object> names = new ArrayList<>();
-    compilationUnit.accept(new ASTVisitor() {
-      @Override
-      public void endVisit(TypeDeclarationStatement node) {
-        names.add(node.resolveBinding().getQualifiedName());
-      }
-
-    });
-    return names;
-  }
-
   public MethodDeclaration getMethodDeclaration(ASTNode node) {
-    if(node instanceof MethodDeclaration) return (MethodDeclaration) node;
-    if(node instanceof Statement) return null;
-    if(node instanceof TypeDeclaration) return null;
+    if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
+    if (node instanceof Statement) return null;
+    if (node instanceof TypeDeclaration) return null;
     final ASTNode parent = node.getParent();
     if (null != parent) return getMethodDeclaration(parent);
     return null;
   }
 
-  @Override
-  public void endVisit(CompilationUnit node) {
-    final Iterator<ImportDeclaration> iterator = node.imports().iterator();
-    ArrayList<ImportDeclaration> newImports = new ArrayList<>();
-    while (iterator.hasNext()) {
-      final ImportDeclaration importDeclaration = iterator.next();
-      final Name name = importDeclaration.getName();
-      final Name replace = replace(name);
-      if (null != replace && !name.toString().equals(replace.toString())) {
-        final ImportDeclaration newImportDeclaration = ast.newImportDeclaration();
-        newImportDeclaration.setName(replace);
-        newImports.add(newImportDeclaration);
-      }
-    }
-    node.imports().addAll(newImports);
-  }
-
-  @Override
-  public void endVisit(TypeParameter node) {
-    if (skip(node)) return;
-    apply(node.getName());
-  }
-
-  @Override
-  public void endVisit(SimpleName node) {
-    if (skip(node)) return;
-    if (node.getParent() instanceof QualifiedName) return;
-    apply(node);
-  }
-
-  @Override
-  public void endVisit(QualifiedName node) {
-    if (skip(node)) return;
-    if (node.getParent() instanceof QualifiedName) return;
-    apply(node);
-  }
-
-  private Name replace(Name node) {
+  protected Name replace(Name node) {
     final IBinding binding = resolveBinding(node);
     if (null == binding) {
       warn(node, "Unresolved binding: %s", node);
@@ -198,13 +157,74 @@ public class ReplaceTypes extends RefFileAstVisitor {
       final String replacement = replacements.get(className);
       if (null != replacement) {
         try {
-          return newQualifiedName(ast, Class.forName(replacement));
+          return ASTUtil.newQualifiedName(ast, Class.forName(replacement));
         } catch (ClassNotFoundException e) {
           warn(node, e.getMessage());
         }
       }
     }
     return null;
+  }
+
+  public static class ModifyCompilationUnit extends ReplaceTypes {
+    public ModifyCompilationUnit(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+      super(projectInfo, compilationUnit, file, invert);
+    }
+
+    @Override
+    public void endVisit(CompilationUnit node) {
+      final Iterator<ImportDeclaration> iterator = node.imports().iterator();
+      ArrayList<ImportDeclaration> newImports = new ArrayList<>();
+      while (iterator.hasNext()) {
+        final ImportDeclaration importDeclaration = iterator.next();
+        final Name name = importDeclaration.getName();
+        final Name replace = replace(name);
+        if (null != replace && !name.toString().equals(replace.toString())) {
+          final ImportDeclaration newImportDeclaration = ast.newImportDeclaration();
+          newImportDeclaration.setName(replace);
+          newImports.add(newImportDeclaration);
+        }
+      }
+      node.imports().addAll(newImports);
+    }
+  }
+
+  public static class ModifyTypeParameter extends ReplaceTypes {
+    public ModifyTypeParameter(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+      super(projectInfo, compilationUnit, file, invert);
+    }
+
+    @Override
+    public void endVisit(TypeParameter node) {
+      if (skip(node)) return;
+      apply(node.getName());
+    }
+  }
+
+  public static class ModifySimpleName extends ReplaceTypes {
+    public ModifySimpleName(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+      super(projectInfo, compilationUnit, file, invert);
+    }
+
+    @Override
+    public void endVisit(SimpleName node) {
+      if (skip(node)) return;
+      if (node.getParent() instanceof QualifiedName) return;
+      apply(node);
+    }
+  }
+
+  public static class ModifyQualifiedName extends ReplaceTypes {
+    public ModifyQualifiedName(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+      super(projectInfo, compilationUnit, file, invert);
+    }
+
+    @Override
+    public void endVisit(QualifiedName node) {
+      if (skip(node)) return;
+      if (node.getParent() instanceof QualifiedName) return;
+      apply(node);
+    }
   }
 
 }

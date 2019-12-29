@@ -86,6 +86,15 @@ public class RefSettings implements Settings {
   }
 
   /**
+   * Gets double cache mode.
+   *
+   * @return the double cache mode
+   */
+  public PersistanceMode getDoubleCacheMode() {
+    return doubleCacheMode;
+  }
+
+  /**
    * Instance ref settings.
    *
    * @return the ref settings
@@ -101,15 +110,6 @@ public class RefSettings implements Settings {
       }
     }
     return INSTANCE;
-  }
-
-  /**
-   * Gets double cache mode.
-   *
-   * @return the double cache mode
-   */
-  public PersistanceMode getDoubleCacheMode() {
-    return doubleCacheMode;
   }
 
   /**

@@ -31,6 +31,24 @@ import java.util.UUID;
 public interface ReferenceCounting {
 
   /**
+   * Gets object id.
+   *
+   * @return the object id
+   */
+  default UUID getObjectId() {
+    throw new RuntimeException("Not Implemented");
+  }
+
+  /**
+   * Is finalized boolean.
+   *
+   * @return the boolean
+   */
+  default boolean isFinalized() {
+    return false;
+  }
+
+  /**
    * Free refs.
    *
    * @param <T>   the type parameter
@@ -109,24 +127,6 @@ public interface ReferenceCounting {
    * Free ref async.
    */
   default void freeRefAsync() {
-  }
-
-  /**
-   * Gets object id.
-   *
-   * @return the object id
-   */
-  default UUID getObjectId() {
-    throw new RuntimeException("Not Implemented");
-  }
-
-  /**
-   * Is finalized boolean.
-   *
-   * @return the boolean
-   */
-  default boolean isFinalized() {
-    return false;
   }
 
   /**

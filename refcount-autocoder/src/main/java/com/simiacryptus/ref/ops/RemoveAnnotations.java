@@ -30,7 +30,7 @@ import java.io.File;
 import java.util.Iterator;
 
 @RefIgnore
-public class RemoveAnnotations extends RefFileAstVisitor {
+public class RemoveAnnotations extends RefASTOperator {
 
   public RemoveAnnotations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);

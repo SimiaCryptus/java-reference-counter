@@ -66,6 +66,10 @@ public class RefIntStream implements IntStream {
     this.inner = stream;
   }
 
+  @Override
+  public boolean isParallel() {
+    return inner.isParallel();
+  }
 
   /**
    * Generate ref int stream.
@@ -108,6 +112,10 @@ public class RefIntStream implements IntStream {
     return new RefIntStream(IntStream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
+  }
+
+  public static RefIntStream concat(RefIntStream a, RefIntStream b) {
+    return new RefIntStream(IntStream.concat(a.inner, b.inner));
   }
 
   @Override
@@ -221,15 +229,6 @@ public class RefIntStream implements IntStream {
     track(action);
     inner.forEachOrdered((int t) -> action.accept(getRef(t)));
     close();
-  }
-
-  private <U> U getRef(U u) {
-    return RefStream.getRef(u, this.refs);
-  }
-
-  @Override
-  public boolean isParallel() {
-    return inner.isParallel();
   }
 
   @NotNull
@@ -362,10 +361,6 @@ public class RefIntStream implements IntStream {
 
   }
 
-  private <U> U storeRef(U u) {
-    return RefStream.storeRef(u, refs);
-  }
-
   @Override
   public int sum() {
     final int sum = inner.sum();
@@ -387,20 +382,24 @@ public class RefIntStream implements IntStream {
     return ints;
   }
 
-  private void track(Object... lambda) {
-    for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
-    }
-  }
-
   @NotNull
   @Override
   public RefIntStream unordered() {
     return new RefIntStream(inner.unordered(), lambdas, refs);
   }
 
-  public static RefIntStream concat(RefIntStream a, RefIntStream b) {
-    return new RefIntStream(IntStream.concat(a.inner,b.inner));
+  private <U> U getRef(U u) {
+    return RefStream.getRef(u, this.refs);
+  }
+
+  private <U> U storeRef(U u) {
+    return RefStream.storeRef(u, refs);
+  }
+
+  private void track(Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
   }
 
 }

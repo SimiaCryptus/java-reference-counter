@@ -31,11 +31,40 @@ import java.util.function.Predicate;
 /**
  * The type Array list container.
  */
-public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class ArrayListContainer extends ReferenceCountingBase {
   /**
    * Instantiates a new Array list container.
    */
   public ArrayListContainer() {
+  }
+
+  @NotNull
+  private static Predicate<BasicType> getTest() {
+    return ArrayListContainer::test1;
+  }
+
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testCodeGen();
+      testCollectionOperations();
+      testElementOperations();
+      testIteratorOperations();
+      testStreamOperations();
+    }
+  }
+
+  public static ArrayListContainer[] addRefs(ArrayListContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayListContainer::addRef)
+        .toArray((x) -> new ArrayListContainer[x]);
+  }
+
+  public static ArrayListContainer[][] addRefs(ArrayListContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayListContainer::addRefs)
+        .toArray((x) -> new ArrayListContainer[x][]);
   }
 
   private static void testOperations(
@@ -56,7 +85,7 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length) {
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
     }
   }
@@ -103,7 +132,7 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
       if (!values.isEmpty()) {
         throw new RuntimeException();
       }
-      final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
+      final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
       values.addAll(com.simiacryptus.ref.wrappers.RefArrays.asList(basicTypeN));
       values.add(1, basicType1);
       values.addAll(1, com.simiacryptus.ref.wrappers.RefArrays.asList(basicTypeN));
@@ -209,16 +238,17 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
             return iterator.next();
           }
 
-          public @Override void _free() {
+          public @Override
+          void _free() {
             super._free();
           }
         }, -1, 0), false).filter(x -> {
-          return test1(x);
-        }).filter(ArrayListContainer::test2).filter(x -> {
-          return x.getValue() >= 0;
-        }).filter(x -> {
-          return x != null;
-        }).count();
+      return test1(x);
+    }).filter(ArrayListContainer::test2).filter(x -> {
+      return x.getValue() >= 0;
+    }).filter(x -> {
+      return x != null;
+    }).count();
   }
 
   private static long getCount2(com.simiacryptus.ref.wrappers.RefIterator<BasicType> iterator) {
@@ -234,7 +264,8 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
             return iterator.next();
           }
 
-          public @Override void _free() {
+          public @Override
+          void _free() {
             super._free();
           }
         }, -1, 0), false).filter(x -> {
@@ -254,11 +285,6 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
     return null != getTest();
   }
 
-  @NotNull
-  private static Predicate<BasicType> getTest() {
-    return ArrayListContainer::test1;
-  }
-
   private static void testCollectionOperations() {
     testOperations(values -> {
       assert values.size() == values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.mapping(x -> {
@@ -274,8 +300,8 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
     testOperations(values -> {
       assert values
           .size() == (int) values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.reducing(0, x -> {
-            return 1;
-          }, (a, b) -> a + b));
+        return 1;
+      }, (a, b) -> a + b));
     });
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
@@ -323,19 +349,6 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
         throw new RuntimeException();
       }
     });
-  }
-
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testCodeGen();
-      testCollectionOperations();
-      testElementOperations();
-      testIteratorOperations();
-      testStreamOperations();
-    }
   }
 
   private static void testIteratorOperations() {
@@ -386,7 +399,7 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
     });
     testOperations(values372 -> {
 
-      final @NotNull BasicType[] array374 = values372.toArray(new BasicType[] {});
+      final @NotNull BasicType[] array374 = values372.toArray(new BasicType[]{});
       final int inputIndex = 0;
       @NotNull
       BasicType[] outputPrototype377 = array374;
@@ -394,12 +407,10 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
       {
         final BasicType inputTensor = array374[inputIndex];
         final int inputDims = inputTensor.value;
-        @Nonnull
-        final BasicType result = new BasicType();
+        @Nonnull final BasicType result = new BasicType();
         for (int j = 0; j < outputPrototype377.length; j++) {
           final int j_ = j;
-          @Nonnull
-          final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
+          @Nonnull final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
           final WrapperType[] copyInput = com.simiacryptus.ref.wrappers.RefArrays.stream(array374).map(x -> {
             return new WrapperType(x);
           }).toArray(i -> new WrapperType[i]);
@@ -410,18 +421,18 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
                 return super.getInner();
               }
 
-              public @Override void _free() {
+              public @Override
+              void _free() {
                 super._free();
               }
             };
           }
-          @Nullable
-          final WrapperType eval;
+          @Nullable final WrapperType eval;
           try {
             eval = new WrapperType(new BasicType());
           } finally {
             for (@Nonnull
-            WrapperType nnResult : copyInput) {
+                WrapperType nnResult : copyInput) {
               nnResult.getInner().assertAlive();
             }
           }
@@ -496,7 +507,7 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
     testOperations(values -> {
       assert values.size() == values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.toList())
           .size() : values.size() + " != "
-              + values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.toList()).size();
+          + values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.toList()).size();
     });
     testOperations(values -> {
       assert values.size() == values.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.toSet()).size();
@@ -632,21 +643,13 @@ public @com.simiacryptus.ref.lang.RefAware class ArrayListContainer extends Refe
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override ArrayListContainer addRef() {
+  public @Override
+  ArrayListContainer addRef() {
     return (ArrayListContainer) super.addRef();
-  }
-
-  public static ArrayListContainer[] addRefs(ArrayListContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayListContainer::addRef)
-        .toArray((x) -> new ArrayListContainer[x]);
-  }
-
-  public static ArrayListContainer[][] addRefs(ArrayListContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayListContainer::addRefs)
-        .toArray((x) -> new ArrayListContainer[x][]);
   }
 }

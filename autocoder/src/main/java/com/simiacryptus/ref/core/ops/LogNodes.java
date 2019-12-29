@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-public class LogNodes extends FileAstVisitor {
+public class LogNodes extends ASTOperator {
 
   public LogNodes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);

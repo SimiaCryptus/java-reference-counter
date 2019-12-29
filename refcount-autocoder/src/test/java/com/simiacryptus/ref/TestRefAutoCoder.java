@@ -32,6 +32,11 @@ import java.io.IOException;
 
 @RefIgnore
 public class TestRefAutoCoder {
+  @NotNull
+  public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
+    return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
+  }
+
   public static class Add {
     public static void main(String[] args) {
       try {
@@ -50,11 +55,6 @@ public class TestRefAutoCoder {
         e.printStackTrace();
       }
     }
-  }
-
-  @NotNull
-  public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
-    return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }
 
 }

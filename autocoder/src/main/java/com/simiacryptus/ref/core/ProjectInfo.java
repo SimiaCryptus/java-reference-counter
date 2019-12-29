@@ -48,7 +48,11 @@ public class ProjectInfo {
   }
 
   public ASTParser getAstParser() {
-    return astParser==null?newAstParser():astParser;
+    return astParser == null ? newAstParser() : astParser;
+  }
+
+  public void setAstParser(ASTParser astParser) {
+    this.astParser = astParser;
   }
 
   @NotNull
@@ -89,10 +93,6 @@ public class ProjectInfo {
         new NullProgressMonitor()
     );
     return results;
-  }
-
-  public void setAstParser(ASTParser astParser) {
-    this.astParser = astParser;
   }
 
   @NotNull

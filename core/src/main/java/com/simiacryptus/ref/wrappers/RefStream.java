@@ -61,15 +61,6 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  static void freeAll(Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
-    refs.forEach((k, v) -> {
-      final int cnt = v.getAndSet(0);
-      if(cnt>0) for (int i = 0; i < cnt; i++) {
-        k.inner.freeRef();
-      }
-    });
-  }
-
   /**
    * Instantiates a new Ref stream.
    *
@@ -82,6 +73,38 @@ public class RefStream<T> implements Stream<T> {
     this.inner = stream;
     this.lambdas = lambdas;
     this.refs = refs;
+  }
+
+  /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
+  public Stream<T> getInner() {
+    return new StreamWrapper<T>(inner) {
+      @Override
+      public @NotNull Iterator<T> iterator() {
+        final Iterator<T> iterator = super.iterator();
+        if (iterator instanceof RefIterator) {
+          return ((RefIterator) iterator).getInner();
+        }
+        return iterator;
+      }
+
+      @Override
+      public @NotNull Spliterator<T> spliterator() {
+        final Spliterator<T> spliterator = super.spliterator();
+        if (spliterator instanceof RefSpliterator) {
+          return ((RefSpliterator) spliterator).getInner();
+        }
+        return spliterator;
+      }
+    };
+  }
+
+  @Override
+  public boolean isParallel() {
+    return getInner().isParallel();
   }
 
   /**
@@ -120,6 +143,48 @@ public class RefStream<T> implements Stream<T> {
    */
   public static <T> RefStream<T> concat(Stream<? extends T> a, Stream<? extends T> b) {
     return new RefStream<>(Stream.concat(a, b));
+  }
+
+  static void freeAll(Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    refs.forEach((k, v) -> {
+      final int cnt = v.getAndSet(0);
+      if (cnt > 0) for (int i = 0; i < cnt; i++) {
+        k.inner.freeRef();
+      }
+    });
+  }
+
+  static <U> U getRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    if (u instanceof ReferenceCounting) {
+      final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
+      final AtomicBoolean obtained = new AtomicBoolean(false);
+      refCnt.updateAndGet(x -> {
+        if (x <= 0) return 0;
+        else {
+          obtained.set(true);
+          return x - 1;
+        }
+      });
+      if (!obtained.get()) {
+        RefUtil.addRef(u);
+      }
+    }
+    return u;
+  }
+
+  /**
+   * Store ref u.
+   *
+   * @param <U>  the type parameter
+   * @param u    the u
+   * @param refs
+   * @return the u
+   */
+  static <U> U storeRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    if (u instanceof ReferenceCounting) {
+      refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
+    }
+    return u;
   }
 
   @Override
@@ -255,65 +320,6 @@ public class RefStream<T> implements Stream<T> {
     track(action);
     getInner().forEachOrdered((T t) -> action.accept(getRef(t)));
     close();
-  }
-
-  @NotNull
-  private <A> BiConsumer<A, A> getBiConsumer(BinaryOperator<A> combiner) {
-    return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
-  }
-
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
-  public Stream<T> getInner() {
-    return new StreamWrapper<T>(inner) {
-      @Override
-      public @NotNull Iterator<T> iterator() {
-        final Iterator<T> iterator = super.iterator();
-        if (iterator instanceof RefIterator) {
-          return ((RefIterator) iterator).getInner();
-        }
-        return iterator;
-      }
-
-      @Override
-      public @NotNull Spliterator<T> spliterator() {
-        final Spliterator<T> spliterator = super.spliterator();
-        if (spliterator instanceof RefSpliterator) {
-          return ((RefSpliterator) spliterator).getInner();
-        }
-        return spliterator;
-      }
-    };
-  }
-
-  private <U> U getRef(U u) {
-    return getRef(u, this.refs);
-  }
-
-  static <U> U getRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
-    if (u instanceof ReferenceCounting) {
-      final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
-      final AtomicBoolean obtained = new AtomicBoolean(false);
-      refCnt.updateAndGet(x-> {
-        if (x <= 0) return 0;
-        else {
-          obtained.set(true);
-          return x - 1;
-        }
-      });
-      if (!obtained.get()) {
-        RefUtil.addRef(u);
-      }
-    }
-    return u;
-  }
-
-  @Override
-  public boolean isParallel() {
-    return getInner().isParallel();
   }
 
   @NotNull
@@ -484,21 +490,6 @@ public class RefStream<T> implements Stream<T> {
     return storeRef(u, refs);
   }
 
-  /**
-   * Store ref u.
-   *
-   * @param <U> the type parameter
-   * @param u   the u
-   * @param refs
-   * @return the u
-   */
-  static <U> U storeRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
-    if (u instanceof ReferenceCounting) {
-      refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
-    }
-    return u;
-  }
-
   @Override
   public Object[] toArray() {
     final Object[] array = getInner().map(this::getRef).toArray();
@@ -514,16 +505,25 @@ public class RefStream<T> implements Stream<T> {
     return array;
   }
 
-  private void track(Object... lambda) {
-    for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
-    }
-  }
-
   @NotNull
   @Override
   public RefStream<T> unordered() {
     return new RefStream(getInner().unordered(), lambdas, refs);
+  }
+
+  @NotNull
+  private <A> BiConsumer<A, A> getBiConsumer(BinaryOperator<A> combiner) {
+    return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
+  }
+
+  private <U> U getRef(U u) {
+    return getRef(u, this.refs);
+  }
+
+  private void track(Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
   }
 
   /**

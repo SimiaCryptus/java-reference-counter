@@ -27,8 +27,13 @@ import java.io.PrintStream;
 public abstract class AutoCoderMojo extends BaseMojo {
   public static final PrintStream ERR = System.err;
 
+  @NotNull
+  protected ProjectInfo getProjectInfo() {
+    return new ProjectInfo(basedir.getAbsolutePath(), getSources(), getDependencies());
+  }
+
   public void execute() throws MojoExecutionException {
-    if(getBoolean("logException", true)) {
+    if (getBoolean("logException", true)) {
       try {
         getAutoCoder(getProjectInfo()).rewrite();
       } catch (RuntimeException e) {
@@ -41,11 +46,6 @@ public abstract class AutoCoderMojo extends BaseMojo {
     } else {
       getAutoCoder(getProjectInfo()).rewrite();
     }
-  }
-
-  @NotNull
-  protected ProjectInfo getProjectInfo() {
-    return new ProjectInfo(basedir.getAbsolutePath(), getSources(), getDependencies());
   }
 
   protected abstract AutoCoder getAutoCoder(ProjectInfo projectInfo);

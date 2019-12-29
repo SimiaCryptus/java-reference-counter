@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
@@ -28,7 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 @RefIgnore
-public class OptimizeRefs extends RefFileAstVisitor {
+public class OptimizeRefs extends RefASTOperator {
 
   public OptimizeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
@@ -51,7 +52,7 @@ public class OptimizeRefs extends RefFileAstVisitor {
         return;
       }
       final SimpleName variable = (SimpleName) freeRefNode.getExpression();
-      Block parentBlock = getBlock(freeRefNode);
+      Block parentBlock = ASTUtil.getBlock(freeRefNode);
       if (null == parentBlock) {
         warn(freeRefNode, "Could not find containing block");
         return;

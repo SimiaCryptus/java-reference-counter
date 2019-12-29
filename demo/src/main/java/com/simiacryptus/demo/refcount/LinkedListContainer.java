@@ -23,17 +23,36 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.PrimitiveIterator;
-import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import com.simiacryptus.ref.wrappers.RefPrimitiveIterator;
-import com.simiacryptus.ref.wrappers.RefSpliterator;
 
 /**
  * The type Linked list container.
  */
-public @com.simiacryptus.ref.lang.RefAware class LinkedListContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class LinkedListContainer extends ReferenceCountingBase {
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testCollectionOperations(new com.simiacryptus.ref.wrappers.RefLinkedList<>());
+      testElementOperations(new com.simiacryptus.ref.wrappers.RefLinkedList<>());
+      testStreamOperations();
+      testIteratorOperations();
+    }
+  }
+
+  public static LinkedListContainer[] addRefs(LinkedListContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedListContainer::addRef)
+        .toArray((x) -> new LinkedListContainer[x]);
+  }
+
+  public static LinkedListContainer[][] addRefs(LinkedListContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedListContainer::addRefs)
+        .toArray((x) -> new LinkedListContainer[x][]);
+  }
+
   private static void testOperations(
       com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefLinkedList<BasicType>> fn) {
     com.simiacryptus.ref.wrappers.RefLinkedList<BasicType> values = new com.simiacryptus.ref.wrappers.RefLinkedList<>();
@@ -52,7 +71,7 @@ public @com.simiacryptus.ref.lang.RefAware class LinkedListContainer extends Ref
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length) {
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
     }
   }
@@ -95,7 +114,7 @@ public @com.simiacryptus.ref.lang.RefAware class LinkedListContainer extends Ref
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
-    final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
+    final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
     values.addAll(com.simiacryptus.ref.wrappers.RefArrays.asList(basicTypeN));
     values.add(1, basicType1);
     values.addAll(1, com.simiacryptus.ref.wrappers.RefArrays.asList(basicTypeN));
@@ -136,18 +155,6 @@ public @com.simiacryptus.ref.lang.RefAware class LinkedListContainer extends Ref
     values.clear();
     if (!values.isEmpty()) {
       throw new RuntimeException();
-    }
-  }
-
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testCollectionOperations(new com.simiacryptus.ref.wrappers.RefLinkedList<>());
-      testElementOperations(new com.simiacryptus.ref.wrappers.RefLinkedList<>());
-      testStreamOperations();
-      testIteratorOperations();
     }
   }
 
@@ -846,21 +853,13 @@ public @com.simiacryptus.ref.lang.RefAware class LinkedListContainer extends Ref
     testLongStream();
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override LinkedListContainer addRef() {
+  public @Override
+  LinkedListContainer addRef() {
     return (LinkedListContainer) super.addRef();
-  }
-
-  public static LinkedListContainer[] addRefs(LinkedListContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedListContainer::addRef)
-        .toArray((x) -> new LinkedListContainer[x]);
-  }
-
-  public static LinkedListContainer[][] addRefs(LinkedListContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(LinkedListContainer::addRefs)
-        .toArray((x) -> new LinkedListContainer[x][]);
   }
 }

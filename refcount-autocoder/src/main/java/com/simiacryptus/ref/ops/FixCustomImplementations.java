@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.RefIterator;
@@ -26,10 +27,9 @@ import com.simiacryptus.ref.wrappers.RefIteratorBase;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
-import java.util.Iterator;
 
 @RefIgnore
-public class FixCustomImplementations extends RefFileAstVisitor {
+public class FixCustomImplementations extends RefASTOperator {
 
   public FixCustomImplementations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
@@ -49,7 +49,7 @@ public class FixCustomImplementations extends RefFileAstVisitor {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
       info(node, "RefIterator anonymous class");
       final ClassInstanceCreation parent = (ClassInstanceCreation) node.getParent();
-      final SimpleType simpleType = ast.newSimpleType(newQualifiedName(ast, replace));
+      final SimpleType simpleType = ast.newSimpleType(ASTUtil.newQualifiedName(ast, replace));
       final Type parentType = parent.getType();
       if (parentType instanceof ParameterizedType) {
         final ParameterizedType type = ast.newParameterizedType(simpleType);

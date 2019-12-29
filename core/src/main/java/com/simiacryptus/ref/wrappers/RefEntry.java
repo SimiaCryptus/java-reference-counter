@@ -60,13 +60,6 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
   }
 
   @Override
-  protected void _free() {
-    RefUtil.freeRef(value);
-    RefUtil.freeRef(key);
-    super._free();
-  }
-
-  @Override
   public K getKey() {
     return RefUtil.addRef(key);
   }
@@ -78,5 +71,12 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
 
   @Override
   public abstract V setValue(V value);
+
+  @Override
+  protected void _free() {
+    RefUtil.freeRef(value);
+    RefUtil.freeRef(key);
+    super._free();
+  }
 
 }

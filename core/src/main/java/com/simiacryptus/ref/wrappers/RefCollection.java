@@ -39,6 +39,13 @@ import java.util.function.Predicate;
 public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
 
   /**
+   * Gets inner.
+   *
+   * @return the inner
+   */
+  Collection<T> getInner();
+
+  /**
    * Add refs ref collection [ ].
    *
    * @param <T>   the type parameter
@@ -60,13 +67,6 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
     RefUtil.freeRef(action);
     iterator.freeRef();
   }
-
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
-  Collection<T> getInner();
 
   @NotNull
   @Override

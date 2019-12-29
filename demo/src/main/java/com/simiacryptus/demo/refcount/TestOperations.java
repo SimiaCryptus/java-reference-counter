@@ -27,7 +27,8 @@ import java.util.Random;
 /**
  * The type Test operations.
  */
-public @com.simiacryptus.ref.lang.RefAware class TestOperations extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class TestOperations extends ReferenceCountingBase {
   /**
    * The constant count.
    */
@@ -57,8 +58,24 @@ public @com.simiacryptus.ref.lang.RefAware class TestOperations extends Referenc
     testOperations2424.run();
   }
 
-  public @Override void _free() {
+  public static TestOperations[] addRefs(TestOperations[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRef)
+        .toArray((x) -> new TestOperations[x]);
+  }
+
+  public static TestOperations[][] addRefs(TestOperations[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRefs)
+        .toArray((x) -> new TestOperations[x][]);
+  }
+
+  public @Override
+  void _free() {
     super._free();
+  }
+
+  public @Override
+  TestOperations addRef() {
+    return (TestOperations) super.addRef();
   }
 
   private void run() {
@@ -69,7 +86,7 @@ public @com.simiacryptus.ref.lang.RefAware class TestOperations extends Referenc
 
   private void test(BasicType datum1) {
     testList();
-    testArray(new BasicType[] { datum1 });
+    testArray(new BasicType[]{datum1});
     testSet();
     testDeque();
     testMap();
@@ -186,19 +203,5 @@ public @com.simiacryptus.ref.lang.RefAware class TestOperations extends Referenc
     for (int i = 0; i < count; i++) {
       simpleContainer.test();
     }
-  }
-
-  public @Override TestOperations addRef() {
-    return (TestOperations) super.addRef();
-  }
-
-  public static TestOperations[] addRefs(TestOperations[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRef)
-        .toArray((x) -> new TestOperations[x]);
-  }
-
-  public static TestOperations[][] addRefs(TestOperations[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRefs)
-        .toArray((x) -> new TestOperations[x][]);
   }
 }

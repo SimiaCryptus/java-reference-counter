@@ -24,7 +24,31 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Dequque container.
  */
-public @com.simiacryptus.ref.lang.RefAware class DeququeContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware
+class DeququeContainer extends ReferenceCountingBase {
+  /**
+   * Test.
+   */
+  public static void test() {
+    for (int i = 0; i < TestOperations.count; i++) {
+      testCollectionOperations(new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>());
+      testElementOperations(new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>());
+      testDequeOperations();
+      testStreamOperations();
+      testIteratorOperations();
+    }
+  }
+
+  public static DeququeContainer[] addRefs(DeququeContainer[] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(DeququeContainer::addRef)
+        .toArray((x) -> new DeququeContainer[x]);
+  }
+
+  public static DeququeContainer[][] addRefs(DeququeContainer[][] array) {
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(DeququeContainer::addRefs)
+        .toArray((x) -> new DeququeContainer[x][]);
+  }
+
   private static void testOperations(
       com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType>> fn) {
     com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<BasicType> values = new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>();
@@ -43,7 +67,7 @@ public @com.simiacryptus.ref.lang.RefAware class DeququeContainer extends Refere
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[] {}).length) {
+    if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
     }
   }
@@ -98,19 +122,6 @@ public @com.simiacryptus.ref.lang.RefAware class DeququeContainer extends Refere
     values.clear();
     if (!values.isEmpty()) {
       throw new RuntimeException();
-    }
-  }
-
-  /**
-   * Test.
-   */
-  public static void test() {
-    for (int i = 0; i < TestOperations.count; i++) {
-      testCollectionOperations(new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>());
-      testElementOperations(new com.simiacryptus.ref.wrappers.RefConcurrentLinkedDeque<>());
-      testDequeOperations();
-      testStreamOperations();
-      testIteratorOperations();
     }
   }
 
@@ -407,21 +418,13 @@ public @com.simiacryptus.ref.lang.RefAware class DeququeContainer extends Refere
     });
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
-  public @Override DeququeContainer addRef() {
+  public @Override
+  DeququeContainer addRef() {
     return (DeququeContainer) super.addRef();
-  }
-
-  public static DeququeContainer[] addRefs(DeququeContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(DeququeContainer::addRef)
-        .toArray((x) -> new DeququeContainer[x]);
-  }
-
-  public static DeququeContainer[][] addRefs(DeququeContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(DeququeContainer::addRefs)
-        .toArray((x) -> new DeququeContainer[x][]);
   }
 }

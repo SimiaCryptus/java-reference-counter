@@ -57,13 +57,13 @@ public abstract class RecycleBin<T> {
     }
 
     @Override
-    protected void free(double[] obj) {
-    }
-
-    @Override
     public void reset(@Nonnull final double[] data, long size) {
       assert data.length == size;
       Arrays.fill(data, 0);
+    }
+
+    @Override
+    protected void free(double[] obj) {
     }
   }.setPersistanceMode(RefSettings.INSTANCE().getDoubleCacheMode());
   /**
@@ -77,13 +77,13 @@ public abstract class RecycleBin<T> {
     }
 
     @Override
-    protected void free(float[] obj) {
-    }
-
-    @Override
     public void reset(@Nonnull final float[] data, long size) {
       assert data.length == size;
       Arrays.fill(data, 0);
+    }
+
+    @Override
+    protected void free(float[] obj) {
     }
   }.setPersistanceMode(RefSettings.INSTANCE().getDoubleCacheMode());
   /**
@@ -142,151 +142,6 @@ public abstract class RecycleBin<T> {
       }
     }
     return RecycleBin.garbageTruck;
-  }
-
-  /**
-   * Equals boolean.
-   *
-   * @param a the a
-   * @param b the b
-   * @return the boolean
-   */
-  public static boolean equals(@Nullable Object a, @Nullable Object b) {
-    if (a == b) return true;
-    if (a == null || b == null) return false;
-    return a.equals(b);
-  }
-
-  /**
-   * Clear long.
-   *
-   * @return the long
-   */
-  public long clear() {
-    Map<Long, ConcurrentLinkedDeque<ObjectWrapper>> buckets = this.buckets;
-    if (null == buckets) return 0;
-    return buckets.keySet().stream().mapToLong(length -> {
-      ConcurrentLinkedDeque<ObjectWrapper> remove = buckets.remove(length);
-      if (null == remove || remove.isEmpty()) return 0;
-      return remove.stream().mapToLong(ref -> {
-        return freeItem(ref.obj.get(), length);
-      }).sum();
-    }).sum();
-  }
-
-  private void clearMemory(long length) {
-    long max = Runtime.getRuntime().maxMemory();
-    long previous = Runtime.getRuntime().freeMemory();
-    long size = getSize();
-    logger.warn(String.format("Allocation of length %d failed; %s/%s used memory; %s items in recycle buffer; Clearing memory", length, previous, max, size));
-    clear();
-    System.gc();
-    long after = Runtime.getRuntime().freeMemory();
-    logger.warn(String.format("Clearing memory freed %s/%s bytes", previous - after, max));
-  }
-
-  /**
-   * Copy of t.
-   *
-   * @param original the original
-   * @param size     the size
-   * @return the t
-   */
-  @Nullable
-  public T copyOf(@Nullable final T original, long size) {
-    if (null == original) return null;
-    final T copy = obtain(size);
-    System.arraycopy(original, 0, copy, 0, (int) size);
-    return copy;
-  }
-
-  /**
-   * Create t.
-   *
-   * @param length the length
-   * @return the t
-   */
-  @Nonnull
-  public abstract T create(long length);
-
-  /**
-   * Create t.
-   *
-   * @param length  the length
-   * @param retries the retries
-   * @return the t
-   */
-  @Nonnull
-  public T create(long length, int retries) {
-    try {
-      @Nonnull T result = create(length);
-      @Nullable StackCounter stackCounter = getAllocations(length);
-      if (null != stackCounter) {
-        stackCounter.increment(length);
-      }
-      return result;
-    } catch (@Nonnull final Throwable e) {
-      if (retries <= 0) throw new RuntimeException(String.format("Could not allocate %d bytes", length), e);
-    }
-    clearMemory(length);
-    return create(length, retries - 1);
-  }
-
-  /**
-   * Free.
-   *
-   * @param obj the obj
-   */
-  protected abstract void free(T obj);
-
-  /**
-   * Free item long.
-   *
-   * @param obj  the obj
-   * @param size the size
-   * @return the long
-   */
-  protected long freeItem(@org.jetbrains.annotations.Nullable T obj, long size) {
-    @Nullable StackCounter stackCounter = getFrees(size);
-    if (null != stackCounter) {
-      stackCounter.increment(size);
-    }
-    if (null != obj) free(obj);
-    return size;
-  }
-
-  /**
-   * Gets allocations.
-   *
-   * @param length the length
-   * @return the allocations
-   */
-  @Nullable
-  public StackCounter getAllocations(final long length) {
-    if (!isProfiling(length)) return null;
-    return allocations;
-  }
-
-  /**
-   * Gets bin.
-   *
-   * @param size the size
-   * @return the bin
-   */
-  protected ConcurrentLinkedDeque<ObjectWrapper> getBin(long size) {
-    return buckets.computeIfAbsent(size, x -> new ConcurrentLinkedDeque<>());
-  }
-
-  /**
-   * Gets frees.
-   *
-   * @param length the length
-   * @return the frees
-   */
-  @Nullable
-  public StackCounter getFrees(final long length) {
-    if (!isProfiling(length)) return null;
-    return frees;
   }
 
   /**
@@ -395,6 +250,128 @@ public abstract class RecycleBin<T> {
   }
 
   /**
+   * Gets size.
+   *
+   * @return the size
+   */
+  public long getSize() {
+    return this.buckets.entrySet().stream().mapToLong(e -> e.getKey() * e.getValue().size()).sum();
+  }
+
+  /**
+   * Sets profiling.
+   *
+   * @param threshold the threshold
+   * @return the profiling
+   */
+  @Nonnull
+  public RecycleBin<T> setProfiling(final int threshold) {
+    this.profilingThreshold = threshold;
+    return this;
+  }
+
+  /**
+   * Equals boolean.
+   *
+   * @param a the a
+   * @param b the b
+   * @return the boolean
+   */
+  public static boolean equals(@Nullable Object a, @Nullable Object b) {
+    if (a == b) return true;
+    if (a == null || b == null) return false;
+    return a.equals(b);
+  }
+
+  /**
+   * Clear long.
+   *
+   * @return the long
+   */
+  public long clear() {
+    Map<Long, ConcurrentLinkedDeque<ObjectWrapper>> buckets = this.buckets;
+    if (null == buckets) return 0;
+    return buckets.keySet().stream().mapToLong(length -> {
+      ConcurrentLinkedDeque<ObjectWrapper> remove = buckets.remove(length);
+      if (null == remove || remove.isEmpty()) return 0;
+      return remove.stream().mapToLong(ref -> {
+        return freeItem(ref.obj.get(), length);
+      }).sum();
+    }).sum();
+  }
+
+  /**
+   * Copy of t.
+   *
+   * @param original the original
+   * @param size     the size
+   * @return the t
+   */
+  @Nullable
+  public T copyOf(@Nullable final T original, long size) {
+    if (null == original) return null;
+    final T copy = obtain(size);
+    System.arraycopy(original, 0, copy, 0, (int) size);
+    return copy;
+  }
+
+  /**
+   * Create t.
+   *
+   * @param length the length
+   * @return the t
+   */
+  @Nonnull
+  public abstract T create(long length);
+
+  /**
+   * Create t.
+   *
+   * @param length  the length
+   * @param retries the retries
+   * @return the t
+   */
+  @Nonnull
+  public T create(long length, int retries) {
+    try {
+      @Nonnull T result = create(length);
+      @Nullable StackCounter stackCounter = getAllocations(length);
+      if (null != stackCounter) {
+        stackCounter.increment(length);
+      }
+      return result;
+    } catch (@Nonnull final Throwable e) {
+      if (retries <= 0) throw new RuntimeException(String.format("Could not allocate %d bytes", length), e);
+    }
+    clearMemory(length);
+    return create(length, retries - 1);
+  }
+
+  /**
+   * Gets allocations.
+   *
+   * @param length the length
+   * @return the allocations
+   */
+  @Nullable
+  public StackCounter getAllocations(final long length) {
+    if (!isProfiling(length)) return null;
+    return allocations;
+  }
+
+  /**
+   * Gets frees.
+   *
+   * @param length the length
+   * @return the frees
+   */
+  @Nullable
+  public StackCounter getFrees(final long length) {
+    if (!isProfiling(length)) return null;
+    return frees;
+  }
+
+  /**
    * Gets recycle get.
    *
    * @param length the length
@@ -416,15 +393,6 @@ public abstract class RecycleBin<T> {
   public StackCounter getRecycle_put(final long length) {
     if (!isProfiling(length)) return null;
     return recycle_put;
-  }
-
-  /**
-   * Gets size.
-   *
-   * @return the size
-   */
-  public long getSize() {
-    return this.buckets.entrySet().stream().mapToLong(e -> e.getKey() * e.getValue().size()).sum();
   }
 
   /**
@@ -541,18 +509,6 @@ public abstract class RecycleBin<T> {
   public abstract void reset(T data, long size);
 
   /**
-   * Sets profiling.
-   *
-   * @param threshold the threshold
-   * @return the profiling
-   */
-  @Nonnull
-  public RecycleBin<T> setProfiling(final int threshold) {
-    this.profilingThreshold = threshold;
-    return this;
-  }
-
-  /**
    * Want boolean.
    *
    * @param size the size
@@ -570,6 +526,39 @@ public abstract class RecycleBin<T> {
   }
 
   /**
+   * Free.
+   *
+   * @param obj the obj
+   */
+  protected abstract void free(T obj);
+
+  /**
+   * Free item long.
+   *
+   * @param obj  the obj
+   * @param size the size
+   * @return the long
+   */
+  protected long freeItem(@org.jetbrains.annotations.Nullable T obj, long size) {
+    @Nullable StackCounter stackCounter = getFrees(size);
+    if (null != stackCounter) {
+      stackCounter.increment(size);
+    }
+    if (null != obj) free(obj);
+    return size;
+  }
+
+  /**
+   * Gets bin.
+   *
+   * @param size the size
+   * @return the bin
+   */
+  protected ConcurrentLinkedDeque<ObjectWrapper> getBin(long size) {
+    return buckets.computeIfAbsent(size, x -> new ConcurrentLinkedDeque<>());
+  }
+
+  /**
    * Wrap supplier.
    *
    * @param data the data
@@ -578,6 +567,17 @@ public abstract class RecycleBin<T> {
   @Nullable
   protected Supplier<T> wrap(T data) {
     return persistanceMode.wrap(data);
+  }
+
+  private void clearMemory(long length) {
+    long max = Runtime.getRuntime().maxMemory();
+    long previous = Runtime.getRuntime().freeMemory();
+    long size = getSize();
+    logger.warn(String.format("Allocation of length %d failed; %s/%s used memory; %s items in recycle buffer; Clearing memory", length, previous, max, size));
+    clear();
+    System.gc();
+    long after = Runtime.getRuntime().freeMemory();
+    logger.warn(String.format("Clearing memory freed %s/%s bytes", previous - after, max));
   }
 
   private class ObjectWrapper {

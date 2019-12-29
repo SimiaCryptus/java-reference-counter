@@ -55,6 +55,11 @@ public class RefArrayList<T> extends RefAbstractList<T> {
     addAll(list);
   }
 
+  @Override
+  public List<T> getInner() {
+    return inner;
+  }
+
   /**
    * Add refs ref array list [ ].
    *
@@ -71,11 +76,6 @@ public class RefArrayList<T> extends RefAbstractList<T> {
   public @Override
   RefArrayList<T> addRef() {
     return (RefArrayList<T>) super.addRef();
-  }
-
-  @Override
-  public List<T> getInner() {
-    return inner;
   }
 
 }

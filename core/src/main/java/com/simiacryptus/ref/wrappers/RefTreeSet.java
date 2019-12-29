@@ -84,6 +84,11 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
     addAll(values);
   }
 
+  @Override
+  public Map<T, T> getInnerMap() {
+    return inner;
+  }
+
   /**
    * Add refs ref tree set [ ].
    *
@@ -100,11 +105,6 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
   public @Override
   RefTreeSet<T> addRef() {
     return (RefTreeSet<T>) super.addRef();
-  }
-
-  @Override
-  public Map<T, T> getInnerMap() {
-    return inner;
   }
 
   /**

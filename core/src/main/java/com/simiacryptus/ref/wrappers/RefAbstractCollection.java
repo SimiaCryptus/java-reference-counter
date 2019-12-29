@@ -34,6 +34,14 @@ import java.util.Iterator;
  */
 public abstract class RefAbstractCollection<T> extends ReferenceCountingBase implements RefCollection<T>, Cloneable, Serializable {
 
+  public abstract Collection<T> getInner();
+
+  @Override
+  public final boolean isEmpty() {
+    assertAlive();
+    return getInner().isEmpty();
+  }
+
   @NotNull
   public @Override
   RefAbstractCollection<T> addRef() {
@@ -67,14 +75,6 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
     final boolean b = !c_inner.stream().anyMatch(o -> !inner.contains(o));
     RefUtil.freeRef(c);
     return b;
-  }
-
-  public abstract Collection<T> getInner();
-
-  @Override
-  public final boolean isEmpty() {
-    assertAlive();
-    return getInner().isEmpty();
   }
 
   @NotNull

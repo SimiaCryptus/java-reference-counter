@@ -50,6 +50,14 @@ public class RefAssert {
     }
   }
 
+  public static void fail(String message) {
+    if (message == null) {
+      throw new AssertionError();
+    } else {
+      throw new AssertionError(message);
+    }
+  }
+
   private static boolean equalsRegardingNull(Object expected, Object actual) {
     if (expected == null) {
       final boolean b = actual == null;
@@ -79,14 +87,6 @@ public class RefAssert {
     String expectedString = String.valueOf(expected);
     String actualString = String.valueOf(actual);
     return equalsRegardingNull(expectedString, actualString) ? formatted + "expected: " + formatClassAndValue(expected, expectedString) + " but was: " + formatClassAndValue(actual, actualString) : formatted + "expected:<" + expectedString + "> but was:<" + actualString + ">";
-  }
-
-  public static void fail(String message) {
-    if (message == null) {
-      throw new AssertionError();
-    } else {
-      throw new AssertionError(message);
-    }
   }
 
   private static String formatClassAndValue(Object value, String valueString) {

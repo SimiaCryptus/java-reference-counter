@@ -5,17 +5,14 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.io.File;
 
-public class FileAstScanner extends FileAstVisitor {
-  public FileAstScanner(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean record) {
+public class ASTScanner extends ASTEditor {
+  public ASTScanner(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean record) {
     super(projectInfo, compilationUnit, file, record);
-  }
-
-  protected ASTMapping reparseAndAlign() {
-    return null;
   }
 
   @Override
   public boolean write(boolean format) {
     return false;
   }
+
 }

@@ -57,6 +57,28 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
   private double sumOfSquare = 0.0d;
   private double sumOfSquareCompensation; // Low order bits of sum
 
+  /**
+   * Gets standard deviation.
+   *
+   * @return the standard deviation
+   */
+  public final double getStandardDeviation() {
+    return getCount() > 0 ? Math.sqrt(getSumOfSquare() / getCount() - Math.pow(getAverage(), 2)) : 0.0d;
+  }
+
+  /**
+   * Gets sum of square.
+   *
+   * @return the sum of square
+   */
+  public double getSumOfSquare() {
+    final double tmp = sumOfSquare + sumOfSquareCompensation;
+    if (Double.isNaN(tmp) && Double.isInfinite(simpleSumOfSquare)) {
+      return simpleSumOfSquare;
+    }
+    return tmp;
+  }
+
   @Override
   public synchronized void accept(final double value) {
     super.accept(value);
@@ -92,35 +114,6 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
     return this;
   }
 
-  /**
-   * Gets standard deviation.
-   *
-   * @return the standard deviation
-   */
-  public final double getStandardDeviation() {
-    return getCount() > 0 ? Math.sqrt(getSumOfSquare() / getCount() - Math.pow(getAverage(), 2)) : 0.0d;
-  }
-
-  /**
-   * Gets sum of square.
-   *
-   * @return the sum of square
-   */
-  public double getSumOfSquare() {
-    final double tmp = sumOfSquare + sumOfSquareCompensation;
-    if (Double.isNaN(tmp) && Double.isInfinite(simpleSumOfSquare)) {
-      return simpleSumOfSquare;
-    }
-    return tmp;
-  }
-
-  private void sumOfSquareWithCompensation(final double value) {
-    final double tmp = value - sumOfSquareCompensation;
-    final double velvel = sumOfSquare + tmp; // Little wolf of rounding error
-    sumOfSquareCompensation = velvel - sumOfSquare - tmp;
-    sumOfSquare = velvel;
-  }
-
   @Override
   public String toString() {
     return toString(1).toString();
@@ -134,5 +127,12 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
    */
   public CharSequence toString(final double scale) {
     return String.format("%.4e +- %.4e [%.4e - %.4e] (%d#)", getAverage() * scale, getStandardDeviation() * scale, getMin() * scale, getMax() * scale, getCount());
+  }
+
+  private void sumOfSquareWithCompensation(final double value) {
+    final double tmp = value - sumOfSquareCompensation;
+    final double velvel = sumOfSquare + tmp; // Little wolf of rounding error
+    sumOfSquareCompensation = velvel - sumOfSquare - tmp;
+    sumOfSquare = velvel;
   }
 }

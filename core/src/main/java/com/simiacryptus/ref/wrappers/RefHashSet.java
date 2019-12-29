@@ -69,6 +69,11 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     addAll(values);
   }
 
+  @Override
+  public Map<T, T> getInnerMap() {
+    return inner;
+  }
+
   /**
    * Add refs ref hash set [ ].
    *
@@ -85,11 +90,6 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
   public @Override
   RefHashSet<T> addRef() {
     return (RefHashSet<T>) super.addRef();
-  }
-
-  @Override
-  public Map<T, T> getInnerMap() {
-    return inner;
   }
 
 }
