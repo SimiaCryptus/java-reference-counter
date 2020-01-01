@@ -168,17 +168,11 @@ public class InsertFreeRefs extends RefASTOperator {
       warn(node, "No body for %s", node);
       return;
     }
-    for (int i = Math.max(declaredAt, 0); i < body.statements().size(); i++) {
-      final Statement statement = (Statement) body.statements().get(i);
-      if (statement instanceof SuperConstructorInvocation) {
-        declaredAt = i;
-        break;
-      }
-    }
+    declaredAt = firstLine(body, declaredAt);
     final StatementOfInterest lastMention = lastMention(body, node, declaredAt);
     if (null == lastMention) {
       debug(node, "No mentions in body. Adding freeRef");
-      insertFreeRef(typeBinding, node, body, -1, isNonNull);
+      insertFreeRef(typeBinding, node, body, declaredAt, isNonNull);
     } else {
       final List<StatementOfInterest> inScopeExits = exits(body, declaredAt, lastMention.line);
       if (lastMention.isComplexReturn()) {
@@ -235,13 +229,29 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  private static int firstLine(@NotNull Block body, int declaredAt) {
+    final List<Statement> statements = body.statements();
+    for (int i = Math.max(declaredAt, 0); i < statements.size(); i++) {
+      final Statement statement = statements.get(i);
+      if (statement instanceof ConstructorInvocation) {
+        declaredAt = i;
+        break;
+      }
+      if (statement instanceof SuperConstructorInvocation) {
+        declaredAt = i;
+        break;
+      }
+    }
+    return declaredAt;
+  }
+
   /**
    * Apply.
    *
    * @param node        the node
    * @param typeBinding the type binding
    */
-  protected void apply(@NotNull Expression node, @NotNull ITypeBinding typeBinding) {
+  protected void freeExpressionResult(@NotNull Expression node, @NotNull ITypeBinding typeBinding) {
     if (isRefCounted(node, typeBinding)) {
       debug(node, "Ref-returning method: %s", node);
       final ASTNode parent = node.getParent();
@@ -702,7 +712,7 @@ public class InsertFreeRefs extends RefASTOperator {
         warn(node, "Unresolved constructor binding on %s", node);
         return;
       }
-      apply(node, methodBinding.getDeclaringClass());
+      freeExpressionResult(node, methodBinding.getDeclaringClass());
     }
   }
 
@@ -732,7 +742,7 @@ public class InsertFreeRefs extends RefASTOperator {
         warn(node, "Unresolved binding on %s", node);
         return;
       }
-      apply(node, methodBinding.getReturnType());
+      freeExpressionResult(node, methodBinding.getReturnType());
     }
   }
 

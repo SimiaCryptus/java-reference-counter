@@ -133,7 +133,7 @@ public class InlineRefs extends RefASTOperator {
             final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
             final StatementOfInterest lastMention = lastMention(ASTUtil.getBlock(node), fragment.getName(), 0);
             if (null == lastMention) {
-              warn(node, "No mentions of %s", fragment.getName());
+              debug(node, "No mentions of %s", fragment.getName());
               return;
             }
             if (!lastMention.statement.equals(previousStatement)) {
@@ -146,7 +146,7 @@ public class InlineRefs extends RefASTOperator {
               debug(previousStatement, "delete %s", previousStatement);
               previousStatement.delete();
             } else {
-              warn(node, "previous variable %s is not used in %s", fragment.getName(), node.getRightHandSide());
+              debug(node, "previous variable %s is not used in %s", fragment.getName(), node.getRightHandSide());
             }
           } else {
             warn(node, "previous variable has multiple fragments");
@@ -185,7 +185,7 @@ public class InlineRefs extends RefASTOperator {
               final VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.get(0);
               final StatementOfInterest lastMention = lastMention(ASTUtil.getBlock(node), fragment.getName(), 0);
               if (null == lastMention) {
-                warn(node, "No mentions of %s", fragment.getName());
+                debug(node, "No mentions of %s", fragment.getName());
                 return;
               }
               if (lastMention.statement.equals(previousStatement)) {

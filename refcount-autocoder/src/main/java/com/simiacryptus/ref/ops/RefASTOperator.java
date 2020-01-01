@@ -102,7 +102,7 @@ abstract class RefASTOperator extends ASTOperator {
         return false;
       }
       if (ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
-        warn(node, "Marked with RefIgnore");
+        debug(node, "Marked with RefIgnore");
         return false;
       }
     }
@@ -236,8 +236,9 @@ abstract class RefASTOperator extends ASTOperator {
       final ITypeBinding[] typeArguments = type.getTypeArguments();
       if (null == typeArguments || 0 == typeArguments.length) {
         warn(1, node, "No type argument for Optional");
+      } else {
+        return isRefCounted(node, typeArguments[0]);
       }
-      return isRefCounted(node, typeArguments[0]);
     }
     if (type.isArray()) {
       type = type.getElementType();

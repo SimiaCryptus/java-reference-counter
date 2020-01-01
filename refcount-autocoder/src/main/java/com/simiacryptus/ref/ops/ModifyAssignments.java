@@ -88,7 +88,7 @@ public class ModifyAssignments extends RefASTOperator {
           if (rightHandSide instanceof Name) {
             if (!isFinal) {
               block.statements().add(lineNumber, freeRefStatement(leftHandSide, typeBinding));
-              warn(leftHandSide, "Adding freeRef for %s", leftHandSide);
+              debug(leftHandSide, "Adding freeRef for %s", leftHandSide);
             }
             assignment.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
             debug(assignment, "Simple field-set statement at line " + lineNumber);
@@ -99,7 +99,7 @@ public class ModifyAssignments extends RefASTOperator {
             exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(assignment, typeBinding.getQualifiedName(), true)));
             if (!isFinal) {
               exchangeBlock.statements().add(freeRefStatement(leftHandSide, typeBinding));
-              warn(leftHandSide, "Adding freeRef for %s", leftHandSide);
+              debug(leftHandSide, "Adding freeRef for %s", leftHandSide);
             }
             assignment.setRightHandSide(wrapAddRef(ast.newSimpleName(identifier), typeBinding));
             exchangeBlock.statements().add(expressionStatement);

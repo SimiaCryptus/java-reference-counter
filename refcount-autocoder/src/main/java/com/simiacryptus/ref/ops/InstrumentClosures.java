@@ -231,7 +231,7 @@ public class InstrumentClosures extends RefASTOperator {
               closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
           addRefcounting(node, closures);
         } else {
-          warn(node, String.format("Closures in Non-RefCountable %s at %s: %s",
+          debug(node, String.format("Closures in Non-RefCountable %s at %s: %s",
               bindingID,
               getSpan(node),
               closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));

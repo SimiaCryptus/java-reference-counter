@@ -93,7 +93,7 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
     if (chooseType.isPresent()) {
       Type newType = getType(type, chooseType.get().getQualifiedName(), true);
-      warn(type, "Replaced variable type %s to %s", type, newType);
+      debug(type, "Replaced variable type %s to %s", type, newType);
       return newType;
     } else {
       warn(type, "No candidates fit for %s", type);
@@ -210,12 +210,12 @@ public class FixVariableDeclarations extends RefASTOperator {
     @Override
     public void endVisit(@NotNull FieldDeclaration node) {
       final Type type = node.getType();
-      final List fragments = node.fragments();
+      final List<VariableDeclarationFragment> fragments = node.fragments();
       if (1 != fragments.size()) {
         warn(node, "%s fragments", fragments.size());
         return;
       }
-      final Type newType = apply(type, ((VariableDeclarationFragment) fragments.get(0)).getInitializer());
+      final Type newType = apply(type, fragments.get(0).getInitializer());
       if (null != newType && type != newType) node.setType(newType);
     }
   }
