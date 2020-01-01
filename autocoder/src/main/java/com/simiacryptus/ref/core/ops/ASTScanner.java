@@ -21,11 +21,23 @@ package com.simiacryptus.ref.core.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Ast scanner.
+ */
 public class ASTScanner extends ASTEditor {
-  public ASTScanner(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean record) {
+  /**
+   * Instantiates a new Ast scanner.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   * @param record          the record
+   */
+  public ASTScanner(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, boolean record) {
     super(projectInfo, compilationUnit, file, record);
   }
 

@@ -26,23 +26,34 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Insert annotations.
+ */
 @RefIgnore
 public class InsertAnnotations extends RefASTOperator {
 
-  public InsertAnnotations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Insert annotations.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  public InsertAnnotations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(TypeDeclaration node) {
+  public void endVisit(@NotNull TypeDeclaration node) {
     if (!ASTUtil.hasAnnotation(node.resolveBinding(), RefAware.class)) {
       final MarkerAnnotation annotation = ast.newMarkerAnnotation();
       annotation.setTypeName(ASTUtil.newQualifiedName(ast, RefAware.class));
       node.modifiers().add(annotation);
-      info(node, "Added @RefAware to %s", node.getName());
+      debug(node, "Added @RefAware to %s", node.getName());
     }
     super.endVisit(node);
   }

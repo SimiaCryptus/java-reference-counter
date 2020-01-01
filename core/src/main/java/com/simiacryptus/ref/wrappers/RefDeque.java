@@ -32,6 +32,7 @@ import java.util.Deque;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
   /**
@@ -41,10 +42,11 @@ public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
    * @param array the array
    * @return the ref deque [ ]
    */
+  @NotNull
   public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
         .toArray((x) -> new RefDeque[x]);
   }
 
-  RefDeque<T> addRef();
+  @NotNull RefDeque<T> addRef();
 }

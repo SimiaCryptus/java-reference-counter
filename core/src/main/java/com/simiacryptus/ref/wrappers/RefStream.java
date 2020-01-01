@@ -21,6 +21,7 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +37,7 @@ import java.util.stream.*;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefStream<T> implements Stream<T> {
   private final Stream<T> inner;
   /**
@@ -80,6 +82,7 @@ public class RefStream<T> implements Stream<T> {
    *
    * @return the inner
    */
+  @NotNull
   public Stream<T> getInner() {
     return new StreamWrapper<T>(inner) {
       @Override
@@ -114,6 +117,7 @@ public class RefStream<T> implements Stream<T> {
    * @param x   the x
    * @return the ref stream
    */
+  @NotNull
   public static <T> RefStream<T> of(T x) {
     return new RefStream<>(Stream.of(x)).onClose(() -> {
       RefUtil.freeRef(x);
@@ -127,7 +131,8 @@ public class RefStream<T> implements Stream<T> {
    * @param array the array
    * @return the ref stream
    */
-  public static <T> RefStream<T> of(T... array) {
+  @NotNull
+  public static <T> RefStream<T> of(@NotNull T... array) {
     return new RefStream<>(Stream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
@@ -141,11 +146,17 @@ public class RefStream<T> implements Stream<T> {
    * @param b   the b
    * @return the ref stream
    */
-  public static <T> RefStream<T> concat(Stream<? extends T> a, Stream<? extends T> b) {
+  @NotNull
+  public static <T> RefStream<T> concat(@NotNull Stream<? extends T> a, @NotNull Stream<? extends T> b) {
     return new RefStream<>(Stream.concat(a, b));
   }
 
-  static void freeAll(Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+  /**
+   * Free all.
+   *
+   * @param refs the refs
+   */
+  static void freeAll(@NotNull Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     refs.forEach((k, v) -> {
       final int cnt = v.getAndSet(0);
       if (cnt > 0) for (int i = 0; i < cnt; i++) {
@@ -154,7 +165,15 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  static <U> U getRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+  /**
+   * Gets ref.
+   *
+   * @param <U>  the type parameter
+   * @param u    the u
+   * @param refs the refs
+   * @return the ref
+   */
+  static <U> U getRef(U u, @NotNull Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
       final AtomicBoolean obtained = new AtomicBoolean(false);
@@ -177,10 +196,10 @@ public class RefStream<T> implements Stream<T> {
    *
    * @param <U>  the type parameter
    * @param u    the u
-   * @param refs
+   * @param refs the refs
    * @return the u
    */
-  static <U> U storeRef(U u, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+  static <U> U storeRef(U u, @NotNull Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
     }
@@ -264,6 +283,7 @@ public class RefStream<T> implements Stream<T> {
     return new RefStream(getInner().filter((T t) -> predicate.test(getRef(t))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public Optional<T> findAny() {
     final Optional<T> optional = getInner().findAny().map(RefUtil::addRef);
@@ -271,6 +291,7 @@ public class RefStream<T> implements Stream<T> {
     return optional;
   }
 
+  @NotNull
   @Override
   public Optional<T> findFirst() {
     final Optional<T> optional = getInner().findFirst().map(RefUtil::addRef);
@@ -288,18 +309,21 @@ public class RefStream<T> implements Stream<T> {
     ), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefDoubleStream flatMapToDouble(@NotNull Function<? super T, ? extends DoubleStream> mapper) {
     track(mapper);
     return new RefDoubleStream(getInner().flatMapToDouble((T t) -> mapper.apply(getRef(t))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefIntStream flatMapToInt(@NotNull Function<? super T, ? extends IntStream> mapper) {
     track(mapper);
     return new RefIntStream(getInner().flatMapToInt((T t) -> mapper.apply(getRef(t))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefLongStream flatMapToLong(@NotNull Function<? super T, ? extends LongStream> mapper) {
     track(mapper);
@@ -346,24 +370,28 @@ public class RefStream<T> implements Stream<T> {
     return new RefStream<>(getInner().map(t -> storeRef(mapper.apply(getRef(t)))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefDoubleStream mapToDouble(@NotNull ToDoubleFunction<? super T> mapper) {
     track(mapper);
     return new RefDoubleStream(getInner().mapToDouble((T value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefIntStream mapToInt(@NotNull ToIntFunction<? super T> mapper) {
     track(mapper);
     return new RefIntStream(getInner().mapToInt((T value) -> mapper.applyAsInt(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefLongStream mapToLong(@NotNull ToLongFunction<? super T> mapper) {
     track(mapper);
     return new RefLongStream(getInner().mapToLong((T value) -> mapper.applyAsLong(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public Optional<T> max(@NotNull Comparator<? super T> comparator) {
     track(comparator);
@@ -372,6 +400,7 @@ public class RefStream<T> implements Stream<T> {
     return optional;
   }
 
+  @NotNull
   @Override
   public Optional<T> min(@NotNull Comparator<? super T> comparator) {
     track(comparator);
@@ -409,6 +438,7 @@ public class RefStream<T> implements Stream<T> {
     return new RefStream(getInner().peek((T t) -> action.accept(getRef(t))), lambdas, refs);
   }
 
+  @Nullable
   @Override
   public T reduce(T identity, @NotNull BinaryOperator<T> accumulator) {
     track(accumulator);
@@ -417,6 +447,7 @@ public class RefStream<T> implements Stream<T> {
     return reduce;
   }
 
+  @NotNull
   @Override
   public Optional<T> reduce(@NotNull BinaryOperator<T> accumulator) {
     track(accumulator);
@@ -490,6 +521,7 @@ public class RefStream<T> implements Stream<T> {
     return storeRef(u, refs);
   }
 
+  @NotNull
   @Override
   public Object[] toArray() {
     final Object[] array = getInner().map(this::getRef).toArray();
@@ -497,6 +529,7 @@ public class RefStream<T> implements Stream<T> {
     return array;
   }
 
+  @NotNull
   @Override
   public <A> A[] toArray(@NotNull IntFunction<A[]> generator) {
     track(generator);
@@ -512,7 +545,7 @@ public class RefStream<T> implements Stream<T> {
   }
 
   @NotNull
-  private <A> BiConsumer<A, A> getBiConsumer(BinaryOperator<A> combiner) {
+  private <A> BiConsumer<A, A> getBiConsumer(@NotNull BinaryOperator<A> combiner) {
     return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
   }
 
@@ -520,7 +553,7 @@ public class RefStream<T> implements Stream<T> {
     return getRef(u, this.refs);
   }
 
-  private void track(Object... lambda) {
+  private void track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }
@@ -549,7 +582,7 @@ public class RefStream<T> implements Stream<T> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       IdentityWrapper that = (IdentityWrapper) o;

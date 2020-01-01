@@ -37,8 +37,10 @@ import java.util.Map;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefHashSet<T> extends RefAbstractSet<T> {
 
+  @NotNull
   private final Map<T, T> inner;
 
   /**
@@ -69,6 +71,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     addAll(values);
   }
 
+  @NotNull
   @Override
   public Map<T, T> getInnerMap() {
     return inner;
@@ -81,6 +84,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
    * @param array the array
    * @return the ref hash set [ ]
    */
+  @NotNull
   public static <T> RefHashSet<T>[] addRefs(@NotNull RefHashSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef)
         .toArray((x) -> new RefHashSet[x]);

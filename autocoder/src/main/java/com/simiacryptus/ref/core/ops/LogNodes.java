@@ -26,14 +26,24 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Log nodes.
+ */
 public class LogNodes extends ASTOperator {
 
-  public LogNodes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Log nodes.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  public LogNodes(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
   public void preVisit(@NotNull ASTNode node) {
-    info(node, "Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));
+    debug(node, "Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));
   }
 }

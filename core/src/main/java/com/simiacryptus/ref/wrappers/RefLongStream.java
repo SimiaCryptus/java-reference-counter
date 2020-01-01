@@ -33,6 +33,7 @@ import java.util.stream.LongStream;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefLongStream implements LongStream {
   private final LongStream inner;
   private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
@@ -78,6 +79,7 @@ public class RefLongStream implements LongStream {
    * @param endExclusive   the end exclusive
    * @return the ref long stream
    */
+  @NotNull
   public static RefLongStream range(long startInclusive, final long endExclusive) {
     return new RefLongStream(LongStream.range(startInclusive, endExclusive));
   }
@@ -88,6 +90,7 @@ public class RefLongStream implements LongStream {
    * @param x the x
    * @return the ref long stream
    */
+  @NotNull
   public static RefLongStream of(long x) {
     return new RefLongStream(LongStream.of(x));
   }
@@ -98,7 +101,8 @@ public class RefLongStream implements LongStream {
    * @param array the array
    * @return the ref long stream
    */
-  public static RefLongStream of(long... array) {
+  @NotNull
+  public static RefLongStream of(@NotNull long... array) {
     return new RefLongStream(LongStream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
@@ -110,11 +114,20 @@ public class RefLongStream implements LongStream {
    * @param s the s
    * @return the ref long stream
    */
-  public static RefLongStream generate(LongSupplier s) {
+  @NotNull
+  public static RefLongStream generate(@NotNull LongSupplier s) {
     return new RefLongStream(LongStream.generate(s));
   }
 
-  public static RefLongStream concat(RefLongStream a, RefLongStream b) {
+  /**
+   * Concat ref long stream.
+   *
+   * @param a the a
+   * @param b the b
+   * @return the ref long stream
+   */
+  @NotNull
+  public static RefLongStream concat(@NotNull RefLongStream a, @NotNull RefLongStream b) {
     return new RefLongStream(LongStream.concat(a.inner, b.inner));
   }
 
@@ -134,6 +147,7 @@ public class RefLongStream implements LongStream {
     return anyMatch;
   }
 
+  @NotNull
   @Override
   public RefDoubleStream asDoubleStream() {
     return new RefDoubleStream(inner.asDoubleStream(), lambdas, refs);
@@ -146,6 +160,7 @@ public class RefLongStream implements LongStream {
     return average;
   }
 
+  @NotNull
   @Override
   public RefStream<Long> boxed() {
     return new RefStream<>(inner.boxed(), lambdas, refs);
@@ -213,7 +228,7 @@ public class RefLongStream implements LongStream {
   }
 
   @Override
-  public void forEach(LongConsumer action) {
+  public void forEach(@NotNull LongConsumer action) {
     track(action);
     inner.forEach((long t) -> action.accept(getRef(t)));
     close();
@@ -251,18 +266,21 @@ public class RefLongStream implements LongStream {
     return new RefLongStream(inner.map(t -> storeRef(mapper.applyAsLong(t))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefDoubleStream mapToDouble(@NotNull LongToDoubleFunction mapper) {
     track(mapper);
     return new RefDoubleStream(inner.mapToDouble((long value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefIntStream mapToInt(@NotNull LongToIntFunction mapper) {
     track(mapper);
     return new RefIntStream(inner.mapToInt((long value) -> mapper.applyAsInt(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public <U> RefStream<U> mapToObj(LongFunction<? extends U> mapper) {
     return new RefStream<>(inner.mapToObj(mapper), lambdas, refs);
@@ -390,7 +408,7 @@ public class RefLongStream implements LongStream {
     return RefStream.storeRef(u, refs);
   }
 
-  private void track(Object... lambda) {
+  private void track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }

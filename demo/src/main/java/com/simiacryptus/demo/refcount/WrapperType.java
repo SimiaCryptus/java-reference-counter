@@ -21,39 +21,21 @@ package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * The type Wrapper type.
- *
- * @param <T> the type parameter
- */
+@SuppressWarnings("unused")
 public class WrapperType<T extends ReferenceCounting> extends ReferenceCountingBase {
   private T inner;
 
-  /**
-   * Instantiates a new Wrapper type.
-   *
-   * @param inner the inner
-   */
   public WrapperType(T inner) {
     this.setInner(inner);
   }
 
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
   public T getInner() {
     return inner;
   }
 
-  /**
-   * Sets inner.
-   *
-   * @param innerWrapperType the inner
-   * @return the inner
-   */
+  @NotNull
   public WrapperType<T> setInner(T innerWrapperType) {
     {
       this.inner = innerWrapperType;

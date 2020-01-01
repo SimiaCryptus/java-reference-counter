@@ -23,20 +23,31 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 
+/**
+ * The type Optimize refs.
+ */
 @RefIgnore
 public class OptimizeRefs extends RefASTOperator {
 
+  /**
+   * Instantiates a new Optimize refs.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
   public OptimizeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(MethodInvocation freeRefNode) {
+  public void endVisit(@NotNull MethodInvocation freeRefNode) {
     if (freeRefNode.getName().toString().equals("freeRef")) {
       final IMethodBinding methodBinding = resolveMethodBinding(freeRefNode);
       if (null == methodBinding) {
@@ -44,7 +55,7 @@ public class OptimizeRefs extends RefASTOperator {
         return;
       }
       if ((methodBinding.getModifiers() & Modifier.STATIC) != 0) {
-        info(freeRefNode, "Non-instance freeRef");
+        debug(freeRefNode, "Non-instance freeRef");
         return;
       }
       if (!(freeRefNode.getExpression() instanceof SimpleName)) {
@@ -74,23 +85,23 @@ public class OptimizeRefs extends RefASTOperator {
       }
       final StatementOfInterest lastMention = lastMention(parentBlock, variable, 0, freeRefLineNumber, 1);
       if (lastMention.line > addRefLineNumber) {
-        info(freeRefNode, "Value used at line %s, after prior addRef at line %s", lastMention.line, addRefLineNumber);
+        debug(freeRefNode, "Value used at line %s, after prior addRef at line %s", lastMention.line, addRefLineNumber);
         return;
       }
-      info(freeRefNode, "Consolidating freeRef of %s at line %s with addRef at line %s", variable, freeRefLineNumber, addRefLineNumber);
+      debug(freeRefNode, "Consolidating freeRef of %s at line %s with addRef at line %s", variable, freeRefLineNumber, addRefLineNumber);
       replace(addRefNode, copyIfAttached(variable));
       parentBlock.statements().remove(freeRefLineNumber);
     }
   }
 
   @Nullable
-  private MethodInvocation findAddRef(Block block, int line, final Expression subject) {
+  private MethodInvocation findAddRef(@NotNull Block block, int line, @NotNull final Expression subject) {
     final ArrayList<MethodInvocation> addRefInvocations = new ArrayList<>();
     for (int i = line - 1; i >= 0; i--) {
       final Statement statement = (Statement) block.statements().get(i);
       statement.accept(new ASTVisitor() {
         @Override
-        public void endVisit(MethodInvocation addRefNode) {
+        public void endVisit(@NotNull MethodInvocation addRefNode) {
           if (addRefNode.getName().toString().equals("addRef")) {
             if (addRefNode.getExpression().toString().equals(subject.toString())) {
               addRefInvocations.add(addRefNode);
@@ -109,7 +120,7 @@ public class OptimizeRefs extends RefASTOperator {
         }
       });
       if (!addRefInvocations.isEmpty()) {
-        info(statement, "Found %s preceeding addRef(s)", addRefInvocations.size());
+        debug(statement, "Found %s preceeding addRef(s)", addRefInvocations.size());
         return addRefInvocations.get(0);
       }
     }

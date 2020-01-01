@@ -30,13 +30,29 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The type Remove refs.
+ */
 @RefIgnore
 public class RemoveRefs extends RefASTOperator {
 
+  /**
+   * Instantiates a new Remove refs.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
   protected RemoveRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Is ref util boolean.
+   *
+   * @param node the node
+   * @return the boolean
+   */
   protected boolean isRefUtil(@NotNull MethodInvocation node) {
     final Expression expression = node.getExpression();
     if (expression instanceof SimpleName) {
@@ -55,6 +71,12 @@ public class RemoveRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Unwrap expression.
+   *
+   * @param subject the subject
+   * @return the expression
+   */
   protected Expression unwrap(Expression subject) {
     if (subject instanceof ParenthesizedExpression) {
       return unwrap(((ParenthesizedExpression) subject).getExpression());
@@ -65,7 +87,17 @@ public class RemoveRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify method invocation.
+   */
   public static class ModifyMethodInvocation extends RemoveRefs {
+    /**
+     * Instantiates a new Modify method invocation.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -89,7 +121,7 @@ public class RemoveRefs extends RefASTOperator {
             subject = copyIfAttached(expression);
           }
         }
-        info(node, "Removing %s and replacing with %s", methodName, subject);
+        debug(node, "Removing %s and replacing with %s", methodName, subject);
         //        replace(node, subject);
         ASTNode parent = node.getParent();
         if (parent instanceof ConditionalExpression) {
@@ -115,53 +147,63 @@ public class RemoveRefs extends RefASTOperator {
             warn(node, "%s not found as argument to %s", node, ((MethodInvocation) parent).getName());
           } else {
             arguments.set(index, subject);
-            info(node, "%s removed as argument %s of %s", methodName, index, parent);
+            debug(node, "%s removed as argument %s of %s", methodName, index, parent);
           }
         } else if (parent instanceof ExpressionStatement) {
           subject = unwrap(subject);
           if (ASTUtil.isEvaluable(subject)) {
-            info(subject, "%s replaced with %s", parent, subject);
+            debug(subject, "%s replaced with %s", parent, subject);
             replace(parent, ast.newExpressionStatement(copyIfAttached(subject)));
           } else {
-            info(subject, "%s removed", parent);
+            debug(subject, "%s removed", parent);
             delete((ExpressionStatement) parent);
           }
         } else if (parent instanceof ClassInstanceCreation) {
           final List arguments = ((ClassInstanceCreation) parent).arguments();
           final int index = arguments.indexOf(node);
-          info(node, "%s removed as argument %s of %s", node, index, parent);
+          debug(node, "%s removed as argument %s of %s", node, index, parent);
           arguments.set(index, subject);
         } else if (parent instanceof VariableDeclarationFragment) {
-          info(node, "%s removed", node);
+          debug(node, "%s removed", node);
           ((VariableDeclarationFragment) parent).setInitializer(subject);
         } else if (parent instanceof Assignment) {
-          info(node, "%s removed", node);
+          debug(node, "%s removed", node);
           ((Assignment) parent).setRightHandSide(subject);
         } else if (parent instanceof ArrayInitializer) {
           final List arguments = ((ArrayInitializer) parent).expressions();
           final int index = arguments.indexOf(node);
           arguments.set(index, subject);
-          info(node, "%s removed as argument %s of %s", node, index, parent);
+          debug(node, "%s removed as argument %s of %s", node, index, parent);
         } else {
           subject = unwrap(subject);
-          info(subject, "%s replaced with %s", parent, subject);
+          debug(subject, "%s replaced with %s", parent, subject);
           replace(node, copyIfAttached(subject));
         }
       }
     }
   }
 
+  /**
+   * The type Modify block.
+   */
   public static class ModifyBlock extends RemoveRefs {
+    /**
+     * Instantiates a new Modify block.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyBlock(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(Block node) {
+    public void endVisit(@NotNull Block node) {
       if (node.statements().isEmpty()) {
         final ASTNode parent = node.getParent();
         if (parent instanceof Initializer) {
-          info(node, "delete %s", parent);
+          debug(node, "delete %s", parent);
           parent.delete();
         }
       }

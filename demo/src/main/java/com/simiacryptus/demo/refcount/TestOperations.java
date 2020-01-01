@@ -24,17 +24,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
-/**
- * The type Test operations.
- */
+@SuppressWarnings("unused")
 public class TestOperations extends ReferenceCountingBase {
-  /**
-   * The constant count.
-   */
   public static final int count = 1;
-  /**
-   * The constant random.
-   */
   public static final Random random = new Random(143892);
   private SimpleContainer simpleContainer;
   private ArrayContainer arrayContainer;
@@ -47,11 +39,6 @@ public class TestOperations extends ReferenceCountingBase {
   private HashSetContainer hashSetContainer;
   private TreeSetContainer treeSetContainer;
 
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   */
   public static void main(String... args) {
     final TestOperations testOperations2424 = new TestOperations();
     testOperations2424.run();
@@ -94,7 +81,8 @@ public class TestOperations extends ReferenceCountingBase {
     return datum1;
   }
 
-  private BasicType testBasicType(BasicType datum1) {
+  @NotNull
+  private BasicType testBasicType(@NotNull BasicType datum1) {
     for (int i = 0; i < count; i++) {
       datum1.use();
     }

@@ -21,17 +21,38 @@ package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.ASTEditor;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 
+/**
+ * The type Symbol index.
+ */
 public class SymbolIndex {
+  /**
+   * The constant logger.
+   */
   protected static final Logger logger = LoggerFactory.getLogger(SymbolIndex.class);
+  /**
+   * The Definitions.
+   */
   public final HashMap<BindingID, ASTNode> definitions = new HashMap<>();
+  /**
+   * The References.
+   */
   public final HashMap<BindingID, List<ASTNode>> references = new HashMap<>();
 
+  /**
+   * Gets binding id.
+   *
+   * @param binding the binding
+   * @return the binding id
+   */
+  @Nullable
   public static BindingID getBindingID(@Nonnull IBinding binding) {
     if (null == binding) return null;
     final String path = getPath(binding);
@@ -39,7 +60,8 @@ public class SymbolIndex {
     else return new BindingID(path, getType(binding));
   }
 
-  private static IMethodBinding getImplementation(IMethodBinding methodBinding) {
+  @NotNull
+  private static IMethodBinding getImplementation(@NotNull IMethodBinding methodBinding) {
     while (true) {
       IMethodBinding impl = ReflectionUtil.getField(methodBinding, "implementation");
       if (null != impl && methodBinding != impl) {
@@ -95,7 +117,7 @@ public class SymbolIndex {
     }
   }
 
-  private static String methodName(IMethodBinding methodBinding) {
+  private static String methodName(@Nullable IMethodBinding methodBinding) {
     if (null == methodBinding) return "null";
     return String.format("%s(%s)",
         methodBinding.getName(),
@@ -126,31 +148,69 @@ public class SymbolIndex {
     }
   }
 
+  /**
+   * The type Context location.
+   */
   public static class ContextLocation {
+    /**
+     * The Location.
+     */
     public final ASTEditor.Span location;
+    /**
+     * The Context.
+     */
     public final LinkedHashMap<BindingID, ASTEditor.Span> context;
 
+    /**
+     * Instantiates a new Context location.
+     *
+     * @param location the location
+     * @param context  the context
+     */
     public ContextLocation(ASTEditor.Span location, LinkedHashMap<BindingID, ASTEditor.Span> context) {
       this.location = location;
       this.context = context;
     }
   }
 
+  /**
+   * The type Binding id.
+   */
   public static class BindingID {
+    /**
+     * The Path.
+     */
     public final String path;
+    /**
+     * The Type.
+     */
     public final String type;
 
+    /**
+     * Instantiates a new Binding id.
+     *
+     * @param path the path
+     * @param type the type
+     */
     public BindingID(String path, String type) {
       this.path = path;
       this.type = type;
     }
 
+    /**
+     * Sets type.
+     *
+     * @param type the type
+     * @return the type
+     */
+    @NotNull
+    @SuppressWarnings("unused")
     public BindingID setType(String type) {
       return new BindingID(path, type);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       BindingID bindingID = (BindingID) o;

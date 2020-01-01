@@ -38,6 +38,7 @@ import java.util.function.Function;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   /**
@@ -48,15 +49,16 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
    * @param array the array
    * @return the ref map [ ]
    */
+  @NotNull
   public static <K, V> RefMap<K, V>[] addRefs(@NotNull RefMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef)
         .toArray((x) -> new RefMap[x]);
   }
 
-  RefMap<K, V> addRef();
+  @NotNull RefMap<K, V> addRef();
 
   @Override
-  default V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+  default V computeIfAbsent(K key, @NotNull Function<? super K, ? extends V> mappingFunction) {
     V value = get(RefUtil.addRef(key));
     if (value == null) {
       value = mappingFunction.apply(RefUtil.addRef(key));
@@ -75,7 +77,7 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   @Override
   RefSet<Entry<K, V>> entrySet();
 
-  default void forEach(BiConsumer<? super K, ? super V> action) {
+  default void forEach(@NotNull BiConsumer<? super K, ? super V> action) {
     final RefSet<Entry<K, V>> entries = entrySet();
     entries.forEach(entry -> {
       final K key = entry.getKey();
@@ -91,7 +93,7 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   RefSet<K> keySet();
 
   @Override
-  default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> fn) {
+  default V merge(K key, V value, @NotNull BiFunction<? super V, ? super V, ? extends V> fn) {
     V oldValue = get(RefUtil.addRef(key));
     V newValue;
     if (oldValue == null) {

@@ -29,13 +29,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.*;
 
-/**
- * The type Array list container.
- */
+@SuppressWarnings("unused")
 public @RefAware class ArrayListContainer extends ReferenceCountingBase {
-  /**
-   * Instantiates a new Array list container.
-   */
   public ArrayListContainer() {
   }
 
@@ -44,9 +39,6 @@ public @RefAware class ArrayListContainer extends ReferenceCountingBase {
     return ArrayListContainer::test1;
   }
 
-  /**
-   * Test.
-   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCodeGen();
@@ -57,7 +49,7 @@ public @RefAware class ArrayListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testOperations(java.util.function.Consumer<java.util.ArrayList<BasicType>> fn) {
+  private static void testOperations(@NotNull java.util.function.Consumer<java.util.ArrayList<BasicType>> fn) {
     java.util.ArrayList<BasicType> values = new java.util.ArrayList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -65,7 +57,7 @@ public @RefAware class ArrayListContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
-  private static void testArrayOperations(java.util.ArrayList<BasicType> values) {
+  private static void testArrayOperations(@NotNull java.util.ArrayList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
     }
@@ -214,7 +206,7 @@ public @RefAware class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
-  private static long getCount1(java.util.Iterator<BasicType> iterator) {
+  private static long getCount1(@NotNull java.util.Iterator<BasicType> iterator) {
     return java.util.stream.StreamSupport.stream(java.util.Spliterators.spliterator(new RefIteratorBase<BasicType>() {
       @Override
       public boolean hasNext() {
@@ -238,7 +230,7 @@ public @RefAware class ArrayListContainer extends ReferenceCountingBase {
     }).count();
   }
 
-  private static long getCount2(java.util.Iterator<BasicType> iterator) {
+  private static long getCount2(@NotNull java.util.Iterator<BasicType> iterator) {
     return java.util.stream.StreamSupport.stream(java.util.Spliterators.spliterator(new RefIteratorBase<BasicType>() {
       @Override
       public boolean hasNext() {
@@ -262,7 +254,7 @@ public @RefAware class ArrayListContainer extends ReferenceCountingBase {
     }).collect(java.util.stream.Collectors.toList()).size();
   }
 
-  private static boolean test1(BasicType x) {
+  private static boolean test1(@NotNull BasicType x) {
     return 0 < x.value;
   }
 

@@ -103,11 +103,13 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().filter(predicate);
   }
 
+  @NotNull
   @Override
   public Optional<T> findAny() {
     return getInner().findAny();
   }
 
+  @NotNull
   @Override
   public Optional<T> findFirst() {
     return getInner().findFirst();
@@ -174,11 +176,13 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().mapToLong(mapper);
   }
 
+  @NotNull
   @Override
   public Optional<T> max(Comparator<? super T> comparator) {
     return getInner().max(comparator);
   }
 
+  @NotNull
   @Override
   public Optional<T> min(Comparator<? super T> comparator) {
     return getInner().min(comparator);
@@ -211,6 +215,7 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().reduce(identity, accumulator);
   }
 
+  @NotNull
   @Override
   public Optional<T> reduce(BinaryOperator<T> accumulator) {
     return getInner().reduce(accumulator);
@@ -248,11 +253,13 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().spliterator();
   }
 
+  @NotNull
   @Override
   public Object[] toArray() {
     return getInner().toArray();
   }
 
+  @NotNull
   @Override
   public <A> A[] toArray(IntFunction<A[]> generator) {
     return getInner().toArray(generator);

@@ -45,6 +45,7 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class ReferenceCountingBase implements ReferenceCounting {
 
   private static final Logger logger = LoggerFactory.getLogger(ReferenceCountingBase.class);
@@ -53,6 +54,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private static final ExecutorService gcPool = newFixedThreadPool(1, new ThreadFactoryBuilder()
       .setDaemon(true).build());
   private static final ThreadLocal<Boolean> inFinalizer = new ThreadLocal<Boolean>() {
+    @NotNull
     @Override
     protected Boolean initialValue() {
       return false;
@@ -67,7 +69,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     if (RefSettings.INSTANCE() == null) throw new RuntimeException();
   }
 
-  private transient final UUID objectId = RefSettings.INSTANCE().isLifecycleDebug(this) ? UUID.randomUUID() : jvmId;
   private transient final AtomicInteger references = new AtomicInteger(1);
   private transient final AtomicBoolean isFreed = new AtomicBoolean(false);
   @Nullable
@@ -76,12 +77,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private transient final LinkedList<StackTraceElement[]> freeRefs = new LinkedList<>();
   private transient volatile boolean isFinalized = false;
   private transient boolean detached = false;
-
-  @NotNull
-  @Override
-  public UUID getObjectId() {
-    return objectId;
-  }
 
   /**
    * Is detached boolean.
@@ -114,7 +109,8 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
    * @param prefix the prefix
    * @return the stack trace element [ ]
    */
-  public static StackTraceElement[] removeSuffix(@NotNull final StackTraceElement[] stack, final Collection<StackTraceElement> prefix) {
+  @NotNull
+  public static StackTraceElement[] removeSuffix(@NotNull final StackTraceElement[] stack, @NotNull final Collection<StackTraceElement> prefix) {
     return Arrays.stream(stack).limit(stack.length - prefix.size()).toArray(i -> new StackTraceElement[i]);
   }
 
@@ -124,7 +120,8 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
    * @param reversedStacks the reversed stacks
    * @return the list
    */
-  public static List<StackTraceElement> findCommonPrefix(final List<List<StackTraceElement>> reversedStacks) {
+  @org.jetbrains.annotations.Nullable
+  public static List<StackTraceElement> findCommonPrefix(@NotNull final List<List<StackTraceElement>> reversedStacks) {
     if (0 == reversedStacks.size()) return null;
     List<StackTraceElement> protoprefix = reversedStacks.get(0);
     for (int i = 0; i < protoprefix.size(); i++) {
@@ -155,7 +152,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
    * @param x   the x
    * @return the list
    */
-  public static <T> List<T> reverseCopy(final T[] x) {
+  public static <T> List<T> reverseCopy(@NotNull final T[] x) {
     return IntStream.range(0, x.length).map(i -> (x.length - 1) - i).mapToObj(i -> x[i]).collect(Collectors.toList());
   }
 
@@ -243,8 +240,8 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   public String referenceReport(boolean includeCaller, boolean isFinalized) {
     @Nonnull ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     @Nonnull PrintStream out = new PrintStream(buffer);
-    out.print(String.format("Object %s %s (%d refs, %d frees) ",
-        getClass().getName(), getObjectId().toString(), 1 + addRefs.size(), freeRefs.size()));
+    out.print(String.format("Object %s (%d refs, %d frees) ",
+        getClass().getName(), 1 + addRefs.size(), freeRefs.size()));
     List<StackTraceElement> prefix = reverseCopy(findCommonPrefix(Stream.concat(
         Stream.<StackTraceElement[]>of(refCreatedBy),
         Stream.concat(

@@ -23,20 +23,11 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.PrimitiveIterator;
-import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import com.simiacryptus.ref.wrappers.RefPrimitiveIterator;
-import com.simiacryptus.ref.wrappers.RefSpliterator;
 
-/**
- * The type Linked list container.
- */
+@SuppressWarnings("unused")
 public class LinkedListContainer extends ReferenceCountingBase {
-  /**
-   * Test.
-   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations(new java.util.LinkedList<>());
@@ -46,7 +37,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testOperations(java.util.function.Consumer<java.util.LinkedList<BasicType>> fn) {
+  private static void testOperations(@NotNull java.util.function.Consumer<java.util.LinkedList<BasicType>> fn) {
     java.util.LinkedList<BasicType> values = new java.util.LinkedList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -54,7 +45,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
-  private static void testArrayOperations(java.util.LinkedList<BasicType> values) {
+  private static void testArrayOperations(@NotNull java.util.LinkedList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
     }
@@ -68,7 +59,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testElementOperations(java.util.LinkedList<BasicType> values) {
+  private static void testElementOperations(@NotNull java.util.LinkedList<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
@@ -128,7 +119,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testCollectionOperations(java.util.LinkedList<BasicType> values) {
+  private static void testCollectionOperations(@NotNull java.util.LinkedList<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
     final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);

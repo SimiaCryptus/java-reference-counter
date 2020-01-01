@@ -39,16 +39,35 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+/**
+ * The type Ref ast operator.
+ */
 @RefIgnore
 abstract class RefASTOperator extends ASTOperator {
+  @NotNull
   private static Map<File, Integer> fileCounters = new HashMap<>();
+  @NotNull
   private static Map<File, AtomicInteger> identifierCounters = new HashMap<>();
+  @NotNull
   private String tempVarPrefix = "temp";
 
-  public RefASTOperator(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Ref ast operator.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  public RefASTOperator(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Gets add ref method.
+   *
+   * @param type the type
+   * @return the add ref method
+   */
   @Nullable
   public static IMethodBinding getAddRefMethod(@NotNull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
@@ -58,6 +77,12 @@ abstract class RefASTOperator extends ASTOperator {
     ).findAny().orElse(null);
   }
 
+  /**
+   * Gets add refs method.
+   *
+   * @param type the type
+   * @return the add refs method
+   */
   @Nullable
   public static IMethodBinding getAddRefsMethod(@NotNull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
@@ -84,6 +109,14 @@ abstract class RefASTOperator extends ASTOperator {
     return super.preVisit2(node);
   }
 
+  /**
+   * Gets method declaration.
+   *
+   * @param node the node
+   * @return the method declaration
+   */
+  @Nullable
+  @SuppressWarnings("unused")
   public MethodDeclaration getMethodDeclaration(ASTNode node) {
     if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
     if (node instanceof Statement) return null;
@@ -93,7 +126,14 @@ abstract class RefASTOperator extends ASTOperator {
     return null;
   }
 
-  protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, ITypeBinding expression) {
+  /**
+   * Consumes refs boolean.
+   *
+   * @param methodBinding the method binding
+   * @param expression    the expression
+   * @return the boolean
+   */
+  protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, @Nullable ITypeBinding expression) {
     final String methodName = methodBinding.getName();
     if (ASTUtil.hasAnnotation(methodBinding, RefIgnore.class)) return false;
     if (methodName.equals("addRefs")) {
@@ -105,8 +145,15 @@ abstract class RefASTOperator extends ASTOperator {
     return null == expression ? isRefAware(methodBinding.getDeclaringClass()) : isRefAware(expression);
   }
 
+  /**
+   * Free ref statement statement.
+   *
+   * @param node        the node
+   * @param typeBinding the type binding
+   * @return the statement
+   */
   @NotNull
-  protected final Statement freeRefStatement(@NotNull ASTNode node, ITypeBinding typeBinding) {
+  protected final Statement freeRefStatement(@NotNull ASTNode node, @Nullable ITypeBinding typeBinding) {
     if (null == typeBinding) {
       warn(1, node, "Cannot add freeRef (binding not resolved)");
       return null;
@@ -118,23 +165,43 @@ abstract class RefASTOperator extends ASTOperator {
     infixExpression.setRightOperand(copyIfAttached((Expression) node));
     ifStatement.setExpression(infixExpression);
     ifStatement.setThenStatement(newFreeRef(node, typeBinding));
-    info(1, node, "Added freeRef");
+    debug(1, node, "Added freeRef");
     return ifStatement;
   }
 
+  /**
+   * Free ref util statement statement.
+   *
+   * @param node        the node
+   * @param typeBinding the type binding
+   * @return the statement
+   */
   @NotNull
-  protected final Statement freeRefUtilStatement(@NotNull ASTNode node, ITypeBinding typeBinding) {
+  protected final Statement freeRefUtilStatement(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
     return ast.newExpressionStatement(newFreeRefUtil(node, typeBinding));
   }
 
-  protected final String getTempIdentifier(ASTNode node) {
+  /**
+   * Gets temp identifier.
+   *
+   * @param node the node
+   * @return the temp identifier
+   */
+  protected final String getTempIdentifier(@NotNull ASTNode node) {
     final String id = String.format(tempVarPrefix + "_%02d_%04d",
         (long) fileCounters.computeIfAbsent(file, x -> fileCounters.size()),
         (long) identifierCounters.computeIfAbsent(file, x -> new AtomicInteger(0)).incrementAndGet());
-    info(1, node, "Creating %s", id);
+    debug(1, node, "Creating %s", id);
     return id;
   }
 
+  /**
+   * Gets type binding.
+   *
+   * @param declaration the declaration
+   * @return the type binding
+   */
+  @Nullable
   protected final ITypeBinding getTypeBinding(@NotNull VariableDeclaration declaration) {
     final IVariableBinding iVariableBinding = resolveBinding(declaration);
     if (iVariableBinding == null) {
@@ -144,11 +211,24 @@ abstract class RefASTOperator extends ASTOperator {
     return iVariableBinding.getType();
   }
 
-  protected final boolean isRefAware(ITypeBinding declaringClass) {
+  /**
+   * Is ref aware boolean.
+   *
+   * @param declaringClass the declaring class
+   * @return the boolean
+   */
+  protected final boolean isRefAware(@NotNull ITypeBinding declaringClass) {
     if (declaringClass.getTypeDeclaration().getQualifiedName().equals(Map.Entry.class.getCanonicalName())) return true;
     return ASTUtil.hasAnnotation(declaringClass, RefAware.class);
   }
 
+  /**
+   * Is ref counted boolean.
+   *
+   * @param node the node
+   * @param type the type
+   * @return the boolean
+   */
   protected final boolean isRefCounted(ASTNode node, @NotNull ITypeBinding type) {
     if (node instanceof MethodReference) return false;
     if (type.isPrimitive()) return false;
@@ -163,11 +243,11 @@ abstract class RefASTOperator extends ASTOperator {
       type = type.getElementType();
     }
     if (ASTUtil.derives(type, ReferenceCounting.class)) {
-      info(1, node, "Derives ReferenceCounting: %s (%s)", node, type.getQualifiedName());
+      debug(1, node, "Derives ReferenceCounting: %s (%s)", node, type.getQualifiedName());
       return true;
     }
     if (ASTUtil.derives(type, Map.Entry.class)) {
-      info(1, node, "Derives Map.Entry: %s (%s)", node, type.getQualifiedName());
+      debug(1, node, "Derives Map.Entry: %s (%s)", node, type.getQualifiedName());
       return true;
     }
 //    if (type.isInterface() && !(node instanceof LambdaExpression)) {
@@ -182,10 +262,22 @@ abstract class RefASTOperator extends ASTOperator {
     return false;
   }
 
-  protected final boolean isTempIdentifier(SimpleName name) {
+  /**
+   * Is temp identifier boolean.
+   *
+   * @param name the name
+   * @return the boolean
+   */
+  protected final boolean isTempIdentifier(@NotNull SimpleName name) {
     return Pattern.matches(tempVarPrefix + "[\\d_]+", name.toString());
   }
 
+  /**
+   * Method consumes self refs boolean.
+   *
+   * @param methodBinding the method binding
+   * @return the boolean
+   */
   protected final boolean methodConsumesSelfRefs(@Nonnull IMethodBinding methodBinding) {
     final String qualifiedName = methodBinding.getDeclaringClass().getTypeDeclaration().getQualifiedName();
     final String methodName = methodBinding.getName();
@@ -197,6 +289,13 @@ abstract class RefASTOperator extends ASTOperator {
     return false;
   }
 
+  /**
+   * New add ref method invocation.
+   *
+   * @param name        the name
+   * @param typeBinding the type binding
+   * @return the method invocation
+   */
   @NotNull
   protected final MethodInvocation newAddRef(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
@@ -214,6 +313,14 @@ abstract class RefASTOperator extends ASTOperator {
     }
   }
 
+  /**
+   * New free ref statement.
+   *
+   * @param node        the node
+   * @param typeBinding the type binding
+   * @return the statement
+   */
+  @NotNull
   protected final Statement newFreeRef(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
       if (ASTUtil.derives(typeBinding.getElementType(), ReferenceCounting.class)) {
@@ -243,6 +350,13 @@ abstract class RefASTOperator extends ASTOperator {
     }
   }
 
+  /**
+   * New free ref util method invocation.
+   *
+   * @param name        the name
+   * @param typeBinding the type binding
+   * @return the method invocation
+   */
   @NotNull
   protected final MethodInvocation newFreeRefUtil(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
@@ -260,6 +374,12 @@ abstract class RefASTOperator extends ASTOperator {
     }
   }
 
+  /**
+   * Skip boolean.
+   *
+   * @param node the node
+   * @return the boolean
+   */
   protected final boolean skip(@NotNull ASTNode node) {
     return enclosingMethods(node).stream().anyMatch(enclosingMethod -> {
       if (ASTUtil.hasAnnotation(enclosingMethod, RefIgnore.class)) return true;
@@ -268,6 +388,13 @@ abstract class RefASTOperator extends ASTOperator {
     });
   }
 
+  /**
+   * Wrap add ref expression.
+   *
+   * @param expression the expression
+   * @param type       the type
+   * @return the expression
+   */
   @NotNull
   protected final Expression wrapAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
     if (expression instanceof CastExpression) {
@@ -289,7 +416,7 @@ abstract class RefASTOperator extends ASTOperator {
         methodInvocation.setName(ast.newSimpleName("addRefs"));
         methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, qualifiedName.split("<")[0].split("\\.")));
         methodInvocation.arguments().add(copyIfAttached(expression));
-        info(1, expression, "AddRef for %s", expression);
+        debug(1, expression, "AddRef for %s", expression);
         return methodInvocation;
       }
     } else {
@@ -298,13 +425,13 @@ abstract class RefASTOperator extends ASTOperator {
         methodInvocation.setName(ast.newSimpleName("addRef"));
         methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
         methodInvocation.arguments().add(copyIfAttached(expression));
-        info(1, expression, "AddRef for %s", expression);
+        debug(1, expression, "AddRef for %s", expression);
         return methodInvocation;
       } else {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
         methodInvocation.setName(ast.newSimpleName("addRef"));
         methodInvocation.setExpression(copyIfAttached(expression));
-        info(1, expression, "AddRef for %s", expression);
+        debug(1, expression, "AddRef for %s", expression);
         if (expression instanceof SimpleName) {
           final InfixExpression infixExpression = ast.newInfixExpression();
           infixExpression.setLeftOperand(copyIfAttached(expression));

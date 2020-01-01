@@ -33,6 +33,7 @@ import java.util.stream.IntStream;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefIntStream implements IntStream {
   private final IntStream inner;
   private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
@@ -77,7 +78,8 @@ public class RefIntStream implements IntStream {
    * @param s the s
    * @return the ref int stream
    */
-  public static RefIntStream generate(IntSupplier s) {
+  @NotNull
+  public static RefIntStream generate(@NotNull IntSupplier s) {
     return new RefIntStream(IntStream.generate(s));
   }
 
@@ -88,6 +90,7 @@ public class RefIntStream implements IntStream {
    * @param endExclusive   the end exclusive
    * @return the ref int stream
    */
+  @NotNull
   public static RefIntStream range(int startInclusive, int endExclusive) {
     return new RefIntStream(IntStream.range(startInclusive, endExclusive));
   }
@@ -98,6 +101,7 @@ public class RefIntStream implements IntStream {
    * @param x the x
    * @return the ref int stream
    */
+  @NotNull
   public static RefIntStream of(int x) {
     return new RefIntStream(IntStream.of(x));
   }
@@ -108,17 +112,34 @@ public class RefIntStream implements IntStream {
    * @param array the array
    * @return the ref int stream
    */
-  public static RefIntStream of(int... array) {
+  @NotNull
+  public static RefIntStream of(@NotNull int... array) {
     return new RefIntStream(IntStream.of(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
   }
 
-  public static RefIntStream concat(RefIntStream a, RefIntStream b) {
+  /**
+   * Concat ref int stream.
+   *
+   * @param a the a
+   * @param b the b
+   * @return the ref int stream
+   */
+  @NotNull
+  public static RefIntStream concat(@NotNull RefIntStream a, @NotNull RefIntStream b) {
     return new RefIntStream(IntStream.concat(a.inner, b.inner));
   }
 
-  public static RefIntStream iterate(final int seed, final IntUnaryOperator f) {
+  /**
+   * Iterate ref int stream.
+   *
+   * @param seed the seed
+   * @param f    the f
+   * @return the ref int stream
+   */
+  @NotNull
+  public static RefIntStream iterate(final int seed, @NotNull final IntUnaryOperator f) {
     return new RefIntStream(IntStream.iterate(seed, f));
   }
 
@@ -138,11 +159,13 @@ public class RefIntStream implements IntStream {
     return match;
   }
 
+  @NotNull
   @Override
   public RefDoubleStream asDoubleStream() {
     return new RefDoubleStream(inner.asDoubleStream(), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefLongStream asLongStream() {
     return new RefLongStream(inner.asLongStream(), lambdas, refs);
@@ -155,6 +178,7 @@ public class RefIntStream implements IntStream {
     return average;
   }
 
+  @NotNull
   @Override
   public RefStream<Integer> boxed() {
     return new RefStream<>(inner.boxed(), lambdas, refs);
@@ -260,18 +284,21 @@ public class RefIntStream implements IntStream {
     return new RefIntStream(inner.map(t -> storeRef(mapper.applyAsInt(t))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefDoubleStream mapToDouble(@NotNull IntToDoubleFunction mapper) {
     track(mapper);
     return new RefDoubleStream(inner.mapToDouble((int value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefLongStream mapToLong(@NotNull IntToLongFunction mapper) {
     track(mapper);
     return new RefLongStream(inner.mapToLong((int value) -> mapper.applyAsLong(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public <U> RefStream<U> mapToObj(IntFunction<? extends U> mapper) {
     return new RefStream<>(inner.mapToObj(mapper), lambdas, refs);
@@ -400,7 +427,7 @@ public class RefIntStream implements IntStream {
     return RefStream.storeRef(u, refs);
   }
 
-  private void track(Object... lambda) {
+  private void track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }

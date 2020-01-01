@@ -60,6 +60,7 @@ public class RefIterator<T> extends RefIteratorBase<T> {
     return this;
   }
 
+  @NotNull
   @Override
   public RefIterator<T> addRef() {
     return (RefIterator<T>) super.addRef();

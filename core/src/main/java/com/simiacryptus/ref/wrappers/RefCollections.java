@@ -33,6 +33,7 @@ import java.util.stream.Stream;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefCollections {
 
   /**
@@ -71,14 +72,28 @@ public class RefCollections {
    * @param map the map
    * @return the ref map
    */
+  @NotNull
   public static <K, V> RefMap<K, V> unmodifiableMap(RefMap<K, V> map) {
     throw new RuntimeException();
   }
 
-  public static <T> void shuffle(List<T> list) {
+  /**
+   * Shuffle.
+   *
+   * @param <T>  the type parameter
+   * @param list the list
+   */
+  public static <T> void shuffle(@NotNull List<T> list) {
     Collections.shuffle(list);
   }
 
+  /**
+   * Unmodifiable list ref list.
+   *
+   * @param <T>  the type parameter
+   * @param list the list
+   * @return the ref list
+   */
   public static <T> RefList<T> unmodifiableList(RefList<T> list) {
     return list; // TODO: Implement me
   }

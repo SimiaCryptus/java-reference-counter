@@ -28,33 +28,39 @@ import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Project info.
+ */
 public class ProjectInfo {
   private final String projectRoot;
   private final String[] sourcepathEntries;
   private final String[] classpathEntries;
-  private ASTParser astParser = null;
 
+  /**
+   * Instantiates a new Project info.
+   *
+   * @param projectRoot       the project root
+   * @param sourcepathEntries the sourcepath entries
+   * @param classpathEntries  the classpath entries
+   */
   public ProjectInfo(String projectRoot, String[] sourcepathEntries, String[] classpathEntries) {
     this.projectRoot = projectRoot;
     this.sourcepathEntries = sourcepathEntries;
     this.classpathEntries = classpathEntries;
-    //this.setAstParser(newAstParser());
   }
 
-  public ASTParser getAstParser() {
-    return astParser == null ? newAstParser() : astParser;
-  }
-
-  public void setAstParser(ASTParser astParser) {
-    this.astParser = astParser;
-  }
-
+  /**
+   * New ast parser ast parser.
+   *
+   * @return the ast parser
+   */
   @NotNull
   public ASTParser newAstParser() {
     HashMap<String, String> compilerOptions = new HashMap<>();
@@ -69,18 +75,29 @@ public class ProjectInfo {
     return astParser;
   }
 
+  /**
+   * Parse hash map.
+   *
+   * @return the hash map
+   */
   @NotNull
   public HashMap<File, CompilationUnit> parse() {
     return read(sourceFiles());
   }
 
-  public @NotNull HashMap<File, CompilationUnit> read(File... files) {
+  /**
+   * Read hash map.
+   *
+   * @param files the files
+   * @return the hash map
+   */
+  public @NotNull HashMap<File, CompilationUnit> read(@NotNull File... files) {
     final Map<String, File> fileMap = new HashMap<>();
     for (File file : files) {
       fileMap.put(file.getAbsolutePath(), file);
     }
     HashMap<File, CompilationUnit> results = new HashMap<>();
-    getAstParser().createASTs(
+    newAstParser().createASTs(
         fileMap.keySet().toArray(new String[]{}),
         null,
         new String[]{},
@@ -95,12 +112,18 @@ public class ProjectInfo {
     return results;
   }
 
+  /**
+   * Source files file [ ].
+   *
+   * @return the file [ ]
+   */
   @NotNull
   public File[] sourceFiles() {
     return FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true)
         .stream().map(File::getAbsoluteFile).distinct().toArray(i -> new File[i]);
   }
 
+  @NotNull
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("ProjectInfo{");

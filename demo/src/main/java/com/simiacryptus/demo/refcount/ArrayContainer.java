@@ -20,21 +20,12 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * The type Array container.
- */
+@SuppressWarnings("unused")
 public class ArrayContainer extends ReferenceCountingBase {
-  /**
-   * The Values.
-   */
   public BasicType[] values;
 
-  /**
-   * Instantiates a new Array container.
-   *
-   * @param values the values
-   */
   public ArrayContainer(BasicType... values) {
     {
       this.values = values;
@@ -45,41 +36,29 @@ public class ArrayContainer extends ReferenceCountingBase {
     super._free();
   }
 
-  /**
-   * Test.
-   */
   public void test() {
     java.util.Arrays.stream(this.values).forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
+  @NotNull
   @Override
   public String toString() {
     return "ArrayContainer{" + "values=" + java.util.Arrays.toString(values) + '}';
   }
 
-  /**
-   * Use closures 1.
-   *
-   * @param right the right
-   */
-  public void useClosures1(BasicType right) {
+  public void useClosures1(@NotNull BasicType right) {
     java.util.Arrays.stream(this.values)
         .forEach((java.util.function.Consumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
           x.setValue(x.getValue() + right.getValue());
         });
   }
 
-  /**
-   * Use closures 2.
-   *
-   * @param right the right
-   */
-  public void useClosures2(BasicType right) {
+  public void useClosures2(@NotNull BasicType right) {
     java.util.Arrays.stream(this.values).forEach(new java.util.function.Consumer<BasicType>() {
       @Override
-      public void accept(BasicType x) {
+      public void accept(@NotNull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
       }
 
@@ -89,15 +68,10 @@ public class ArrayContainer extends ReferenceCountingBase {
     });
   }
 
-  /**
-   * Use closures 3.
-   *
-   * @param right the right
-   */
-  public void useClosures3(BasicType right) {
+  public void useClosures3(@NotNull BasicType right) {
     java.util.Arrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
       @Override
-      public void accept(BasicType x) {
+      public void accept(@NotNull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
       }
 

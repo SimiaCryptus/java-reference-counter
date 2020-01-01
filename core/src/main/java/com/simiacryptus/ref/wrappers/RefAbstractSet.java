@@ -37,7 +37,9 @@ import java.util.function.Consumer;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> implements RefSet<T>, Cloneable, Serializable {
+  @NotNull
   public Collection<T> getInner() {
     return getInnerMap().keySet();
   }
@@ -47,6 +49,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
    *
    * @return the inner map
    */
+  @NotNull
   public abstract Map<T, T> getInnerMap();
 
   @Override
@@ -88,7 +91,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public void forEach(Consumer<? super T> action) {
+  public void forEach(@NotNull Consumer<? super T> action) {
     assertAlive();
     for (T t : getInnerMap().keySet()) {
       action.accept(RefUtil.addRef(t));

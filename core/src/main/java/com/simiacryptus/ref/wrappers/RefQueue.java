@@ -33,6 +33,7 @@ import java.util.Queue;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
   /**
@@ -42,10 +43,11 @@ public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
    * @param array the array
    * @return the ref queue [ ]
    */
+  @NotNull
   public static <T> RefQueue<T>[] addRefs(@NotNull RefQueue<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefQueue::addRef)
         .toArray((x) -> new RefQueue[x]);
   }
 
-  RefQueue<T> addRef();
+  @NotNull RefQueue<T> addRef();
 }

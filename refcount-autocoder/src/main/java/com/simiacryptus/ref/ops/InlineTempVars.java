@@ -23,18 +23,29 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Inline temp vars.
+ */
 @RefIgnore
 public class InlineTempVars extends RefASTOperator {
 
+  /**
+   * Instantiates a new Inline temp vars.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
   public InlineTempVars(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(VariableDeclarationStatement node) {
+  public void endVisit(@NotNull VariableDeclarationStatement node) {
     if (node.fragments().size() > 1) return;
     final Object head = node.fragments().get(0);
     if (head instanceof VariableDeclarationFragment) {

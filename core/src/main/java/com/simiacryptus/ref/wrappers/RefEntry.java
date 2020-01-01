@@ -23,6 +23,8 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -34,6 +36,7 @@ import java.util.Map;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
 
   private final K key;
@@ -44,7 +47,7 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
    *
    * @param inner the inner
    */
-  public RefEntry(Map.Entry<K, V> inner) {
+  public RefEntry(@NotNull Map.Entry<K, V> inner) {
     this(RefUtil.addRef(inner.getKey()), RefUtil.addRef(inner.getValue()));
   }
 
@@ -59,11 +62,13 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
     this.value = value;
   }
 
+  @Nullable
   @Override
   public K getKey() {
     return RefUtil.addRef(key);
   }
 
+  @Nullable
   @Override
   public V getValue() {
     return RefUtil.addRef(value);

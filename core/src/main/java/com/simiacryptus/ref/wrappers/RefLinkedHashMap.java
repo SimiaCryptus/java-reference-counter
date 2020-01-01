@@ -34,6 +34,7 @@ import java.util.Map;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, KeyValue<K, V>> inner;
@@ -50,11 +51,12 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
    *
    * @param values the values
    */
-  public RefLinkedHashMap(Map<? extends K, ? extends V> values) {
+  public RefLinkedHashMap(@NotNull Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }
 
+  @NotNull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {
     return inner;
@@ -68,6 +70,7 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
    * @param array the array
    * @return the ref linked hash map [ ]
    */
+  @NotNull
   public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@NotNull RefLinkedHashMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
         .toArray((x) -> new RefLinkedHashMap[x]);

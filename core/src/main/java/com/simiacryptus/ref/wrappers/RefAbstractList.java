@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +38,9 @@ import java.util.stream.IntStream;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implements RefList<T> {
+  @NotNull
   public abstract List<T> getInner();
 
   @Override
@@ -79,6 +82,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
     return (RefAbstractList<T>) super.addRef();
   }
 
+  @Nullable
   @Override
   public T get(int index) {
     assertAlive();

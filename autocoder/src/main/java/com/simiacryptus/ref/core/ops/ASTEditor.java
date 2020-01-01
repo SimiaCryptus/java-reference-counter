@@ -25,6 +25,7 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -33,37 +34,84 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * The type Ast editor.
+ */
 public abstract class ASTEditor extends LoggingASTVisitor {
+  /**
+   * The Project info.
+   */
   protected final ProjectInfo projectInfo;
+  /**
+   * The Initial content.
+   */
   protected final String initialContent;
+  @Nullable
   private ASTMapping reparsed = null;
 
-  public ASTEditor(CompilationUnit compilationUnit, ProjectInfo projectInfo, @Nonnull File file) {
+  /**
+   * Instantiates a new Ast editor.
+   *
+   * @param compilationUnit the compilation unit
+   * @param projectInfo     the project info
+   * @param file            the file
+   */
+  public ASTEditor(@NotNull CompilationUnit compilationUnit, ProjectInfo projectInfo, @Nonnull File file) {
     super(compilationUnit, file);
     this.projectInfo = projectInfo;
     this.initialContent = AutoCoder.read(this.file);
   }
 
+  /**
+   * Instantiates a new Ast editor.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   * @param record          the record
+   */
   public ASTEditor(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean record) {
     this(compilationUnit, projectInfo, file);
     if (record) compilationUnit.recordModifications();
   }
 
+  /**
+   * Gets reparsed.
+   *
+   * @return the reparsed
+   */
+  @Nullable
   public ASTMapping getReparsed() {
     return reparsed;
   }
 
+  /**
+   * Sets reparsed.
+   *
+   * @param reparsed the reparsed
+   */
   protected void setReparsed(ASTMapping reparsed) {
     this.reparsed = reparsed;
   }
 
+  /**
+   * Write boolean.
+   *
+   * @param format the format
+   * @return the boolean
+   */
   public boolean write(boolean format) {
     final String finalSrc = updateContent();
     if (initialContent.equals(finalSrc)) return false;
-    write(format ? AutoCoder.format(finalSrc) : finalSrc);
+    write(format ? ASTUtil.format(finalSrc) : finalSrc);
     return true;
   }
 
+  /**
+   * Revert boolean.
+   *
+   * @return the boolean
+   */
   public boolean revert() {
     final String currentContent = AutoCoder.read(this.file);
     if (currentContent.equals(initialContent)) return false;
@@ -71,22 +119,41 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return true;
   }
 
+  /**
+   * Write final boolean.
+   *
+   * @param format the format
+   * @return the boolean
+   */
   public boolean writeFinal(boolean format) {
     update(true, format);
     return !AutoCoder.read(this.file).equals(initialContent);
   }
 
+  /**
+   * Copy if attached t.
+   *
+   * @param <T>  the type parameter
+   * @param node the node
+   * @return the t
+   */
   @NotNull
   protected <T extends ASTNode> T copyIfAttached(@NotNull T node) {
     if (node.getParent() == null) {
       return node;
     } else {
-      info(1, node, "Copy node %s", node);
+      debug(1, node, "Copy node %s", node);
       return (T) ASTNode.copySubtree(ast, node);
     }
   }
 
-  protected final void replace(ASTNode child, ASTNode newChild) {
+  /**
+   * Replace.
+   *
+   * @param child    the child
+   * @param newChild the new child
+   */
+  protected final void replace(@NotNull ASTNode child, ASTNode newChild) {
     final ASTNode parent = child.getParent();
     if (parent instanceof QualifiedName) {
       final QualifiedName qualifiedName = (QualifiedName) parent;
@@ -95,7 +162,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
           final FieldAccess fieldAccess = ast.newFieldAccess();
           fieldAccess.setExpression(copyIfAttached((Expression) newChild));
           fieldAccess.setName(copyIfAttached(qualifiedName.getName()));
-          info(child, "Replacing %s with %s", child, newChild);
+          debug(child, "Replacing %s with %s", child, newChild);
           replace(parent, fieldAccess);
           return;
         }
@@ -103,7 +170,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
     StructuralPropertyDescriptor location = child.getLocationInParent();
     if (location != null) {
-      info(1, child, "Replace %s with %s within %s", child, newChild, location);
+      debug(1, child, "Replace %s with %s within %s", child, newChild, location);
       if (location.isChildListProperty()) {
         List list = (List) parent.getStructuralProperty(location);
         list.set(list.indexOf(child), newChild);
@@ -117,6 +184,15 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * Update ast mapping.
+   *
+   * @param <T>    the type parameter
+   * @param write  the write
+   * @param format the format
+   * @return the ast mapping
+   */
+  @NotNull
   protected <T extends ASTNode> ASTMapping update(boolean write, boolean format) {
     if (write) {
       try {
@@ -135,6 +211,11 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return align;
   }
 
+  /**
+   * Write.
+   *
+   * @param data the data
+   */
   protected void write(String data) {
     try {
       logger.info(String.format("Writing %s", file));
@@ -144,8 +225,14 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * Gets span.
+   *
+   * @param node the node
+   * @return the span
+   */
   @NotNull
-  protected ASTEditor.Span getSpan(ASTNode node) {
+  protected ASTEditor.Span getSpan(@NotNull ASTNode node) {
     final int startPosition = node.getStartPosition();
     final int length = node.getLength();
 
@@ -158,11 +245,13 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     );
   }
 
-  private ASTMapping repairAndUpdate(boolean format, CompilationUnit compilationUnit0, ASTMapping align0) {
+  @NotNull
+  private ASTMapping repairAndUpdate(boolean format, @NotNull CompilationUnit compilationUnit0, @NotNull ASTMapping align0) {
     return repairAndUpdate(format, compilationUnit0, align0, 3);
   }
 
-  private ASTMapping repairAndUpdate(boolean format, CompilationUnit compilationUnit0, ASTMapping align0, int retries) {
+  @NotNull
+  private ASTMapping repairAndUpdate(boolean format, @NotNull CompilationUnit compilationUnit0, @NotNull ASTMapping align0, int retries) {
     compilationUnit0.recordModifications();
     align0.mismatches.forEach((from, to) -> {
       replace(to, ASTNode.copySubtree(to.getAST(), from));
@@ -172,7 +261,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     if (content0.equals(content1)) {
       throw new RuntimeException("ASTNode fixups did not change document");
     }
-    write(format ? AutoCoder.format(content1) : content1);
+    write(format ? ASTUtil.format(content1) : content1);
     final CompilationUnit compilationUnit1 = read();
     final ASTMapping align1 = ASTUtil.align(this.compilationUnit, compilationUnit1);
     align1.errors.stream().forEach(x -> warnRaw(0, this.compilationUnit, x));
@@ -195,12 +284,31 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return ASTUtil.updateContent(initialContent, compilationUnit);
   }
 
+  /**
+   * The type Ast mapping.
+   */
   public static class ASTMapping {
+    /**
+     * The Matches.
+     */
     public final HashMap<ASTNode, ASTNode> matches = new HashMap<>();
+    /**
+     * The Mismatches.
+     */
     public final HashMap<ASTNode, ASTNode> mismatches = new HashMap<>();
+    /**
+     * The Errors.
+     */
     public final List<String> errors = new ArrayList<>();
 
-    public ASTMapping putAll(ASTMapping other) {
+    /**
+     * Put all ast mapping.
+     *
+     * @param other the other
+     * @return the ast mapping
+     */
+    @NotNull
+    public ASTMapping putAll(@NotNull ASTMapping other) {
       matches.putAll(other.matches);
       mismatches.putAll(other.mismatches);
       errors.addAll(other.errors);
@@ -208,13 +316,34 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * The type Span.
+   */
   public static class Span {
+    /**
+     * The Line start.
+     */
     public final int lineStart;
+    /**
+     * The Col start.
+     */
     public final int colStart;
+    /**
+     * The Line end.
+     */
     public final int lineEnd;
     private final int colEnd;
     private final File file;
 
+    /**
+     * Instantiates a new Span.
+     *
+     * @param file      the file
+     * @param lineStart the line start
+     * @param colStart  the col start
+     * @param lineEnd   the line end
+     * @param colEnd    the col end
+     */
     public Span(File file, int lineStart, int colStart, int lineEnd, int colEnd) {
       this.file = file;
       this.lineStart = lineStart;

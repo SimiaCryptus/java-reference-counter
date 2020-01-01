@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -43,6 +44,7 @@ public class RefSpliterators {
    * @param characteristics the characteristics
    * @return the ref spliterator
    */
+  @NotNull
   public static <T> RefSpliterator<T> spliterator(Iterator<T> iterator, int size, int characteristics) {
     if (iterator instanceof RefIterator) {
       Iterator<T> inner = ((RefIterator<T>) iterator).getInner();

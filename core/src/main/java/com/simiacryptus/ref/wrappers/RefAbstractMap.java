@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -36,6 +37,7 @@ import java.util.Map;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
 
   /**
@@ -84,6 +86,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   public RefHashSet<Entry<K, V>> entrySet() {
     final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
     getInner().values().stream().map(x -> new RefEntry<K, V>(RefUtil.addRef(x.key), RefUtil.addRef(x.value)) {
+      @Nullable
       @Override
       public V setValue(V value) {
         return put(RefUtil.addRef(x.key), value);
@@ -92,6 +95,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
     return refSet;
   }
 
+  @Nullable
   @Override
   public V get(Object key) {
     final KeyValue<K, V> keyValue = getInner().get(key);

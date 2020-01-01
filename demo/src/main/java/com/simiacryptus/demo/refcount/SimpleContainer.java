@@ -20,30 +20,18 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * The type Simple container.
- */
+@SuppressWarnings("unused")
 public class SimpleContainer extends ReferenceCountingBase {
-  /**
-   * The Value.
-   */
   public BasicType value;
 
-  /**
-   * Instantiates a new Simple container.
-   */
   public SimpleContainer() {
     {
       value = new BasicType();
     }
   }
 
-  /**
-   * Instantiates a new Simple container.
-   *
-   * @param value the value
-   */
   public SimpleContainer(BasicType value) {
     {
       this.value = value;
@@ -54,13 +42,11 @@ public class SimpleContainer extends ReferenceCountingBase {
     super._free();
   }
 
-  /**
-   * Test.
-   */
   public void test() {
     this.value.setValue(this.value.getValue() + 1);
   }
 
+  @NotNull
   @Override
   public String toString() {
     return "SimpleContainer{" + "values=" + value + '}';

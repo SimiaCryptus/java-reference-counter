@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.PrimitiveIterator;
@@ -35,6 +36,7 @@ import java.util.PrimitiveIterator;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   private final PrimitiveIterator<T, T_CONS> inner;
@@ -87,6 +89,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
      * @param obj the obj
      * @return the ref primitive iterator . of int
      */
+    @NotNull
     public RefPrimitiveIterator.OfInt track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -135,6 +138,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
      * @param obj the obj
      * @return the ref primitive iterator . of long
      */
+    @NotNull
     public RefPrimitiveIterator.OfLong track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -183,6 +187,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
      * @param obj the obj
      * @return the ref primitive iterator . of double
      */
+    @NotNull
     public RefPrimitiveIterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
       return this;

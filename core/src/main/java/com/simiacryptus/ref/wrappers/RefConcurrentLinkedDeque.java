@@ -36,8 +36,10 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implements RefDeque<T> {
 
+  @NotNull
   private final ConcurrentLinkedDeque<T> inner;
 
   /**
@@ -47,17 +49,20 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     inner = new ConcurrentLinkedDeque<>();
   }
 
+  @Nullable
   @Override
   public T getFirst() {
     assertAlive();
     return RefUtil.addRef(getInner().getFirst());
   }
 
+  @NotNull
   @Override
   public Deque<T> getInner() {
     return inner;
   }
 
+  @Nullable
   @Override
   public T getLast() {
     assertAlive();
@@ -71,6 +76,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
    * @param array the array
    * @return the ref concurrent linked deque [ ]
    */
+  @NotNull
   public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@NotNull RefConcurrentLinkedDeque<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)
         .toArray((x) -> new RefConcurrentLinkedDeque[x]);
@@ -116,6 +122,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     return new RefIterator(getInner().descendingIterator()).track(this.addRef());
   }
 
+  @Nullable
   @Override
   public T element() {
     assertAlive();
@@ -153,12 +160,14 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     return RefUtil.addRef(getInner().peek());
   }
 
+  @Nullable
   @Override
   public T peekFirst() {
     assertAlive();
     return RefUtil.addRef(getInner().peekFirst());
   }
 
+  @Nullable
   @Override
   public T peekLast() {
     assertAlive();

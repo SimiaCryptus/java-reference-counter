@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ListIterator;
 
@@ -66,6 +67,7 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
     return getInner().nextIndex();
   }
 
+  @Nullable
   @Override
   public T previous() {
     current = getInner().previous();

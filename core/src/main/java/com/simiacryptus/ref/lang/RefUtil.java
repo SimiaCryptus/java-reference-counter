@@ -22,7 +22,6 @@ package com.simiacryptus.ref.lang;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -36,6 +35,7 @@ import java.util.stream.Stream;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefUtil {
 
   /**
@@ -79,7 +79,8 @@ public class RefUtil {
    * @param refs the refs
    * @return the t
    */
-  public static <T> T wrapInterface(T obj, @NotNull Object... refs) {
+  @NotNull
+  public static <T> T wrapInterface(@NotNull T obj, @NotNull Object... refs) {
     final Class<?> objClass = obj.getClass();
     final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
       @Override
@@ -114,35 +115,4 @@ public class RefUtil {
     java.util.Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
   }
 
-  /**
-   * Free internals.
-   *
-   * @param <T> the type parameter
-   * @param obj the obj
-   */
-  public static <T> void freeInternals(Object obj) {
-    freeInternals(obj, obj.getClass());
-  }
-
-  /**
-   * Free internals.
-   *
-   * @param <T>      the type parameter
-   * @param obj      the obj
-   * @param objClass the obj class
-   */
-  public static <T> void freeInternals(Object obj, Class<?> objClass) {
-    for (Field field : objClass.getDeclaredFields()) {
-      field.setAccessible(true);
-      try {
-        RefUtil.freeRef(field.get(obj));
-      } catch (IllegalAccessException e) {
-        // Ignore
-      }
-    }
-    final Class<?> superclass = objClass.getSuperclass();
-    if (null != superclass) {
-      freeInternals(obj, superclass);
-    }
-  }
 }

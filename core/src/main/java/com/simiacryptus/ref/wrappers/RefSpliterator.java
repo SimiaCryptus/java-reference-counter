@@ -37,6 +37,7 @@ import java.util.function.LongConsumer;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefSpliterator<T> extends ReferenceCountingBase implements Spliterator<T> {
   private final Spliterator<T> inner;
   private final StackTraceElement[] createdBy = Thread.currentThread().getStackTrace();
@@ -86,11 +87,13 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
    * @param array the array
    * @return the ref spliterator [ ]
    */
+  @NotNull
   public static <T> RefSpliterator<T>[] addRefs(@NotNull RefSpliterator<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
         .toArray((x) -> new RefSpliterator[x]);
   }
 
+  @NotNull
   public RefSpliterator<T> addRef() {
     return (RefSpliterator<T>) super.addRef();
   }
@@ -111,6 +114,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
    * @param obj the obj
    * @return the ref spliterator
    */
+  @NotNull
   public RefSpliterator<T> track(ReferenceCounting obj) {
     list.add(obj);
     return this;
@@ -134,10 +138,15 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     list.forEach(ReferenceCounting::freeRef);
     list.clear();
     RefUtil.freeRef(this.inner);
-    //RefUtil.freeInternals(inner);
     super._free();
   }
 
+  /**
+   * Gets ref.
+   *
+   * @param t the t
+   * @return the ref
+   */
   @Nullable
   protected T getRef(T t) {
     return RefUtil.addRef(t);
@@ -180,6 +189,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
      * @param obj the obj
      * @return the ref spliterator . of double
      */
+    @NotNull
     public RefSpliterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -190,6 +200,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.tryAdvance(action);
     }
 
+    @NotNull
     @Override
     public RefSpliterator.OfDouble trySplit() {
       return new RefSpliterator.OfDouble(this.inner.trySplit());
@@ -239,6 +250,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
      * @param obj the obj
      * @return the ref spliterator . of long
      */
+    @NotNull
     public RefSpliterator.OfLong track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -251,6 +263,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.tryAdvance(action);
     }
 
+    @NotNull
     @Override
     public RefSpliterator.OfLong trySplit() {
       return new RefSpliterator.OfLong(this.inner.trySplit());
@@ -301,6 +314,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
      * @param obj the obj
      * @return the ref spliterator . of int
      */
+    @NotNull
     public RefSpliterator.OfInt track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -311,6 +325,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.tryAdvance(action);
     }
 
+    @NotNull
     @Override
     public RefSpliterator.OfInt trySplit() {
       return new RefSpliterator.OfInt(this.inner.trySplit());

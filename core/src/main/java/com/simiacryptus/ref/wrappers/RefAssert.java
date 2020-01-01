@@ -22,19 +22,35 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * The type Ref arrays.
+ * The type Ref assert.
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefAssert {
 
+  /**
+   * Assert equals.
+   *
+   * @param expected the expected
+   * @param actual   the actual
+   */
   public static void assertEquals(Object expected, Object actual) {
     assertEquals(expected, actual, null);
   }
 
-  public static void assertEquals(Object expected, Object actual, String message) {
+  /**
+   * Assert equals.
+   *
+   * @param expected the expected
+   * @param actual   the actual
+   * @param message  the message
+   */
+  public static void assertEquals(Object expected, Object actual, @Nullable String message) {
     try {
       if (!equalsRegardingNull(RefUtil.addRef(expected), RefUtil.addRef(actual))) {
         if (expected instanceof String && actual instanceof String) {
@@ -50,7 +66,12 @@ public class RefAssert {
     }
   }
 
-  public static void fail(String message) {
+  /**
+   * Fail.
+   *
+   * @param message the message
+   */
+  public static void fail(@Nullable String message) {
     if (message == null) {
       throw new AssertionError();
     } else {
@@ -58,21 +79,34 @@ public class RefAssert {
     }
   }
 
-  public static void assertArrayEquals(int[] expected, int[] actuals) {
+  /**
+   * Assert array equals.
+   *
+   * @param expected the expected
+   * @param actuals  the actuals
+   */
+  public static void assertArrayEquals(@NotNull int[] expected, @NotNull int[] actuals) {
     assertEquals(expected.length, actuals.length);
     for (int i = 0; i < expected.length; i++) {
       assertEquals(expected[i], actuals[i]);
     }
   }
 
-  public static void assertArrayEquals(String message, int[] expected, int[] actuals) {
+  /**
+   * Assert array equals.
+   *
+   * @param message  the message
+   * @param expected the expected
+   * @param actuals  the actuals
+   */
+  public static void assertArrayEquals(String message, @NotNull int[] expected, @NotNull int[] actuals) {
     assertEquals(expected.length, actuals.length, message);
     for (int i = 0; i < expected.length; i++) {
       assertEquals(expected[i], actuals[i], message);
     }
   }
 
-  private static boolean equalsRegardingNull(Object expected, Object actual) {
+  private static boolean equalsRegardingNull(@Nullable Object expected, @Nullable Object actual) {
     if (expected == null) {
       final boolean b = actual == null;
       RefUtil.freeRef(actual);
@@ -82,7 +116,7 @@ public class RefAssert {
     }
   }
 
-  private static boolean isEquals(Object expected, Object actual) {
+  private static boolean isEquals(@NotNull Object expected, Object actual) {
     final boolean equals = expected.equals(actual);
     RefUtil.freeRef(equals);
     return equals;
@@ -92,7 +126,8 @@ public class RefAssert {
     fail(format(message, expected, actual));
   }
 
-  private static String format(String message, Object expected, Object actual) {
+  @NotNull
+  private static String format(@Nullable String message, Object expected, Object actual) {
     String formatted = "";
     if (message != null && !"".equals(message)) {
       formatted = message + " ";
@@ -103,7 +138,8 @@ public class RefAssert {
     return equalsRegardingNull(expectedString, actualString) ? formatted + "expected: " + formatClassAndValue(expected, expectedString) + " but was: " + formatClassAndValue(actual, actualString) : formatted + "expected:<" + expectedString + "> but was:<" + actualString + ">";
   }
 
-  private static String formatClassAndValue(Object value, String valueString) {
+  @NotNull
+  private static String formatClassAndValue(@Nullable Object value, String valueString) {
     String className = value == null ? "null" : value.getClass().getName();
     return className + "<" + valueString + ">";
   }
@@ -114,16 +150,33 @@ public class RefAssert {
     private final String expected;
     private final String actual;
 
+    /**
+     * Instantiates a new Comparison failure.
+     *
+     * @param message  the message
+     * @param expected the expected
+     * @param actual   the actual
+     */
     public ComparisonFailure(String message, String expected, String actual) {
       super(message);
       this.expected = expected;
       this.actual = actual;
     }
 
+    /**
+     * Gets actual.
+     *
+     * @return the actual
+     */
     public String getActual() {
       return actual;
     }
 
+    /**
+     * Gets expected.
+     *
+     * @return the expected
+     */
     public String getExpected() {
       return expected;
     }

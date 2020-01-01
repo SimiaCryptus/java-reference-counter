@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public interface Settings {
    * @param defaultValue the default value
    * @return the boolean
    */
-  static boolean get(final String key, final boolean defaultValue) {
+  static boolean get(@NotNull final String key, final boolean defaultValue) {
     boolean value = Boolean.parseBoolean(System.getProperty(key, Boolean.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -75,7 +76,8 @@ public interface Settings {
    * @param defaultValue the default value
    * @return the t
    */
-  static <T extends Enum<T>> T get(final String key, @Nonnull final T defaultValue) {
+  @NotNull
+  static <T extends Enum<T>> T get(@NotNull final String key, @Nonnull final T defaultValue) {
     T value = Enum.valueOf((Class<T>) defaultValue.getClass().getSuperclass(), System.getProperty(key, defaultValue.toString().toUpperCase()));
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -88,7 +90,7 @@ public interface Settings {
    * @param defaultValue the default value
    * @return the string
    */
-  static String get(final String key, final String defaultValue) {
+  static String get(@NotNull final String key, final String defaultValue) {
     String value = System.getProperty(key, defaultValue);
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -101,7 +103,7 @@ public interface Settings {
    * @param defaultValue the default value
    * @return the int
    */
-  static int get(final String key, final int defaultValue) {
+  static int get(@NotNull final String key, final int defaultValue) {
     int value = Integer.parseInt(System.getProperty(key, Integer.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -114,7 +116,7 @@ public interface Settings {
    * @param defaultValue the default value
    * @return the double
    */
-  static double get(final String key, final double defaultValue) {
+  static double get(@NotNull final String key, final double defaultValue) {
     double value = Double.parseDouble(System.getProperty(key, Double.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -127,7 +129,7 @@ public interface Settings {
    * @param defaultValue the default value
    * @return the long
    */
-  static long get(final String key, final long defaultValue) {
+  static long get(@NotNull final String key, final long defaultValue) {
     long value = Long.parseLong(System.getProperty(key, Long.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -139,6 +141,7 @@ public interface Settings {
    * @param obj the obj
    * @return the char sequence
    */
+  @NotNull
   static CharSequence toJson(final Object obj) {
     return toJson(obj, getMapper());
   }
@@ -151,7 +154,7 @@ public interface Settings {
    * @return the char sequence
    */
   @Nonnull
-  static CharSequence toJson(final Object obj, final ObjectMapper objectMapper) {
+  static CharSequence toJson(final Object obj, @NotNull final ObjectMapper objectMapper) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
       objectMapper.writeValue(outputStream, obj);

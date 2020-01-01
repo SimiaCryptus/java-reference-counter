@@ -30,15 +30,36 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The type Test ref auto coder.
+ */
 @RefIgnore
 public class TestRefAutoCoder {
+  /**
+   * Gets project info.
+   *
+   * @return the project info
+   * @throws IOException                   the io exception
+   * @throws PlexusContainerException      the plexus container exception
+   * @throws ComponentLookupException      the component lookup exception
+   * @throws ProjectBuildingException      the project building exception
+   * @throws DependencyResolutionException the dependency resolution exception
+   */
   @NotNull
   public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }
 
+  /**
+   * The type Add.
+   */
   @RefIgnore
   public static class Add {
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
     public static void main(String[] args) {
       try {
         new com.simiacryptus.ref.Insert.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();
@@ -48,8 +69,16 @@ public class TestRefAutoCoder {
     }
   }
 
+  /**
+   * The type Remove.
+   */
   @RefIgnore
   public static class Remove {
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
     public static void main(String[] args) {
       try {
         new com.simiacryptus.ref.Remove.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();

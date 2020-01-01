@@ -24,6 +24,8 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,25 +33,43 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * The type Fix variable declarations.
+ */
 @RefIgnore
 public class FixVariableDeclarations extends RefASTOperator {
 
-  protected FixVariableDeclarations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Fix variable declarations.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  protected FixVariableDeclarations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  protected Type apply(Type type, Expression initializer) {
+  /**
+   * Apply type.
+   *
+   * @param type        the type
+   * @param initializer the initializer
+   * @return the type
+   */
+  @Nullable
+  protected Type apply(@NotNull Type type, @Nullable Expression initializer) {
     final ITypeBinding typeBinding = resolveBinding(type);
     if (null == typeBinding) {
       warn(type, "Unresolved binding for %s", type);
       return null;
     }
     if (null == initializer) {
-      info(type, "No initializer");
+      debug(type, "No initializer");
       return null;
     }
     if (initializer instanceof NullLiteral) {
-      info(type, "Null initializer");
+      debug(type, "Null initializer");
       return null;
     }
     final ITypeBinding initializerType = resolveTypeBinding(initializer);
@@ -81,7 +101,16 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
-  protected Type commonInterface(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
+  /**
+   * Common interface type.
+   *
+   * @param node            the node
+   * @param typeBinding     the type binding
+   * @param initializerType the initializer type
+   * @return the type
+   */
+  @Nullable
+  protected Type commonInterface(Type node, @NotNull ITypeBinding typeBinding, @NotNull ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
       return getType(node, typeBinding.getQualifiedName(), true);
     }
@@ -92,7 +121,13 @@ public class FixVariableDeclarations extends RefASTOperator {
     return null;
   }
 
-  protected List<ITypeBinding> typePath(ITypeBinding typeBinding) {
+  /**
+   * Type path list.
+   *
+   * @param typeBinding the type binding
+   * @return the list
+   */
+  protected List<ITypeBinding> typePath(@NotNull ITypeBinding typeBinding) {
     final ArrayList<ITypeBinding> list = new ArrayList<>();
     list.add(typeBinding);
     final ITypeBinding superclass = typeBinding.getSuperclass();
@@ -105,7 +140,17 @@ public class FixVariableDeclarations extends RefASTOperator {
     return list.stream().distinct().collect(Collectors.toList());
   }
 
-  protected Type commonSuperclass(Type node, ITypeBinding typeBinding, ITypeBinding initializerType) {
+  /**
+   * Common superclass type.
+   *
+   * @param node            the node
+   * @param typeBinding     the type binding
+   * @param initializerType the initializer type
+   * @return the type
+   */
+  @Nullable
+  @SuppressWarnings("unused")
+  protected Type commonSuperclass(Type node, @NotNull ITypeBinding typeBinding, @NotNull ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
       return getType(node, typeBinding.getQualifiedName(), true);
     }
@@ -117,14 +162,24 @@ public class FixVariableDeclarations extends RefASTOperator {
     return commonInterface(node, superclass, initializerType);
   }
 
+  /**
+   * The type Modify variable declaration statement.
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationStatement extends FixVariableDeclarations {
-    public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    /**
+     * Instantiates a new Modify variable declaration statement.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
+    public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(VariableDeclarationStatement node) {
+    public void endVisit(@NotNull VariableDeclarationStatement node) {
       final Type type = node.getType();
       final List fragments = node.fragments();
       if (1 != fragments.size()) {
@@ -136,14 +191,24 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify field declaration.
+   */
   @RefIgnore
   public static class ModifyFieldDeclaration extends FixVariableDeclarations {
-    public ModifyFieldDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    /**
+     * Instantiates a new Modify field declaration.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
+    public ModifyFieldDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(FieldDeclaration node) {
+    public void endVisit(@NotNull FieldDeclaration node) {
       final Type type = node.getType();
       final List fragments = node.fragments();
       if (1 != fragments.size()) {
@@ -155,9 +220,19 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify variable declaration fragment.
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends FixVariableDeclarations {
-    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    /**
+     * Instantiates a new Modify variable declaration fragment.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
+    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
 

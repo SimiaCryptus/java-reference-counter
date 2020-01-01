@@ -23,6 +23,8 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.*;
@@ -33,6 +35,7 @@ import java.util.stream.Collector;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefCollectors {
   /**
    * To list ref collector.
@@ -40,6 +43,7 @@ public class RefCollectors {
    * @param <T> the type parameter
    * @return the ref collector
    */
+  @NotNull
   public static <T> RefCollector<T, ?, RefList<T>> toList() {
     return new RefCollector<>(
         RefArrayList::new,
@@ -61,6 +65,7 @@ public class RefCollectors {
    * @param <T> the type parameter
    * @return the ref collector
    */
+  @NotNull
   public static <T> RefCollector<T, ?, RefSet<T>> toSet() {
     return new RefCollector<>(
         RefHashSet::new,
@@ -87,9 +92,10 @@ public class RefCollectors {
    * @param valueMapper the value mapper
    * @return the ref collector
    */
+  @NotNull
   public static <T, K, U>
-  RefCollector<T, ?, RefMap<K, U>> toMap(Function<? super T, ? extends K> keyMapper,
-                                         Function<? super T, ? extends U> valueMapper) {
+  RefCollector<T, ?, RefMap<K, U>> toMap(@NotNull Function<? super T, ? extends K> keyMapper,
+                                         @NotNull Function<? super T, ? extends U> valueMapper) {
     return toMap(keyMapper, valueMapper, (u, v) -> {
       throw new IllegalStateException(String.format("Duplicate key %s", u));
     }, RefHashMap::new);
@@ -108,9 +114,10 @@ public class RefCollectors {
    * @param mapSupplier   the map supplier
    * @return the ref collector
    */
+  @NotNull
   public static <T, K, U, M extends RefMap<K, U>>
-  RefCollector<T, ?, M> toMap(Function<? super T, ? extends K> keyMapper,
-                              Function<? super T, ? extends U> valueMapper,
+  RefCollector<T, ?, M> toMap(@NotNull Function<? super T, ? extends K> keyMapper,
+                              @NotNull Function<? super T, ? extends U> valueMapper,
                               BinaryOperator<U> mergeFunction,
                               Supplier<M> mapSupplier) {
     return new RefCollector<>(
@@ -142,8 +149,9 @@ public class RefCollectors {
    * @param classifier the classifier
    * @return the ref collector
    */
+  @NotNull
   public static <T, K> RefCollector<T, ?, RefMap<K, RefList<T>>>
-  groupingBy(Function<? super T, ? extends K> classifier) {
+  groupingBy(@NotNull Function<? super T, ? extends K> classifier) {
     return groupingBy(classifier, toList());
   }
 
@@ -158,9 +166,10 @@ public class RefCollectors {
    * @param downstream the downstream
    * @return the ref collector
    */
+  @NotNull
   public static <T, K, A, D>
-  RefCollector<T, ?, RefMap<K, D>> groupingBy(Function<? super T, ? extends K> classifier,
-                                              Collector<? super T, A, D> downstream) {
+  RefCollector<T, ?, RefMap<K, D>> groupingBy(@NotNull Function<? super T, ? extends K> classifier,
+                                              @NotNull Collector<? super T, A, D> downstream) {
     return groupingBy(classifier, RefHashMap::new, downstream);
   }
 
@@ -177,10 +186,11 @@ public class RefCollectors {
    * @param downstream the downstream
    * @return the ref collector
    */
+  @NotNull
   public static <T, K, D, A, M extends RefMap<K, D>>
-  RefCollector<T, ?, M> groupingBy(Function<? super T, ? extends K> classifier,
+  RefCollector<T, ?, M> groupingBy(@NotNull Function<? super T, ? extends K> classifier,
                                    Supplier<M> mapFactory,
-                                   Collector<? super T, A, D> downstream) {
+                                   @NotNull Collector<? super T, A, D> downstream) {
     final Supplier<A> downstream_supplier = downstream.supplier();
     final BiConsumer<A, ? super T> downstream_accumulator = downstream.accumulator();
     final Set<Collector.Characteristics> downstream_characteristics = downstream.characteristics();
@@ -230,9 +240,10 @@ public class RefCollectors {
    * @param downstream the downstream
    * @return the ref collector
    */
+  @NotNull
   public static <T, U, A, R>
-  RefCollector<T, ?, R> mapping(Function<? super T, ? extends U> mapper,
-                                Collector<? super U, A, R> downstream) {
+  RefCollector<T, ?, R> mapping(@NotNull Function<? super T, ? extends U> mapper,
+                                @NotNull Collector<? super U, A, R> downstream) {
     BiConsumer<A, ? super U> downstreamAccumulator = downstream.accumulator();
     final RefCollector<T, A, R> collector = new RefCollector<>(
         downstream.supplier(),
@@ -259,8 +270,9 @@ public class RefCollectors {
    * @param finisher   the finisher
    * @return the ref collector
    */
-  public static <T, A, R, RR> RefCollector<T, A, RR> collectingAndThen(Collector<T, A, R> downstream,
-                                                                       Function<R, RR> finisher) {
+  @NotNull
+  public static <T, A, R, RR> RefCollector<T, A, RR> collectingAndThen(@NotNull Collector<T, A, R> downstream,
+                                                                       @NotNull Function<R, RR> finisher) {
     Set<Collector.Characteristics> characteristics = downstream.characteristics();
     if (characteristics.contains(Collector.Characteristics.IDENTITY_FINISH)) {
       if (characteristics.size() == 1)
@@ -290,12 +302,13 @@ public class RefCollectors {
    * @param op  the op
    * @return the ref collector
    */
+  @NotNull
   public static <T> RefCollector<T, ?, Optional<T>>
-  reducing(BinaryOperator<T> op) {
+  reducing(@NotNull BinaryOperator<T> op) {
     @RefAware
     @RefIgnore
     class OptionalBox extends ReferenceCountingBase implements Consumer<T> {
-      T value = null;
+      @Nullable T value = null;
       boolean present = false;
 
       @Override
@@ -341,6 +354,7 @@ public class RefCollectors {
    * @param <T> the type parameter
    * @return the ref collector
    */
+  @NotNull
   public static <T> RefCollector<T, ?, Long>
   counting() {
     return reducing(0L, e -> {
@@ -359,10 +373,11 @@ public class RefCollectors {
    * @param op       the op
    * @return the ref collector
    */
+  @NotNull
   public static <T, U>
   RefCollector<T, ?, U> reducing(U identity,
-                                 Function<? super T, ? extends U> mapper,
-                                 BinaryOperator<U> op) {
+                                 @NotNull Function<? super T, ? extends U> mapper,
+                                 @NotNull BinaryOperator<U> op) {
     return new RefCollector<>(
         boxSupplier(identity),
         RefUtil.wrapInterface((a, t) -> {
@@ -375,8 +390,9 @@ public class RefCollectors {
         a -> a[0], Collections.emptySet());
   }
 
+  @NotNull
   private static <K, V, M extends RefMap<K, V>>
-  BinaryOperator<M> mapMerger(BinaryOperator<V> mergeFunction) {
+  BinaryOperator<M> mapMerger(@NotNull BinaryOperator<V> mergeFunction) {
     return RefUtil.wrapInterface((a, b) -> {
       for (Map.Entry<K, V> e : b.entrySet()) {
         RefUtil.freeRef(a.merge(e.getKey(), e.getValue(), mergeFunction));
@@ -387,6 +403,7 @@ public class RefCollectors {
     }, mergeFunction);
   }
 
+  @NotNull
   @SuppressWarnings("unchecked")
   private static <T> Supplier<T[]> boxSupplier(T identity) {
     return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);
@@ -444,26 +461,31 @@ public class RefCollectors {
       this(supplier, accumulator, combiner, i -> (R) i, characteristics);
     }
 
+    @Nullable
     @Override
     public BiConsumer<A, T> accumulator() {
       return RefUtil.addRef(accumulator);
     }
 
+    @Nullable
     @Override
     public Set<Characteristics> characteristics() {
       return RefUtil.addRef(characteristics);
     }
 
+    @Nullable
     @Override
     public BinaryOperator<A> combiner() {
       return RefUtil.addRef(combiner);
     }
 
+    @Nullable
     @Override
     public Function<A, R> finisher() {
       return RefUtil.addRef(finisher);
     }
 
+    @Nullable
     @Override
     public Supplier<A> supplier() {
       return RefUtil.addRef(supplier);

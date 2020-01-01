@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +43,7 @@ public class RefLists {
    * @param size the size
    * @return the ref list
    */
+  @NotNull
   public static <T> RefList<RefList<T>> partition(List<T> list, int size) {
     final List<T> inner;
     if (list instanceof RefList) {

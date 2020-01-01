@@ -31,6 +31,7 @@ public class LifecycleException extends RuntimeException {
    * The Obj.
    */
   @Nonnull
+  @SuppressWarnings("unused")
   public final ReferenceCounting obj;
 
   /**

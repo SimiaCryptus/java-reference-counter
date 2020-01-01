@@ -20,14 +20,10 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * The type Hash set container.
- */
+@SuppressWarnings("unused")
 public class HashSetContainer extends ReferenceCountingBase {
-  /**
-   * Test.
-   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations();
@@ -98,7 +94,8 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
-  private static void testOperations(java.util.function.Consumer<java.util.HashSet<BasicType>> setRefConsumer) {
+  private static void testOperations(
+      @NotNull java.util.function.Consumer<java.util.HashSet<BasicType>> setRefConsumer) {
     java.util.HashSet<BasicType> values = new java.util.HashSet<>();
     setRefConsumer.accept(values);
   }

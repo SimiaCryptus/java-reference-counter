@@ -23,6 +23,9 @@ import com.simiacryptus.ref.core.AutoCoderMojo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.maven.plugin.MojoExecutionException;
 
+/**
+ * The type Ref auto coder mojo.
+ */
 @RefIgnore
 public abstract class RefAutoCoderMojo extends AutoCoderMojo {
 

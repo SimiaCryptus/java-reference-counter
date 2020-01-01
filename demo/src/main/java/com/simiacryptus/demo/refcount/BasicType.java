@@ -22,61 +22,32 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-/**
- * The type Basic type.
- */
+@SuppressWarnings("unused")
 public class BasicType extends ReferenceCountingBase implements Comparable<BasicType> {
-  /**
-   * The Label.
-   */
   public final String label;
-  /**
-   * The Value.
-   */
   public int value;
 
-  /**
-   * Instantiates a new Basic type.
-   */
   public BasicType() {
     this(Long.toHexString(TestOperations.random.nextLong()));
   }
 
-  /**
-   * Instantiates a new Basic type.
-   *
-   * @param label the label
-   */
   public BasicType(String label) {
     this.setValue(1);
     this.label = label;
   }
 
-  /**
-   * Gets self.
-   *
-   * @return the self
-   */
+  @NotNull
   public BasicType getSelf() {
     return this;
   }
 
-  /**
-   * Gets value.
-   *
-   * @return the value
-   */
   public int getValue() {
     assertAlive();
     return value;
   }
 
-  /**
-   * Sets value.
-   *
-   * @param value the value
-   */
   public void setValue(int value) {
     this.value = value;
   }
@@ -93,7 +64,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
 
   @RefIgnore
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (o == null)
       return false;
     if (!(o instanceof BasicType))
@@ -111,23 +82,17 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     return label.hashCode();
   }
 
+  @NotNull
   @Override
   public String toString() {
     return "BasicType{" + "values=" + getValue() + '}';
   }
 
-  /**
-   * Use.
-   */
   public void use() {
     this.setValue(this.getValue() + 1);
   }
 
-  /**
-   * Wrap wrapper type.
-   *
-   * @return the wrapper type
-   */
+  @NotNull
   public WrapperType<BasicType> wrap() {
     return new WrapperType<>(this);
   }

@@ -21,23 +21,12 @@ package com.simiacryptus.ref.lang;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
-
 /**
  * The interface Reference counting.
  */
 @RefAware
 @RefIgnore
 public interface ReferenceCounting {
-
-  /**
-   * Gets object id.
-   *
-   * @return the object id
-   */
-  default UUID getObjectId() {
-    throw new RuntimeException("Not Implemented");
-  }
 
   /**
    * Is finalized boolean.
@@ -110,6 +99,7 @@ public interface ReferenceCounting {
    *
    * @return the reference counting
    */
+  @NotNull
   default ReferenceCounting detach() {
     return this;
   }

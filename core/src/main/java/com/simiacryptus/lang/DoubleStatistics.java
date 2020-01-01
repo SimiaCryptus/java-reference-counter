@@ -21,6 +21,7 @@ package com.simiacryptus.lang;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
@@ -37,6 +38,7 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
    * The Collector.
    */
   @javax.annotation.Nonnull
+  @SuppressWarnings("unused")
   public static Collector<Double, DoubleStatistics, DoubleStatistics> COLLECTOR = Collector.of(
       DoubleStatistics::new,
       DoubleStatistics::accept,
@@ -48,6 +50,7 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
    * The Numbers.
    */
   @javax.annotation.Nonnull
+  @SuppressWarnings("unused")
   public static Collector<Number, DoubleStatistics, DoubleStatistics> NUMBERS = Collector.of(
       DoubleStatistics::new,
       (a, n) -> a.accept(n.doubleValue()),
@@ -116,6 +119,7 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
     return this;
   }
 
+  @NotNull
   @Override
   public String toString() {
     return toString(1).toString();

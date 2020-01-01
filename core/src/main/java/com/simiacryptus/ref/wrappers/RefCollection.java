@@ -52,14 +52,15 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
    * @param array the array
    * @return the ref collection [ ]
    */
+  @NotNull
   public static <T> RefCollection<T>[] addRefs(@NotNull RefCollection<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefCollection::addRef)
         .toArray((x) -> new RefCollection[x]);
   }
 
-  RefCollection<T> addRef();
+  @NotNull RefCollection<T> addRef();
 
-  default void forEach(Consumer<? super T> action) {
+  default void forEach(@NotNull Consumer<? super T> action) {
     final RefIterator<T> iterator = iterator();
     while (iterator.hasNext()) {
       action.accept(iterator.next());
@@ -91,7 +92,7 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
     return RefStreamSupport.stream(spliterator(), false);
   }
 
-  default boolean removeIf(Predicate<? super T> filter) {
+  default boolean removeIf(@NotNull Predicate<? super T> filter) {
     Objects.requireNonNull(filter);
     boolean removed = false;
     final Iterator<T> each = getInner().iterator();

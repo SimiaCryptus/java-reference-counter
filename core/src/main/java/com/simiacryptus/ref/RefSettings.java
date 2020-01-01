@@ -45,6 +45,7 @@ public class RefSettings implements Settings {
   private static transient RefSettings INSTANCE = null;
 
   private final boolean lifecycleDebug;
+  @NotNull
   private final PersistanceMode doubleCacheMode;
   private final Set<Class<?>> watchedClasses;
 
@@ -92,6 +93,7 @@ public class RefSettings implements Settings {
    *
    * @return the double cache mode
    */
+  @NotNull
   public PersistanceMode getDoubleCacheMode() {
     return doubleCacheMode;
   }

@@ -105,6 +105,7 @@ public class StackCounter {
    * @param fn    the fn
    * @return the char sequence
    */
+  @SuppressWarnings("unused")
   public CharSequence toString(@Nonnull final StackCounter other, @Nonnull final BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     return StackCounter.toString(this, other, fn);
   }

@@ -21,6 +21,7 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -35,8 +36,10 @@ import java.util.TreeMap;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefTreeSet<T> extends RefAbstractSet<T> {
 
+  @NotNull
   private final TreeMap<T, T> inner;
 
   /**
@@ -84,6 +87,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
     addAll(values);
   }
 
+  @NotNull
   @Override
   public Map<T, T> getInnerMap() {
     return inner;
@@ -96,6 +100,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
    * @param array the array
    * @return the ref tree set [ ]
    */
+  @NotNull
   public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
         .toArray((x) -> new RefTreeSet[x]);
@@ -112,6 +117,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
    *
    * @return the t
    */
+  @Nullable
   public T pollFirst() {
     return RefUtil.addRef(inner.pollFirstEntry().getKey());
   }

@@ -42,6 +42,7 @@ public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCoun
    * @param fn  the fn
    * @return the lazy val
    */
+  @NotNull
   public static <T extends ReferenceCounting> LazyVal<T> wrap(@NotNull Supplier<T> fn) {
     return new LazyVal<T>() {
       @NotNull

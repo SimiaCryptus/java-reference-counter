@@ -24,18 +24,31 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
+/**
+ * The type Modify api.
+ */
 @RefIgnore
 @Mojo(name = "modifyAPI")
 public class ModifyAPI extends RefAutoCoderMojo {
+  @NotNull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The type Coder.
+   */
   public static class Coder extends AutoCoder {
+    /**
+     * Instantiates a new Coder.
+     *
+     * @param projectInfo the project info
+     */
     public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
     }

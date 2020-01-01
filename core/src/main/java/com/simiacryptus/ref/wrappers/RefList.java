@@ -33,6 +33,7 @@ import java.util.List;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {
 
   List<T> getInner();
@@ -44,12 +45,13 @@ public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T>
    * @param array the array
    * @return the ref list [ ]
    */
+  @NotNull
   public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
         .toArray((x) -> new RefList[x]);
   }
 
-  RefList<T> addRef();
+  @NotNull RefList<T> addRef();
 
   @NotNull
   @Override

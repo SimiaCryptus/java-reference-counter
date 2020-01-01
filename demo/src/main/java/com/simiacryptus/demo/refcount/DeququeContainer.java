@@ -20,14 +20,10 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * The type Dequque container.
- */
+@SuppressWarnings("unused")
 public class DeququeContainer extends ReferenceCountingBase {
-  /**
-   * Test.
-   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations(new java.util.concurrent.ConcurrentLinkedDeque<>());
@@ -39,7 +35,7 @@ public class DeququeContainer extends ReferenceCountingBase {
   }
 
   private static void testOperations(
-      java.util.function.Consumer<java.util.concurrent.ConcurrentLinkedDeque<BasicType>> fn) {
+      @NotNull java.util.function.Consumer<java.util.concurrent.ConcurrentLinkedDeque<BasicType>> fn) {
     java.util.concurrent.ConcurrentLinkedDeque<BasicType> values = new java.util.concurrent.ConcurrentLinkedDeque<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -47,7 +43,7 @@ public class DeququeContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
-  private static void testArrayOperations(java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
+  private static void testArrayOperations(@NotNull java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
     }
@@ -61,7 +57,7 @@ public class DeququeContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testElementOperations(java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
+  private static void testElementOperations(@NotNull java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
@@ -91,7 +87,7 @@ public class DeququeContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testCollectionOperations(java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
+  private static void testCollectionOperations(@NotNull java.util.concurrent.ConcurrentLinkedDeque<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
     final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);

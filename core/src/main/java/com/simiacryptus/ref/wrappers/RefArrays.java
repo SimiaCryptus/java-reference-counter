@@ -34,6 +34,7 @@ import java.util.function.IntUnaryOperator;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefArrays {
   /**
    * Stream ref stream.
@@ -42,6 +43,7 @@ public class RefArrays {
    * @param array the array
    * @return the ref stream
    */
+  @NotNull
   public static <T> RefStream<T> stream(@NotNull T[] array) {
     return new RefStream<>(Arrays.stream(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
@@ -86,7 +88,8 @@ public class RefArrays {
    * @param length the length
    * @return the t [ ]
    */
-  public static <T> T[] copyOf(T[] data, int length) {
+  @NotNull
+  public static <T> T[] copyOf(@NotNull T[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
@@ -97,7 +100,8 @@ public class RefArrays {
    * @param length the length
    * @return the int [ ]
    */
-  public static int[] copyOf(int[] data, int length) {
+  @NotNull
+  public static int[] copyOf(@NotNull int[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
@@ -108,7 +112,8 @@ public class RefArrays {
    * @param length the length
    * @return the double [ ]
    */
-  public static double[] copyOf(double[] data, int length) {
+  @NotNull
+  public static double[] copyOf(@NotNull double[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
@@ -140,10 +145,18 @@ public class RefArrays {
    * @param ints the ints
    * @return the string
    */
+  @NotNull
   public static String toString(int[] ints) {
     return Arrays.toString(ints);
   }
 
+  /**
+   * To string string.
+   *
+   * @param ints the ints
+   * @return the string
+   */
+  @NotNull
   public static String toString(byte[] ints) {
     return Arrays.toString(ints);
   }
@@ -154,6 +167,7 @@ public class RefArrays {
    * @param ints the ints
    * @return the string
    */
+  @NotNull
   public static String toString(double[] ints) {
     return Arrays.toString(ints);
   }
@@ -164,11 +178,7 @@ public class RefArrays {
    * @param data the data
    * @param fn   the fn
    */
-  public static void parallelSetAll(double[] data, IntToDoubleFunction fn) {
-    Arrays.parallelSetAll(data, fn);
-  }
-
-  public static void parallelSetAll(int[] data, IntUnaryOperator fn) {
+  public static void parallelSetAll(@NotNull double[] data, @NotNull IntToDoubleFunction fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
@@ -178,7 +188,18 @@ public class RefArrays {
    * @param data the data
    * @param fn   the fn
    */
-  public static <T> void parallelSetAll(T[] data, IntFunction<T> fn) {
+  public static void parallelSetAll(@NotNull int[] data, @NotNull IntUnaryOperator fn) {
+    Arrays.parallelSetAll(data, fn);
+  }
+
+  /**
+   * Parallel set all.
+   *
+   * @param <T>  the type parameter
+   * @param data the data
+   * @param fn   the fn
+   */
+  public static <T> void parallelSetAll(@NotNull T[] data, @NotNull IntFunction<T> fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
@@ -188,7 +209,7 @@ public class RefArrays {
    * @param data the data
    * @param fn   the fn
    */
-  public static void setAll(double[] data, IntToDoubleFunction fn) {
+  public static void setAll(@NotNull double[] data, @NotNull IntToDoubleFunction fn) {
     Arrays.setAll(data, fn);
   }
 
@@ -198,7 +219,7 @@ public class RefArrays {
    * @param data the data
    * @param fn   the fn
    */
-  public static void setAll(int[] data, IntUnaryOperator fn) {
+  public static void setAll(@NotNull int[] data, @NotNull IntUnaryOperator fn) {
     Arrays.setAll(data, fn);
   }
 
@@ -209,7 +230,7 @@ public class RefArrays {
    * @param data the data
    * @param fn   the fn
    */
-  public static <T> void setAll(T[] data, IntFunction<T> fn) {
+  public static <T> void setAll(@NotNull T[] data, @NotNull IntFunction<T> fn) {
     Arrays.setAll(data, fn);
   }
 
@@ -219,7 +240,8 @@ public class RefArrays {
    * @param data the data
    * @return the ref double stream
    */
-  public static RefDoubleStream stream(double[] data) {
+  @NotNull
+  public static RefDoubleStream stream(@NotNull double[] data) {
     return new RefDoubleStream(Arrays.stream(data));
   }
 
@@ -229,7 +251,8 @@ public class RefArrays {
    * @param data the data
    * @return the ref int stream
    */
-  public static RefIntStream stream(int[] data) {
+  @NotNull
+  public static RefIntStream stream(@NotNull int[] data) {
     return new RefIntStream(Arrays.stream(data));
   }
 
@@ -239,7 +262,8 @@ public class RefArrays {
    * @param data the data
    * @return the ref long stream
    */
-  public static RefLongStream stream(long[] data) {
+  @NotNull
+  public static RefLongStream stream(@NotNull long[] data) {
     return new RefLongStream(Arrays.stream(data));
   }
 
@@ -251,11 +275,18 @@ public class RefArrays {
    * @return the int
    */
   @SuppressWarnings("unused")
-  public static int binarySearch(double[] array, double value) {
+  public static int binarySearch(@NotNull double[] array, double value) {
     return Arrays.binarySearch(array, value);
   }
 
-  public static int binarySearch(int[] array, int value) {
+  /**
+   * Binary search int.
+   *
+   * @param array the array
+   * @param value the value
+   * @return the int
+   */
+  public static int binarySearch(@NotNull int[] array, int value) {
     return Arrays.binarySearch(array, value);
   }
 
@@ -279,51 +310,139 @@ public class RefArrays {
     return Arrays.hashCode(data);
   }
 
+  /**
+   * Deep to string char sequence.
+   *
+   * @param a the a
+   * @return the char sequence
+   */
+  @NotNull
   public static CharSequence deepToString(Object[] a) {
     return Arrays.deepToString(a);
   }
 
+  /**
+   * Deep equals boolean.
+   *
+   * @param a the a
+   * @param b the b
+   * @return the boolean
+   */
   public static boolean deepEquals(Object[] a, Object[] b) {
     return Arrays.deepEquals(a, b);
   }
 
+  /**
+   * Deep hash code int.
+   *
+   * @param a the a
+   * @return the int
+   */
   public static int deepHashCode(Object a[]) {
     return Arrays.deepHashCode(a);
   }
 
-  public static <T> T[] copyOfRange(T[] original, int from, int to) {
+  /**
+   * Copy of range t [ ].
+   *
+   * @param <T>      the type parameter
+   * @param original the original
+   * @param from     the from
+   * @param to       the to
+   * @return the t [ ]
+   */
+  @NotNull
+  public static <T> T[] copyOfRange(@NotNull T[] original, int from, int to) {
     return Arrays.copyOfRange(original, from, to);
   }
 
+  /**
+   * To string string.
+   *
+   * @param obj the obj
+   * @return the string
+   */
+  @NotNull
   public static String toString(float[] obj) {
     return Arrays.toString(obj);
   }
 
+  /**
+   * To string string.
+   *
+   * @param obj the obj
+   * @return the string
+   */
+  @NotNull
   public static String toString(long[] obj) {
     return Arrays.toString(obj);
   }
 
-  public static void fill(Object[] array, Object o) {
+  /**
+   * Fill.
+   *
+   * @param array the array
+   * @param o     the o
+   */
+  public static void fill(@NotNull Object[] array, Object o) {
     Arrays.fill(array, o);
   }
 
-  public static void fill(double[] floats, double v) {
+  /**
+   * Fill.
+   *
+   * @param floats the floats
+   * @param v      the v
+   */
+  public static void fill(@NotNull double[] floats, double v) {
     Arrays.fill(floats, v);
   }
 
-  public static void fill(float[] floats, float v) {
+  /**
+   * Fill.
+   *
+   * @param floats the floats
+   * @param v      the v
+   */
+  public static void fill(@NotNull float[] floats, float v) {
     Arrays.fill(floats, v);
   }
 
-  public static float[] copyOf(float[] floats, int length) {
+  /**
+   * Copy of float [ ].
+   *
+   * @param floats the floats
+   * @param length the length
+   * @return the float [ ]
+   */
+  @NotNull
+  public static float[] copyOf(@NotNull float[] floats, int length) {
     return Arrays.copyOf(floats, length);
   }
 
-  public static float[] copyOfRange(float[] floats, int from, int to) {
+  /**
+   * Copy of range float [ ].
+   *
+   * @param floats the floats
+   * @param from   the from
+   * @param to     the to
+   * @return the float [ ]
+   */
+  @NotNull
+  public static float[] copyOfRange(@NotNull float[] floats, int from, int to) {
     return Arrays.copyOfRange(floats, from, to);
   }
 
-  public static int[] copyOfRange(int[] floats, int from, int to) {
+  /**
+   * Copy of range int [ ].
+   *
+   * @param floats the floats
+   * @param from   the from
+   * @param to     the to
+   * @return the int [ ]
+   */
+  @NotNull
+  public static int[] copyOfRange(@NotNull int[] floats, int from, int to) {
     return Arrays.copyOfRange(floats, from, to);
   }
 }

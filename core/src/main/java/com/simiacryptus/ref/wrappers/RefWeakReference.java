@@ -25,35 +25,68 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 
+/**
+ * The type Ref weak reference.
+ *
+ * @param <T> the type parameter
+ */
 @RefAware
 @RefIgnore
 public class RefWeakReference<T> {
   private final WeakReference<T> inner;
 
+  /**
+   * Instantiates a new Ref weak reference.
+   *
+   * @param inner the inner
+   */
   public RefWeakReference(T inner) {
     this(new WeakReference<>(inner));
   }
 
+  /**
+   * Instantiates a new Ref weak reference.
+   *
+   * @param inner the inner
+   */
   protected RefWeakReference(WeakReference<T> inner) {
     this.inner = inner;
   }
 
+  /**
+   * Is enqueued boolean.
+   *
+   * @return the boolean
+   */
   @SuppressWarnings("unused")
   public boolean isEnqueued() {
     return inner.isEnqueued();
   }
 
+  /**
+   * Get t.
+   *
+   * @return the t
+   */
   @Nullable
   @SuppressWarnings("unused")
   public T get() {
     return inner.get();
   }
 
+  /**
+   * Clear.
+   */
   @SuppressWarnings("unused")
   public void clear() {
     inner.clear();
   }
 
+  /**
+   * Enqueue boolean.
+   *
+   * @return the boolean
+   */
   @SuppressWarnings("unused")
   public boolean enqueue() {
     return inner.enqueue();

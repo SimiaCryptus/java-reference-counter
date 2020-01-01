@@ -21,6 +21,7 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ import java.util.Iterator;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class RefIteratorBase<T> extends ReferenceCountingBase implements Iterator<T> {
   /**
    * The List.
@@ -40,6 +42,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
   /**
    * The Current.
    */
+  @Nullable
   protected T current;
 
   /**
@@ -47,6 +50,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
    *
    * @return the inner
    */
+  @Nullable
   public Iterator<T> getInner() {
     return null;
   }
@@ -56,6 +60,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
     return getInner().hasNext();
   }
 
+  @Nullable
   @Override
   public T next() {
     current = getInner().next();
@@ -80,6 +85,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
     return this;
   }
 
+  @NotNull
   @Override
   public RefIteratorBase<T> addRef() {
     return (RefIteratorBase<T>) super.addRef();

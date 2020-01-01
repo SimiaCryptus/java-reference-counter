@@ -34,6 +34,7 @@ import java.util.stream.DoubleStream;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefDoubleStream implements DoubleStream {
   private final DoubleStream inner;
   private final Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
@@ -78,7 +79,8 @@ public class RefDoubleStream implements DoubleStream {
    * @param s the s
    * @return the ref double stream
    */
-  public static RefDoubleStream generate(DoubleSupplier s) {
+  @NotNull
+  public static RefDoubleStream generate(@NotNull DoubleSupplier s) {
     return new RefDoubleStream(DoubleStream.generate(s));
   }
 
@@ -89,7 +91,8 @@ public class RefDoubleStream implements DoubleStream {
    * @param f    the f
    * @return the ref double stream
    */
-  public static RefDoubleStream iterate(final double seed, final DoubleUnaryOperator f) {
+  @NotNull
+  public static RefDoubleStream iterate(final double seed, @NotNull final DoubleUnaryOperator f) {
     return new RefDoubleStream(DoubleStream.iterate(seed, f));
   }
 
@@ -99,6 +102,7 @@ public class RefDoubleStream implements DoubleStream {
    * @param x the x
    * @return the ref double stream
    */
+  @NotNull
   public static RefDoubleStream of(double x) {
     return new RefDoubleStream(DoubleStream.of(x));
   }
@@ -109,11 +113,20 @@ public class RefDoubleStream implements DoubleStream {
    * @param array the array
    * @return the ref double stream
    */
+  @NotNull
   public static RefDoubleStream of(double... array) {
     return new RefDoubleStream(DoubleStream.of(array));
   }
 
-  public static RefDoubleStream concat(RefDoubleStream a, RefDoubleStream b) {
+  /**
+   * Concat ref double stream.
+   *
+   * @param a the a
+   * @param b the b
+   * @return the ref double stream
+   */
+  @NotNull
+  public static RefDoubleStream concat(@NotNull RefDoubleStream a, @NotNull RefDoubleStream b) {
     return new RefDoubleStream(DoubleStream.concat(a.inner, b.inner));
   }
 
@@ -140,6 +153,7 @@ public class RefDoubleStream implements DoubleStream {
     return average;
   }
 
+  @NotNull
   @Override
   public RefStream<Double> boxed() {
     return new RefStream<>(inner.boxed(), lambdas, refs);
@@ -241,20 +255,23 @@ public class RefDoubleStream implements DoubleStream {
     return new RefDoubleStream(inner.map(t -> storeRef(mapper.applyAsDouble(t))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefIntStream mapToInt(@NotNull DoubleToIntFunction mapper) {
     track(mapper);
     return new RefIntStream(inner.mapToInt((double value) -> mapper.applyAsInt(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
   public RefLongStream mapToLong(@NotNull DoubleToLongFunction mapper) {
     track(mapper);
     return new RefLongStream(inner.mapToLong((double value) -> mapper.applyAsLong(getRef(value))), lambdas, refs);
   }
 
+  @NotNull
   @Override
-  public <U> RefStream<U> mapToObj(DoubleFunction<? extends U> mapper) {
+  public <U> RefStream<U> mapToObj(@NotNull DoubleFunction<? extends U> mapper) {
     return new RefStream<>(inner.mapToObj(value -> mapper.apply(value)), lambdas, refs);
   }
 
@@ -380,7 +397,7 @@ public class RefDoubleStream implements DoubleStream {
     return RefStream.storeRef(u, refs);
   }
 
-  private void track(Object... lambda) {
+  private void track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }

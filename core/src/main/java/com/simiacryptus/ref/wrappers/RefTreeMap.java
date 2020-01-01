@@ -27,47 +27,50 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The type Ref hash map.
+ * The type Ref tree map.
  *
  * @param <K> the type parameter
  * @param <V> the type parameter
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefTreeMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, KeyValue<K, V>> inner;
 
   /**
-   * Instantiates a new Ref hash map.
+   * Instantiates a new Ref tree map.
    */
   public RefTreeMap() {
     this.inner = new TreeMap<>();
   }
 
   /**
-   * Instantiates a new Ref hash map.
+   * Instantiates a new Ref tree map.
    *
    * @param values the values
    */
-  public RefTreeMap(Map<? extends K, ? extends V> values) {
+  public RefTreeMap(@NotNull Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }
 
+  @NotNull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {
     return inner;
   }
 
   /**
-   * Add refs ref hash map [ ].
+   * Add refs ref tree map [ ].
    *
    * @param <K>   the type parameter
    * @param <V>   the type parameter
    * @param array the array
-   * @return the ref hash map [ ]
+   * @return the ref tree map [ ]
    */
+  @NotNull
   public static <K, V> RefTreeMap<K, V>[] addRefs(@NotNull RefTreeMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef)
         .toArray((x) -> new RefTreeMap[x]);

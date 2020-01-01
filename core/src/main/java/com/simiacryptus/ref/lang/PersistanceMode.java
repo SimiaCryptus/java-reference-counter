@@ -30,6 +30,7 @@ import java.util.function.Supplier;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public enum PersistanceMode {
   /**
    * The Soft.

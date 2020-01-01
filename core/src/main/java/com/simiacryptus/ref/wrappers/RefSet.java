@@ -33,6 +33,7 @@ import java.util.Set;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {
 
   /**
@@ -42,12 +43,13 @@ public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {
    * @param array the array
    * @return the ref set [ ]
    */
+  @NotNull
   public static <T> RefSet<T>[] addRefs(@NotNull RefSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSet::addRef)
         .toArray((x) -> new RefSet[x]);
   }
 
-  RefSet<T> addRef();
+  @NotNull RefSet<T> addRef();
 
   @Override
   default RefSpliterator<T> spliterator() {

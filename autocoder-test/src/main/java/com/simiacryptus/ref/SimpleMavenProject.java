@@ -38,16 +38,40 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/**
+ * The type Simple maven project.
+ */
 public class SimpleMavenProject {
   private static final File repositoryLocation = new File(System.getProperty("user.home"), ".m2/repository");
   private static final Logger logger = LoggerFactory.getLogger(SimpleMavenProject.class);
+  /**
+   * The Plexus container.
+   */
   @NotNull
   public final DefaultPlexusContainer plexusContainer;
+  /**
+   * The Session.
+   */
   @NotNull
   public final DefaultRepositorySystemSession session;
+  /**
+   * The Project.
+   */
   public final MavenProject project;
+  /**
+   * The Project root.
+   */
   public final String projectRoot;
 
+  /**
+   * Instantiates a new Simple maven project.
+   *
+   * @param projectRoot the project root
+   * @throws IOException              the io exception
+   * @throws PlexusContainerException the plexus container exception
+   * @throws ComponentLookupException the component lookup exception
+   * @throws ProjectBuildingException the project building exception
+   */
   public SimpleMavenProject(final String projectRoot) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     this.projectRoot = projectRoot;
     Map<Object, Object> configProps = new LinkedHashMap<>();
@@ -59,6 +83,12 @@ public class SimpleMavenProject {
     this.project = MavenUtil.getMavenProject(new File(projectRoot, "pom.xml"), plexusContainer, session);
   }
 
+  /**
+   * Get dependencies string [ ].
+   *
+   * @return the string [ ]
+   */
+  @NotNull
   public String[] getDependencies() {
     return resolve().getDependencies().stream()
         .map(Dependency::getArtifact)
@@ -67,11 +97,22 @@ public class SimpleMavenProject {
         .toArray(i -> new String[i]);
   }
 
+  /**
+   * Gets project info.
+   *
+   * @return the project info
+   */
   @NotNull
   public ProjectInfo getProjectInfo() {
     return new ProjectInfo(this.projectRoot, getSources(), getDependencies());
   }
 
+  /**
+   * Get sources string [ ].
+   *
+   * @return the string [ ]
+   */
+  @NotNull
   public String[] getSources() {
     return Stream.concat(
         project.getTestCompileSourceRoots().stream(),
@@ -79,6 +120,17 @@ public class SimpleMavenProject {
     ).toArray(i -> new String[i]);
   }
 
+  /**
+   * Load simple maven project.
+   *
+   * @param root the root
+   * @return the simple maven project
+   * @throws IOException                   the io exception
+   * @throws PlexusContainerException      the plexus container exception
+   * @throws ComponentLookupException      the component lookup exception
+   * @throws ProjectBuildingException      the project building exception
+   * @throws DependencyResolutionException the dependency resolution exception
+   */
   @NotNull
   public static SimpleMavenProject load(String root) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     SimpleMavenProject mavenProject = new SimpleMavenProject(root);
@@ -88,6 +140,11 @@ public class SimpleMavenProject {
     return mavenProject;
   }
 
+  /**
+   * Resolve dependency resolution result.
+   *
+   * @return the dependency resolution result
+   */
   public DependencyResolutionResult resolve() {
     try {
       final ProjectDependenciesResolver resolver = plexusContainer.lookup(ProjectDependenciesResolver.class);

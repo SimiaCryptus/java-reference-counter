@@ -25,18 +25,29 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.RefIterator;
 import com.simiacryptus.ref.wrappers.RefIteratorBase;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Fix custom implementations.
+ */
 @RefIgnore
 public class FixCustomImplementations extends RefASTOperator {
 
-  public FixCustomImplementations(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Fix custom implementations.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  public FixCustomImplementations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(AnonymousClassDeclaration node) {
+  public void endVisit(@NotNull AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
     if (null == typeBinding) {
       warn(node, "Unresolved binding");
@@ -45,9 +56,18 @@ public class FixCustomImplementations extends RefASTOperator {
     if (replace(node, typeBinding, RefIterator.class, RefIteratorBase.class)) return;
   }
 
-  protected boolean replace(AnonymousClassDeclaration node, ITypeBinding typeBinding, Class<?> match, Class<?> replace) {
+  /**
+   * Replace boolean.
+   *
+   * @param node        the node
+   * @param typeBinding the type binding
+   * @param match       the match
+   * @param replace     the replace
+   * @return the boolean
+   */
+  protected boolean replace(@NotNull AnonymousClassDeclaration node, @NotNull ITypeBinding typeBinding, @NotNull Class<?> match, @NotNull Class<?> replace) {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
-      info(node, "RefIterator anonymous class");
+      debug(node, "RefIterator anonymous class");
       final ClassInstanceCreation parent = (ClassInstanceCreation) node.getParent();
       final SimpleType simpleType = ast.newSimpleType(ASTUtil.newQualifiedName(ast, replace));
       final Type parentType = parent.getType();

@@ -20,15 +20,30 @@
 package com.simiacryptus.ref.core;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
 
+/**
+ * The type Reflection util.
+ */
 public class ReflectionUtil {
 
-  public static <T> T getField(Object obj, String name) {
+  /**
+   * Gets field.
+   *
+   * @param <T>  the type parameter
+   * @param obj  the obj
+   * @param name the name
+   * @return the field
+   */
+  @Nullable
+  public static <T> T getField(@NotNull Object obj, String name) {
     final Field value = Arrays.stream(obj.getClass().getDeclaredFields()).filter(x -> x.getName().equals(name)).findFirst().orElse(null);
     if (value != null) {
       value.setAccessible(true);
@@ -41,7 +56,17 @@ public class ReflectionUtil {
     return null;
   }
 
-  public static <T> T invokeMethod(Object obj, String name, Object... args) {
+  /**
+   * Invoke method t.
+   *
+   * @param <T>  the type parameter
+   * @param obj  the obj
+   * @param name the name
+   * @param args the args
+   * @return the t
+   */
+  @NotNull
+  public static <T> T invokeMethod(@NotNull Object obj, String name, @NotNull Object... args) {
     final Method value = Arrays.stream(obj.getClass().getDeclaredMethods())
         .filter(x -> x.getName().equals(name))
         .filter(x -> {
@@ -65,5 +90,49 @@ public class ReflectionUtil {
       }
     }
     throw new RuntimeException(String.format("Method %s.%s(%s) not found", obj.getClass(), name, Arrays.stream(args).map(x -> x.getClass().getSimpleName()).reduce((a, b) -> a + ", " + b).get()));
+  }
+
+  /**
+   * Gets field.
+   *
+   * @param nodeClass the node class
+   * @param name      the name
+   * @return the field
+   */
+  @NotNull
+  public static Field getField(@NotNull Class<?> nodeClass, String name) {
+    final Field[] fields = nodeClass.getDeclaredFields();
+    final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
+    if (!parent.isPresent()) {
+      final Class<?> superclass = nodeClass.getSuperclass();
+      if (superclass != null) {
+        return getField(superclass, name);
+      } else {
+        throw new AssertionError(String.format("Cannot find field %s", name));
+      }
+    }
+    final Field field = parent.get();
+    field.setAccessible(true);
+    return field;
+  }
+
+  /**
+   * Sets field.
+   *
+   * @param <T>     the type parameter
+   * @param astNode the ast node
+   * @param name    the name
+   * @param value   the value
+   * @return the field
+   */
+  @SuppressWarnings("unused")
+  @NotNull
+  public static <T> T setField(@NotNull T astNode, String name, Object value) {
+    try {
+      getField(astNode.getClass(), name).set(astNode, value);
+      return astNode;
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

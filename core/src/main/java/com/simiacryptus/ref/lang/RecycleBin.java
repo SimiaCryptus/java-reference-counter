@@ -44,6 +44,7 @@ import static com.simiacryptus.ref.lang.PersistanceMode.WEAK;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public abstract class RecycleBin<T> {
 
   /**

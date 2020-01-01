@@ -24,22 +24,36 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
+/**
+ * The type Insert.
+ */
 @RefIgnore
 @Mojo(name = "insert")
 public class Insert extends RefAutoCoderMojo {
+  @NotNull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo, getBoolean("modifyAPI", false));
   }
 
+  /**
+   * The type Coder.
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
     private final ProjectInfo projectInfo;
     private final boolean shouldChangeAPI;
 
+    /**
+     * Instantiates a new Coder.
+     *
+     * @param projectInfo     the project info
+     * @param shouldChangeAPI the should change api
+     */
     public Coder(ProjectInfo projectInfo, boolean shouldChangeAPI) {
       super(projectInfo);
       this.projectInfo = projectInfo;

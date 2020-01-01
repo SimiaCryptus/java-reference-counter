@@ -19,36 +19,56 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.lang.Tuple2;
 import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * The type Instrument closures.
+ */
 @RefIgnore
 public class InstrumentClosures extends RefASTOperator {
 
+  /**
+   * The Index.
+   */
+  @NotNull
   protected final SymbolIndex index;
 
-  protected InstrumentClosures(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Instrument closures.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  protected InstrumentClosures(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
     this.index = getSymbolIndex(compilationUnit);
   }
 
-  public void addRefcounting(@Nonnull AnonymousClassDeclaration node, Map<SymbolIndex.BindingID, List<Span>> closures) {
+  /**
+   * Add refcounting.
+   *
+   * @param node     the node
+   * @param closures the closures
+   */
+  public void addRefcounting(@Nonnull AnonymousClassDeclaration node, @NotNull Collection<SymbolIndex.BindingID> closures) {
     final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(node, "_free");
     if (freeMethodOpt.isPresent()) {
-      closures.keySet().stream().map(index.definitions::get).filter(x -> x != null).forEach(closureNode -> {
+      closures.stream().map(index.definitions::get).filter(x -> x != null).forEach(closureNode -> {
         if (closureNode instanceof SingleVariableDeclaration) {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
@@ -57,7 +77,7 @@ public class InstrumentClosures extends RefASTOperator {
             final Block freeMethodBody = freeMethodOpt.get().getBody();
             final boolean isNonNull = ASTUtil.hasAnnotation(singleVariableDeclaration.resolveBinding(), Nonnull.class);
             freeMethodBody.statements().add(0, isNonNull ? newFreeRef(name, type) : freeRefStatement(name, type));
-            info(name, "Adding freeRef for %s", name);
+            debug(name, "Adding freeRef for %s", name);
           }
         } else {
           warn(node, "Cannot handle " + closureNode.getClass().getSimpleName());
@@ -66,7 +86,7 @@ public class InstrumentClosures extends RefASTOperator {
     }
     final Initializer initializer = ast.newInitializer();
     final Block initializerBlock = ast.newBlock();
-    closures.keySet().stream().map(index.definitions::get).filter(x -> x != null).forEach(closureNode -> {
+    closures.stream().map(index.definitions::get).filter(x -> x != null).forEach(closureNode -> {
       if (closureNode instanceof SingleVariableDeclaration) {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
         final ITypeBinding type = resolveBinding(singleVariableDeclaration).getType();
@@ -82,11 +102,17 @@ public class InstrumentClosures extends RefASTOperator {
     node.bodyDeclarations().add(initializer);
   }
 
-  public void wrapInterface(Expression node, Map<SymbolIndex.BindingID, List<Span>> closures) {
-    final List<ASTNode> refClosures = closures.entrySet().stream().filter(entry -> {
-      final ASTNode definition = index.definitions.get(entry.getKey());
+  /**
+   * Wrap interface.
+   *
+   * @param node     the node
+   * @param closures the closures
+   */
+  public void wrapInterface(@NotNull Expression node, @NotNull Collection<SymbolIndex.BindingID> closures) {
+    final List<ASTNode> refClosures = closures.stream().filter(bindingID -> {
+      final ASTNode definition = index.definitions.get(bindingID);
       if (definition == null) {
-        warn(node, "Cannot find definition for %s", entry.getKey());
+        warn(node, "Cannot find definition for %s", bindingID);
         return false;
       } else if (definition instanceof SingleVariableDeclaration) {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) definition;
@@ -108,7 +134,7 @@ public class InstrumentClosures extends RefASTOperator {
         warn(node, "Cannot handle " + definition.getClass().getSimpleName());
         return false;
       }
-    }).map(Map.Entry::getKey).map(index.definitions::get).collect(Collectors.toList());
+    }).map(index.definitions::get).collect(Collectors.toList());
     if (!refClosures.isEmpty()) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       final Type castType = getType(node, false);
@@ -140,81 +166,107 @@ public class InstrumentClosures extends RefASTOperator {
     }
   }
 
-  protected Map<SymbolIndex.BindingID, List<Span>> getClosures(ASTNode node) {
+  /**
+   * Gets closures.
+   *
+   * @param node the node
+   * @return the closures
+   */
+  protected Collection<SymbolIndex.BindingID> getClosures(@NotNull ASTNode node) {
     return getSymbolIndex(node).references.entrySet().stream().flatMap(e -> {
       final SymbolIndex.BindingID bindingID = e.getKey();
-      final List<ASTNode> references = e.getValue();
       if (!bindingID.type.equals("Type")) {
         final ASTNode definition = index.definitions.get(bindingID);
         if (definition == null) {
           warn(node, "Unresolved ref %s in %s", bindingID, getSpan(node));
         } else {
+          final List<ASTNode> references = e.getValue();
           final String locationReport = references.stream()
               .map(x -> getSpan(x).toString())
               .reduce((a, b) -> a + ", " + b).get();
           if (!ASTUtil.contains(node, definition)) {
-            info(node, String.format("Closure %s referenced at %s defined by %s", bindingID, locationReport, getSpan(node)));
-            return references.stream().map(x -> new Tuple2<>(bindingID, getSpan(x)));
+            debug(definition, String.format("Closure %s referenced at %s defined by %s", bindingID, locationReport, getSpan(node)));
+            if (!references.isEmpty()) return Stream.of(bindingID);
           } else {
-            info(node, String.format("In-scope symbol %s referenced at %s defined by %s", bindingID, locationReport, getSpan(definition)));
+            debug(definition, String.format("In-scope symbol %s referenced at %s defined by %s", bindingID, locationReport, getSpan(definition)));
           }
         }
       }
       return Stream.empty();
-    }).filter(x -> x != null).collect(Collectors.groupingBy(x -> x._1, Collectors.mapping(x -> x._2, Collectors.toList())));
+    }).collect(Collectors.toList());
   }
 
+  /**
+   * The type Modify anonymous class declaration.
+   */
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InstrumentClosures {
-    public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    /**
+     * Instantiates a new Modify anonymous class declaration.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
+    public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(AnonymousClassDeclaration node) {
-      final Map<SymbolIndex.BindingID, List<Span>> closures = getClosures(node);
+    public void endVisit(@NotNull AnonymousClassDeclaration node) {
+      final Collection<SymbolIndex.BindingID> closures = getClosures(node);
       if (closures.size() > 0) {
         final ITypeBinding typeBinding = resolveBinding(node);
         final SymbolIndex.BindingID bindingID = index.getBindingID(typeBinding);
         if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object") && typeBinding.getInterfaces().length > 0) {
-          info(node, String.format("Closures in anonymous interface %s at %s: %s",
+          debug(node, String.format("Closures in anonymous interface %s at %s: %s",
               bindingID,
               getSpan(node),
-              closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+              closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
           wrapInterface((Expression) node.getParent(), closures);
         } else if (isRefCounted(node, typeBinding)) {
-          info(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
+          debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
               bindingID,
               getSpan(node),
-              closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+              closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
           addRefcounting(node, closures);
         } else {
           warn(node, String.format("Closures in Non-RefCountable %s at %s: %s",
               bindingID,
               getSpan(node),
-              closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+              closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
         }
       }
     }
   }
 
+  /**
+   * The type Modify lambda expression.
+   */
   @RefIgnore
   public static class ModifyLambdaExpression extends InstrumentClosures {
-    public ModifyLambdaExpression(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    /**
+     * Instantiates a new Modify lambda expression.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
+    public ModifyLambdaExpression(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(LambdaExpression node) {
+    public void endVisit(@NotNull LambdaExpression node) {
       final IMethodBinding methodBinding = resolveMethodBinding(node);
       if (null == methodBinding) return;
       final SymbolIndex.BindingID bindingID = index.getBindingID(methodBinding);
-      final Map<SymbolIndex.BindingID, List<Span>> closures = getClosures(node);
+      final Collection<SymbolIndex.BindingID> closures = getClosures(node);
       if (closures.size() > 0) {
-        info(node, String.format("Closures in %s (body at %s)\n\t%s",
+        debug(node, String.format("Closures in %s (body at %s)\n\t%s",
             bindingID,
             getSpan(node),
-            closures.keySet().stream().map(x -> x.toString()).reduce((a, b) -> a + "\n\t" + b).get()));
+            closures.stream().map(x -> x.toString()).reduce((a, b) -> a + "\n\t" + b).get()));
         wrapInterface(node, closures);
       }
     }

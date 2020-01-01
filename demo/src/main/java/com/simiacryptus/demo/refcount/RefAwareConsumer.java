@@ -21,11 +21,7 @@ package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
-/**
- * The type Ref aware consumer.
- *
- * @param <T> the type parameter
- */
+@SuppressWarnings("unused")
 public abstract class RefAwareConsumer<T> extends ReferenceCountingBase implements java.util.function.Consumer<T> {
   public @Override void _free() {
     super._free();

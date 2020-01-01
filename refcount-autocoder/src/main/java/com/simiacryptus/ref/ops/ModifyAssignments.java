@@ -27,10 +27,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Modify assignments.
+ */
 @RefIgnore
 public class ModifyAssignments extends RefASTOperator {
 
-  public ModifyAssignments(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Modify assignments.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  public ModifyAssignments(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
@@ -81,7 +91,7 @@ public class ModifyAssignments extends RefASTOperator {
               warn(leftHandSide, "Adding freeRef for %s", leftHandSide);
             }
             assignment.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
-            info(assignment, "Simple field-set statement at line " + lineNumber);
+            debug(assignment, "Simple field-set statement at line " + lineNumber);
           } else {
             final Block exchangeBlock = ast.newBlock();
             replace(expressionStatement, exchangeBlock);
@@ -93,7 +103,7 @@ public class ModifyAssignments extends RefASTOperator {
             }
             assignment.setRightHandSide(wrapAddRef(ast.newSimpleName(identifier), typeBinding));
             exchangeBlock.statements().add(expressionStatement);
-            info(assignment, "Complex field-set statement at line " + lineNumber);
+            debug(assignment, "Complex field-set statement at line " + lineNumber);
           }
         } else {
           warn(assignment, "Non-block field-set statement: %s (%s)", parent.getClass(), parent);

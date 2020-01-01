@@ -30,14 +30,31 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 
+/**
+ * The type Insert add refs.
+ */
 @RefIgnore
 public class InsertAddRefs extends RefASTOperator {
 
+  /**
+   * Instantiates a new Insert add refs.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
   protected InsertAddRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  public void addRefsToArguments(ASTNode node, @NotNull List<ASTNode> arguments, String name) {
+  /**
+   * Add refs to arguments.
+   *
+   * @param node      the node
+   * @param arguments the arguments
+   * @param name      the name
+   */
+  public void addRefsToArguments(@NotNull ASTNode node, @NotNull List<ASTNode> arguments, String name) {
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
       if (shouldWrap(arg, name)) {
@@ -47,18 +64,30 @@ public class InsertAddRefs extends RefASTOperator {
           warn(arg, "Unresolved binding");
         } else if (isRefCounted(arg, resolveTypeBinding)) {
           arguments.set(i, wrapAddRef(expression, resolveTypeBinding));
-          info(node, "Argument addRef for %s: %s (%s) defined", name, resolveTypeBinding.getQualifiedName(), expression);
+          debug(node, "Argument addRef for %s: %s (%s) defined", name, resolveTypeBinding.getQualifiedName(), expression);
         } else {
-          info(node, "Non-refcounted arg %s in %s", expression, name);
+          debug(node, "Non-refcounted arg %s in %s", expression, name);
         }
       }
     }
   }
 
+  /**
+   * Modify args boolean.
+   *
+   * @param declaringClass the declaring class
+   * @return the boolean
+   */
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
     return isRefAware(declaringClass);
   }
 
+  /**
+   * Wrap add ref expression.
+   *
+   * @param node the node
+   * @return the expression
+   */
   @Nullable
   public Expression wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
@@ -70,18 +99,29 @@ public class InsertAddRefs extends RefASTOperator {
     return null;
   }
 
-  protected void addRef(Expression expression) {
+  /**
+   * Add ref.
+   *
+   * @param expression the expression
+   */
+  protected void addRef(@NotNull Expression expression) {
     final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
     if (null == resolveTypeBinding) {
       warn(expression, "Unresolved binding for %s", expression);
     } else if (isRefCounted(expression, resolveTypeBinding)) {
       replace(expression, wrapAddRef(expression, resolveTypeBinding));
-      info(expression, "%s.addRef", expression);
+      debug(expression, "%s.addRef", expression);
     } else {
-      info(expression, "Non-refcounted %s", expression);
+      debug(expression, "Non-refcounted %s", expression);
     }
   }
 
+  /**
+   * Is instance accessor boolean.
+   *
+   * @param expression the expression
+   * @return the boolean
+   */
   protected boolean isInstanceAccessor(Expression expression) {
     if (expression instanceof ThisExpression) return true;
     if (expression instanceof SimpleName) {
@@ -92,6 +132,12 @@ public class InsertAddRefs extends RefASTOperator {
     return false;
   }
 
+  /**
+   * Should add ref boolean.
+   *
+   * @param expression the expression
+   * @return the boolean
+   */
   protected boolean shouldAddRef(Expression expression) {
     if (expression instanceof MethodInvocation) return false;
     if (expression instanceof ClassInstanceCreation) return false;
@@ -101,6 +147,13 @@ public class InsertAddRefs extends RefASTOperator {
     return true;
   }
 
+  /**
+   * Should wrap boolean.
+   *
+   * @param arg  the arg
+   * @param name the name
+   * @return the boolean
+   */
   protected boolean shouldWrap(ASTNode arg, String name) {
     if (arg instanceof ClassInstanceCreation) {
       debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
@@ -129,9 +182,19 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify array initializer.
+   */
   @RefIgnore
   public static class ModifyArrayInitializer extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify array initializer.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyArrayInitializer(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -147,7 +210,7 @@ public class InsertAddRefs extends RefASTOperator {
             Object next = expressions.get(i);
             Expression methodInvocation = wrapAddRef((ASTNode) next);
             if (null != methodInvocation) {
-              info(node, "Argument addRef for %s", next);
+              debug(node, "Argument addRef for %s", next);
               expressions.set(i, methodInvocation);
             }
           }
@@ -156,9 +219,19 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify method invocation.
+   */
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify method invocation.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -166,7 +239,8 @@ public class InsertAddRefs extends RefASTOperator {
     @Override
     public void endVisit(@NotNull MethodInvocation node) {
       final Expression expression = node.getExpression();
-      info(node, "Processing method %s.%s", null == expression ? "?" : expression.toString(), node.getName());
+      Object[] args = new Object[]{null == expression ? "?" : expression.toString(), node.getName()};
+      debug(node, "Processing method %s.%s", args);
       if (skip(node)) return;
       final IMethodBinding methodBinding = resolveMethodBinding(node);
       if (null == methodBinding) {
@@ -180,59 +254,99 @@ public class InsertAddRefs extends RefASTOperator {
         targetLabel = methodBinding.getDeclaringClass().getQualifiedName() + "::" + node.getName();
       }
       if (consumesRefs(methodBinding, null == expression ? null : resolveTypeBinding(expression))) {
-        info(node, "Refcounted method %s", node);
+        debug(node, "Refcounted method %s", node);
         addRefsToArguments(node, node.arguments(), targetLabel);
       } else {
-        info(node, "Ignored method %s", targetLabel);
+        debug(node, "Ignored method %s", targetLabel);
       }
     }
   }
 
+  /**
+   * The type Modify assignment.
+   */
   @RefIgnore
   public static class ModifyAssignment extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify assignment.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(Assignment node) {
+    public void endVisit(@NotNull Assignment node) {
       final Expression expression = node.getRightHandSide();
       if (shouldAddRef(expression)) addRef(expression);
     }
   }
 
+  /**
+   * The type Modify variable declaration fragment.
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify variable declaration fragment.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(VariableDeclarationFragment node) {
+    public void endVisit(@NotNull VariableDeclarationFragment node) {
       final Expression initializer = node.getInitializer();
       if (null != initializer && shouldAddRef(initializer)) addRef(initializer);
     }
   }
 
+  /**
+   * The type Modify return statement.
+   */
   @RefIgnore
   public static class ModifyReturnStatement extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify return statement.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(ReturnStatement node) {
+    public void endVisit(@NotNull ReturnStatement node) {
       final Expression expression = node.getExpression();
       if (isInstanceAccessor(expression)) addRef(expression);
     }
   }
 
+  /**
+   * The type Modify constructor invocation.
+   */
   @RefIgnore
   public static class ModifyConstructorInvocation extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify constructor invocation.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyConstructorInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -246,17 +360,27 @@ public class InsertAddRefs extends RefASTOperator {
         return;
       }
       if (consumesRefs(methodBinding, methodBinding.getReturnType()) && node.arguments().size() > 0) {
-        info(node, "Refcounted constructor %s", node);
+        debug(node, "Refcounted constructor %s", node);
         addRefsToArguments(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
       } else {
-        info(node, "Non-refcounted constructor %s", node);
+        debug(node, "Non-refcounted constructor %s", node);
       }
     }
   }
 
+  /**
+   * The type Modify class instance creation.
+   */
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertAddRefs {
 
+    /**
+     * Instantiates a new Modify class instance creation.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -270,14 +394,14 @@ public class InsertAddRefs extends RefASTOperator {
         return;
       }
       if (consumesRefs(methodBinding, resolveTypeBinding(node))) {
-        info(node, "Refcounted constructor %s", node);
+        debug(node, "Refcounted constructor %s", node);
         if (node.arguments().size() > 0) {
           addRefsToArguments(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
         } else {
           debug(node, "No args %s", node);
         }
       } else {
-        info(node, "Non-refcounted constructor %s", node);
+        debug(node, "Non-refcounted constructor %s", node);
       }
     }
   }

@@ -20,14 +20,10 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * The type Tree set container.
- */
+@SuppressWarnings("unused")
 public class TreeSetContainer extends ReferenceCountingBase {
-  /**
-   * Test.
-   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations();
@@ -98,7 +94,8 @@ public class TreeSetContainer extends ReferenceCountingBase {
     });
   }
 
-  private static void testOperations(java.util.function.Consumer<java.util.TreeSet<BasicType>> setRefConsumer) {
+  private static void testOperations(
+      @NotNull java.util.function.Consumer<java.util.TreeSet<BasicType>> setRefConsumer) {
     java.util.TreeSet<BasicType> values = new java.util.TreeSet<>();
     setRefConsumer.accept(values);
   }

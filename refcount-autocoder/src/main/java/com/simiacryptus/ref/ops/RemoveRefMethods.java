@@ -31,10 +31,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * The type Remove ref methods.
+ */
 @RefIgnore
 public class RemoveRefMethods extends RefASTOperator {
 
-  public RemoveRefMethods(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  /**
+   * Instantiates a new Remove ref methods.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
+  public RemoveRefMethods(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 

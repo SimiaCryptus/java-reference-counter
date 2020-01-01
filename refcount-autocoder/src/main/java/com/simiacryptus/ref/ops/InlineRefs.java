@@ -30,13 +30,29 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 
+/**
+ * The type Inline refs.
+ */
 @RefIgnore
 public class InlineRefs extends RefASTOperator {
 
+  /**
+   * Instantiates a new Inline refs.
+   *
+   * @param projectInfo     the project info
+   * @param compilationUnit the compilation unit
+   * @param file            the file
+   */
   protected InlineRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Previous statement statement.
+   *
+   * @param node the node
+   * @return the statement
+   */
   @Nullable
   public Statement previousStatement(@Nonnull ASTNode node) {
     if (node instanceof Statement) {
@@ -51,13 +67,13 @@ public class InlineRefs extends RefASTOperator {
           return null;
         }
       } else {
-        info(node, "No previous statement for %s", node.getClass().getSimpleName());
+        debug(node, "No previous statement for %s", node.getClass().getSimpleName());
         return null;
       }
     } else {
       final ASTNode parent = node.getParent();
       if (null == parent) {
-        info(node, "No previous statement for %s", node.getClass().getSimpleName());
+        debug(node, "No previous statement for %s", node.getClass().getSimpleName());
         return null;
       } else {
         return previousStatement(parent);
@@ -65,8 +81,18 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify block.
+   */
   public static class ModifyBlock extends InlineRefs {
 
+    /**
+     * Instantiates a new Modify block.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyBlock(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -81,8 +107,18 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify assignment.
+   */
   public static class ModifyAssignment extends InlineRefs {
 
+    /**
+     * Instantiates a new Modify assignment.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -101,13 +137,13 @@ public class InlineRefs extends RefASTOperator {
               return;
             }
             if (!lastMention.statement.equals(previousStatement)) {
-              info(node, "Assignment is not last usage of %s", fragment.getName());
+              debug(node, "Assignment is not last usage of %s", fragment.getName());
               return;
             }
             if (fragment.getName().toString().equals(node.getRightHandSide().toString())) {
-              info(node, "Inlining %s", fragment.getName());
+              debug(node, "Inlining %s", fragment.getName());
               node.setRightHandSide(copyIfAttached(fragment.getInitializer()));
-              info(previousStatement, "delete %s", previousStatement);
+              debug(previousStatement, "delete %s", previousStatement);
               previousStatement.delete();
             } else {
               warn(node, "previous variable %s is not used in %s", fragment.getName(), node.getRightHandSide());
@@ -122,8 +158,18 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The type Modify return statement.
+   */
   public static class ModifyReturnStatement extends InlineRefs {
 
+    /**
+     * Instantiates a new Modify return statement.
+     *
+     * @param projectInfo     the project info
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     */
     public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -143,12 +189,12 @@ public class InlineRefs extends RefASTOperator {
                 return;
               }
               if (lastMention.statement.equals(previousStatement)) {
-                info(node, "Assignment is not last usage of %s", fragment.getName());
+                debug(node, "Assignment is not last usage of %s", fragment.getName());
                 return;
               }
               if (fragment.getName().toString().equals(node.getExpression().toString())) {
                 final Expression initializer = fragment.getInitializer();
-                info(node, "Inlining %s initialized by %s", fragment.getName(), initializer.getClass().getSimpleName());
+                debug(node, "Inlining %s initialized by %s", fragment.getName(), initializer.getClass().getSimpleName());
                 if (initializer instanceof ArrayInitializer) {
                   final ArrayCreation arrayCreation = ast.newArrayCreation();
                   arrayCreation.setType(ast.newArrayType(getType(initializer, initializer.resolveTypeBinding().getElementType().getQualifiedName(), false)));
@@ -157,15 +203,15 @@ public class InlineRefs extends RefASTOperator {
                 } else {
                   node.setExpression(copyIfAttached(initializer));
                 }
-                info(previousStatement, "delete %s", previousStatement);
+                debug(previousStatement, "delete %s", previousStatement);
                 previousStatement.delete();
               }
             }
           } else {
-            info(node, "Cannot inline - Previous statement is %s", previousStatement.getClass().getSimpleName());
+            debug(node, "Cannot inline - Previous statement is %s", previousStatement.getClass().getSimpleName());
           }
         } else {
-          info(node, "Cannot inline - No previous statement");
+          debug(node, "Cannot inline - No previous statement");
         }
       }
     }

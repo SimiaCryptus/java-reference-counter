@@ -23,6 +23,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
@@ -44,7 +45,7 @@ public class Test {
     final AtomicInteger bytes = new AtomicInteger(0);
     AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>() {
       @Override
-      protected synchronized void append(ILoggingEvent iLoggingEvent) {
+      protected synchronized void append(@NotNull ILoggingEvent iLoggingEvent) {
         String formattedMessage = iLoggingEvent.getFormattedMessage();
         out.println(formattedMessage);
         out.flush();

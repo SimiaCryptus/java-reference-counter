@@ -33,6 +33,7 @@ import java.util.List;
  */
 @RefAware
 @RefIgnore
+@SuppressWarnings("unused")
 public class RefLinkedList<T> extends RefAbstractList<T> {
   @NotNull
   private final List<T> inner;
@@ -54,6 +55,7 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
     this.addAll(list);
   }
 
+  @NotNull
   @Override
   public List<T> getInner() {
     return inner;
@@ -66,6 +68,7 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
    * @param array the array
    * @return the ref linked list [ ]
    */
+  @NotNull
   public static <T> RefLinkedList<T>[] addRefs(@NotNull RefLinkedList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedList::addRef)
         .toArray((x) -> new RefLinkedList[x]);
