@@ -44,7 +44,8 @@ public class TestOperations extends ReferenceCountingBase {
     testOperations2424.run();
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 
@@ -56,7 +57,7 @@ public class TestOperations extends ReferenceCountingBase {
 
   private void test(BasicType datum1) {
     testList();
-    testArray(new BasicType[] { datum1 });
+    testArray(new BasicType[]{datum1});
     testSet();
     testDeque();
     testMap();

@@ -38,7 +38,8 @@ public class SimpleContainer extends ReferenceCountingBase {
     }
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     super._free();
   }
 

@@ -149,6 +149,42 @@ public class SymbolIndex {
   }
 
   /**
+   * Context linked hash map.
+   *
+   * @param node the node
+   * @return the linked hash map
+   */
+  @NotNull
+  public LinkedHashMap<BindingID, ASTNode> context(@NotNull ASTNode node) {
+    final LinkedHashMap<BindingID, ASTNode> list = new LinkedHashMap<>();
+    final ASTNode parent = node.getParent();
+    if (parent != null) list.putAll(this.context(parent));
+    if (node instanceof LambdaExpression) {
+      final IMethodBinding methodBinding = ((LambdaExpression) node).resolveMethodBinding();
+      if (methodBinding == null) {
+        logger.warn("Unresolved binding for %s", node);
+      } else {
+        list.put(getBindingID(methodBinding), node);
+      }
+    } else if (node instanceof MethodDeclaration) {
+      final IMethodBinding methodBinding = ((MethodDeclaration) node).resolveBinding();
+      if (methodBinding == null) {
+        logger.warn("Unresolved binding for %s", node);
+      } else {
+        list.put(getBindingID(methodBinding), node);
+      }
+    } else if (node instanceof TypeDeclaration) {
+      final ITypeBinding typeBinding = ((TypeDeclaration) node).resolveBinding();
+      if (typeBinding == null) {
+        logger.warn("Unresolved binding for %s", node);
+      } else {
+        list.put(getBindingID(typeBinding), node);
+      }
+    }
+    return list;
+  }
+
+  /**
    * The type Context location.
    */
   public static class ContextLocation {
@@ -159,7 +195,7 @@ public class SymbolIndex {
     /**
      * The Context.
      */
-    public final LinkedHashMap<BindingID, ASTEditor.Span> context;
+    public final @NotNull LinkedHashMap<BindingID, ASTNode> context;
 
     /**
      * Instantiates a new Context location.
@@ -167,7 +203,7 @@ public class SymbolIndex {
      * @param location the location
      * @param context  the context
      */
-    public ContextLocation(ASTEditor.Span location, LinkedHashMap<BindingID, ASTEditor.Span> context) {
+    public ContextLocation(ASTEditor.Span location, @NotNull LinkedHashMap<BindingID, ASTNode> context) {
       this.location = location;
       this.context = context;
     }

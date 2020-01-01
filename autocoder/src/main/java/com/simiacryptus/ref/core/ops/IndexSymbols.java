@@ -27,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -88,42 +87,6 @@ public class IndexSymbols extends ASTScanner {
   public IndexSymbols setVerbose(boolean verbose) {
     this.verbose = verbose;
     return this;
-  }
-
-  /**
-   * Context linked hash map.
-   *
-   * @param node the node
-   * @return the linked hash map
-   */
-  @NotNull
-  public LinkedHashMap<SymbolIndex.BindingID, Span> context(@NotNull ASTNode node) {
-    final LinkedHashMap<SymbolIndex.BindingID, Span> list = new LinkedHashMap<>();
-    final ASTNode parent = node.getParent();
-    if (parent != null) list.putAll(context(parent));
-    if (node instanceof LambdaExpression) {
-      final IMethodBinding methodBinding = ((LambdaExpression) node).resolveMethodBinding();
-      if (methodBinding == null) {
-        warn(node, "Unresolved binding for %s", node);
-      } else {
-        list.put(index.getBindingID(methodBinding), getSpan(node));
-      }
-    } else if (node instanceof MethodDeclaration) {
-      final IMethodBinding methodBinding = ((MethodDeclaration) node).resolveBinding();
-      if (methodBinding == null) {
-        warn(node, "Unresolved binding for %s", node);
-      } else {
-        list.put(index.getBindingID(methodBinding), getSpan(node));
-      }
-    } else if (node instanceof TypeDeclaration) {
-      final ITypeBinding typeBinding = ((TypeDeclaration) node).resolveBinding();
-      if (typeBinding == null) {
-        warn(node, "Unresolved binding for %s", node);
-      } else {
-        list.put(index.getBindingID(typeBinding), getSpan(node));
-      }
-    }
-    return list;
   }
 
   @Override
@@ -202,7 +165,7 @@ public class IndexSymbols extends ASTScanner {
     SymbolIndex.BindingID bindingID = index.getBindingID(binding);
     if (null == bindingID) return;
     final SymbolIndex.ContextLocation contextLocation = getContextLocation(node);
-    final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
+    final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + getSpan(e.getValue())).reduce((a, b) -> a + "\n\t" + b).orElse("-");
     if (isVerbose()) debug(node, "Reference to %s at %s within:\n\t%s", bindingID, contextLocation.location, contextPath);
     index.references.computeIfAbsent(bindingID, x -> new ArrayList<>()).add(node);
   }
@@ -214,8 +177,8 @@ public class IndexSymbols extends ASTScanner {
    * @return the context location
    */
   @NotNull
-  protected SymbolIndex.ContextLocation getContextLocation(@NotNull ASTNode node) {
-    return new SymbolIndex.ContextLocation(getSpan(node), context(node));
+  private SymbolIndex.ContextLocation getContextLocation(@NotNull ASTNode node) {
+    return new SymbolIndex.ContextLocation(getSpan(node), index.context(node));
   }
 
   private void indexDef(@NotNull ASTNode node, @Nullable IBinding binding) {
@@ -223,7 +186,7 @@ public class IndexSymbols extends ASTScanner {
     final SymbolIndex.BindingID bindingID = index.getBindingID(binding);
     if (null == bindingID) return;
     final SymbolIndex.ContextLocation contextLocation = getContextLocation(node);
-    final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + e.getValue()).reduce((a, b) -> a + "\n\t" + b).orElse("-");
+    final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + getSpan(e.getValue())).reduce((a, b) -> a + "\n\t" + b).orElse("-");
     if (isVerbose()) debug(node, "Declaration of %s at %s within: \n\t%s", bindingID, getSpan(node), contextPath);
     final ASTNode replaced = index.definitions.put(bindingID, node);
     if (null != replaced) {
