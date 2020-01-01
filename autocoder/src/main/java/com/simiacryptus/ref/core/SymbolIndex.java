@@ -1,11 +1,26 @@
+/*
+ * Copyright (c) 2020 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.ASTEditor;
 import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,50 +53,36 @@ public class SymbolIndex {
     if (binding instanceof IVariableBinding) {
       IVariableBinding variableBinding = (IVariableBinding) binding;
       if (variableBinding.isField()) {
-        final FieldBinding fieldBinding = ReflectionUtil.getField(variableBinding, "binding");
-        if (fieldBinding != null) {
-          final ReferenceBinding declaringClass = fieldBinding.declaringClass;
-          if (null == declaringClass) {
-            return null;
-          }
-          final String className = Arrays.stream(declaringClass.compoundName).map(String::new).reduce((a, b) -> a + "." + b).get();
-          return String.format("%s::%s",
-              className,
-              null == variableBinding ? "null" : variableBinding.getName());
-        } else {
-          return "null::" + variableBinding.getName();
-        }
+        final ITypeBinding declaringClass = variableBinding.getDeclaringClass();
+        return String.format("%s::%s",
+            null == declaringClass ? "null" : getPath(declaringClass),
+            variableBinding.getName());
       } else if (variableBinding.isParameter()) {
-        final LocalVariableBinding localVariableBinding = ReflectionUtil.getField(variableBinding, "binding");
         final IMethodBinding declaringMethod = variableBinding.getDeclaringMethod();
-        final String paramName = null == variableBinding ? "?" : new String(localVariableBinding.declaration.name);
-        final MethodScope declaringScope = (MethodScope) localVariableBinding.declaringScope;
-        if (declaringScope.referenceContext instanceof org.eclipse.jdt.internal.compiler.ast.LambdaExpression) {
-          final org.eclipse.jdt.internal.compiler.ast.LambdaExpression lambdaExpression = (org.eclipse.jdt.internal.compiler.ast.LambdaExpression) declaringScope.referenceContext;
-          return (Arrays.stream(lambdaExpression.binding.declaringClass.compoundName)
-              .map(x -> new String(x)).reduce((a, b) -> a + "." + b).get()
-              + "::" + new String(lambdaExpression.binding.selector)) + "::" + paramName;
-        } else {
-          return getPath(declaringMethod) + "::" + paramName;
-        }
+        return String.format("%s::%s",
+            null == declaringMethod ? "null" : getPath(declaringMethod),
+            variableBinding.getName());
       } else {
         final IMethodBinding declaringMethod = variableBinding.getDeclaringMethod();
-
         return String.format("%s::%s[%s]",
             null == declaringMethod ? "null" : getPath(declaringMethod),
-            null == variableBinding ? "null" : variableBinding.getName(),
-            null == variableBinding ? "?" : variableBinding.getVariableId());
+            variableBinding.getName(),
+            variableBinding.getVariableId());
       }
     } else if (binding instanceof IMethodBinding) {
       IMethodBinding methodBinding = getImplementation((IMethodBinding) binding);
-      final String typeBinding = null == methodBinding ? "null" : getPath(methodBinding.getDeclaringClass());
-      return typeBinding + "::" + methodName(methodBinding);
+      final ITypeBinding declaringClass = methodBinding == null ? null : methodBinding.getDeclaringClass();
+      return String.format("%s::%s",
+          null == declaringClass ? "null" : getPath(declaringClass),
+          methodName(methodBinding));
     } else if (binding instanceof ITypeBinding) {
       final ITypeBinding typeBinding = (ITypeBinding) binding;
       if (typeBinding.isAnonymous()) {
         final String[] split = typeBinding.getKey().split("~");
-        if (split.length < 2) return getPath(typeBinding.getDeclaringClass()) + "." + typeBinding.getKey();
-        return getPath(typeBinding.getDeclaringClass()) + "." + split[1];
+        final ITypeBinding declaringClass = typeBinding.getDeclaringClass();
+        return String.format("%s.%s",
+            null == declaringClass ? "null" : getPath(declaringClass),
+            (split.length < 2) ? typeBinding.getKey() : split[1]);
       } else {
         return typeBinding.getQualifiedName();
       }
@@ -103,9 +104,6 @@ public class SymbolIndex {
   }
 
   private static String getType(IBinding binding) {
-    if (getPath(binding).matches(".*::lambda\\$\\d+")) {
-      return "Lambda";
-    }
     if (binding instanceof IVariableBinding) {
       final IVariableBinding variableBinding = (IVariableBinding) binding;
       if (variableBinding.isField()) {

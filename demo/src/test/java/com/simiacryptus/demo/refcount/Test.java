@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -29,7 +29,7 @@ import java.io.PrintStream;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public @com.simiacryptus.ref.lang.RefAware class Test {
+public class Test {
   static {
     System.setProperty("DEBUG_LIFECYCLE", "true");
   }

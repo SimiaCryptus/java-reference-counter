@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -164,6 +164,7 @@ public class InstrumentClosures extends RefASTOperator {
     }).filter(x -> x != null).collect(Collectors.groupingBy(x -> x._1, Collectors.mapping(x -> x._2, Collectors.toList())));
   }
 
+  @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InstrumentClosures {
     public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
@@ -197,6 +198,7 @@ public class InstrumentClosures extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyLambdaExpression extends InstrumentClosures {
     public ModifyLambdaExpression(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);

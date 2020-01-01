@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -26,8 +26,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The type Basic type.
  */
-public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCountingBase
-    implements Comparable<BasicType> {
+public class BasicType extends ReferenceCountingBase implements Comparable<BasicType> {
   /**
    * The Label.
    */
@@ -60,7 +59,7 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
    * @return the self
    */
   public BasicType getSelf() {
-    return this.addRef();
+    return this;
   }
 
   /**
@@ -89,10 +88,7 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
 
   @Override
   public int compareTo(@NotNull BasicType o) {
-    int temp_07_0001 = this.label.compareTo(o.label);
-    if (null != o)
-      o.freeRef();
-    return temp_07_0001;
+    return this.label.compareTo(o.label);
   }
 
   @RefIgnore
@@ -133,24 +129,6 @@ public @com.simiacryptus.ref.lang.RefAware class BasicType extends ReferenceCoun
    * @return the wrapper type
    */
   public WrapperType<BasicType> wrap() {
-    return new WrapperType<>(this.addRef());
-  }
-
-  public @Override @SuppressWarnings("unused") BasicType addRef() {
-    return (BasicType) super.addRef();
-  }
-
-  public static @SuppressWarnings("unused") BasicType[] addRefs(BasicType[] array) {
-    if (array == null)
-      return null;
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRef)
-        .toArray((x) -> new BasicType[x]);
-  }
-
-  public static @SuppressWarnings("unused") BasicType[][] addRefs(BasicType[][] array) {
-    if (array == null)
-      return null;
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(BasicType::addRefs)
-        .toArray((x) -> new BasicType[x][]);
+    return new WrapperType<>(this);
   }
 }

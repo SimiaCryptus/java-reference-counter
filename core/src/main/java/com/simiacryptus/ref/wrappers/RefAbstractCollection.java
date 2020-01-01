@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,6 +19,8 @@
 
 package com.simiacryptus.ref.wrappers;
 
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +34,8 @@ import java.util.Iterator;
  *
  * @param <T> the type parameter
  */
+@RefAware
+@RefIgnore
 public abstract class RefAbstractCollection<T> extends ReferenceCountingBase implements RefCollection<T>, Cloneable, Serializable {
 
   public abstract Collection<T> getInner();

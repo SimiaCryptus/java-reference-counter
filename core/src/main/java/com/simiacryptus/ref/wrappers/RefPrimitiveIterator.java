@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,6 +19,8 @@
 
 package com.simiacryptus.ref.wrappers;
 
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
@@ -31,6 +33,8 @@ import java.util.PrimitiveIterator;
  * @param <T>      the type parameter
  * @param <T_CONS> the type parameter
  */
+@RefAware
+@RefIgnore
 public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   private final PrimitiveIterator<T, T_CONS> inner;
@@ -52,6 +56,8 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
   /**
    * The type Of int.
    */
+  @RefAware
+  @RefIgnore
   public static class OfInt extends ReferenceCountingBase implements PrimitiveIterator.OfInt {
     private final PrimitiveIterator.OfInt inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
@@ -98,6 +104,8 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
   /**
    * The type Of long.
    */
+  @RefAware
+  @RefIgnore
   public static class OfLong extends ReferenceCountingBase implements PrimitiveIterator.OfLong {
     private final PrimitiveIterator.OfLong inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
@@ -144,6 +152,8 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
   /**
    * The type Of double.
    */
+  @RefAware
+  @RefIgnore
   public static class OfDouble extends ReferenceCountingBase implements PrimitiveIterator.OfDouble {
     private final PrimitiveIterator.OfDouble inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();

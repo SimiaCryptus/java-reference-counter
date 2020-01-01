@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -64,6 +64,7 @@ public class RefAssert {
       assertEquals(expected[i], actuals[i]);
     }
   }
+
   public static void assertArrayEquals(String message, int[] expected, int[] actuals) {
     assertEquals(expected.length, actuals.length, message);
     for (int i = 0; i < expected.length; i++) {
@@ -107,6 +108,8 @@ public class RefAssert {
     return className + "<" + valueString + ">";
   }
 
+  @RefAware
+  @RefIgnore
   private static class ComparisonFailure extends AssertionError {
     private final String expected;
     private final String actual;

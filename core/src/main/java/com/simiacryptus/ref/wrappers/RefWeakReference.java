@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
 @RefAware
@@ -39,6 +38,11 @@ public class RefWeakReference<T> {
     this.inner = inner;
   }
 
+  @SuppressWarnings("unused")
+  public boolean isEnqueued() {
+    return inner.isEnqueued();
+  }
+
   @Nullable
   @SuppressWarnings("unused")
   public T get() {
@@ -48,11 +52,6 @@ public class RefWeakReference<T> {
   @SuppressWarnings("unused")
   public void clear() {
     inner.clear();
-  }
-
-  @SuppressWarnings("unused")
-  public boolean isEnqueued() {
-    return inner.isEnqueued();
   }
 
   @SuppressWarnings("unused")

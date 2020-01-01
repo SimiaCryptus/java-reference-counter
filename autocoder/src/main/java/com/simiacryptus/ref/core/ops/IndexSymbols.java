@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -63,7 +63,7 @@ public class IndexSymbols extends ASTScanner {
       if (methodBinding == null) {
         warn(node, "Unresolved binding for %s", node);
       } else {
-        list.put(index.getBindingID(methodBinding).setType("Lambda"), getSpan(node));
+        list.put(index.getBindingID(methodBinding), getSpan(node));
       }
     } else if (node instanceof MethodDeclaration) {
       final IMethodBinding methodBinding = ((MethodDeclaration) node).resolveBinding();

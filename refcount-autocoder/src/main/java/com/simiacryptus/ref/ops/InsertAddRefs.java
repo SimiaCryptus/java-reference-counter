@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -129,6 +129,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyArrayInitializer extends InsertAddRefs {
 
     public ModifyArrayInitializer(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
@@ -155,6 +156,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyMethodInvocation extends InsertAddRefs {
 
     public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
@@ -186,6 +188,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyAssignment extends InsertAddRefs {
 
     public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
@@ -199,6 +202,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertAddRefs {
 
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
@@ -212,6 +216,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyReturnStatement extends InsertAddRefs {
 
     public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
@@ -225,6 +230,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyConstructorInvocation extends InsertAddRefs {
 
     public ModifyConstructorInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
@@ -248,6 +254,7 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertAddRefs {
 
     public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {

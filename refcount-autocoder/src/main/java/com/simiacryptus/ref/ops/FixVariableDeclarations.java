@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -117,6 +117,7 @@ public class FixVariableDeclarations extends RefASTOperator {
     return commonInterface(node, superclass, initializerType);
   }
 
+  @RefIgnore
   public static class ModifyVariableDeclarationStatement extends FixVariableDeclarations {
     public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
@@ -135,6 +136,7 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyFieldDeclaration extends FixVariableDeclarations {
     public ModifyFieldDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
@@ -153,6 +155,7 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyVariableDeclarationFragment extends FixVariableDeclarations {
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);

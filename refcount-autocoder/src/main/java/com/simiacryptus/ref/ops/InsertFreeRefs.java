@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -127,7 +127,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
     for (int i = Math.max(declaredAt, 0); i < body.statements().size(); i++) {
       final Statement statement = (Statement) body.statements().get(i);
-      if(statement instanceof SuperConstructorInvocation) {
+      if (statement instanceof SuperConstructorInvocation) {
         declaredAt = i;
         break;
       }
@@ -472,6 +472,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertFreeRefs {
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
@@ -523,6 +524,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifySingleVariableDeclaration extends InsertFreeRefs {
     public ModifySingleVariableDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
@@ -541,6 +543,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertFreeRefs {
     public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
@@ -562,6 +565,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  @RefIgnore
   public static class ModifyMethodInvocation extends InsertFreeRefs {
     public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);

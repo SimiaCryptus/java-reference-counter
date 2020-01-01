@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2020 by Andrew Charneski.
+ *
+ * The author licenses this file to you under the
+ * Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance
+ * with the License.  You may obtain a copy
+ * of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.ASTEditor;
@@ -18,11 +37,14 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public abstract class AutoCoder {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoderMojo.class);
   private final ProjectInfo projectInfo;
+  private boolean parallel = Boolean.parseBoolean(System.getProperty("parallel", Boolean.toString(true)));
 
   protected AutoCoder(ProjectInfo projectInfo) {
     this.projectInfo = projectInfo;
@@ -37,6 +59,15 @@ public abstract class AutoCoder {
     final SymbolIndex index = new SymbolIndex();
     scan((projectInfo, cu, file) -> new IndexSymbols(projectInfo, cu, file, index));
     return index;
+  }
+
+  public boolean isParallel() {
+    return parallel;
+  }
+
+  public AutoCoder setParallel(boolean parallel) {
+    this.parallel = parallel;
+    return this;
   }
 
   @NotNull
@@ -108,7 +139,13 @@ public abstract class AutoCoder {
   public abstract void rewrite();
 
   protected int rewrite(@NotNull VisitorFactory visitorFactory) {
-    return getProjectInfo().parse().entrySet().stream().mapToInt(entry -> {
+    return rewrite(visitorFactory, isParallel());
+  }
+
+  protected int rewrite(@NotNull VisitorFactory visitorFactory, boolean parallel) {
+    Stream<Map.Entry<File, CompilationUnit>> stream = getProjectInfo().parse().entrySet().stream();
+    if(parallel) stream = stream.parallel();
+    return stream.mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));

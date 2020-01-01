@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Andrew Charneski.
+ * Copyright (c) 2020 by Andrew Charneski.
  *
  * The author licenses this file to you under the
  * Apache License, Version 2.0 (the "License");
@@ -7,7 +7,7 @@
  * with the License.  You may obtain a copy
  * of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -24,7 +24,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Simple container.
  */
-public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends ReferenceCountingBase {
+public class SimpleContainer extends ReferenceCountingBase {
   /**
    * The Value.
    */
@@ -35,12 +35,7 @@ public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends Referen
    */
   public SimpleContainer() {
     {
-      com.simiacryptus.demo.refcount.BasicType temp_01_0001 = new BasicType();
-      if (null != value)
-        value.freeRef();
-      value = temp_01_0001 == null ? null : temp_01_0001.addRef();
-      if (null != temp_01_0001)
-        temp_01_0001.freeRef();
+      value = new BasicType();
     }
   }
 
@@ -51,20 +46,11 @@ public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends Referen
    */
   public SimpleContainer(BasicType value) {
     {
-      com.simiacryptus.demo.refcount.BasicType temp_01_0002 = value == null ? null : value.addRef();
-      if (null != this.value)
-        this.value.freeRef();
-      this.value = temp_01_0002 == null ? null : temp_01_0002.addRef();
-      if (null != temp_01_0002)
-        temp_01_0002.freeRef();
+      this.value = value;
     }
-    if (null != value)
-      value.freeRef();
   }
 
   public @Override void _free() {
-    if (null != value)
-      value.freeRef();
     super._free();
   }
 
@@ -78,23 +64,5 @@ public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends Referen
   @Override
   public String toString() {
     return "SimpleContainer{" + "values=" + value + '}';
-  }
-
-  public @Override @SuppressWarnings("unused") SimpleContainer addRef() {
-    return (SimpleContainer) super.addRef();
-  }
-
-  public static @SuppressWarnings("unused") SimpleContainer[] addRefs(SimpleContainer[] array) {
-    if (array == null)
-      return null;
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRef)
-        .toArray((x) -> new SimpleContainer[x]);
-  }
-
-  public static @SuppressWarnings("unused") SimpleContainer[][] addRefs(SimpleContainer[][] array) {
-    if (array == null)
-      return null;
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRefs)
-        .toArray((x) -> new SimpleContainer[x][]);
   }
 }
