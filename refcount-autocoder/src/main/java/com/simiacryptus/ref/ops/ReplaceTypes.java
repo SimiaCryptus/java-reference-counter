@@ -32,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -87,6 +88,7 @@ public class ReplaceTypes extends RefASTOperator {
     replacements.put(Deque.class, RefDeque.class);
     replacements.put(DoubleStream.class, RefDoubleStream.class);
     replacements.put(Map.Entry.class, RefEntry.class);
+    replacements.put(WeakReference.class, RefWeakReference.class);
     replacements.put(HashMap.class, RefHashMap.class);
     replacements.put(HashSet.class, RefHashSet.class);
     replacements.put(IntStream.class, RefIntStream.class);

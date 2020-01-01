@@ -24,8 +24,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Simple container.
  */
-public @com.simiacryptus.ref.lang.RefAware
-class SimpleContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class SimpleContainer extends ReferenceCountingBase {
   /**
    * The Value.
    */
@@ -36,7 +35,12 @@ class SimpleContainer extends ReferenceCountingBase {
    */
   public SimpleContainer() {
     {
-      value = new BasicType();
+      com.simiacryptus.demo.refcount.BasicType temp_01_0001 = new BasicType();
+      if (null != value)
+        value.freeRef();
+      value = temp_01_0001 == null ? null : temp_01_0001.addRef();
+      if (null != temp_01_0001)
+        temp_01_0001.freeRef();
     }
   }
 
@@ -47,22 +51,20 @@ class SimpleContainer extends ReferenceCountingBase {
    */
   public SimpleContainer(BasicType value) {
     {
-      this.value = value;
+      com.simiacryptus.demo.refcount.BasicType temp_01_0002 = value == null ? null : value.addRef();
+      if (null != this.value)
+        this.value.freeRef();
+      this.value = temp_01_0002 == null ? null : temp_01_0002.addRef();
+      if (null != temp_01_0002)
+        temp_01_0002.freeRef();
     }
+    if (null != value)
+      value.freeRef();
   }
 
-  public static SimpleContainer[] addRefs(SimpleContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRef)
-        .toArray((x) -> new SimpleContainer[x]);
-  }
-
-  public static SimpleContainer[][] addRefs(SimpleContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRefs)
-        .toArray((x) -> new SimpleContainer[x][]);
-  }
-
-  public @Override
-  void _free() {
+  public @Override void _free() {
+    if (null != value)
+      value.freeRef();
     super._free();
   }
 
@@ -78,8 +80,21 @@ class SimpleContainer extends ReferenceCountingBase {
     return "SimpleContainer{" + "values=" + value + '}';
   }
 
-  public @Override
-  SimpleContainer addRef() {
+  public @Override @SuppressWarnings("unused") SimpleContainer addRef() {
     return (SimpleContainer) super.addRef();
+  }
+
+  public static @SuppressWarnings("unused") SimpleContainer[] addRefs(SimpleContainer[] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRef)
+        .toArray((x) -> new SimpleContainer[x]);
+  }
+
+  public static @SuppressWarnings("unused") SimpleContainer[][] addRefs(SimpleContainer[][] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(SimpleContainer::addRefs)
+        .toArray((x) -> new SimpleContainer[x][]);
   }
 }

@@ -45,9 +45,7 @@ public class InsertAddRefs extends RefASTOperator {
         final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
         if (null == resolveTypeBinding) {
           warn(arg, "Unresolved binding");
-          return;
-        }
-        if (isRefCounted(arg, resolveTypeBinding)) {
+        } else if (isRefCounted(arg, resolveTypeBinding)) {
           arguments.set(i, wrapAddRef(expression, resolveTypeBinding));
           info(node, "Argument addRef for %s: %s (%s) defined", name, resolveTypeBinding.getQualifiedName(), expression);
         } else {
@@ -76,9 +74,7 @@ public class InsertAddRefs extends RefASTOperator {
     final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
     if (null == resolveTypeBinding) {
       warn(expression, "Unresolved binding for %s", expression);
-      return;
-    }
-    if (isRefCounted(expression, resolveTypeBinding)) {
+    } else if (isRefCounted(expression, resolveTypeBinding)) {
       replace(expression, wrapAddRef(expression, resolveTypeBinding));
       info(expression, "%s.addRef", expression);
     } else {

@@ -24,8 +24,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Array container.
  */
-public @com.simiacryptus.ref.lang.RefAware
-class ArrayContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class ArrayContainer extends ReferenceCountingBase {
   /**
    * The Values.
    */
@@ -38,22 +37,21 @@ class ArrayContainer extends ReferenceCountingBase {
    */
   public ArrayContainer(BasicType... values) {
     {
-      this.values = values;
+      com.simiacryptus.demo.refcount.BasicType[] temp_03_0001 = com.simiacryptus.demo.refcount.BasicType
+          .addRefs(values);
+      if (null != this.values)
+        com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(this.values);
+      this.values = com.simiacryptus.demo.refcount.BasicType.addRefs(temp_03_0001);
+      if (null != temp_03_0001)
+        com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(temp_03_0001);
     }
+    if (null != values)
+      com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(values);
   }
 
-  public static ArrayContainer[] addRefs(ArrayContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRef)
-        .toArray((x) -> new ArrayContainer[x]);
-  }
-
-  public static ArrayContainer[][] addRefs(ArrayContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRefs)
-        .toArray((x) -> new ArrayContainer[x][]);
-  }
-
-  public @Override
-  void _free() {
+  public @Override void _free() {
+    if (null != values)
+      com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(values);
     super._free();
   }
 
@@ -61,14 +59,19 @@ class ArrayContainer extends ReferenceCountingBase {
    * Test.
    */
   public void test() {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(this.values).forEach(x -> {
-      x.setValue(x.getValue() + 1);
-    });
+    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
+        .forEach(x -> {
+          x.setValue(x.getValue() + 1);
+          if (null != x)
+            x.freeRef();
+        });
   }
 
   @Override
   public String toString() {
-    return "ArrayContainer{" + "values=" + com.simiacryptus.ref.wrappers.RefArrays.toString(values) + '}';
+    return "ArrayContainer{" + "values="
+        + com.simiacryptus.ref.wrappers.RefArrays.toString(com.simiacryptus.demo.refcount.BasicType.addRefs(values))
+        + '}';
   }
 
   /**
@@ -77,10 +80,17 @@ class ArrayContainer extends ReferenceCountingBase {
    * @param right the right
    */
   public void useClosures1(BasicType right) {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(this.values)
-        .forEach((com.simiacryptus.ref.wrappers.RefConsumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
-          x.setValue(x.getValue() + right.getValue());
-        });
+    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
+        .forEach(
+            (com.simiacryptus.ref.wrappers.RefConsumer<? super com.simiacryptus.demo.refcount.BasicType>) com.simiacryptus.ref.lang.RefUtil
+                .wrapInterface(
+                    (com.simiacryptus.ref.wrappers.RefConsumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
+                      x.setValue(x.getValue() + right.getValue());
+                      if (null != x)
+                        x.freeRef();
+                    }, right == null ? null : right.addRef()));
+    if (null != right)
+      right.freeRef();
   }
 
   /**
@@ -89,17 +99,22 @@ class ArrayContainer extends ReferenceCountingBase {
    * @param right the right
    */
   public void useClosures2(BasicType right) {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(this.values)
-        .forEach(new com.simiacryptus.ref.wrappers.RefConsumer<BasicType>() {
-          @Override
-          public void accept(BasicType x) {
-            x.setValue(x.getValue() + right.getValue());
-          }
+    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
+        .forEach(
+            com.simiacryptus.ref.lang.RefUtil.wrapInterface(new com.simiacryptus.ref.wrappers.RefConsumer<BasicType>() {
+              @Override
+              public void accept(BasicType x) {
+                x.setValue(x.getValue() + right.getValue());
+                if (null != x)
+                  x.freeRef();
+              }
 
-          public void _free() {
-          }
+              public void _free() {
+              }
 
-        });
+            }, right == null ? null : right.addRef()));
+    if (null != right)
+      right.freeRef();
   }
 
   /**
@@ -108,21 +123,44 @@ class ArrayContainer extends ReferenceCountingBase {
    * @param right the right
    */
   public void useClosures3(BasicType right) {
-    com.simiacryptus.ref.wrappers.RefArrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
-      @Override
-      public void accept(BasicType x) {
-        x.setValue(x.getValue() + right.getValue());
-      }
+    com.simiacryptus.ref.wrappers.RefArrays.stream(com.simiacryptus.demo.refcount.BasicType.addRefs(this.values))
+        .forEach(new RefAwareConsumer<BasicType>() {
+          @Override
+          public void accept(BasicType x) {
+            x.setValue(x.getValue() + right.getValue());
+            if (null != x)
+              x.freeRef();
+          }
 
-      public @Override
-      void _free() {
-        super._free();
-      }
-    });
+          public @Override void _free() {
+            if (null != right)
+              right.freeRef();
+            super._free();
+          }
+
+          {
+            right.addRef();
+          }
+        });
+    if (null != right)
+      right.freeRef();
   }
 
-  public @Override
-  ArrayContainer addRef() {
+  public @Override @SuppressWarnings("unused") ArrayContainer addRef() {
     return (ArrayContainer) super.addRef();
+  }
+
+  public static @SuppressWarnings("unused") ArrayContainer[] addRefs(ArrayContainer[] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRef)
+        .toArray((x) -> new ArrayContainer[x]);
+  }
+
+  public static @SuppressWarnings("unused") ArrayContainer[][] addRefs(ArrayContainer[][] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(ArrayContainer::addRefs)
+        .toArray((x) -> new ArrayContainer[x][]);
   }
 }

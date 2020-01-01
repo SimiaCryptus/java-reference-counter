@@ -3,7 +3,6 @@ package com.simiacryptus.ref.core.ops;
 import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.core.SymbolIndex;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -127,11 +126,11 @@ public abstract class ASTEditor extends LoggingASTVisitor {
   }
 
   @NotNull
-  protected SymbolIndex.Span getSpan(ASTNode node) {
+  protected ASTEditor.Span getSpan(ASTNode node) {
     final int startPosition = node.getStartPosition();
     final int length = node.getLength();
 
-    return new SymbolIndex.Span(
+    return new Span(
         file,
         compilationUnit.getLineNumber(startPosition),
         compilationUnit.getColumnNumber(startPosition),
@@ -187,6 +186,27 @@ public abstract class ASTEditor extends LoggingASTVisitor {
       mismatches.putAll(other.mismatches);
       errors.addAll(other.errors);
       return this;
+    }
+  }
+
+  public static class Span {
+    public final int lineStart;
+    public final int colStart;
+    public final int lineEnd;
+    private final int colEnd;
+    private final File file;
+
+    public Span(File file, int lineStart, int colStart, int lineEnd, int colEnd) {
+      this.file = file;
+      this.lineStart = lineStart;
+      this.colStart = colStart;
+      this.lineEnd = lineEnd;
+      this.colEnd = colEnd;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s:{%d:%d-%d:%d}", file.getName(), lineStart, colStart, lineEnd, colEnd);
     }
   }
 }

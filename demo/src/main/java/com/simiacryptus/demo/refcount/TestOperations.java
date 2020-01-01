@@ -27,12 +27,11 @@ import java.util.Random;
 /**
  * The type Test operations.
  */
-public @com.simiacryptus.ref.lang.RefAware
-class TestOperations extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class TestOperations extends ReferenceCountingBase {
   /**
    * The constant count.
    */
-  public static final int count = 2;
+  public static final int count = 1;
   /**
    * The constant random.
    */
@@ -56,37 +55,47 @@ class TestOperations extends ReferenceCountingBase {
   public static void main(String... args) {
     final TestOperations testOperations2424 = new TestOperations();
     testOperations2424.run();
+    if (null != testOperations2424)
+      testOperations2424.freeRef();
   }
 
-  public static TestOperations[] addRefs(TestOperations[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRef)
-        .toArray((x) -> new TestOperations[x]);
-  }
-
-  public static TestOperations[][] addRefs(TestOperations[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRefs)
-        .toArray((x) -> new TestOperations[x][]);
-  }
-
-  public @Override
-  void _free() {
+  public @Override void _free() {
+    if (null != treeSetContainer)
+      treeSetContainer.freeRef();
+    if (null != hashSetContainer)
+      hashSetContainer.freeRef();
+    if (null != concurrentHashMapValuesContainer)
+      concurrentHashMapValuesContainer.freeRef();
+    if (null != linkedHashMapValuesContainer)
+      linkedHashMapValuesContainer.freeRef();
+    if (null != hashMapValuesContainer)
+      hashMapValuesContainer.freeRef();
+    if (null != deququeContainer)
+      deququeContainer.freeRef();
+    if (null != linkedListContainer)
+      linkedListContainer.freeRef();
+    if (null != arrayListContainer)
+      arrayListContainer.freeRef();
+    if (null != arrayContainer)
+      arrayContainer.freeRef();
+    if (null != simpleContainer)
+      simpleContainer.freeRef();
     super._free();
-  }
-
-  public @Override
-  TestOperations addRef() {
-    return (TestOperations) super.addRef();
   }
 
   private void run() {
     BasicType basicType = testBasicType();
     testSimpleContainer();
-    test(basicType);
+    test(basicType == null ? null : basicType.addRef());
+    if (null != basicType)
+      basicType.freeRef();
   }
 
   private void test(BasicType datum1) {
     testList();
-    testArray(new BasicType[]{datum1});
+    testArray(new BasicType[] { datum1 == null ? null : datum1.addRef() });
+    if (null != datum1)
+      datum1.freeRef();
     testSet();
     testDeque();
     testMap();
@@ -94,22 +103,28 @@ class TestOperations extends ReferenceCountingBase {
 
   private void testArray(BasicType[] values) {
     {
-      {
-        this.arrayContainer = new ArrayContainer(values);
-      }
-      for (int i = 0; i < count; i++) {
-        arrayContainer.test();
-      }
-      arrayContainer.useClosures1(testBasicType());
-      arrayContainer.useClosures2(testBasicType());
-      arrayContainer.useClosures3(testBasicType());
+      com.simiacryptus.demo.refcount.ArrayContainer temp_04_0001 = new ArrayContainer(
+          com.simiacryptus.demo.refcount.BasicType.addRefs(values));
+      if (null != this.arrayContainer)
+        this.arrayContainer.freeRef();
+      this.arrayContainer = temp_04_0001 == null ? null : temp_04_0001.addRef();
+      if (null != temp_04_0001)
+        temp_04_0001.freeRef();
     }
+    if (null != values)
+      com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(values);
+    for (int i = 0; i < count; i++) {
+      arrayContainer.test();
+    }
+    arrayContainer.useClosures1(testBasicType());
+    arrayContainer.useClosures2(testBasicType());
+    arrayContainer.useClosures3(testBasicType());
   }
 
   @NotNull
   private BasicType testBasicType() {
     BasicType datum1 = new BasicType();
-    testBasicType(datum1);
+    com.simiacryptus.ref.lang.RefUtil.freeRef(testBasicType(datum1 == null ? null : datum1.addRef()));
     return datum1;
   }
 
@@ -122,86 +137,133 @@ class TestOperations extends ReferenceCountingBase {
 
   private void testDeque() {
     {
-      {
-        this.deququeContainer = new DeququeContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        deququeContainer.test();
-      }
+      com.simiacryptus.demo.refcount.DeququeContainer temp_04_0002 = new DeququeContainer();
+      if (null != this.deququeContainer)
+        this.deququeContainer.freeRef();
+      this.deququeContainer = temp_04_0002 == null ? null : temp_04_0002.addRef();
+      if (null != temp_04_0002)
+        temp_04_0002.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      deququeContainer.test();
     }
   }
 
   private void testList() {
     {
-      {
-        this.arrayListContainer = new ArrayListContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        arrayListContainer.test();
-      }
+      com.simiacryptus.demo.refcount.ArrayListContainer temp_04_0003 = new ArrayListContainer();
+      if (null != this.arrayListContainer)
+        this.arrayListContainer.freeRef();
+      this.arrayListContainer = temp_04_0003 == null ? null : temp_04_0003.addRef();
+      if (null != temp_04_0003)
+        temp_04_0003.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      arrayListContainer.test();
     }
     {
-      {
-        this.linkedListContainer = new LinkedListContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        linkedListContainer.test();
-      }
+      com.simiacryptus.demo.refcount.LinkedListContainer temp_04_0004 = new LinkedListContainer();
+      if (null != this.linkedListContainer)
+        this.linkedListContainer.freeRef();
+      this.linkedListContainer = temp_04_0004 == null ? null : temp_04_0004.addRef();
+      if (null != temp_04_0004)
+        temp_04_0004.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      linkedListContainer.test();
     }
   }
 
   private void testMap() {
     {
-      {
-        this.hashMapValuesContainer = new HashMapValuesContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        hashMapValuesContainer.test();
-      }
+      com.simiacryptus.demo.refcount.HashMapValuesContainer temp_04_0005 = new HashMapValuesContainer();
+      if (null != this.hashMapValuesContainer)
+        this.hashMapValuesContainer.freeRef();
+      this.hashMapValuesContainer = temp_04_0005 == null ? null : temp_04_0005.addRef();
+      if (null != temp_04_0005)
+        temp_04_0005.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      hashMapValuesContainer.test();
     }
     {
-      {
-        this.linkedHashMapValuesContainer = new LinkedHashMapValuesContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        linkedHashMapValuesContainer.test();
-      }
+      com.simiacryptus.demo.refcount.LinkedHashMapValuesContainer temp_04_0006 = new LinkedHashMapValuesContainer();
+      if (null != this.linkedHashMapValuesContainer)
+        this.linkedHashMapValuesContainer.freeRef();
+      this.linkedHashMapValuesContainer = temp_04_0006 == null ? null : temp_04_0006.addRef();
+      if (null != temp_04_0006)
+        temp_04_0006.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      linkedHashMapValuesContainer.test();
     }
     {
-      {
-        this.concurrentHashMapValuesContainer = new ConcurrentHashMapValuesContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        concurrentHashMapValuesContainer.test();
-      }
+      com.simiacryptus.demo.refcount.ConcurrentHashMapValuesContainer temp_04_0007 = new ConcurrentHashMapValuesContainer();
+      if (null != this.concurrentHashMapValuesContainer)
+        this.concurrentHashMapValuesContainer.freeRef();
+      this.concurrentHashMapValuesContainer = temp_04_0007 == null ? null : temp_04_0007.addRef();
+      if (null != temp_04_0007)
+        temp_04_0007.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      concurrentHashMapValuesContainer.test();
     }
   }
 
   private void testSet() {
     {
-      {
-        this.hashSetContainer = new HashSetContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        hashSetContainer.test();
-      }
+      com.simiacryptus.demo.refcount.HashSetContainer temp_04_0008 = new HashSetContainer();
+      if (null != this.hashSetContainer)
+        this.hashSetContainer.freeRef();
+      this.hashSetContainer = temp_04_0008 == null ? null : temp_04_0008.addRef();
+      if (null != temp_04_0008)
+        temp_04_0008.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      hashSetContainer.test();
     }
     {
-      {
-        this.treeSetContainer = new TreeSetContainer();
-      }
-      for (int i = 0; i < count; i++) {
-        treeSetContainer.test();
-      }
+      com.simiacryptus.demo.refcount.TreeSetContainer temp_04_0009 = new TreeSetContainer();
+      if (null != this.treeSetContainer)
+        this.treeSetContainer.freeRef();
+      this.treeSetContainer = temp_04_0009 == null ? null : temp_04_0009.addRef();
+      if (null != temp_04_0009)
+        temp_04_0009.freeRef();
+    }
+    for (int i = 0; i < count; i++) {
+      treeSetContainer.test();
     }
   }
 
   private void testSimpleContainer() {
     {
-      this.simpleContainer = new SimpleContainer();
+      com.simiacryptus.demo.refcount.SimpleContainer temp_04_0010 = new SimpleContainer();
+      if (null != this.simpleContainer)
+        this.simpleContainer.freeRef();
+      this.simpleContainer = temp_04_0010 == null ? null : temp_04_0010.addRef();
+      if (null != temp_04_0010)
+        temp_04_0010.freeRef();
     }
     for (int i = 0; i < count; i++) {
       simpleContainer.test();
     }
+  }
+
+  public @Override @SuppressWarnings("unused") TestOperations addRef() {
+    return (TestOperations) super.addRef();
+  }
+
+  public static @SuppressWarnings("unused") TestOperations[] addRefs(TestOperations[] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRef)
+        .toArray((x) -> new TestOperations[x]);
+  }
+
+  public static @SuppressWarnings("unused") TestOperations[][] addRefs(TestOperations[][] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(TestOperations::addRefs)
+        .toArray((x) -> new TestOperations[x][]);
   }
 }

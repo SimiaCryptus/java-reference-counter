@@ -40,7 +40,7 @@ public class TestRefAutoCoder {
   public static class Add {
     public static void main(String[] args) {
       try {
-        new com.simiacryptus.ref.Insert.Coder(TestRefAutoCoder.getProjectInfo(), false).rewrite();
+        new com.simiacryptus.ref.Insert.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -50,7 +50,7 @@ public class TestRefAutoCoder {
   public static class Remove {
     public static void main(String[] args) {
       try {
-        new com.simiacryptus.ref.Remove.Coder(TestRefAutoCoder.getProjectInfo(), false).rewrite();
+        new com.simiacryptus.ref.Remove.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();
       } catch (Exception e) {
         e.printStackTrace();
       }

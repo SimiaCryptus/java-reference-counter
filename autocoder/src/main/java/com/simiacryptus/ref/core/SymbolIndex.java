@@ -1,5 +1,6 @@
 package com.simiacryptus.ref.core;
 
+import com.simiacryptus.ref.core.ops.ASTEditor;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
@@ -9,20 +10,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.util.*;
 
 public class SymbolIndex {
   protected static final Logger logger = LoggerFactory.getLogger(SymbolIndex.class);
-  public final HashMap<BindingID, ContextLocation> definitionLocations = new HashMap<>();
-  public final HashMap<BindingID, ASTNode> definitionNodes = new HashMap<>();
-  public final HashMap<BindingID, List<ContextLocation>> references = new HashMap<>();
+  public final HashMap<BindingID, ASTNode> definitions = new HashMap<>();
+  public final HashMap<BindingID, List<ASTNode>> references = new HashMap<>();
 
   public static BindingID getBindingID(@Nonnull IBinding binding) {
     if (null == binding) return null;
     final String path = getPath(binding);
     if (null == path) return null;
-    if (path.contains("::lambda$")) return new BindingID(path, "Lambda");
     else return new BindingID(path, getType(binding));
   }
 
@@ -55,15 +53,16 @@ public class SymbolIndex {
         }
       } else if (variableBinding.isParameter()) {
         final LocalVariableBinding localVariableBinding = ReflectionUtil.getField(variableBinding, "binding");
-        final IMethodBinding methodBinding = variableBinding.getDeclaringMethod();
+        final IMethodBinding declaringMethod = variableBinding.getDeclaringMethod();
         final String paramName = null == variableBinding ? "?" : new String(localVariableBinding.declaration.name);
         final MethodScope declaringScope = (MethodScope) localVariableBinding.declaringScope;
         if (declaringScope.referenceContext instanceof org.eclipse.jdt.internal.compiler.ast.LambdaExpression) {
-          return (Arrays.stream(((org.eclipse.jdt.internal.compiler.ast.LambdaExpression) declaringScope.referenceContext).binding.declaringClass.compoundName)
+          final org.eclipse.jdt.internal.compiler.ast.LambdaExpression lambdaExpression = (org.eclipse.jdt.internal.compiler.ast.LambdaExpression) declaringScope.referenceContext;
+          return (Arrays.stream(lambdaExpression.binding.declaringClass.compoundName)
               .map(x -> new String(x)).reduce((a, b) -> a + "." + b).get()
-              + "::" + new String(((org.eclipse.jdt.internal.compiler.ast.LambdaExpression) declaringScope.referenceContext).binding.selector)) + "::" + paramName;
+              + "::" + new String(lambdaExpression.binding.selector)) + "::" + paramName;
         } else {
-          return getPath(methodBinding) + "::" + paramName;
+          return getPath(declaringMethod) + "::" + paramName;
         }
       } else {
         final IMethodBinding declaringMethod = variableBinding.getDeclaringMethod();
@@ -104,35 +103,36 @@ public class SymbolIndex {
   }
 
   private static String getType(IBinding binding) {
-    String type;
+    if (getPath(binding).matches(".*::lambda\\$\\d+")) {
+      return "Lambda";
+    }
     if (binding instanceof IVariableBinding) {
       final IVariableBinding variableBinding = (IVariableBinding) binding;
       if (variableBinding.isField()) {
-        type = "Field";
+        return "Field";
       } else if (variableBinding.isParameter()) {
-        type = "Parameter";
+        return "Parameter";
       } else {
-        type = "Variable";
+        return "Variable";
       }
     } else if (binding instanceof IMethodBinding) {
-      type = "Method";
+      return "Method";
     } else if (binding instanceof ITypeBinding) {
       if (((ITypeBinding) binding).isAnonymous()) {
-        type = "Anonymous Class";
+        return "Anonymous Class";
       } else {
-        type = "Type";
+        return "Type";
       }
     } else {
-      type = String.format("Other (%s)", binding.getClass().getSimpleName());
+      return String.format("Other (%s)", binding.getClass().getSimpleName());
     }
-    return type;
   }
 
   public static class ContextLocation {
-    public final Span location;
-    public final LinkedHashMap<BindingID, Span> context;
+    public final ASTEditor.Span location;
+    public final LinkedHashMap<BindingID, ASTEditor.Span> context;
 
-    public ContextLocation(Span location, LinkedHashMap<BindingID, Span> context) {
+    public ContextLocation(ASTEditor.Span location, LinkedHashMap<BindingID, ASTEditor.Span> context) {
       this.location = location;
       this.context = context;
     }
@@ -171,32 +171,4 @@ public class SymbolIndex {
     }
   }
 
-  public static class Span {
-    public final int lineStart;
-    public final int colStart;
-    public final int lineEnd;
-    private final int colEnd;
-    private final File file;
-
-    public Span(File file, int lineStart, int colStart, int lineEnd, int colEnd) {
-      this.file = file;
-      this.lineStart = lineStart;
-      this.colStart = colStart;
-      this.lineEnd = lineEnd;
-      this.colEnd = colEnd;
-    }
-
-    public boolean contains(Span location) {
-      if (location.lineStart < lineStart) return false;
-      if (location.lineStart == lineStart && location.colStart < colStart) return false;
-      if (location.lineEnd > lineEnd) return false;
-      if (location.lineEnd == lineEnd && location.colEnd > colEnd) return false;
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("%s:{%d:%d-%d:%d}", file.getName(), lineStart, colStart, lineEnd, colEnd);
-    }
-  }
 }

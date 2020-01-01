@@ -99,7 +99,7 @@ public class InsertFreeRefs extends RefASTOperator {
       final TypeDeclaration typeDeclaration = (TypeDeclaration) fieldParent;
       final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(typeDeclaration, "_free");
       if (freeMethodOpt.isPresent()) {
-        info(declaration, "Adding freeRef for %s::%s to %s", typeDeclaration.getName(), declaration.getName(), "(" + getLocation(name) + ")");
+        info(declaration, "Adding freeRef for %s to (%s)", name, getLocation(name));
         freeMethodOpt.get().getBody().statements().add(0, ASTUtil.hasAnnotation(declaration.resolveBinding(), Nonnull.class) ? newFreeRef(name, typeBinding) : freeRefStatement(name, typeBinding));
       } else {
         warn(declaration, "Cannot add freeRef for %s::%s - no _free method", typeDeclaration.getName(), declaration.getName());
@@ -124,6 +124,13 @@ public class InsertFreeRefs extends RefASTOperator {
     if (null == body) {
       warn(node, "No body for %s", node);
       return;
+    }
+    for (int i = Math.max(declaredAt, 0); i < body.statements().size(); i++) {
+      final Statement statement = (Statement) body.statements().get(i);
+      if(statement instanceof SuperConstructorInvocation) {
+        declaredAt = i;
+        break;
+      }
     }
     final StatementOfInterest lastMention = lastMention(body, node, declaredAt);
     if (null == lastMention) {
@@ -318,7 +325,7 @@ public class InsertFreeRefs extends RefASTOperator {
     final SimpleName name = ast.newSimpleName(identifier);
     statements.add(lineNumber + 1, isNonNull ? newFreeRef(name, typeBinding) : freeRefStatement(name, typeBinding));
     statements.add(lineNumber, newLocalVariable(identifier, node, type));
-    info(node, "Wrapped method call with freeref at line %s", lineNumber);
+    info(node, "Wrapped method call with freeRef for %s at line %s", name, lineNumber);
   }
 
   protected Type getType(@NotNull Expression node, ITypeBinding typeBinding, boolean isDeclaration) {
@@ -392,6 +399,7 @@ public class InsertFreeRefs extends RefASTOperator {
       tryStatement.getBody().statements().add(returnStatement);
       tryStatement.setFinally(ast.newBlock());
       tryStatement.getFinally().statements().add(isNonNull ? newFreeRef(node, typeBinding) : freeRefStatement(node, typeBinding));
+      info(node, "Added freeRef in finally for %s", node);
     } else {
       statements.add(line, isNonNull ? newFreeRef(copyIfAttached(node), typeBinding) : freeRefStatement(copyIfAttached(node), typeBinding));
       statements.add(line, newLocalVariable);
@@ -412,9 +420,10 @@ public class InsertFreeRefs extends RefASTOperator {
       replace(throwStatement, tryStatement);
       tryStatement.getBody().statements().add(throwStatement);
       tryStatement.setFinally(ast.newBlock());
-      tryStatement.getFinally().statements().add(isNonNull ? freeRefStatement(node, typeBinding) : freeRefStatement(node, typeBinding));
+      tryStatement.getFinally().statements().add(freeRefStatement(node, typeBinding));
+      info(block, "Added freeRef in finally for %s", node);
     } else {
-      statements.add(line, isNonNull ? freeRefStatement(copyIfAttached(node), typeBinding) : freeRefStatement(copyIfAttached(node), typeBinding));
+      statements.add(line, freeRefStatement(copyIfAttached(node), typeBinding));
       statements.add(line, newLocalVariable);
       throwStatement.setExpression(ast.newSimpleName(identifier));
       info(block, "Added freeRef for throw value %s", node);

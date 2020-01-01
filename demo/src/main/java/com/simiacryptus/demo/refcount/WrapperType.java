@@ -27,8 +27,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
  *
  * @param <T> the type parameter
  */
-public @com.simiacryptus.ref.lang.RefAware
-class WrapperType<T extends ReferenceCounting>
+public @com.simiacryptus.ref.lang.RefAware class WrapperType<T extends ReferenceCounting>
     extends ReferenceCountingBase {
   private T inner;
 
@@ -38,7 +37,9 @@ class WrapperType<T extends ReferenceCounting>
    * @param inner the inner
    */
   public WrapperType(T inner) {
-    this.setInner(inner);
+    com.simiacryptus.ref.lang.RefUtil.freeRef(this.setInner(com.simiacryptus.ref.lang.RefUtil.addRef(inner)));
+    if (null != inner)
+      inner.freeRef();
   }
 
   /**
@@ -47,37 +48,49 @@ class WrapperType<T extends ReferenceCounting>
    * @return the inner
    */
   public T getInner() {
-    return inner;
+    return com.simiacryptus.ref.lang.RefUtil.addRef(inner);
   }
 
   /**
    * Sets inner.
    *
-   * @param inner the inner
+   * @param innerWrapperType the inner
    * @return the inner
    */
-  public WrapperType<T> setInner(T inner) {
+  public WrapperType<T> setInner(T innerWrapperType) {
     {
-      this.inner = inner;
+      T temp_02_0001 = com.simiacryptus.ref.lang.RefUtil.addRef(innerWrapperType);
+      if (null != this.inner)
+        this.inner.freeRef();
+      this.inner = com.simiacryptus.ref.lang.RefUtil.addRef(temp_02_0001);
+      if (null != temp_02_0001)
+        temp_02_0001.freeRef();
     }
-    return this;
+    if (null != innerWrapperType)
+      innerWrapperType.freeRef();
+    return this.addRef();
   }
 
-  public static WrapperType[] addRefs(WrapperType[] array) {
+  public void _free() {
+    if (null != inner)
+      inner.freeRef();
+  }
+
+  public @Override @SuppressWarnings("unused") WrapperType<T> addRef() {
+    return (WrapperType<T>) super.addRef();
+  }
+
+  public static @SuppressWarnings("unused") WrapperType[] addRefs(WrapperType[] array) {
+    if (array == null)
+      return null;
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(WrapperType::addRef)
         .toArray((x) -> new WrapperType[x]);
   }
 
-  public static WrapperType[][] addRefs(WrapperType[][] array) {
+  public static @SuppressWarnings("unused") WrapperType[][] addRefs(WrapperType[][] array) {
+    if (array == null)
+      return null;
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(WrapperType::addRefs)
         .toArray((x) -> new WrapperType[x][]);
-  }
-
-  public void _free() {
-  }
-
-  public @Override
-  WrapperType<T> addRef() {
-    return (WrapperType<T>) super.addRef();
   }
 }

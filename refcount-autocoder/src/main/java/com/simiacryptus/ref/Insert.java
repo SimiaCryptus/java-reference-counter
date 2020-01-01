@@ -54,21 +54,19 @@ public class Insert extends RefAutoCoderMojo {
         new ModifyAPI.Coder(projectInfo).rewrite();
       }
       rewrite(InsertAddRefs.ModifyArrayInitializer::new);
-      rewrite(InsertAddRefs.ModifyAssignment::new);
-      rewrite(InsertAddRefs.ModifyAssignment::new);
       rewrite(InsertAddRefs.ModifyClassInstanceCreation::new);
       rewrite(InsertAddRefs.ModifyConstructorInvocation::new);
       rewrite(InsertAddRefs.ModifyMethodInvocation::new);
       rewrite(InsertAddRefs.ModifyReturnStatement::new);
+      rewrite(InsertAddRefs.ModifyAssignment::new);
       rewrite(InsertAddRefs.ModifyVariableDeclarationFragment::new);
       rewrite(ModifyAssignments::new);
+      rewrite(InsertFreeRefs.ModifyVariableDeclarationFragment::new);
       rewrite(InsertFreeRefs.ModifySingleVariableDeclaration::new);
       rewrite(InsertFreeRefs.ModifyClassInstanceCreation::new);
       rewrite(InsertFreeRefs.ModifyMethodInvocation::new);
-      rewrite(InsertFreeRefs.ModifyVariableDeclarationFragment::new);
-      SymbolIndex index = getSymbolIndex();
-      rewrite((projectInfo, cu, file) -> new InstrumentClosures.ModifyAnonymousClassDeclaration(projectInfo, cu, file, index));
-      rewrite((projectInfo, cu, file) -> new InstrumentClosures.ModifyLambdaExpression(projectInfo, cu, file, index));
+      rewrite(InstrumentClosures.ModifyAnonymousClassDeclaration::new);
+      rewrite(InstrumentClosures.ModifyLambdaExpression::new);
       rewrite(OptimizeRefs::new);
     }
   }

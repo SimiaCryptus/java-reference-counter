@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ASTUtil {
 
@@ -126,6 +127,15 @@ public class ASTUtil {
   public static MarkerAnnotation annotation_override(@NotNull AST ast) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
     annotation.setTypeName(ast.newSimpleName("Override"));
+    return annotation;
+  }
+
+  public static SingleMemberAnnotation annotation_SuppressWarnings(@NotNull AST ast, String label) {
+    final SingleMemberAnnotation annotation = ast.newSingleMemberAnnotation();
+    annotation.setTypeName(ast.newSimpleName("SuppressWarnings"));
+    final StringLiteral stringLiteral = ast.newStringLiteral();
+    stringLiteral.setLiteralValue(label);
+    annotation.setValue(stringLiteral);
     return annotation;
   }
 
@@ -247,5 +257,17 @@ public class ASTUtil {
     if (statement instanceof ReturnStatement) return true;
     if (statement instanceof ThrowStatement) return true;
     return false;
+  }
+
+  public static boolean contains(ASTNode node, ASTNode searchFor) {
+    final AtomicBoolean returnValue = new AtomicBoolean(false);
+    node.accept(new ASTVisitor() {
+      @Override
+      public void postVisit(ASTNode node) {
+        if(node.equals(searchFor)) returnValue.set(true);
+        super.postVisit(node);
+      }
+    });
+    return returnValue.get();
   }
 }

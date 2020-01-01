@@ -24,8 +24,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 /**
  * The type Hash set container.
  */
-public @com.simiacryptus.ref.lang.RefAware
-class HashSetContainer extends ReferenceCountingBase {
+public @com.simiacryptus.ref.lang.RefAware class HashSetContainer extends ReferenceCountingBase {
   /**
    * Test.
    */
@@ -38,21 +37,15 @@ class HashSetContainer extends ReferenceCountingBase {
     }
   }
 
-  public static HashSetContainer[] addRefs(HashSetContainer[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRef)
-        .toArray((x) -> new HashSetContainer[x]);
-  }
-
-  public static HashSetContainer[][] addRefs(HashSetContainer[][] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRefs)
-        .toArray((x) -> new HashSetContainer[x][]);
-  }
-
   private static void testStreamOperations() {
     testOperations(values -> {
       values.stream().forEach(x -> {
         x.setValue(x.getValue() + 1);
+        if (null != x)
+          x.freeRef();
       });
+      if (null != values)
+        values.freeRef();
     });
   }
 
@@ -60,59 +53,114 @@ class HashSetContainer extends ReferenceCountingBase {
     testOperations(values -> {
       values.add(new BasicType());
       if (0 == values.size()) {
+        if (null != values)
+          values.freeRef();
         throw new RuntimeException();
       }
       if (false) {
         if (values.size() != values.toArray().length) {
+          if (null != values)
+            values.freeRef();
           throw new RuntimeException();
         }
       }
-      if (values.size() != values.toArray(new BasicType[]{}).length) {
+      com.simiacryptus.demo.refcount.BasicType[] temp_10_0001 = values.toArray(new BasicType[] {});
+      if (values.size() != temp_10_0001.length) {
+        if (null != values)
+          values.freeRef();
         throw new RuntimeException();
       }
-      values.toArray(new BasicType[]{});
+      if (null != temp_10_0001)
+        com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(temp_10_0001);
+      com.simiacryptus.ref.lang.ReferenceCounting.freeRefs(values.toArray(new BasicType[] {}));
+      if (null != values)
+        values.freeRef();
     });
   }
 
   private static void testElementOperations() {
     testOperations(values -> {
       if (!values.isEmpty()) {
+        if (null != values)
+          values.freeRef();
         throw new RuntimeException();
       }
       final BasicType basicType1 = new BasicType();
-      if (!values.add(basicType1)) {
+      if (!values.add(basicType1 == null ? null : basicType1.addRef())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
-      if (!values.contains(basicType1)) {
+      if (!values.contains(basicType1 == null ? null : basicType1.addRef())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
-      if (values.add(values.iterator().next())) {
+      com.simiacryptus.ref.wrappers.RefIterator<com.simiacryptus.demo.refcount.BasicType> temp_10_0002 = values
+          .iterator();
+      if (values.add(temp_10_0002.next())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
-      values.iterator();
-      if (!values.contains(basicType1)) {
+      if (null != temp_10_0002)
+        temp_10_0002.freeRef();
+      com.simiacryptus.ref.lang.RefUtil.freeRef(values.iterator());
+      if (!values.contains(basicType1 == null ? null : basicType1.addRef())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
-      if (!values.remove(basicType1)) {
+      if (!values.remove(basicType1 == null ? null : basicType1.addRef())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
-      if (values.remove(basicType1)) {
+      if (values.remove(basicType1 == null ? null : basicType1.addRef())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
-      if (!values.add(basicType1)) {
+      if (!values.add(basicType1 == null ? null : basicType1.addRef())) {
+        if (null != values)
+          values.freeRef();
+        if (null != basicType1)
+          basicType1.freeRef();
         throw new RuntimeException();
       }
+      if (null != basicType1)
+        basicType1.freeRef();
       values.clear();
       if (!values.isEmpty()) {
+        if (null != values)
+          values.freeRef();
         throw new RuntimeException();
       }
+      if (null != values)
+        values.freeRef();
     });
   }
 
   private static void testOperations(
       com.simiacryptus.ref.wrappers.RefConsumer<com.simiacryptus.ref.wrappers.RefHashSet<BasicType>> setRefConsumer) {
     com.simiacryptus.ref.wrappers.RefHashSet<BasicType> values = new com.simiacryptus.ref.wrappers.RefHashSet<>();
-    setRefConsumer.accept(values);
+    setRefConsumer.accept(values == null ? null : values.addRef());
+    if (null != setRefConsumer)
+      setRefConsumer.freeRef();
+    if (null != values)
+      values.freeRef();
   }
 
   private static void testCollectionOperations() {
@@ -120,30 +168,62 @@ class HashSetContainer extends ReferenceCountingBase {
       setValues.add(new BasicType());
       final BasicType basicType = new BasicType();
       final com.simiacryptus.ref.wrappers.RefList<com.simiacryptus.demo.refcount.BasicType> list = com.simiacryptus.ref.wrappers.RefArrays
-          .asList(basicType);
-      if (!setValues.addAll(list)) {
+          .asList(basicType == null ? null : basicType.addRef());
+      if (null != basicType)
+        basicType.freeRef();
+      if (!setValues.addAll(list == null ? null : list.addRef())) {
+        if (null != setValues)
+          setValues.freeRef();
+        if (null != list)
+          list.freeRef();
         throw new RuntimeException();
       }
-      if (!setValues.containsAll(list)) {
+      if (!setValues.containsAll(list == null ? null : list.addRef())) {
+        if (null != setValues)
+          setValues.freeRef();
+        if (null != list)
+          list.freeRef();
         throw new RuntimeException();
       }
-      if (!setValues.retainAll(list)) {
+      if (!setValues.retainAll(list == null ? null : list.addRef())) {
+        if (null != setValues)
+          setValues.freeRef();
+        if (null != list)
+          list.freeRef();
         throw new RuntimeException();
       }
-      setValues.removeAll(list);
+      setValues.removeAll(list == null ? null : list.addRef());
+      if (null != list)
+        list.freeRef();
       if (!setValues.isEmpty()) {
+        if (null != setValues)
+          setValues.freeRef();
         throw new RuntimeException();
       }
+      if (null != setValues)
+        setValues.freeRef();
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 
-  public @Override
-  HashSetContainer addRef() {
+  public @Override @SuppressWarnings("unused") HashSetContainer addRef() {
     return (HashSetContainer) super.addRef();
+  }
+
+  public static @SuppressWarnings("unused") HashSetContainer[] addRefs(HashSetContainer[] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRef)
+        .toArray((x) -> new HashSetContainer[x]);
+  }
+
+  public static @SuppressWarnings("unused") HashSetContainer[][] addRefs(HashSetContainer[][] array) {
+    if (array == null)
+      return null;
+    return java.util.Arrays.stream(array).filter((x) -> x != null).map(HashSetContainer::addRefs)
+        .toArray((x) -> new HashSetContainer[x][]);
   }
 }

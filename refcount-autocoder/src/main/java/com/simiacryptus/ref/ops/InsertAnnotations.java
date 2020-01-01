@@ -38,10 +38,12 @@ public class InsertAnnotations extends RefASTOperator {
 
   @Override
   public void endVisit(TypeDeclaration node) {
-    final MarkerAnnotation annotation = ast.newMarkerAnnotation();
-    annotation.setTypeName(ASTUtil.newQualifiedName(ast, RefAware.class));
-    node.modifiers().add(annotation);
-    info(node, "Added @RefAware to %s", node.getName());
+    if(!ASTUtil.hasAnnotation(node.resolveBinding(), RefAware.class)) {
+      final MarkerAnnotation annotation = ast.newMarkerAnnotation();
+      annotation.setTypeName(ASTUtil.newQualifiedName(ast, RefAware.class));
+      node.modifiers().add(annotation);
+      info(node, "Added @RefAware to %s", node.getName());
+    }
     super.endVisit(node);
   }
 }

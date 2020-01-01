@@ -243,7 +243,7 @@ public abstract class ASTOperator extends ASTEditor {
           indexReference(root, binding);
         }
       }
-    }.setVerbose(false));
+    }.setVerbose(true));
     return lambdaIndex;
   }
 
@@ -444,6 +444,15 @@ public abstract class ASTOperator extends ASTEditor {
       if (null != binding) return binding;
     }
     return null;
+  }
+
+  protected <T extends ASTNode> T findReparsed(T node) {
+    T reparsed = findReparsed1(node).orElse(null);
+    if (null != reparsed) {
+      return reparsed;
+    }
+    return findReparsed2(node).orElse(null);
+
   }
 
   protected final IBinding resolveBinding(@NotNull Name node) {

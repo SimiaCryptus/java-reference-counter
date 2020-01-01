@@ -76,7 +76,10 @@ public class ModifyAssignments extends RefASTOperator {
           final int lineNumber = block.statements().indexOf(expressionStatement);
           final Expression rightHandSide = assignment.getRightHandSide();
           if (rightHandSide instanceof Name) {
-            if (!isFinal) block.statements().add(lineNumber, freeRefStatement(leftHandSide, typeBinding));
+            if (!isFinal) {
+              block.statements().add(lineNumber, freeRefStatement(leftHandSide, typeBinding));
+              warn(leftHandSide, "Adding freeRef for %s", leftHandSide);
+            }
             assignment.setRightHandSide(wrapAddRef(rightHandSide, typeBinding));
             info(assignment, "Simple field-set statement at line " + lineNumber);
           } else {
@@ -84,7 +87,10 @@ public class ModifyAssignments extends RefASTOperator {
             replace(expressionStatement, exchangeBlock);
             final String identifier = getTempIdentifier(assignment);
             exchangeBlock.statements().add(newLocalVariable(identifier, rightHandSide, getType(assignment, typeBinding.getQualifiedName(), true)));
-            if (!isFinal) exchangeBlock.statements().add(freeRefStatement(leftHandSide, typeBinding));
+            if (!isFinal) {
+              exchangeBlock.statements().add(freeRefStatement(leftHandSide, typeBinding));
+              warn(leftHandSide, "Adding freeRef for %s", leftHandSide);
+            }
             assignment.setRightHandSide(wrapAddRef(ast.newSimpleName(identifier), typeBinding));
             exchangeBlock.statements().add(expressionStatement);
             info(assignment, "Complex field-set statement at line " + lineNumber);

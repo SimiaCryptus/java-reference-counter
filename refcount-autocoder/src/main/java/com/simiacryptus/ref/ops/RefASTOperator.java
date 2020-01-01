@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 
 @RefIgnore
 abstract class RefASTOperator extends ASTOperator {
-
+  private static Map<File, Integer> fileCounters = new HashMap<>();
   private static Map<File, AtomicInteger> identifierCounters = new HashMap<>();
   private String tempVarPrefix = "temp";
 
@@ -119,7 +119,9 @@ abstract class RefASTOperator extends ASTOperator {
   }
 
   protected final String getTempIdentifier(ASTNode node) {
-    final String id = String.format(tempVarPrefix + "%04d", (long) identifierCounters.computeIfAbsent(file, x -> new AtomicInteger(0)).incrementAndGet());
+    final String id = String.format(tempVarPrefix + "_%02d_%04d",
+        (long) fileCounters.computeIfAbsent(file, x -> fileCounters.size()),
+        (long) identifierCounters.computeIfAbsent(file, x -> new AtomicInteger(0)).incrementAndGet());
     info(1, node, "Creating %s", id);
     return id;
   }
@@ -172,7 +174,7 @@ abstract class RefASTOperator extends ASTOperator {
   }
 
   protected final boolean isTempIdentifier(SimpleName name) {
-    return Pattern.matches(tempVarPrefix + "\\d{0,4}", name.toString());
+    return Pattern.matches(tempVarPrefix + "[\\d_]+", name.toString());
   }
 
   protected final boolean methodConsumesSelfRefs(@Nonnull IMethodBinding methodBinding) {
