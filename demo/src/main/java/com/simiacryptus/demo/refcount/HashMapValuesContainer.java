@@ -117,7 +117,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
       final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<com.simiacryptus.ref.wrappers.RefMap.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
+      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<java.util.Map.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
         if (1 == ((int) lambdaParameter.getKey())) {
           if (null == lambdaParameter.getValue()) {
             throw new AssertionError();

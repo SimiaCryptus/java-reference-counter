@@ -84,6 +84,15 @@ abstract class RefASTOperator extends ASTOperator {
     return super.preVisit2(node);
   }
 
+  public MethodDeclaration getMethodDeclaration(ASTNode node) {
+    if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
+    if (node instanceof Statement) return null;
+    if (node instanceof TypeDeclaration) return null;
+    final ASTNode parent = node.getParent();
+    if (null != parent) return getMethodDeclaration(parent);
+    return null;
+  }
+
   protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, ITypeBinding expression) {
     final String methodName = methodBinding.getName();
     if (ASTUtil.hasAnnotation(methodBinding, RefIgnore.class)) return false;

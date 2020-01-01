@@ -23,8 +23,12 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import com.simiacryptus.ref.wrappers.RefPrimitiveIterator;
+import com.simiacryptus.ref.wrappers.RefSpliterator;
 
 /**
  * The type Linked list container.
@@ -147,10 +151,10 @@ public class LinkedListContainer extends ReferenceCountingBase {
 
   private static void testDoubleStream() {
     testOperations(values -> {
-      final java.util.stream.DoubleStream intStream = values.stream().mapToDouble(foobar1 -> {
+      final java.util.stream.DoubleStream doubleStream = values.stream().mapToDouble(foobar1 -> {
         return foobar1.getValue();
       });
-      final com.simiacryptus.ref.wrappers.RefPrimitiveIterator.OfDouble iterator = intStream.iterator();
+      final java.util.PrimitiveIterator.OfDouble iterator = doubleStream.iterator();
       while (iterator.hasNext()) {
         assert null != iterator.next();
       }
@@ -159,7 +163,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       final java.util.stream.DoubleStream intStream = values.stream().mapToDouble(foobar1 -> {
         return foobar1.getValue();
       });
-      final com.simiacryptus.ref.wrappers.RefSpliterator.OfDouble iterator = intStream.spliterator();
+      final java.util.Spliterator.OfDouble iterator = intStream.spliterator();
       iterator.forEachRemaining((double i) -> {
         assert i > 0;
       });
@@ -299,7 +303,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       final java.util.stream.IntStream intStream = values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
       });
-      final com.simiacryptus.ref.wrappers.RefPrimitiveIterator.OfInt iterator = intStream.iterator();
+      final java.util.PrimitiveIterator.OfInt iterator = intStream.iterator();
       while (iterator.hasNext()) {
         assert null != iterator.next();
       }
@@ -308,7 +312,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       final java.util.stream.IntStream intStream = values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
       });
-      final com.simiacryptus.ref.wrappers.RefSpliterator.OfInt iterator = intStream.spliterator();
+      final java.util.Spliterator.OfInt iterator = intStream.spliterator();
       iterator.forEachRemaining((int i) -> {
         assert i > 0;
       });
@@ -497,7 +501,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       final java.util.stream.LongStream intStream = values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
       });
-      final com.simiacryptus.ref.wrappers.RefPrimitiveIterator.OfLong iterator = intStream.iterator();
+      final java.util.PrimitiveIterator.OfLong iterator = intStream.iterator();
       while (iterator.hasNext()) {
         assert null != iterator.next();
       }
@@ -506,7 +510,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       final java.util.stream.LongStream intStream = values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
       });
-      final com.simiacryptus.ref.wrappers.RefSpliterator.OfLong iterator = intStream.spliterator();
+      final java.util.Spliterator.OfLong iterator = intStream.spliterator();
       iterator.forEachRemaining((long i) -> {
         assert i > 0;
       });

@@ -108,6 +108,9 @@ public class ReplaceTypes extends RefASTOperator {
     replacements.put(Queue.class, RefQueue.class);
     replacements.put(Set.class, RefSet.class);
     replacements.put(Spliterator.class, RefSpliterator.class);
+    replacements.put(Spliterator.OfDouble.class, RefSpliterator.OfDouble.class);
+    replacements.put(Spliterator.OfInt.class, RefSpliterator.OfInt.class);
+    replacements.put(Spliterator.OfLong.class, RefSpliterator.OfLong.class);
     replacements.put(Spliterators.class, RefSpliterators.class);
     replacements.put(Stream.class, RefStream.class);
     replacements.put(StreamSupport.class, RefStreamSupport.class);
@@ -119,35 +122,11 @@ public class ReplaceTypes extends RefASTOperator {
     if (node.getParent() instanceof ImportDeclaration) {
       return;
     }
-    final MethodDeclaration methodDeclaration = getMethodDeclaration(node);
-    if (null != methodDeclaration) {
-      final IMethodBinding methodBinding = methodDeclaration.resolveBinding();
-      if (null == methodBinding) {
-        warn(methodDeclaration, "Cannot resolve %s", methodDeclaration);
-      } else {
-        final ITypeBinding declaringClass = methodBinding.getDeclaringClass();
-        if (!ASTUtil.hasAnnotation(declaringClass, RefAware.class)) {
-          info(methodDeclaration, "Method %s is defined by %s, which is NOT ref-aware", methodBinding, declaringClass.getQualifiedName());
-          //return;
-        } else {
-          info(methodDeclaration, "Method %s is defined by %s, which is ref-aware", methodBinding, declaringClass.getQualifiedName());
-        }
-      }
-    }
     final Name replace = replace(node);
     if (null != replace && !node.toString().equals(replace.toString())) {
       replace(node, replace);
       info(node, "Replaced %s with %s", node, replace);
     }
-  }
-
-  public MethodDeclaration getMethodDeclaration(ASTNode node) {
-    if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
-    if (node instanceof Statement) return null;
-    if (node instanceof TypeDeclaration) return null;
-    final ASTNode parent = node.getParent();
-    if (null != parent) return getMethodDeclaration(parent);
-    return null;
   }
 
   protected Name replace(Name node) {
@@ -225,7 +204,6 @@ public class ReplaceTypes extends RefASTOperator {
     @Override
     public void endVisit(QualifiedName node) {
       if (skip(node)) return;
-      if (node.getParent() instanceof QualifiedName) return;
       apply(node);
     }
   }
