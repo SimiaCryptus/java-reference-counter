@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
@@ -250,7 +251,11 @@ public class RefArrays {
    * @param value the value
    * @return the int
    */
+  @SuppressWarnings("unused")
   public static int binarySearch(double[] array, double value) {
+    return Arrays.binarySearch(array, value);
+  }
+  public static int binarySearch(int[] array, int value) {
     return Arrays.binarySearch(array, value);
   }
 
@@ -296,5 +301,25 @@ public class RefArrays {
 
   public static String toString(long[] obj) {
     return Arrays.toString(obj);
+  }
+
+  public static void fill(Object[] array, Object o) {
+    Arrays.fill(array,o);
+  }
+
+  public static void fill(double[] floats, double v) {
+    Arrays.fill(floats, v);
+  }
+  public static void fill(float[] floats, float v) {
+    Arrays.fill(floats, v);
+  }
+  public static float[] copyOf(float[] floats, int length) {
+    return Arrays.copyOf(floats, length);
+  }
+  public static float[] copyOfRange(float[] floats, int from, int to) {
+    return Arrays.copyOfRange(floats, from, to);
+  }
+  public static int[] copyOfRange(int[] floats, int from, int to) {
+    return Arrays.copyOfRange(floats, from, to);
   }
 }

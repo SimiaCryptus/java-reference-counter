@@ -90,6 +90,7 @@ public class ReplaceTypes extends RefASTOperator {
     replacements.put(Map.Entry.class, RefEntry.class);
     replacements.put(WeakReference.class, RefWeakReference.class);
     replacements.put(HashMap.class, RefHashMap.class);
+    replacements.put(TreeMap.class, RefTreeMap.class);
     replacements.put(HashSet.class, RefHashSet.class);
     replacements.put(IntStream.class, RefIntStream.class);
     replacements.put(Iterator.class, RefIterator.class);

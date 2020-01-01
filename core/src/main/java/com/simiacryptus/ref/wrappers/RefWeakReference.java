@@ -28,8 +28,12 @@ import java.lang.ref.WeakReference;
 
 @RefAware
 @RefIgnore
-public abstract class RefWeakReference<T> {
+public class RefWeakReference<T> {
   private final WeakReference<T> inner;
+
+  public RefWeakReference(T inner) {
+    this(new WeakReference<>(inner));
+  }
 
   protected RefWeakReference(WeakReference<T> inner) {
     this.inner = inner;

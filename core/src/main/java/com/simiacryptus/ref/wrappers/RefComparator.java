@@ -23,7 +23,9 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 
+import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
@@ -65,10 +67,19 @@ public class RefComparator<T> implements Comparator<T> {
    * @param fn  the fn
    * @return the comparator
    */
-  public static <T, U extends Comparable<? super U>> Comparator<? super T> comparing(Function<? super T, ? extends U> fn) {
-    return (a, b) -> {
-      return fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b)));
-    };
+  public static <T, U extends Comparable<? super U>> RefComparator<? super T> comparing(Function<? super T, ? extends U> fn) {
+    return new RefComparator<>((a, b) -> fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b))));
+  }
+
+  public RefComparator<T> thenComparingInt(ToIntFunction<? super T> keyExtractor) {
+    return new RefComparator<>(thenComparing(comparingInt(keyExtractor)));
+  }
+
+  public RefComparator<T> thenComparing(Comparator<? super T> other) {
+    return new RefComparator<>((c1, c2) -> {
+      int res = compare(c1, c2);
+      return (res != 0) ? res : other.compare(c1, c2);
+    });
   }
 
   /**

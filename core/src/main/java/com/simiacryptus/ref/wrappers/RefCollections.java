@@ -74,4 +74,8 @@ public class RefCollections {
   public static <T> void shuffle(List<T> list) {
     Collections.shuffle(list);
   }
+
+  public static <T> RefList<T> unmodifiableList(RefList<T> list) {
+    return list; // TODO: Implement me
+  }
 }

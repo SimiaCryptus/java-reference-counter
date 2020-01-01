@@ -58,6 +58,19 @@ public class RefAssert {
     }
   }
 
+  public static void assertArrayEquals(int[] expected, int[] actuals) {
+    assertEquals(expected.length, actuals.length);
+    for (int i = 0; i < expected.length; i++) {
+      assertEquals(expected[i], actuals[i]);
+    }
+  }
+  public static void assertArrayEquals(String message, int[] expected, int[] actuals) {
+    assertEquals(expected.length, actuals.length, message);
+    for (int i = 0; i < expected.length; i++) {
+      assertEquals(expected[i], actuals[i], message);
+    }
+  }
+
   private static boolean equalsRegardingNull(Object expected, Object actual) {
     if (expected == null) {
       final boolean b = actual == null;

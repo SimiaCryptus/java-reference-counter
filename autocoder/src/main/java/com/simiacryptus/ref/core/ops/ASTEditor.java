@@ -100,7 +100,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
 
   protected <T extends ASTNode> ASTMapping update(boolean write, boolean format) {
     if (write) {
-      logger.info(String.format("Writing intermediate changes to %s", file));
       try {
         write(format);
       } catch (Throwable e) {
@@ -119,6 +118,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
 
   protected void write(String data) {
     try {
+      logger.info(String.format("Writing %s", file));
       FileUtils.write(file, data, "UTF-8");
     } catch (IOException e) {
       throw new RuntimeException(e);

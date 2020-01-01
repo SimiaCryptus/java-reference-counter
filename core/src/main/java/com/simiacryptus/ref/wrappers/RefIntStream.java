@@ -401,5 +401,7 @@ public class RefIntStream implements IntStream {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }
   }
-
+  public static RefIntStream iterate(final int seed, final IntUnaryOperator f) {
+    return new RefIntStream(IntStream.iterate(seed, f));
+  }
 }
