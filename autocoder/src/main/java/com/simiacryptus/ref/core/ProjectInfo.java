@@ -96,18 +96,20 @@ public class ProjectInfo {
       fileMap.put(file.getAbsolutePath(), file);
     }
     HashMap<File, CompilationUnit> results = new HashMap<>();
-    newAstParser().createASTs(
-        fileMap.keySet().toArray(new String[]{}),
-        null,
-        new String[]{},
-        new FileASTRequestor() {
-          @Override
-          public void acceptAST(final String source, final CompilationUnit ast) {
-            results.put(fileMap.get(source), ast);
-          }
-        },
-        new NullProgressMonitor()
-    );
+    synchronized (ProjectInfo.class) {
+      newAstParser().createASTs(
+          fileMap.keySet().toArray(new String[]{}),
+          null,
+          new String[]{},
+          new FileASTRequestor() {
+            @Override
+            public void acceptAST(final String source, final CompilationUnit ast) {
+              results.put(fileMap.get(source), ast);
+            }
+          },
+          new NullProgressMonitor()
+      );
+    }
     return results;
   }
 

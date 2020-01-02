@@ -218,8 +218,10 @@ public abstract class ASTEditor extends LoggingASTVisitor {
    */
   protected void write(String data) {
     try {
-      logger.info(String.format("Writing %s", file));
-      FileUtils.write(file, data, "UTF-8");
+      synchronized (ProjectInfo.class) {
+        logger.info(String.format("Writing %s", file));
+        FileUtils.write(file, data, "UTF-8");
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
