@@ -44,5 +44,6 @@ public class WrapperType<T extends ReferenceCounting> extends ReferenceCountingB
   }
 
   public void _free() {
+    inner = null;
   }
 }

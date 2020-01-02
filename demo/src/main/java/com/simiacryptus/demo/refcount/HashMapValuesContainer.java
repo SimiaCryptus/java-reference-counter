@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import com.simiacryptus.ref.wrappers.RefMap;
 
 @SuppressWarnings("unused")
 public class HashMapValuesContainer extends ReferenceCountingBase {
@@ -145,8 +146,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 }

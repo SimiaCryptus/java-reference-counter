@@ -52,7 +52,7 @@ public class DeququeContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[]{}).length) {
+    if (values.size() != values.toArray(new BasicType[] {}).length) {
       throw new RuntimeException();
     }
   }
@@ -396,8 +396,7 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 }

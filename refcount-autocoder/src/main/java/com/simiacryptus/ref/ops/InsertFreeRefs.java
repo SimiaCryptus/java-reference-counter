@@ -125,13 +125,44 @@ public class InsertFreeRefs extends RefASTOperator {
       final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(typeDeclaration, "_free");
       if (freeMethodOpt.isPresent()) {
         debug(declaration, "Adding freeRef for %s to (%s)", name, getLocation(name));
-        freeMethodOpt.get().getBody().statements().add(0, ASTUtil.hasAnnotation(declaration.resolveBinding(), Nonnull.class) ? newFreeRef(name, typeBinding) : freeRefStatement(name, typeBinding));
+        final boolean isFinal = isFinal(declaration);
+        final List<Statement> statements = freeMethodOpt.get().getBody().statements();
+        if(!isFinal) {
+          statements.add(0, ast.newExpressionStatement(setToNull(name)));
+        }
+        statements.add(0, isFinal && ASTUtil.hasAnnotation(declaration.resolveBinding(), Nonnull.class) ? newFreeRef(name, typeBinding) : freeRefStatement(name, typeBinding));
       } else {
         warn(declaration, "Cannot add freeRef for %s::%s - no _free method", typeDeclaration.getName(), declaration.getName());
       }
     } else {
       warn(declaration, "Cannot add freeRef for %s (FieldDeclaration) in %s : %s", name, fieldParent.getClass(), fieldParent.toString().trim());
     }
+  }
+
+  protected boolean isFinal(@Nonnull VariableDeclaration declaration) {
+    if(declaration instanceof SingleVariableDeclaration) {
+      return ((SingleVariableDeclaration) declaration).modifiers().contains(Modifier.FINAL);
+    } else {
+      final ASTNode declarationParent = declaration.getParent();
+      if(declarationParent instanceof VariableDeclarationExpression) {
+        return ((VariableDeclarationExpression) declarationParent).modifiers().contains(Modifier.FINAL);
+      } else if(declarationParent instanceof VariableDeclarationStatement) {
+        return ((VariableDeclarationStatement) declarationParent).modifiers().contains(Modifier.FINAL);
+      } else if(declarationParent instanceof FieldDeclaration) {
+        return ((FieldDeclaration) declarationParent).modifiers().contains(Modifier.FINAL);
+      } else {
+        throw new RuntimeException(declarationParent.getClass().getName());
+      }
+    }
+  }
+
+  @NotNull
+  private Assignment setToNull(@NotNull SimpleName name) {
+    final Assignment assignment = ast.newAssignment();
+    assignment.setLeftHandSide(copyIfAttached(name));
+    assignment.setOperator(Assignment.Operator.ASSIGN);
+    assignment.setRightHandSide(ast.newNullLiteral());
+    return assignment;
   }
 
   /**

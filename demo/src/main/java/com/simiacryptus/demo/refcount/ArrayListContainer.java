@@ -30,8 +30,7 @@ import javax.annotation.Nullable;
 import java.util.function.*;
 
 @SuppressWarnings("unused")
-public @RefAware
-class ArrayListContainer extends ReferenceCountingBase {
+public @RefAware class ArrayListContainer extends ReferenceCountingBase {
   public ArrayListContainer() {
   }
 
@@ -67,7 +66,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[]{}).length) {
+    if (values.size() != values.toArray(new BasicType[] {}).length) {
       throw new RuntimeException();
     }
   }
@@ -114,7 +113,7 @@ class ArrayListContainer extends ReferenceCountingBase {
       if (!values.isEmpty()) {
         throw new RuntimeException();
       }
-      final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
+      final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
       values.addAll(java.util.Arrays.asList(basicTypeN));
       values.add(1, basicType1);
       values.addAll(1, java.util.Arrays.asList(basicTypeN));
@@ -219,8 +218,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         return iterator.next();
       }
 
-      public @Override
-      void _free() {
+      public @Override void _free() {
         super._free();
       }
     }, -1, 0), false).filter(x272 -> {
@@ -244,8 +242,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         return iterator.next();
       }
 
-      public @Override
-      void _free() {
+      public @Override void _free() {
         super._free();
       }
     }, -1, 0), false).filter((Predicate<? super BasicType>) x -> {
@@ -375,17 +372,19 @@ class ArrayListContainer extends ReferenceCountingBase {
     });
     testOperations(values372 -> {
 
-      final @NotNull BasicType[] array374 = values372.toArray(new BasicType[]{});
+      final @NotNull BasicType[] array374 = values372.toArray(new BasicType[] {});
       final int inputIndex = 0;
       @NotNull
       BasicType[] outputPrototype377 = array374;
 
       final BasicType inputTensor = array374[inputIndex];
       final int inputDims = inputTensor.value;
-      @Nonnull final BasicType result = new BasicType();
+      @Nonnull
+      final BasicType result = new BasicType();
       for (int j = 0; j < outputPrototype377.length; j++) {
         final int j_ = j;
-        @Nonnull final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
+        @Nonnull
+        final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
         final WrapperType[] copyInput = java.util.Arrays.stream(array374)
             .map((Function<? super BasicType, ? extends WrapperType>) x -> {
               return new WrapperType(x);
@@ -397,18 +396,18 @@ class ArrayListContainer extends ReferenceCountingBase {
               return super.getInner();
             }
 
-            public @Override
-            void _free() {
+            public @Override void _free() {
               super._free();
             }
           };
         }
-        @Nullable final WrapperType eval;
+        @Nullable
+        final WrapperType eval;
         try {
           eval = new WrapperType(new BasicType());
         } finally {
           for (@Nonnull
-              WrapperType nnResult : copyInput) {
+          WrapperType nnResult : copyInput) {
             nnResult.getInner().assertAlive();
           }
         }
@@ -451,8 +450,8 @@ class ArrayListContainer extends ReferenceCountingBase {
             x.setValue(x.getValue() + 1);
             return java.util.stream.Stream.of(x, new BasicType());
           }).forEach((java.util.function.Consumer<? super BasicType>) x -> {
-        assert x != null;
-      });
+            assert x != null;
+          });
     });
     testOperations(values -> {
       assert values.stream().allMatch((Predicate<? super BasicType>) x -> {
@@ -623,8 +622,7 @@ class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 }
