@@ -141,15 +141,15 @@ public class InsertFreeRefs extends RefASTOperator {
 
   protected boolean isFinal(@Nonnull VariableDeclaration declaration) {
     if(declaration instanceof SingleVariableDeclaration) {
-      return ((SingleVariableDeclaration) declaration).modifiers().contains(Modifier.FINAL);
+      return Modifier.isFinal(((SingleVariableDeclaration) declaration).getModifiers());
     } else {
       final ASTNode declarationParent = declaration.getParent();
       if(declarationParent instanceof VariableDeclarationExpression) {
-        return ((VariableDeclarationExpression) declarationParent).modifiers().contains(Modifier.FINAL);
+        return Modifier.isFinal(((VariableDeclarationExpression) declarationParent).getModifiers());
       } else if(declarationParent instanceof VariableDeclarationStatement) {
-        return ((VariableDeclarationStatement) declarationParent).modifiers().contains(Modifier.FINAL);
+        return Modifier.isFinal(((VariableDeclarationStatement) declarationParent).getModifiers());
       } else if(declarationParent instanceof FieldDeclaration) {
-        return ((FieldDeclaration) declarationParent).modifiers().contains(Modifier.FINAL);
+        return Modifier.isFinal(((FieldDeclaration) declarationParent).getModifiers());
       } else {
         throw new RuntimeException(declarationParent.getClass().getName());
       }
