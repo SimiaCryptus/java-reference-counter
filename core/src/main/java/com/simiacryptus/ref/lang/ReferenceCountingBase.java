@@ -169,7 +169,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   }
 
   public boolean assertAlive() {
-    if (isFinalized) {
+    if (isFinalized()) {
       throw new LifecycleException(this);
     }
     if (isFinalized() && !inFinalizer.get()) {
@@ -193,7 +193,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
 
   @Override
   public int freeRef() {
-    if (isFinalized) {
+    if (isFinalized()) {
       //logger.debug("Object has been finalized");
       return 0;
     }

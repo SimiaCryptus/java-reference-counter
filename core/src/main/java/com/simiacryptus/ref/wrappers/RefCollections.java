@@ -74,7 +74,7 @@ public class RefCollections {
    */
   @NotNull
   public static <K, V> RefMap<K, V> unmodifiableMap(RefMap<K, V> map) {
-    throw new RuntimeException();
+    return map; // TODO: Implement Me
   }
 
   /**
