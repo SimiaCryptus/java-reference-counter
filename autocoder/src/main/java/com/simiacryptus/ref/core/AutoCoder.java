@@ -42,7 +42,7 @@ public abstract class AutoCoder {
    */
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoderMojo.class);
   private final ProjectInfo projectInfo;
-  private boolean parallel = Boolean.parseBoolean(System.getProperty("parallel", Boolean.toString(true)));
+  private boolean parallel = Boolean.parseBoolean(System.getProperty("parallel", Boolean.toString(false)));
 
   /**
    * Instantiates a new Auto coder.
