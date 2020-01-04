@@ -54,10 +54,6 @@ public interface RefComparator<T> extends Comparator<T> {
     return RefComparator.create((a, b) -> fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b))));
   }
 
-  default <U extends Comparable<? super U>> RefComparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor) {
-    return thenComparing(comparing(keyExtractor));
-  }
-
   @NotNull
   public static <T> RefComparator<T> comparingInt(@NotNull ToIntFunction<? super T> keyExtractor) {
     return RefComparator.create(Comparator.comparingInt(keyExtractor));
@@ -71,6 +67,10 @@ public interface RefComparator<T> extends Comparator<T> {
   @NotNull
   public static <T> RefComparator<T> comparingDouble(@NotNull ToDoubleFunction<? super T> keyExtractor) {
     return RefComparator.create(Comparator.comparingDouble(keyExtractor));
+  }
+
+  default <U extends Comparable<? super U>> RefComparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor) {
+    return thenComparing(comparing(keyExtractor));
   }
 
   @NotNull

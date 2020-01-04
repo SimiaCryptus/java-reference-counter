@@ -22,7 +22,7 @@ package com.simiacryptus.ref;
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.ops.*;
+import com.simiacryptus.ref.ops.ValidateTypeHierarchy;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.jetbrains.annotations.NotNull;
 

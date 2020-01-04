@@ -103,13 +103,15 @@ public abstract class AutoCoder {
         if (!failAtEnd) {
           throw new RuntimeException(String.format("Error processing %s with %s", file, astVisitor.getClass().getName()), e);
         } else {
-          errors.add(String.format("Error processing %s with %s - %s", file, astVisitor.getClass().getName(), e.getMessage()));
+          final String msg = String.format("Error processing %s with %s - %s", file, astVisitor.getClass().getName(), e.getMessage());
+          logger.warn(msg, e);
+          errors.add(msg);
           return 0;
         }
       }
     }).sum();
-    if(!errors.isEmpty()) {
-      throw new RuntimeException(errors.stream().reduce((a,b)->a+"\n"+b).get());
+    if (!errors.isEmpty()) {
+      throw new RuntimeException(errors.stream().reduce((a, b) -> a + "\n" + b).get());
     }
     return sum;
   }

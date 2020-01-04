@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefAware;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.NavigableSet;
-import java.util.SortedSet;
 
 @RefAware
 public interface RefNavigableSet<T> extends NavigableSet<T>, RefSet<T> {

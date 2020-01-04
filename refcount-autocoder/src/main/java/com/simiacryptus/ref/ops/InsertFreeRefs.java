@@ -99,7 +99,7 @@ public class InsertFreeRefs extends RefASTOperator {
           warn(declaration, "Cannot add freeRef for %s (VariableDeclarationStatement) in %s : %s", name, parentParent.getClass(), parentParent.toString().trim());
         }
       } else if (parent instanceof FieldDeclaration) {
-        if(!Modifier.isStatic(((FieldDeclaration)parent).getModifiers())) {
+        if (!Modifier.isStatic(((FieldDeclaration) parent).getModifiers())) {
           add_freeRef_entry(declaration, typeBinding, name, parent);
         }
       } else {

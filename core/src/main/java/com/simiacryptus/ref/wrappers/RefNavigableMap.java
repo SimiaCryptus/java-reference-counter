@@ -20,15 +20,11 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.NavigableMap;
-import java.util.NavigableSet;
-import java.util.SortedMap;
-import java.util.SortedSet;
 
 @RefAware
-public interface RefNavigableMap<K,V> extends NavigableMap<K, V>, RefMap<K,V> {
+public interface RefNavigableMap<K, V> extends NavigableMap<K, V>, RefMap<K, V> {
 
   @Override
   RefNavigableMap<K, V> descendingMap();

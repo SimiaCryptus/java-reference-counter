@@ -19,14 +19,12 @@
 
 package com.simiacryptus.ref.ops;
 
-import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.Optional;
 
 @RefIgnore
 public class ValidateTypeHierarchy extends RefASTOperator {
@@ -42,7 +40,7 @@ public class ValidateTypeHierarchy extends RefASTOperator {
       warn(node, "Cannot resolve type of %s", node.getName());
       return;
     }
-    if(!typeBinding.isTopLevel() && !Modifier.isStatic(typeBinding.getModifiers()) && isRefCounted(node, typeBinding)) {
+    if (!typeBinding.isTopLevel() && !Modifier.isStatic(typeBinding.getModifiers()) && isRefCounted(node, typeBinding)) {
       fatal(node, "Non-static inner class cannot be Refcounted", node.getName());
     }
   }
@@ -65,19 +63,12 @@ public class ValidateTypeHierarchy extends RefASTOperator {
     if (isRefCounted(declaration, declarationType)) {
       ASTNode parent = declaration.getParent();
       if (parent instanceof FieldDeclaration) {
-        if(!Modifier.isStatic(((FieldDeclaration)parent).getModifiers())) {
+        if (!Modifier.isStatic(((FieldDeclaration) parent).getModifiers())) {
           final ASTNode fieldParent = parent.getParent();
           if (fieldParent instanceof TypeDeclaration) {
-            final TypeDeclaration typeDeclaration = (TypeDeclaration) fieldParent;
-            final ITypeBinding typeBinding = typeDeclaration.resolveBinding();
-            if(null == typeBinding) {
-              warn(typeDeclaration, "Unresolved binding");
-              return;
-            }
-            final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(typeDeclaration, "_free");
-            if (!isRefCounted(typeDeclaration, typeBinding)) {
-              fatal(declaration, "Unaccountable Reference: %s::%s", typeDeclaration.getName(), declaration.getName());
-            }
+            validateField(declaration, ((TypeDeclaration) fieldParent).resolveBinding());
+          } else if (fieldParent instanceof AnonymousClassDeclaration) {
+            validateField(declaration, ((AnonymousClassDeclaration) fieldParent).resolveBinding());
           } else {
             fatal(declaration, "Cannot add freeRef for %s (FieldDeclaration) in %s : %s", declaration.getName(), fieldParent.getClass(), fieldParent.toString().trim());
           }
@@ -85,6 +76,16 @@ public class ValidateTypeHierarchy extends RefASTOperator {
       }
     } else {
       debug(declaration, "%s is not refcounted (%s)", declaration, declarationType);
+    }
+  }
+
+  private void validateField(@NotNull VariableDeclarationFragment declaration, ITypeBinding typeBinding) {
+    if (null == typeBinding) {
+      warn(declaration, "Unresolved binding");
+    } else {
+      if (!isRefCounted(declaration, typeBinding)) {
+        fatal(declaration, "Unaccountable Reference: %s::%s", declaration.getName(), declaration.getName());
+      }
     }
   }
 

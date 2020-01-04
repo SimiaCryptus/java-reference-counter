@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.SortedMap;
 
 @RefAware
-public interface RefSortedMap<K,V> extends SortedMap<K,V>, RefMap<K,V> {
+public interface RefSortedMap<K, V> extends SortedMap<K, V>, RefMap<K, V> {
   @NotNull
   @Override
   RefSortedMap<K, V> subMap(K fromKey, K toKey);

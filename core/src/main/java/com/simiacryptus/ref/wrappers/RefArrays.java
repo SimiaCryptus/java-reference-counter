@@ -245,27 +245,27 @@ public class RefArrays {
   }
 
   public static void fill(@NotNull int[] array, int fromIndex, int toIndex, int value) {
-    Arrays.fill(array, fromIndex,toIndex,value);
+    Arrays.fill(array, fromIndex, toIndex, value);
   }
 
   public static void fill(@NotNull long[] array, int fromIndex, int toIndex, long value) {
-    Arrays.fill(array, fromIndex,toIndex,value);
+    Arrays.fill(array, fromIndex, toIndex, value);
   }
 
   public static void fill(@NotNull double[] array, int fromIndex, int toIndex, double value) {
-    Arrays.fill(array, fromIndex,toIndex,value);
+    Arrays.fill(array, fromIndex, toIndex, value);
   }
 
   public static void fill(@NotNull float[] array, int fromIndex, int toIndex, float value) {
-    Arrays.fill(array, fromIndex,toIndex,value);
+    Arrays.fill(array, fromIndex, toIndex, value);
   }
 
   public static void fill(@NotNull byte[] array, int fromIndex, int toIndex, byte value) {
-    Arrays.fill(array, fromIndex,toIndex,value);
+    Arrays.fill(array, fromIndex, toIndex, value);
   }
 
   public static void fill(@NotNull char[] array, int fromIndex, int toIndex, char value) {
-    Arrays.fill(array, fromIndex,toIndex,value);
+    Arrays.fill(array, fromIndex, toIndex, value);
   }
 
   @NotNull
