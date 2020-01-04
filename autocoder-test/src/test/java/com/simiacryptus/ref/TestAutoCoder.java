@@ -31,24 +31,12 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * The type Test auto coder.
- */
 public class TestAutoCoder {
   @NotNull
   private ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }
 
-  /**
-   * Print.
-   *
-   * @throws ComponentLookupException      the component lookup exception
-   * @throws PlexusContainerException      the plexus container exception
-   * @throws ProjectBuildingException      the project building exception
-   * @throws DependencyResolutionException the dependency resolution exception
-   * @throws IOException                   the io exception
-   */
   @Test
   public void print() throws ComponentLookupException, PlexusContainerException, ProjectBuildingException, DependencyResolutionException, IOException {
     new PrintAST().getAutoCoder(TestAutoCoder.this.getProjectInfo()).rewrite();

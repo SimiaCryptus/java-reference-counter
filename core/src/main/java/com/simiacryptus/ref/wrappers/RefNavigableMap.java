@@ -20,39 +20,40 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 @RefAware
-@RefIgnore
-public class RefIterator<T> extends RefIteratorBase<T> {
-
-  private final Iterator<T> inner;
-
-  public RefIterator(Iterator<T> inner) {
-    if (inner instanceof RefIterator) {
-      this.inner = ((RefIterator<T>) inner).getInner();
-    } else {
-      this.inner = inner;
-    }
-  }
+public interface RefNavigableMap<K,V> extends NavigableMap<K, V>, RefMap<K,V> {
 
   @Override
-  public Iterator<T> getInner() {
-    return inner;
-  }
+  RefNavigableMap<K, V> descendingMap();
 
-  public @NotNull RefIterator<T> track(ReferenceCounting obj) {
-    super.track(obj);
-    return this;
-  }
-
-  @NotNull
   @Override
-  public RefIterator<T> addRef() {
-    return (RefIterator<T>) super.addRef();
-  }
+  RefNavigableSet<K> navigableKeySet();
+
+  @Override
+  RefNavigableSet<K> descendingKeySet();
+
+  @Override
+  RefNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive);
+
+  @Override
+  RefNavigableMap<K, V> headMap(K toKey, boolean inclusive);
+
+  @Override
+  RefNavigableMap<K, V> tailMap(K fromKey, boolean inclusive);
+
+  @Override
+  RefSortedMap<K, V> subMap(K fromKey, K toKey);
+
+  @Override
+  RefSortedMap<K, V> headMap(K toKey);
+
+  @Override
+  RefSortedMap<K, V> tailMap(K fromKey);
 }

@@ -20,42 +20,26 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.WeakReference;
+import java.util.SortedSet;
 
 @RefAware
-@RefIgnore
-public class RefWeakReference<T> {
-  private final WeakReference<T> inner;
+public interface RefSortedSet<T> extends SortedSet<T>, RefSet<T> {
+  @NotNull
+  @Override
+  RefSortedSet<T> subSet(T fromElement, T toElement);
 
-  public RefWeakReference(T inner) {
-    this(new WeakReference<>(inner));
-  }
+  @NotNull
+  @Override
+  RefSortedSet<T> headSet(T toElement);
 
-  protected RefWeakReference(WeakReference<T> inner) {
-    this.inner = inner;
-  }
+  @NotNull
+  @Override
+  RefSortedSet<T> tailSet(T fromElement);
 
-  @SuppressWarnings("unused")
-  public boolean isEnqueued() {
-    return inner.isEnqueued();
-  }
-
-  @Nullable
-  @SuppressWarnings("unused")
-  public T get() {
-    return inner.get();
-  }
-
-  @SuppressWarnings("unused")
-  public void clear() {
-    inner.clear();
-  }
-
-  @SuppressWarnings("unused")
-  public boolean enqueue() {
-    return inner.enqueue();
+  @Override
+  default RefSpliterator<T> spliterator() {
+    return RefSet.super.spliterator();
   }
 }

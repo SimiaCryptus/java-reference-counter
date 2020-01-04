@@ -25,9 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
-/**
- * The type Print ast.
- */
 @Mojo(name = "printAST")
 public class PrintAST extends AutoCoderMojo {
 

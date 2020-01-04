@@ -30,30 +30,13 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 
-/**
- * The type Insert add refs.
- */
 @RefIgnore
 public class InsertAddRefs extends RefASTOperator {
 
-  /**
-   * Instantiates a new Insert add refs.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   protected InsertAddRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  /**
-   * Add refs to arguments.
-   *
-   * @param node      the node
-   * @param arguments the arguments
-   * @param name      the name
-   */
   public void addRefsToArguments(@NotNull ASTNode node, @NotNull List<ASTNode> arguments, String name) {
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
@@ -72,22 +55,10 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Modify args boolean.
-   *
-   * @param declaringClass the declaring class
-   * @return the boolean
-   */
   public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
     return isRefAware(declaringClass);
   }
 
-  /**
-   * Wrap add ref expression.
-   *
-   * @param node the node
-   * @return the expression
-   */
   @Nullable
   public Expression wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
@@ -99,11 +70,6 @@ public class InsertAddRefs extends RefASTOperator {
     return null;
   }
 
-  /**
-   * Add ref.
-   *
-   * @param expression the expression
-   */
   protected void addRef(@NotNull Expression expression) {
     final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
     if (null == resolveTypeBinding) {
@@ -116,12 +82,6 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Is instance accessor boolean.
-   *
-   * @param expression the expression
-   * @return the boolean
-   */
   protected boolean isInstanceAccessor(Expression expression) {
     if (expression instanceof ThisExpression) return true;
     if (expression instanceof SimpleName) {
@@ -132,12 +92,6 @@ public class InsertAddRefs extends RefASTOperator {
     return false;
   }
 
-  /**
-   * Should add ref boolean.
-   *
-   * @param expression the expression
-   * @return the boolean
-   */
   protected boolean shouldAddRef(Expression expression) {
     if (expression instanceof MethodInvocation) return false;
     if (expression instanceof ClassInstanceCreation) return false;
@@ -147,13 +101,6 @@ public class InsertAddRefs extends RefASTOperator {
     return true;
   }
 
-  /**
-   * Should wrap boolean.
-   *
-   * @param arg  the arg
-   * @param name the name
-   * @return the boolean
-   */
   protected boolean shouldWrap(ASTNode arg, String name) {
     if (arg instanceof ClassInstanceCreation) {
       debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
@@ -182,19 +129,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify array initializer.
-   */
   @RefIgnore
   public static class ModifyArrayInitializer extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify array initializer.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyArrayInitializer(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -219,19 +156,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify method invocation.
-   */
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify method invocation.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -262,19 +189,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify assignment.
-   */
   @RefIgnore
   public static class ModifyAssignment extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify assignment.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -286,19 +203,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify variable declaration fragment.
-   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify variable declaration fragment.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -310,19 +217,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify return statement.
-   */
   @RefIgnore
   public static class ModifyReturnStatement extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify return statement.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -334,19 +231,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify constructor invocation.
-   */
   @RefIgnore
   public static class ModifyConstructorInvocation extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify constructor invocation.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyConstructorInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -368,19 +255,9 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify class instance creation.
-   */
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertAddRefs {
 
-    /**
-     * Instantiates a new Modify class instance creation.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }

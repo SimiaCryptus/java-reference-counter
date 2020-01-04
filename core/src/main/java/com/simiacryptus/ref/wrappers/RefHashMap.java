@@ -26,12 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * The type Ref hash map.
- *
- * @param <K> the type parameter
- * @param <V> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -39,18 +33,14 @@ public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, KeyValue<K, V>> inner;
 
-  /**
-   * Instantiates a new Ref hash map.
-   */
   public RefHashMap() {
     this.inner = new HashMap<>();
   }
 
-  /**
-   * Instantiates a new Ref hash map.
-   *
-   * @param values the values
-   */
+  public RefHashMap(int length) {
+    this.inner = new HashMap<>(length);
+  }
+
   public RefHashMap(@NotNull Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
@@ -62,14 +52,6 @@ public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
     return inner;
   }
 
-  /**
-   * Add refs ref hash map [ ].
-   *
-   * @param <K>   the type parameter
-   * @param <V>   the type parameter
-   * @param array the array
-   * @return the ref hash map [ ]
-   */
   @NotNull
   public static <K, V> RefHashMap<K, V>[] addRefs(@NotNull RefHashMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefHashMap::addRef)

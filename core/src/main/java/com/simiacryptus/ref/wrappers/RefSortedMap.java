@@ -20,42 +20,21 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.WeakReference;
+import java.util.SortedMap;
 
 @RefAware
-@RefIgnore
-public class RefWeakReference<T> {
-  private final WeakReference<T> inner;
+public interface RefSortedMap<K,V> extends SortedMap<K,V>, RefMap<K,V> {
+  @NotNull
+  @Override
+  RefSortedMap<K, V> subMap(K fromKey, K toKey);
 
-  public RefWeakReference(T inner) {
-    this(new WeakReference<>(inner));
-  }
+  @NotNull
+  @Override
+  RefSortedMap<K, V> headMap(K toKey);
 
-  protected RefWeakReference(WeakReference<T> inner) {
-    this.inner = inner;
-  }
-
-  @SuppressWarnings("unused")
-  public boolean isEnqueued() {
-    return inner.isEnqueued();
-  }
-
-  @Nullable
-  @SuppressWarnings("unused")
-  public T get() {
-    return inner.get();
-  }
-
-  @SuppressWarnings("unused")
-  public void clear() {
-    inner.clear();
-  }
-
-  @SuppressWarnings("unused")
-  public boolean enqueue() {
-    return inner.enqueue();
-  }
+  @NotNull
+  @Override
+  RefSortedMap<K, V> tailMap(K fromKey);
 }

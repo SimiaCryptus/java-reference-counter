@@ -24,20 +24,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.PrintStream;
 
-/**
- * The type Auto coder mojo.
- */
 public abstract class AutoCoderMojo extends BaseMojo {
-  /**
-   * The constant ERR.
-   */
   public static final PrintStream ERR = System.err;
 
-  /**
-   * Gets project info.
-   *
-   * @return the project info
-   */
   @NotNull
   protected ProjectInfo getProjectInfo() {
     return new ProjectInfo(basedir.getAbsolutePath(), getSources(), getDependencies());
@@ -59,21 +48,8 @@ public abstract class AutoCoderMojo extends BaseMojo {
     }
   }
 
-  /**
-   * Gets auto coder.
-   *
-   * @param projectInfo the project info
-   * @return the auto coder
-   */
   protected abstract AutoCoder getAutoCoder(ProjectInfo projectInfo);
 
-  /**
-   * Gets boolean.
-   *
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the boolean
-   */
   protected boolean getBoolean(@NotNull String key, boolean defaultValue) {
     return Boolean.parseBoolean(System.getProperty(key, Boolean.toString(defaultValue)));
   }

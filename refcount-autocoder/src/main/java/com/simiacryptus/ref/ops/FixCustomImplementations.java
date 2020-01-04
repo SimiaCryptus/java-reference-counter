@@ -29,19 +29,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * The type Fix custom implementations.
- */
 @RefIgnore
 public class FixCustomImplementations extends RefASTOperator {
 
-  /**
-   * Instantiates a new Fix custom implementations.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public FixCustomImplementations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
@@ -56,15 +46,6 @@ public class FixCustomImplementations extends RefASTOperator {
     if (replace(node, typeBinding, RefIterator.class, RefIteratorBase.class)) return;
   }
 
-  /**
-   * Replace boolean.
-   *
-   * @param node        the node
-   * @param typeBinding the type binding
-   * @param match       the match
-   * @param replace     the replace
-   * @return the boolean
-   */
   protected boolean replace(@NotNull AnonymousClassDeclaration node, @NotNull ITypeBinding typeBinding, @NotNull Class<?> match, @NotNull Class<?> replace) {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
       debug(node, "RefIterator anonymous class");

@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
-/**
- * The type Insert.
- */
 @RefIgnore
 @Mojo(name = "insert")
 public class Insert extends RefAutoCoderMojo {
@@ -40,32 +37,26 @@ public class Insert extends RefAutoCoderMojo {
     return new Coder(projectInfo, getBoolean("modifyAPI", false));
   }
 
-  /**
-   * The type Coder.
-   */
   @RefIgnore
   public static class Coder extends AutoCoder {
-    private final ProjectInfo projectInfo;
     private final boolean shouldChangeAPI;
 
-    /**
-     * Instantiates a new Coder.
-     *
-     * @param projectInfo     the project info
-     * @param shouldChangeAPI the should change api
-     */
     public Coder(ProjectInfo projectInfo, boolean shouldChangeAPI) {
       super(projectInfo);
-      this.projectInfo = projectInfo;
       this.shouldChangeAPI = shouldChangeAPI;
     }
 
     @Override
     @Nonnull
     public void rewrite() {
+      new Check.Coder(projectInfo).rewrite();
       new Remove().getAutoCoder(projectInfo).rewrite();
       if (shouldChangeAPI) {
         new ModifyAPI.Coder(projectInfo).rewrite();
+      } else {
+        rewrite(RemoveRefMethods::new);
+        rewrite(InsertMethods.ModifyAnonymousClassDeclaration::new);
+        rewrite(InsertMethods.ModifyTypeDeclaration::new);
       }
       rewrite(InsertAddRefs.ModifyArrayInitializer::new);
       rewrite(InsertAddRefs.ModifyClassInstanceCreation::new);

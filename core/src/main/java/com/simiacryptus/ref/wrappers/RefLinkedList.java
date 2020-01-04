@@ -26,11 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * The type Ref linked list.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -38,18 +33,10 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
   @NotNull
   private final List<T> inner;
 
-  /**
-   * Instantiates a new Ref linked list.
-   */
   public RefLinkedList() {
     this.inner = new LinkedList<>();
   }
 
-  /**
-   * Instantiates a new Ref linked list.
-   *
-   * @param list the list
-   */
   public RefLinkedList(@NotNull List<T> list) {
     this();
     this.addAll(list);
@@ -61,13 +48,6 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
     return inner;
   }
 
-  /**
-   * Add refs ref linked list [ ].
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref linked list [ ]
-   */
   @NotNull
   public static <T> RefLinkedList<T>[] addRefs(@NotNull RefLinkedList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedList::addRef)

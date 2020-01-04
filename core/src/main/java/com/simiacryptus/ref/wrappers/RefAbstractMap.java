@@ -29,22 +29,11 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 
-/**
- * The type Ref abstract map.
- *
- * @param <K> the type parameter
- * @param <V> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
 
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
   protected abstract Map<K, KeyValue<K, V>> getInner();
 
   @Override
@@ -160,30 +149,12 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
     super._free();
   }
 
-  /**
-   * The type Key value.
-   *
-   * @param <K> the type parameter
-   * @param <V> the type parameter
-   */
   @RefAware
   @RefIgnore
   protected static class KeyValue<K, V> {
-    /**
-     * The Key.
-     */
     public final K key;
-    /**
-     * The Value.
-     */
     public final V value;
 
-    /**
-     * Instantiates a new Key value.
-     *
-     * @param key   the key
-     * @param value the value
-     */
     public KeyValue(K key, V value) {
       this.key = key;
       this.value = value;

@@ -30,43 +30,23 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * The type Auto coder.
- */
 public abstract class AutoCoder {
-  /**
-   * The constant logger.
-   */
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoderMojo.class);
-  private final ProjectInfo projectInfo;
+  protected final ProjectInfo projectInfo;
   private boolean parallel = Boolean.parseBoolean(System.getProperty("parallel", Boolean.toString(false)));
 
-  /**
-   * Instantiates a new Auto coder.
-   *
-   * @param projectInfo the project info
-   */
   protected AutoCoder(ProjectInfo projectInfo) {
     this.projectInfo = projectInfo;
   }
 
-  /**
-   * Gets project info.
-   *
-   * @return the project info
-   */
   protected ProjectInfo getProjectInfo() {
     return projectInfo;
   }
 
-  /**
-   * Gets symbol index.
-   *
-   * @return the symbol index
-   */
   @SuppressWarnings("unused")
   @NotNull
   protected SymbolIndex getSymbolIndex() {
@@ -75,21 +55,10 @@ public abstract class AutoCoder {
     return index;
   }
 
-  /**
-   * Is parallel boolean.
-   *
-   * @return the boolean
-   */
   public boolean isParallel() {
     return parallel;
   }
 
-  /**
-   * Sets parallel.
-   *
-   * @param parallel the parallel
-   * @return the parallel
-   */
   @NotNull
   @SuppressWarnings("unused")
   public AutoCoder setParallel(boolean parallel) {
@@ -97,12 +66,6 @@ public abstract class AutoCoder {
     return this;
   }
 
-  /**
-   * Read string.
-   *
-   * @param file the file
-   * @return the string
-   */
   public static String read(@NotNull File file) {
     try {
       return FileUtils.readFileToString(file, "UTF-8");
@@ -111,53 +74,46 @@ public abstract class AutoCoder {
     }
   }
 
-  /**
-   * Rewrite.
-   */
   @Nonnull
   public abstract void rewrite();
 
-  /**
-   * Rewrite int.
-   *
-   * @param visitorFactory the visitor factory
-   * @return the int
-   */
   protected int rewrite(@NotNull VisitorFactory visitorFactory) {
-    return rewrite(visitorFactory, isParallel());
+    return rewrite(visitorFactory, isParallel(), false);
   }
 
-  /**
-   * Rewrite int.
-   *
-   * @param visitorFactory the visitor factory
-   * @param parallel       the parallel
-   * @return the int
-   */
-  protected int rewrite(@NotNull VisitorFactory visitorFactory, boolean parallel) {
+  protected int rewrite(@NotNull VisitorFactory visitorFactory, boolean parallel, boolean failAtEnd) {
     Stream<Map.Entry<File, CompilationUnit>> stream = getProjectInfo().parse().entrySet().stream();
     if (parallel) stream = stream.parallel();
-    return stream.mapToInt(entry -> {
+    final ArrayList<String> errors = new ArrayList<>();
+    final int sum = stream.mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
       logger.debug(String.format("Scanning %s", file));
       final ASTEditor astVisitor = visitorFactory.apply(getProjectInfo(), compilationUnit, file);
-      compilationUnit.accept(astVisitor);
-      if (astVisitor.writeFinal(true)) {
-        logger.info(String.format("Changed by %s: %s", astVisitor.getClass().getName(), file));
-        return 1;
-      } else {
-        logger.info(String.format("Not Touched by %s: %s", astVisitor.getClass().getName(), file));
-        return 0;
+      try {
+        compilationUnit.accept(astVisitor);
+        if (astVisitor.writeFinal(true)) {
+          logger.info(String.format("Changed by %s: %s", astVisitor.getClass().getName(), file));
+          return 1;
+        } else {
+          logger.info(String.format("Not Touched by %s: %s", astVisitor.getClass().getName(), file));
+          return 0;
+        }
+      } catch (Throwable e) {
+        if (!failAtEnd) {
+          throw new RuntimeException(String.format("Error processing %s with %s", file, astVisitor.getClass().getName()), e);
+        } else {
+          errors.add(String.format("Error processing %s with %s - %s", file, astVisitor.getClass().getName(), e.getMessage()));
+          return 0;
+        }
       }
     }).sum();
+    if(!errors.isEmpty()) {
+      throw new RuntimeException(errors.stream().reduce((a,b)->a+"\n"+b).get());
+    }
+    return sum;
   }
 
-  /**
-   * Scan.
-   *
-   * @param visitor the visitor
-   */
   protected void scan(@NotNull VisitorFactory visitor) {
     getProjectInfo().parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
@@ -171,18 +127,7 @@ public abstract class AutoCoder {
     });
   }
 
-  /**
-   * The interface Visitor factory.
-   */
   public interface VisitorFactory {
-    /**
-     * Apply ast editor.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     * @return the ast editor
-     */
     @NotNull ASTEditor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
   }
 }

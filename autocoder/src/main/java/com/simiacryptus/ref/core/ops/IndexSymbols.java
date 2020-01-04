@@ -29,60 +29,26 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The type Index symbols.
- */
 public class IndexSymbols extends ASTScanner {
 
-  /**
-   * The Index.
-   */
   public final SymbolIndex index;
   private boolean verbose = true;
   private boolean failOnDuplicate;
 
-  /**
-   * Instantiates a new Index symbols.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   * @param index           the index
-   */
   public IndexSymbols(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, SymbolIndex index) {
     this(projectInfo, compilationUnit, file, index, true);
   }
 
-  /**
-   * Instantiates a new Index symbols.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   * @param index           the index
-   * @param failOnDuplicate the fail on duplicate
-   */
   public IndexSymbols(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, SymbolIndex index, boolean failOnDuplicate) {
     super(projectInfo, compilationUnit, file, false);
     this.index = index;
     this.failOnDuplicate = failOnDuplicate;
   }
 
-  /**
-   * Is verbose boolean.
-   *
-   * @return the boolean
-   */
   public boolean isVerbose() {
     return verbose;
   }
 
-  /**
-   * Sets verbose.
-   *
-   * @param verbose the verbose
-   * @return the verbose
-   */
   @NotNull
   public IndexSymbols setVerbose(boolean verbose) {
     this.verbose = verbose;
@@ -151,12 +117,6 @@ public class IndexSymbols extends ASTScanner {
     super.endVisit(node);
   }
 
-  /**
-   * Index reference.
-   *
-   * @param node    the node
-   * @param binding the binding
-   */
   public void indexReference(@NotNull Name node, @Nullable IBinding binding) {
     if (null == binding) {
       if (isVerbose()) debug(node, "Unresolved element for %s", binding.getName());
@@ -170,12 +130,6 @@ public class IndexSymbols extends ASTScanner {
     index.references.computeIfAbsent(bindingID, x -> new ArrayList<>()).add(node);
   }
 
-  /**
-   * Gets context location.
-   *
-   * @param node the node
-   * @return the context location
-   */
   @NotNull
   private SymbolIndex.ContextLocation getContextLocation(@NotNull ASTNode node) {
     return new SymbolIndex.ContextLocation(getSpan(node), index.context(node));

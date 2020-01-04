@@ -24,13 +24,8 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import java.util.function.Consumer;
 
-/**
- * The interface Ref consumer.
- *
- * @param <T> the type parameter
- */
 @RefAware
-public interface RefConsumer<T> extends Consumer<T>, ReferenceCounting {
+public interface RefConsumer<T> extends Consumer<T> {
   @Override
   void accept(T t);
 }

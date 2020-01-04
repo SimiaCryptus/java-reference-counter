@@ -30,29 +30,13 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 
-/**
- * The type Inline refs.
- */
 @RefIgnore
 public class InlineRefs extends RefASTOperator {
 
-  /**
-   * Instantiates a new Inline refs.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   protected InlineRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  /**
-   * Previous statement statement.
-   *
-   * @param node the node
-   * @return the statement
-   */
   @Nullable
   public Statement previousStatement(@Nonnull ASTNode node) {
     if (node instanceof Statement) {
@@ -81,18 +65,8 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify block.
-   */
   public static class ModifyBlock extends InlineRefs {
 
-    /**
-     * Instantiates a new Modify block.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyBlock(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -107,18 +81,8 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify assignment.
-   */
   public static class ModifyAssignment extends InlineRefs {
 
-    /**
-     * Instantiates a new Modify assignment.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -158,18 +122,8 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify return statement.
-   */
   public static class ModifyReturnStatement extends InlineRefs {
 
-    /**
-     * Instantiates a new Modify return statement.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }

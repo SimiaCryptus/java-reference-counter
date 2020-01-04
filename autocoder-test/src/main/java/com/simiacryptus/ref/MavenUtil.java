@@ -49,34 +49,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * The type Maven util.
- */
 public class MavenUtil {
-  /**
-   * Gets maven project.
-   *
-   * @param pom       the pom
-   * @param container the container
-   * @param session   the session
-   * @return the maven project
-   * @throws ProjectBuildingException the project building exception
-   * @throws ComponentLookupException the component lookup exception
-   */
   public static MavenProject getMavenProject(File pom, @NotNull final DefaultPlexusContainer container, final DefaultRepositorySystemSession session) throws ProjectBuildingException, org.codehaus.plexus.component.repository.exception.ComponentLookupException {
     DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();
     request.setRepositorySession(session);
     return container.lookup(ProjectBuilder.class).build(pom, request).getProject();
   }
 
-  /**
-   * Gets plexus container.
-   *
-   * @param repositoryLocation the repository location
-   * @return the plexus container
-   * @throws IOException              the io exception
-   * @throws PlexusContainerException the plexus container exception
-   */
   @Nonnull
   public static DefaultPlexusContainer getPlexusContainer(@NotNull final File repositoryLocation) throws IOException, PlexusContainerException {
     DefaultRepositoryLayout defaultRepositoryLayout = new DefaultRepositoryLayout();
@@ -90,16 +69,6 @@ public class MavenUtil {
     return new DefaultPlexusContainer(configuration, new BasicModule(repository));
   }
 
-  /**
-   * Gets session.
-   *
-   * @param repositoryLocation the repository location
-   * @param isOffline          the is offline
-   * @param configProps        the config props
-   * @param container          the container
-   * @return the session
-   * @throws ComponentLookupException the component lookup exception
-   */
   @Nonnull
   public static DefaultRepositorySystemSession getSession(final File repositoryLocation, final boolean isOffline, final Map<Object, Object> configProps, @NotNull final DefaultPlexusContainer container) throws org.codehaus.plexus.component.repository.exception.ComponentLookupException {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();

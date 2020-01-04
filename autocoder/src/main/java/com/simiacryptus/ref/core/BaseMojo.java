@@ -36,36 +36,16 @@ import java.io.File;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * The type Base mojo.
- */
 public abstract class BaseMojo extends AbstractMojo {
-  /**
-   * The Basedir.
-   */
   @Parameter(defaultValue = "${basedir}", required = true, readonly = true)
   protected File basedir;
-  /**
-   * The Session.
-   */
   @Parameter(defaultValue = "${session}", readonly = true, required = true)
   protected MavenSession session;
-  /**
-   * The Project.
-   */
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   protected MavenProject project;
-  /**
-   * The Repository system.
-   */
   @Component
   protected RepositorySystem repositorySystem;
 
-  /**
-   * Get dependencies string [ ].
-   *
-   * @return the string [ ]
-   */
   @NotNull
   public String[] getDependencies() {
     return project.getDependencies().stream()
@@ -77,11 +57,6 @@ public abstract class BaseMojo extends AbstractMojo {
         .toArray(i -> new String[i]);
   }
 
-  /**
-   * Get sources string [ ].
-   *
-   * @return the string [ ]
-   */
   @NotNull
   public String[] getSources() {
     return Stream.concat(
@@ -90,12 +65,6 @@ public abstract class BaseMojo extends AbstractMojo {
     ).filter(s -> new File(s).exists()).toArray(i -> new String[i]);
   }
 
-  /**
-   * Resolve artifact resolution result.
-   *
-   * @param artifact the artifact
-   * @return the artifact resolution result
-   */
   public ArtifactResolutionResult resolve(Artifact artifact) {
     try {
       return repositorySystem.resolve(new ArtifactResolutionRequest()
@@ -109,13 +78,6 @@ public abstract class BaseMojo extends AbstractMojo {
     }
   }
 
-  /**
-   * Find dependency optional.
-   *
-   * @param groupId    the group id
-   * @param artifactId the artifact id
-   * @return the optional
-   */
   @NotNull
   protected Optional<Dependency> findDependency(String groupId, String artifactId) {
     return project.getDependencies().stream().filter(artifact ->

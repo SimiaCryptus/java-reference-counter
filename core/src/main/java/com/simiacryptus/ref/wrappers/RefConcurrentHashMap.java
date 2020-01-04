@@ -26,12 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * The type Ref concurrent hash map.
- *
- * @param <K> the type parameter
- * @param <V> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -39,18 +33,10 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
   @NotNull
   private final Map<K, KeyValue<K, V>> inner;
 
-  /**
-   * Instantiates a new Ref concurrent hash map.
-   */
   public RefConcurrentHashMap() {
     this.inner = new ConcurrentHashMap<>();
   }
 
-  /**
-   * Instantiates a new Ref concurrent hash map.
-   *
-   * @param values the values
-   */
   public RefConcurrentHashMap(@NotNull Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
@@ -62,14 +48,6 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
     return inner;
   }
 
-  /**
-   * Add refs ref concurrent hash map [ ].
-   *
-   * @param <K>   the type parameter
-   * @param <V>   the type parameter
-   * @param array the array
-   * @return the ref concurrent hash map [ ]
-   */
   @NotNull
   public static <K, V> RefConcurrentHashMap<K, V>[] addRefs(@NotNull RefConcurrentHashMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentHashMap::addRef)

@@ -29,29 +29,12 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-/**
- * The interface Ref collection.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
 
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
   Collection<T> getInner();
 
-  /**
-   * Add refs ref collection [ ].
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref collection [ ]
-   */
   @NotNull
   public static <T> RefCollection<T>[] addRefs(@NotNull RefCollection<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefCollection::addRef)

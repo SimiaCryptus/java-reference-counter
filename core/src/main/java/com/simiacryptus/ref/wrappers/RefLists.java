@@ -29,20 +29,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * The type Ref lists.
- */
 @RefAware
 @RefIgnore
 public class RefLists {
-  /**
-   * Partition ref list.
-   *
-   * @param <T>  the type parameter
-   * @param list the list
-   * @param size the size
-   * @return the ref list
-   */
   @NotNull
   public static <T> RefList<RefList<T>> partition(List<T> list, int size) {
     final List<T> inner;

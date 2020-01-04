@@ -27,19 +27,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * The type Modify assignments.
- */
 @RefIgnore
 public class ModifyAssignments extends RefASTOperator {
 
-  /**
-   * Instantiates a new Modify assignments.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public ModifyAssignments(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }

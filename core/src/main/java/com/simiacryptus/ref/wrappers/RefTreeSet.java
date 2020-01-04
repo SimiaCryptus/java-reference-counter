@@ -24,27 +24,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
-/**
- * The type Ref tree set.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
-public class RefTreeSet<T> extends RefAbstractSet<T> {
+public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<T> {
 
   @NotNull
   private final TreeMap<T, T> inner;
 
-  /**
-   * Instantiates a new Ref tree set.
-   */
   public RefTreeSet() {
     this((a, b) -> {
       final int result;
@@ -55,33 +44,19 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
       }
       return result;
     });
+    new TreeSet<>();
   }
 
-  /**
-   * Instantiates a new Ref tree set.
-   *
-   * @param comparator the comparator
-   */
   public RefTreeSet(Comparator<? super T> comparator) {
     this(new TreeMap<>(comparator));
   }
 
-  /**
-   * Instantiates a new Ref tree set.
-   *
-   * @param inner the inner
-   */
   RefTreeSet(@Nonnull TreeMap<T, T> inner) {
     if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
     this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
-  /**
-   * Instantiates a new Ref tree set.
-   *
-   * @param values the values
-   */
   public RefTreeSet(@NotNull Collection<T> values) {
     this();
     addAll(values);
@@ -93,13 +68,6 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
     return inner;
   }
 
-  /**
-   * Add refs ref tree set [ ].
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref tree set [ ]
-   */
   @NotNull
   public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
@@ -112,13 +80,102 @@ public class RefTreeSet<T> extends RefAbstractSet<T> {
     return (RefTreeSet<T>) super.addRef();
   }
 
-  /**
-   * Poll first t.
-   *
-   * @return the t
-   */
+  @Nullable
+  @Override
+  public T lower(T t) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Nullable
+  @Override
+  public T floor(T t) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Nullable
+  @Override
+  public T ceiling(T t) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Nullable
+  @Override
+  public T higher(T t) {
+    throw new UnsupportedOperationException();
+  }
+
   @Nullable
   public T pollFirst() {
     return RefUtil.addRef(inner.pollFirstEntry().getKey());
+  }
+
+  @Nullable
+  @Override
+  public T pollLast() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefNavigableSet<T> descendingSet() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public Iterator<T> descendingIterator() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefNavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefNavigableSet<T> headSet(T toElement, boolean inclusive) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefNavigableSet<T> tailSet(T fromElement, boolean inclusive) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Nullable
+  @Override
+  public Comparator<? super T> comparator() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefSortedSet<T> subSet(T fromElement, T toElement) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefSortedSet<T> headSet(T toElement) {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  @Override
+  public RefSortedSet<T> tailSet(T fromElement) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public T first() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public T last() {
+    throw new UnsupportedOperationException();
   }
 }

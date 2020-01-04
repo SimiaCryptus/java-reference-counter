@@ -35,18 +35,8 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * The type Ast util.
- */
 public class ASTUtil {
 
-  /**
-   * Align ast editor . ast mapping.
-   *
-   * @param from the from
-   * @param to   the to
-   * @return the ast editor . ast mapping
-   */
   @NotNull
   public static ASTEditor.ASTMapping align(@Nonnull ASTNode from, @Nonnull ASTNode to) {
     final ASTEditor.ASTMapping mapping = new ASTEditor.ASTMapping();
@@ -113,12 +103,6 @@ public class ASTUtil {
     return mapping;
   }
 
-  /**
-   * Children linked hash map.
-   *
-   * @param node the node
-   * @return the linked hash map
-   */
   @NotNull
   public static LinkedHashMap<String, Object> children(@NotNull ASTNode node) {
     Collection<StructuralPropertyDescriptor> properties = new TreeSet<>(Comparator.comparing(x -> x.toString()));
@@ -137,13 +121,6 @@ public class ASTUtil {
     return map;
   }
 
-  /**
-   * Derives boolean.
-   *
-   * @param typeBinding the type binding
-   * @param baseClass   the base class
-   * @return the boolean
-   */
   public static boolean derives(@Nonnull ITypeBinding typeBinding, @Nonnull Class<?> baseClass) {
     final String binaryName = typeBinding.getTypeDeclaration().getQualifiedName();
     if (null != binaryName && binaryName.equals(baseClass.getCanonicalName())) return true;
@@ -153,25 +130,11 @@ public class ASTUtil {
     return false;
   }
 
-  /**
-   * New qualified name name.
-   *
-   * @param ast   the ast
-   * @param clazz the clazz
-   * @return the name
-   */
   @NotNull
   public static Name newQualifiedName(@NotNull AST ast, @NotNull Class<?> clazz) {
     return newQualifiedName(ast, clazz.getName().split("\\."));
   }
 
-  /**
-   * New qualified name name.
-   *
-   * @param ast  the ast
-   * @param path the path
-   * @return the name
-   */
   @NotNull
   public static Name newQualifiedName(@NotNull AST ast, @NotNull String... path) {
     final SimpleName simpleName = ast.newSimpleName(path[path.length - 1]);
@@ -179,25 +142,11 @@ public class ASTUtil {
     return ast.newQualifiedName(newQualifiedName(ast, Arrays.stream(path).limit(path.length - 1).toArray(String[]::new)), simpleName);
   }
 
-  /**
-   * Array type array type.
-   *
-   * @param ast        the ast
-   * @param fqTypeName the fq type name
-   * @param rank       the rank
-   * @return the array type
-   */
   @NotNull
   public static ArrayType arrayType(@NotNull AST ast, @NotNull String fqTypeName, int rank) {
     return ast.newArrayType(ast.newSimpleType(ast.newSimpleName(fqTypeName)), rank);
   }
 
-  /**
-   * Annotation override marker annotation.
-   *
-   * @param ast the ast
-   * @return the marker annotation
-   */
   @NotNull
   public static MarkerAnnotation annotation_override(@NotNull AST ast) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
@@ -205,13 +154,6 @@ public class ASTUtil {
     return annotation;
   }
 
-  /**
-   * Annotation suppress warnings single member annotation.
-   *
-   * @param ast   the ast
-   * @param label the label
-   * @return the single member annotation
-   */
   @NotNull
   public static SingleMemberAnnotation annotation_SuppressWarnings(@NotNull AST ast, @NotNull String label) {
     final SingleMemberAnnotation annotation = ast.newSingleMemberAnnotation();
@@ -222,13 +164,6 @@ public class ASTUtil {
     return annotation;
   }
 
-  /**
-   * Has annotation boolean.
-   *
-   * @param declaringClass the declaring class
-   * @param aClass         the a class
-   * @return the boolean
-   */
   public static boolean hasAnnotation(@Nullable IBinding declaringClass, @NotNull Class<?> aClass) {
     if (declaringClass == null) return false;
     if (declaringClass.toString().startsWith("Anonymous")) return false;
@@ -237,14 +172,6 @@ public class ASTUtil {
         .anyMatch(qualifiedName -> qualifiedName.equals(aClass.getCanonicalName()));
   }
 
-  /**
-   * Find expressions list.
-   *
-   * @param <T>       the type parameter
-   * @param tree      the tree
-   * @param searchFor the search for
-   * @return the list
-   */
   @NotNull
   public static <T extends ASTNode> List<T> findExpressions(@NotNull ASTNode tree, @NotNull T searchFor) {
     final List<T> reference = new ArrayList<>();
@@ -263,25 +190,11 @@ public class ASTUtil {
     return reference;
   }
 
-  /**
-   * Find method optional.
-   *
-   * @param typeDeclaration the type declaration
-   * @param name            the name
-   * @return the optional
-   */
   @NotNull
   public static Optional<MethodDeclaration> findMethod(@NotNull TypeDeclaration typeDeclaration, String name) {
     return Arrays.stream(typeDeclaration.getMethods()).filter(methodDeclaration -> methodDeclaration.getName().toString().equals(name)).findFirst();
   }
 
-  /**
-   * Find method optional.
-   *
-   * @param typeDeclaration the type declaration
-   * @param name            the name
-   * @return the optional
-   */
   @NotNull
   public static Optional<MethodDeclaration> findMethod(@NotNull AnonymousClassDeclaration typeDeclaration, String name) {
     return typeDeclaration.bodyDeclarations().stream()
@@ -289,12 +202,6 @@ public class ASTUtil {
         .filter(methodDeclaration -> ((MethodDeclaration) methodDeclaration).getName().toString().equals(name)).findFirst();
   }
 
-  /**
-   * Gets block.
-   *
-   * @param node the node
-   * @return the block
-   */
   @Nullable
   public static Block getBlock(@NotNull ASTNode node) {
     final ASTNode parent = node.getParent();
@@ -313,12 +220,6 @@ public class ASTUtil {
     }
   }
 
-  /**
-   * Gets lambda.
-   *
-   * @param node the node
-   * @return the lambda
-   */
   @Nullable
   public static LambdaExpression getLambda(@Nullable ASTNode node) {
     if (node == null) return null;
@@ -326,12 +227,6 @@ public class ASTUtil {
     return getLambda(node.getParent());
   }
 
-  /**
-   * Gets statement.
-   *
-   * @param node the node
-   * @return the statement
-   */
   @Nullable
   public static Statement getStatement(@Nullable ASTNode node) {
     if (node == null) return null;
@@ -339,12 +234,6 @@ public class ASTUtil {
     return getStatement(node.getParent());
   }
 
-  /**
-   * Is evaluable boolean.
-   *
-   * @param node the node
-   * @return the boolean
-   */
   public static boolean isEvaluable(@Nullable Expression node) {
     if (node == null) {
       return false;
@@ -373,12 +262,6 @@ public class ASTUtil {
     }
   }
 
-  /**
-   * Is field boolean.
-   *
-   * @param simpleName the simple name
-   * @return the boolean
-   */
   public static boolean isField(@NotNull SimpleName simpleName) {
     final IBinding iBinding = simpleName.resolveBinding();
     final boolean isVariable = iBinding instanceof IVariableBinding;
@@ -389,13 +272,6 @@ public class ASTUtil {
     return isField;
   }
 
-  /**
-   * Update content string.
-   *
-   * @param content the content
-   * @param cu      the cu
-   * @return the string
-   */
   public static String updateContent(String content, @NotNull CompilationUnit cu) {
     Document document = new Document(content);
     final Hashtable<String, String> options = JavaCore.getOptions();
@@ -407,25 +283,12 @@ public class ASTUtil {
     return document.get();
   }
 
-  /**
-   * Is exit boolean.
-   *
-   * @param statement the statement
-   * @return the boolean
-   */
   public static boolean isExit(Statement statement) {
     if (statement instanceof ReturnStatement) return true;
     if (statement instanceof ThrowStatement) return true;
     return false;
   }
 
-  /**
-   * Contains boolean.
-   *
-   * @param node      the node
-   * @param searchFor the search for
-   * @return the boolean
-   */
   public static boolean contains(@NotNull ASTNode node, ASTNode searchFor) {
     final AtomicBoolean returnValue = new AtomicBoolean(false);
     node.accept(new ASTVisitor() {
@@ -438,12 +301,6 @@ public class ASTUtil {
     return returnValue.get();
   }
 
-  /**
-   * Format string.
-   *
-   * @param finalSrc the final src
-   * @return the string
-   */
   public static String format(@NotNull String finalSrc) {
     final Document document = new Document();
     document.set(finalSrc);
@@ -463,11 +320,6 @@ public class ASTUtil {
     return document.get();
   }
 
-  /**
-   * Formatting settings default code formatter options.
-   *
-   * @return the default code formatter options
-   */
   @NotNull
   public static DefaultCodeFormatterOptions formattingSettings() {
     final DefaultCodeFormatterOptions javaConventionsSettings = DefaultCodeFormatterOptions.getJavaConventionsSettings();

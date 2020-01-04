@@ -32,22 +32,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-/**
- * The interface Settings.
- */
 @RefAware
 @RefIgnore
 public interface Settings {
-  /**
-   * The constant logger.
-   */
   Logger logger = LoggerFactory.getLogger(Settings.class);
 
-  /**
-   * Gets mapper.
-   *
-   * @return the mapper
-   */
   static ObjectMapper getMapper() {
     ObjectMapper enable = new ObjectMapper()
         //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
@@ -55,27 +44,12 @@ public interface Settings {
     return enable;
   }
 
-  /**
-   * Get boolean.
-   *
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the boolean
-   */
   static boolean get(@NotNull final String key, final boolean defaultValue) {
     boolean value = Boolean.parseBoolean(System.getProperty(key, Boolean.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  /**
-   * Get t.
-   *
-   * @param <T>          the type parameter
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the t
-   */
   @NotNull
   static <T extends Enum<T>> T get(@NotNull final String key, @Nonnull final T defaultValue) {
     T value = Enum.valueOf((Class<T>) defaultValue.getClass().getSuperclass(), System.getProperty(key, defaultValue.toString().toUpperCase()));
@@ -83,76 +57,35 @@ public interface Settings {
     return value;
   }
 
-  /**
-   * Get string.
-   *
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the string
-   */
   static String get(@NotNull final String key, final String defaultValue) {
     String value = System.getProperty(key, defaultValue);
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  /**
-   * Get int.
-   *
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the int
-   */
   static int get(@NotNull final String key, final int defaultValue) {
     int value = Integer.parseInt(System.getProperty(key, Integer.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  /**
-   * Get double.
-   *
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the double
-   */
   static double get(@NotNull final String key, final double defaultValue) {
     double value = Double.parseDouble(System.getProperty(key, Double.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  /**
-   * Get long.
-   *
-   * @param key          the key
-   * @param defaultValue the default value
-   * @return the long
-   */
   static long get(@NotNull final String key, final long defaultValue) {
     long value = Long.parseLong(System.getProperty(key, Long.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  /**
-   * To json char sequence.
-   *
-   * @param obj the obj
-   * @return the char sequence
-   */
   @NotNull
   static CharSequence toJson(final Object obj) {
     return toJson(obj, getMapper());
   }
 
-  /**
-   * To json char sequence.
-   *
-   * @param obj          the obj
-   * @param objectMapper the object mapper
-   * @return the char sequence
-   */
   @Nonnull
   static CharSequence toJson(final Object obj, @NotNull final ObjectMapper objectMapper) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

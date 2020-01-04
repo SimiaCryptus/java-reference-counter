@@ -25,34 +25,22 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.function.Supplier;
 
-/**
- * The enum Persistance mode.
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public enum PersistanceMode {
-  /**
-   * The Soft.
-   */
   SOFT {
     @Override
     public <T> Supplier<T> wrap(T obj) {
       return new SoftReference<>(obj)::get;
     }
   },
-  /**
-   * The Weak.
-   */
   WEAK {
     @Override
     public <T> Supplier<T> wrap(T obj) {
       return new WeakReference<>(obj)::get;
     }
   },
-  /**
-   * The Strong.
-   */
   STRONG {
     @Nonnull
     @Override
@@ -60,9 +48,6 @@ public enum PersistanceMode {
       return () -> obj;
     }
   },
-  /**
-   * The Null.
-   */
   NULL {
     @Nullable
     @Override
@@ -71,13 +56,6 @@ public enum PersistanceMode {
     }
   };
 
-  /**
-   * Wrap supplier.
-   *
-   * @param <T> the type parameter
-   * @param obj the obj
-   * @return the supplier
-   */
   @org.jetbrains.annotations.Nullable
   @Nullable
   public abstract <T> Supplier<T> wrap(T obj);

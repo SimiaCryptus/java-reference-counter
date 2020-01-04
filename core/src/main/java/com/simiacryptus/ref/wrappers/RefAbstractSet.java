@@ -30,11 +30,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * The type Ref abstract set.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -44,11 +39,6 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
     return getInnerMap().keySet();
   }
 
-  /**
-   * Gets inner map.
-   *
-   * @return the inner map
-   */
   @NotNull
   public abstract Map<T, T> getInnerMap();
 

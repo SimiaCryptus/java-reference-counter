@@ -30,19 +30,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Iterator;
 
-/**
- * The type Remove annotations.
- */
 @RefIgnore
 public class RemoveAnnotations extends RefASTOperator {
 
-  /**
-   * Instantiates a new Remove annotations.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public RemoveAnnotations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }

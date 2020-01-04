@@ -30,30 +30,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.*;
 
-/**
- * The type Ref stream.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefStream<T> implements Stream<T> {
   private final Stream<T> inner;
-  /**
-   * The Lambdas.
-   */
   public List<ReferenceCounting> lambdas;
-  /**
-   * The Refs.
-   */
   public Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
 
-  /**
-   * Instantiates a new Ref stream.
-   *
-   * @param stream the stream
-   */
   public RefStream(Stream<T> stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
@@ -63,13 +47,6 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  /**
-   * Instantiates a new Ref stream.
-   *
-   * @param stream  the stream
-   * @param lambdas the lambdas
-   * @param refs    the refs
-   */
   RefStream(Stream<T> stream, List<ReferenceCounting> lambdas, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = stream;
@@ -77,11 +54,6 @@ public class RefStream<T> implements Stream<T> {
     this.refs = refs;
   }
 
-  /**
-   * Gets inner.
-   *
-   * @return the inner
-   */
   @NotNull
   public Stream<T> getInner() {
     return new StreamWrapper<T>(inner) {
@@ -110,13 +82,6 @@ public class RefStream<T> implements Stream<T> {
     return getInner().isParallel();
   }
 
-  /**
-   * Of ref stream.
-   *
-   * @param <T> the type parameter
-   * @param x   the x
-   * @return the ref stream
-   */
   @NotNull
   public static <T> RefStream<T> of(T x) {
     return new RefStream<>(Stream.of(x)).onClose(() -> {
@@ -124,13 +89,6 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  /**
-   * Of ref stream.
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref stream
-   */
   @NotNull
   public static <T> RefStream<T> of(@NotNull T... array) {
     return new RefStream<>(Stream.of(array).onClose(() -> {
@@ -138,24 +96,16 @@ public class RefStream<T> implements Stream<T> {
     }));
   }
 
-  /**
-   * Concat ref stream.
-   *
-   * @param <T> the type parameter
-   * @param a   the a
-   * @param b   the b
-   * @return the ref stream
-   */
+  @NotNull
+  public static <T> RefStream<T> empty() {
+    return new RefStream<>(Stream.empty());
+  }
+
   @NotNull
   public static <T> RefStream<T> concat(@NotNull Stream<? extends T> a, @NotNull Stream<? extends T> b) {
     return new RefStream<>(Stream.concat(a, b));
   }
 
-  /**
-   * Free all.
-   *
-   * @param refs the refs
-   */
   static void freeAll(@NotNull Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     refs.forEach((k, v) -> {
       final int cnt = v.getAndSet(0);
@@ -165,14 +115,6 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  /**
-   * Gets ref.
-   *
-   * @param <U>  the type parameter
-   * @param u    the u
-   * @param refs the refs
-   * @return the ref
-   */
   static <U> U getRef(U u, @NotNull Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
@@ -191,14 +133,6 @@ public class RefStream<T> implements Stream<T> {
     return u;
   }
 
-  /**
-   * Store ref u.
-   *
-   * @param <U>  the type parameter
-   * @param u    the u
-   * @param refs the refs
-   * @return the u
-   */
   static <U> U storeRef(U u, @NotNull Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
@@ -510,13 +444,6 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  /**
-   * Store ref u.
-   *
-   * @param <U> the type parameter
-   * @param u   the u
-   * @return the u
-   */
   public <U> U storeRef(U u) {
     return storeRef(u, refs);
   }
@@ -559,24 +486,11 @@ public class RefStream<T> implements Stream<T> {
     }
   }
 
-  /**
-   * The type Identity wrapper.
-   *
-   * @param <T> the type parameter
-   */
   @RefAware
   @RefIgnore
   public static class IdentityWrapper<T> {
-    /**
-     * The Inner.
-     */
     public final T inner;
 
-    /**
-     * Instantiates a new Identity wrapper.
-     *
-     * @param inner the inner
-     */
     public IdentityWrapper(T inner) {
       this.inner = inner;
     }

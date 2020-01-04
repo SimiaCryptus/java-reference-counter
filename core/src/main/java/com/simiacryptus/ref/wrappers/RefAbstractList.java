@@ -31,11 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
-/**
- * The type Ref abstract list.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")

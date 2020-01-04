@@ -22,6 +22,7 @@ package com.simiacryptus.ref.ops;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
@@ -39,35 +40,16 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import java.util.stream.*;
 
-/**
- * The type Replace types.
- */
 @RefIgnore
 public class ReplaceTypes extends RefASTOperator {
 
-  /**
-   * The Replacements.
-   */
   protected Map<String, String> replacements;
 
-  /**
-   * Instantiates a new Replace types.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   * @param invert          the invert
-   */
   protected ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
     super(projectInfo, compilationUnit, file);
     this.replacements = classMapping(invert);
   }
 
-  /**
-   * Gets types.
-   *
-   * @return the types
-   */
   @NotNull
   @SuppressWarnings("unused")
   protected ArrayList<Object> getTypes() {
@@ -82,12 +64,6 @@ public class ReplaceTypes extends RefASTOperator {
     return names;
   }
 
-  /**
-   * Class mapping map.
-   *
-   * @param invert the invert
-   * @return the map
-   */
   public static Map<String, String> classMapping(boolean invert) {
     return (invert ? classMapping().inverse() : classMapping())
         .entrySet().stream().collect(Collectors.toMap(
@@ -95,11 +71,6 @@ public class ReplaceTypes extends RefASTOperator {
             x -> x.getValue().getCanonicalName()));
   }
 
-  /**
-   * Class mapping bi map.
-   *
-   * @return the bi map
-   */
   @NotNull
   public static BiMap<Class<?>, Class<?>> classMapping() {
     BiMap<Class<?>, Class<?>> replacements = HashBiMap.create();
@@ -120,8 +91,13 @@ public class ReplaceTypes extends RefASTOperator {
     replacements.put(Deque.class, RefDeque.class);
     replacements.put(DoubleStream.class, RefDoubleStream.class);
     replacements.put(Map.Entry.class, RefEntry.class);
+    replacements.put(Maps.class, RefMaps.class);
     replacements.put(WeakReference.class, RefWeakReference.class);
     replacements.put(HashMap.class, RefHashMap.class);
+    replacements.put(NavigableMap.class, RefNavigableMap.class);
+    replacements.put(NavigableSet.class, RefNavigableSet.class);
+    replacements.put(SortedSet.class, RefSortedSet.class);
+    replacements.put(SortedMap.class, RefSortedMap.class);
     replacements.put(TreeMap.class, RefTreeMap.class);
     replacements.put(HashSet.class, RefHashSet.class);
     replacements.put(IntStream.class, RefIntStream.class);
@@ -150,13 +126,8 @@ public class ReplaceTypes extends RefASTOperator {
     return replacements;
   }
 
-  /**
-   * Apply.
-   *
-   * @param node the node
-   */
   public void apply(@NotNull Name node) {
-    if (node.getParent() instanceof ImportDeclaration) {
+    if (isImport(node)) {
       return;
     }
     final Name replace = replace(node);
@@ -166,12 +137,6 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
-  /**
-   * Replace name.
-   *
-   * @param node the node
-   * @return the name
-   */
   @Nullable
   protected Name replace(@NotNull Name node) {
     final IBinding binding = resolveBinding(node);
@@ -192,18 +157,17 @@ public class ReplaceTypes extends RefASTOperator {
     return null;
   }
 
-  /**
-   * The type Modify compilation unit.
-   */
+  private boolean isImport(@NotNull ASTNode node) {
+    if (node instanceof ImportDeclaration) return true;
+    if (node instanceof Statement) return false;
+    if (node instanceof Block) return false;
+    if (node instanceof TypeDeclaration) return false;
+    final ASTNode parent = node.getParent();
+    if (null == parent) return false;
+    return isImport(parent);
+  }
+
   public static class ModifyCompilationUnit extends ReplaceTypes {
-    /**
-     * Instantiates a new Modify compilation unit.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     * @param invert          the invert
-     */
     public ModifyCompilationUnit(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
@@ -226,18 +190,7 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify type parameter.
-   */
   public static class ModifyTypeParameter extends ReplaceTypes {
-    /**
-     * Instantiates a new Modify type parameter.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     * @param invert          the invert
-     */
     public ModifyTypeParameter(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
@@ -249,18 +202,7 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify simple name.
-   */
   public static class ModifySimpleName extends ReplaceTypes {
-    /**
-     * Instantiates a new Modify simple name.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     * @param invert          the invert
-     */
     public ModifySimpleName(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
@@ -273,18 +215,7 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify qualified name.
-   */
   public static class ModifyQualifiedName extends ReplaceTypes {
-    /**
-     * Instantiates a new Modify qualified name.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     * @param invert          the invert
-     */
     public ModifyQualifiedName(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }

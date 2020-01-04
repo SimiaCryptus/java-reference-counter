@@ -28,20 +28,9 @@ import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.StreamSupport;
 
-/**
- * The type Ref stream support.
- */
 @RefAware
 @RefIgnore
 public class RefStreamSupport {
-  /**
-   * Stream ref stream.
-   *
-   * @param <T>         the type parameter
-   * @param spliterator the spliterator
-   * @param parallel    the parallel
-   * @return the ref stream
-   */
   public static <T> RefStream<T> stream(Spliterator<T> spliterator, boolean parallel) {
     if (spliterator instanceof RefSpliterator) {
       final RefSpliterator refSpliterator = (RefSpliterator) spliterator;

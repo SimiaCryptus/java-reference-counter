@@ -25,18 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * The type Ast scanner.
- */
 public class ASTScanner extends ASTEditor {
-  /**
-   * Instantiates a new Ast scanner.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   * @param record          the record
-   */
   public ASTScanner(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, boolean record) {
     super(projectInfo, compilationUnit, file, record);
   }

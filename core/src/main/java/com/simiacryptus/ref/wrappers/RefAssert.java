@@ -25,32 +25,16 @@ import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * The type Ref assert.
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefAssert {
 
-  /**
-   * Assert equals.
-   *
-   * @param expected the expected
-   * @param actual   the actual
-   */
   public static void assertEquals(Object expected, Object actual) {
-    assertEquals(expected, actual, null);
+    assertEquals(null, expected, actual);
   }
 
-  /**
-   * Assert equals.
-   *
-   * @param expected the expected
-   * @param actual   the actual
-   * @param message  the message
-   */
-  public static void assertEquals(Object expected, Object actual, @Nullable String message) {
+  public static void assertEquals(@Nullable String message, Object expected, Object actual) {
     try {
       if (!equalsRegardingNull(RefUtil.addRef(expected), RefUtil.addRef(actual))) {
         if (expected instanceof String && actual instanceof String) {
@@ -66,11 +50,20 @@ public class RefAssert {
     }
   }
 
-  /**
-   * Fail.
-   *
-   * @param message the message
-   */
+  public static void assertEquals(@Nullable String message, long expected, long actual) {
+    if (expected != actual) {
+      String cleanMessage = message == null ? "" : message;
+      throw new ComparisonFailure(cleanMessage, Long.toString(expected), Long.toString(actual));
+    }
+  }
+
+  public static void assertEquals(@Nullable String message, int expected, int actual) {
+    if (expected != actual) {
+      String cleanMessage = message == null ? "" : message;
+      throw new ComparisonFailure(cleanMessage, Integer.toString(expected), Integer.toString(actual));
+    }
+  }
+
   public static void fail(@Nullable String message) {
     if (message == null) {
       throw new AssertionError();
@@ -79,12 +72,6 @@ public class RefAssert {
     }
   }
 
-  /**
-   * Assert array equals.
-   *
-   * @param expected the expected
-   * @param actuals  the actuals
-   */
   public static void assertArrayEquals(@NotNull int[] expected, @NotNull int[] actuals) {
     assertEquals(expected.length, actuals.length);
     for (int i = 0; i < expected.length; i++) {
@@ -92,17 +79,10 @@ public class RefAssert {
     }
   }
 
-  /**
-   * Assert array equals.
-   *
-   * @param message  the message
-   * @param expected the expected
-   * @param actuals  the actuals
-   */
   public static void assertArrayEquals(String message, @NotNull int[] expected, @NotNull int[] actuals) {
-    assertEquals(expected.length, actuals.length, message);
+    assertEquals(message, expected.length, actuals.length);
     for (int i = 0; i < expected.length; i++) {
-      assertEquals(expected[i], actuals[i], message);
+      assertEquals(message, expected[i], actuals[i]);
     }
   }
 
@@ -150,33 +130,16 @@ public class RefAssert {
     private final String expected;
     private final String actual;
 
-    /**
-     * Instantiates a new Comparison failure.
-     *
-     * @param message  the message
-     * @param expected the expected
-     * @param actual   the actual
-     */
     public ComparisonFailure(String message, String expected, String actual) {
       super(message);
       this.expected = expected;
       this.actual = actual;
     }
 
-    /**
-     * Gets actual.
-     *
-     * @return the actual
-     */
     public String getActual() {
       return actual;
     }
 
-    /**
-     * Gets expected.
-     *
-     * @return the expected
-     */
     public String getExpected() {
       return expected;
     }

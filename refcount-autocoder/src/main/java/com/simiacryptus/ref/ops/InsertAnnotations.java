@@ -30,19 +30,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * The type Insert annotations.
- */
 @RefIgnore
 public class InsertAnnotations extends RefASTOperator {
 
-  /**
-   * Instantiates a new Insert annotations.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public InsertAnnotations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }

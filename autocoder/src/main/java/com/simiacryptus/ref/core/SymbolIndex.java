@@ -29,29 +29,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-/**
- * The type Symbol index.
- */
 public class SymbolIndex {
-  /**
-   * The constant logger.
-   */
   protected static final Logger logger = LoggerFactory.getLogger(SymbolIndex.class);
-  /**
-   * The Definitions.
-   */
   public final HashMap<BindingID, ASTNode> definitions = new HashMap<>();
-  /**
-   * The References.
-   */
   public final HashMap<BindingID, List<ASTNode>> references = new HashMap<>();
 
-  /**
-   * Gets binding id.
-   *
-   * @param binding the binding
-   * @return the binding id
-   */
   @Nullable
   public static BindingID getBindingID(@Nonnull IBinding binding) {
     if (null == binding) return null;
@@ -148,12 +130,6 @@ public class SymbolIndex {
     }
   }
 
-  /**
-   * Context linked hash map.
-   *
-   * @param node the node
-   * @return the linked hash map
-   */
   @NotNull
   public LinkedHashMap<BindingID, ASTNode> context(@NotNull ASTNode node) {
     final LinkedHashMap<BindingID, ASTNode> list = new LinkedHashMap<>();
@@ -184,61 +160,25 @@ public class SymbolIndex {
     return list;
   }
 
-  /**
-   * The type Context location.
-   */
   public static class ContextLocation {
-    /**
-     * The Location.
-     */
     public final ASTEditor.Span location;
-    /**
-     * The Context.
-     */
     public final @NotNull LinkedHashMap<BindingID, ASTNode> context;
 
-    /**
-     * Instantiates a new Context location.
-     *
-     * @param location the location
-     * @param context  the context
-     */
     public ContextLocation(ASTEditor.Span location, @NotNull LinkedHashMap<BindingID, ASTNode> context) {
       this.location = location;
       this.context = context;
     }
   }
 
-  /**
-   * The type Binding id.
-   */
   public static class BindingID {
-    /**
-     * The Path.
-     */
     public final String path;
-    /**
-     * The Type.
-     */
     public final String type;
 
-    /**
-     * Instantiates a new Binding id.
-     *
-     * @param path the path
-     * @param type the type
-     */
     public BindingID(String path, String type) {
       this.path = path;
       this.type = type;
     }
 
-    /**
-     * Sets type.
-     *
-     * @param type the type
-     * @return the type
-     */
     @NotNull
     @SuppressWarnings("unused")
     public BindingID setType(String type) {

@@ -29,19 +29,9 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 
-/**
- * The type Optimize refs.
- */
 @RefIgnore
 public class OptimizeRefs extends RefASTOperator {
 
-  /**
-   * Instantiates a new Optimize refs.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public OptimizeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }

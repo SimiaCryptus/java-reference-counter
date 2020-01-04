@@ -35,36 +35,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * The type Instrument closures.
- */
 @RefIgnore
 public class InstrumentClosures extends RefASTOperator {
 
-  /**
-   * The Index.
-   */
   @NotNull
   protected final SymbolIndex index;
 
-  /**
-   * Instantiates a new Instrument closures.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   protected InstrumentClosures(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
     this.index = getSymbolIndex(compilationUnit);
   }
 
-  /**
-   * Add refcounting.
-   *
-   * @param node     the node
-   * @param closures the closures
-   */
   public void addRefcounting(@Nonnull AnonymousClassDeclaration node, @NotNull Collection<SymbolIndex.BindingID> closures) {
     final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(node, "_free");
     if (freeMethodOpt.isPresent()) {
@@ -102,12 +83,6 @@ public class InstrumentClosures extends RefASTOperator {
     node.bodyDeclarations().add(initializer);
   }
 
-  /**
-   * Wrap interface.
-   *
-   * @param node     the node
-   * @param closures the closures
-   */
   public void wrapInterface(@NotNull Expression node, @NotNull Collection<SymbolIndex.BindingID> closures) {
     final List<ASTNode> refClosures = closures.stream().filter(bindingID -> {
       final ASTNode definition = index.definitions.get(bindingID);
@@ -166,12 +141,6 @@ public class InstrumentClosures extends RefASTOperator {
     }
   }
 
-  /**
-   * Gets closures.
-   *
-   * @param node the node
-   * @return the closures
-   */
   protected Collection<SymbolIndex.BindingID> getClosures(@NotNull ASTNode node) {
     return getSymbolIndex(node).references.entrySet().stream().flatMap(e -> {
       final SymbolIndex.BindingID bindingID = e.getKey();
@@ -196,18 +165,8 @@ public class InstrumentClosures extends RefASTOperator {
     }).collect(Collectors.toList());
   }
 
-  /**
-   * The type Modify anonymous class declaration.
-   */
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InstrumentClosures {
-    /**
-     * Instantiates a new Modify anonymous class declaration.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -240,18 +199,8 @@ public class InstrumentClosures extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify lambda expression.
-   */
   @RefIgnore
   public static class ModifyLambdaExpression extends InstrumentClosures {
-    /**
-     * Instantiates a new Modify lambda expression.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyLambdaExpression(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }

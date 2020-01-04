@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
-/**
- * The type Revert api.
- */
 @RefIgnore
 @Mojo(name = "revertAPI")
 public class RevertAPI extends RefAutoCoderMojo {
@@ -40,15 +37,7 @@ public class RevertAPI extends RefAutoCoderMojo {
     return new Coder(projectInfo);
   }
 
-  /**
-   * The type Coder.
-   */
   public static class Coder extends AutoCoder {
-    /**
-     * Instantiates a new Coder.
-     *
-     * @param projectInfo the project info
-     */
     public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
     }

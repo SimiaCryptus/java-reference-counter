@@ -27,16 +27,10 @@ import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.Collector;
 
-/**
- * The type Double statistics.
- */
 @RefAware
 @RefIgnore
 public class DoubleStatistics extends DoubleSummaryStatistics {
 
-  /**
-   * The Collector.
-   */
   @javax.annotation.Nonnull
   @SuppressWarnings("unused")
   public static Collector<Double, DoubleStatistics, DoubleStatistics> COLLECTOR = Collector.of(
@@ -46,9 +40,6 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
       d -> d
   );
 
-  /**
-   * The Numbers.
-   */
   @javax.annotation.Nonnull
   @SuppressWarnings("unused")
   public static Collector<Number, DoubleStatistics, DoubleStatistics> NUMBERS = Collector.of(
@@ -62,20 +53,10 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
   private double sumOfSquare = 0.0d;
   private double sumOfSquareCompensation; // Low order bits of sum
 
-  /**
-   * Gets standard deviation.
-   *
-   * @return the standard deviation
-   */
   public final double getStandardDeviation() {
     return getCount() > 0 ? Math.sqrt(getSumOfSquare() / getCount() - Math.pow(getAverage(), 2)) : 0.0d;
   }
 
-  /**
-   * Gets sum of square.
-   *
-   * @return the sum of square
-   */
   public double getSumOfSquare() {
     final double tmp = sumOfSquare + sumOfSquareCompensation;
     if (Double.isNaN(tmp) && Double.isInfinite(simpleSumOfSquare)) {
@@ -92,24 +73,12 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
     sumOfSquareWithCompensation(squareValue);
   }
 
-  /**
-   * Accept double statistics.
-   *
-   * @param value the value
-   * @return the double statistics
-   */
   @javax.annotation.Nonnull
   public DoubleStatistics accept(@javax.annotation.Nonnull final double[] value) {
     Arrays.stream(value).forEach(this::accept);
     return this;
   }
 
-  /**
-   * Combine double statistics.
-   *
-   * @param other the other
-   * @return the double statistics
-   */
   @javax.annotation.Nonnull
   public DoubleStatistics combine(@javax.annotation.Nonnull final DoubleStatistics other) {
     super.combine(other);
@@ -125,12 +94,6 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
     return toString(1).toString();
   }
 
-  /**
-   * To string char sequence.
-   *
-   * @param scale the scale
-   * @return the char sequence
-   */
   public CharSequence toString(final double scale) {
     return String.format("%.4e +- %.4e [%.4e - %.4e] (%d#)", getAverage() * scale, getStandardDeviation() * scale, getMin() * scale, getMax() * scale, getCount());
   }

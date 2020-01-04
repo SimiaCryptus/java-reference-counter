@@ -22,47 +22,32 @@ package com.simiacryptus.ref;
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.ops.InlineRefs;
-import com.simiacryptus.ref.ops.InlineTempVars;
-import com.simiacryptus.ref.ops.RemoveRefs;
+import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "remove")
-public class Remove extends RefAutoCoderMojo {
+@Mojo(name = "check")
+public class Check extends RefAutoCoderMojo {
   @NotNull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
-    return new Coder(projectInfo, getBoolean("modifyAPI", false));
+    return new Coder(projectInfo);
   }
 
   @RefIgnore
   public static class Coder extends AutoCoder {
-    private final boolean shouldChangeAPI;
 
-    public Coder(ProjectInfo projectInfo, boolean shouldChangeAPI) {
+    public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
-      this.shouldChangeAPI = shouldChangeAPI;
     }
 
     @Override
     @Nonnull
     public void rewrite() {
-      while (rewrite(RemoveRefs.ModifyBlock::new) + rewrite(RemoveRefs.ModifyMethodInvocation::new) > 0) {
-        logger.info("Re-running RemoveRefs");
-      }
-      while (rewrite(InlineRefs.ModifyAssignment::new) + rewrite(InlineRefs.ModifyBlock::new) + rewrite(InlineRefs.ModifyReturnStatement::new) > 0) {
-        logger.info("Re-running InlineRefs");
-      }
-      while (rewrite(InlineTempVars::new) > 0) {
-        logger.info("Re-running InlineTempVars");
-      }
-      if (shouldChangeAPI) {
-        new RevertAPI.Coder(projectInfo).rewrite();
-      }
+      rewrite(ValidateTypeHierarchy::new, isParallel(), true);
     }
   }
 }

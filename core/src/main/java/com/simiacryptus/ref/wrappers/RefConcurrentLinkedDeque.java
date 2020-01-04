@@ -29,11 +29,6 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-/**
- * The type Ref concurrent linked deque.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -42,9 +37,6 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   @NotNull
   private final ConcurrentLinkedDeque<T> inner;
 
-  /**
-   * Instantiates a new Ref concurrent linked deque.
-   */
   public RefConcurrentLinkedDeque() {
     inner = new ConcurrentLinkedDeque<>();
   }
@@ -69,13 +61,6 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     return RefUtil.addRef(getInner().getLast());
   }
 
-  /**
-   * Add refs ref concurrent linked deque [ ].
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref concurrent linked deque [ ]
-   */
   @NotNull
   public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@NotNull RefConcurrentLinkedDeque<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)

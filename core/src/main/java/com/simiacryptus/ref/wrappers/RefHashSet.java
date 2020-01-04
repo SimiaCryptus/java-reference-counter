@@ -30,11 +30,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * The type Ref hash set.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -43,29 +38,20 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
   @NotNull
   private final Map<T, T> inner;
 
-  /**
-   * Instantiates a new Ref hash set.
-   */
   public RefHashSet() {
     this(new HashMap<>());
   }
 
-  /**
-   * Instantiates a new Ref hash set.
-   *
-   * @param inner the inner
-   */
+  public RefHashSet(int size) {
+    this(new HashMap<>(size));
+  }
+
   RefHashSet(@Nonnull HashMap<T, T> inner) {
     if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
     this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
-  /**
-   * Instantiates a new Ref hash set.
-   *
-   * @param values the values
-   */
   public RefHashSet(@NotNull Collection<T> values) {
     this();
     addAll(values);
@@ -77,13 +63,6 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     return inner;
   }
 
-  /**
-   * Add refs ref hash set [ ].
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref hash set [ ]
-   */
   @NotNull
   public static <T> RefHashSet<T>[] addRefs(@NotNull RefHashSet<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef)

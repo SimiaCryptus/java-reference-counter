@@ -22,49 +22,22 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
-public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
+public class RefMaps {
 
-  private final K key;
-  private V value;
-
-  public RefEntry(@NotNull Map.Entry<K, V> inner) {
-    this(RefUtil.addRef(inner.getKey()), RefUtil.addRef(inner.getValue()));
+  public static <K, V1, V2> RefMap<K, V2> transformEntries(RefMap<K, V1> fromMap, EntryTransformer<? super K, ? super V1, V2> transformer) {
+    final RefHashMap<K, V2> refHashMap = new RefHashMap<>();
+    fromMap.forEach((k, v) -> refHashMap.put(RefUtil.addRef(k), transformer.transformEntry(k, v)));
+    return refHashMap;
   }
 
-  public RefEntry(K key, V value) {
-    this.key = key;
-    this.value = value;
+  @RefAware
+  @FunctionalInterface
+  public interface EntryTransformer<K, V1, V2> {
+    V2 transformEntry(@Nullable K var1, @Nullable V1 var2);
   }
-
-  @Nullable
-  @Override
-  public K getKey() {
-    return RefUtil.addRef(key);
-  }
-
-  @Nullable
-  @Override
-  public V getValue() {
-    return RefUtil.addRef(value);
-  }
-
-  @Override
-  public abstract V setValue(V value);
-
-  @Override
-  protected void _free() {
-    RefUtil.freeRef(value);
-    RefUtil.freeRef(key);
-    super._free();
-  }
-
 }

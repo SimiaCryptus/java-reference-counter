@@ -33,30 +33,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * The type Fix variable declarations.
- */
 @RefIgnore
 public class FixVariableDeclarations extends RefASTOperator {
 
-  /**
-   * Instantiates a new Fix variable declarations.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   protected FixVariableDeclarations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  /**
-   * Apply type.
-   *
-   * @param type        the type
-   * @param initializer the initializer
-   * @return the type
-   */
   @Nullable
   protected Type apply(@NotNull Type type, @Nullable Expression initializer) {
     final ITypeBinding typeBinding = resolveBinding(type);
@@ -101,14 +84,6 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
-  /**
-   * Common interface type.
-   *
-   * @param node            the node
-   * @param typeBinding     the type binding
-   * @param initializerType the initializer type
-   * @return the type
-   */
   @Nullable
   protected Type commonInterface(Type node, @NotNull ITypeBinding typeBinding, @NotNull ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
@@ -121,12 +96,6 @@ public class FixVariableDeclarations extends RefASTOperator {
     return null;
   }
 
-  /**
-   * Type path list.
-   *
-   * @param typeBinding the type binding
-   * @return the list
-   */
   protected List<ITypeBinding> typePath(@NotNull ITypeBinding typeBinding) {
     final ArrayList<ITypeBinding> list = new ArrayList<>();
     list.add(typeBinding);
@@ -140,14 +109,6 @@ public class FixVariableDeclarations extends RefASTOperator {
     return list.stream().distinct().collect(Collectors.toList());
   }
 
-  /**
-   * Common superclass type.
-   *
-   * @param node            the node
-   * @param typeBinding     the type binding
-   * @param initializerType the initializer type
-   * @return the type
-   */
   @Nullable
   @SuppressWarnings("unused")
   protected Type commonSuperclass(Type node, @NotNull ITypeBinding typeBinding, @NotNull ITypeBinding initializerType) {
@@ -162,18 +123,8 @@ public class FixVariableDeclarations extends RefASTOperator {
     return commonInterface(node, superclass, initializerType);
   }
 
-  /**
-   * The type Modify variable declaration statement.
-   */
   @RefIgnore
   public static class ModifyVariableDeclarationStatement extends FixVariableDeclarations {
-    /**
-     * Instantiates a new Modify variable declaration statement.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -191,18 +142,8 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify field declaration.
-   */
   @RefIgnore
   public static class ModifyFieldDeclaration extends FixVariableDeclarations {
-    /**
-     * Instantiates a new Modify field declaration.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyFieldDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -220,18 +161,8 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify variable declaration fragment.
-   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends FixVariableDeclarations {
-    /**
-     * Instantiates a new Modify variable declaration fragment.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
       super(projectInfo, compilationUnit, file);
     }

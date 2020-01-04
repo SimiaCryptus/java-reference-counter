@@ -28,9 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.LongStream;
 
-/**
- * The type Ref long stream.
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -39,11 +36,6 @@ public class RefLongStream implements LongStream {
   private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
-  /**
-   * Instantiates a new Ref long stream.
-   *
-   * @param stream the stream
-   */
   RefLongStream(LongStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
@@ -53,13 +45,6 @@ public class RefLongStream implements LongStream {
     });
   }
 
-  /**
-   * Instantiates a new Ref long stream.
-   *
-   * @param stream  the stream
-   * @param lambdas the lambdas
-   * @param refs    the refs
-   */
   RefLongStream(LongStream stream, List<ReferenceCounting> lambdas, Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
@@ -72,35 +57,16 @@ public class RefLongStream implements LongStream {
     return inner.isParallel();
   }
 
-  /**
-   * Range ref long stream.
-   *
-   * @param startInclusive the start inclusive
-   * @param endExclusive   the end exclusive
-   * @return the ref long stream
-   */
   @NotNull
   public static RefLongStream range(long startInclusive, final long endExclusive) {
     return new RefLongStream(LongStream.range(startInclusive, endExclusive));
   }
 
-  /**
-   * Of ref long stream.
-   *
-   * @param x the x
-   * @return the ref long stream
-   */
   @NotNull
   public static RefLongStream of(long x) {
     return new RefLongStream(LongStream.of(x));
   }
 
-  /**
-   * Of ref long stream.
-   *
-   * @param array the array
-   * @return the ref long stream
-   */
   @NotNull
   public static RefLongStream of(@NotNull long... array) {
     return new RefLongStream(LongStream.of(array).onClose(() -> {
@@ -108,24 +74,11 @@ public class RefLongStream implements LongStream {
     }));
   }
 
-  /**
-   * Generate ref long stream.
-   *
-   * @param s the s
-   * @return the ref long stream
-   */
   @NotNull
   public static RefLongStream generate(@NotNull LongSupplier s) {
     return new RefLongStream(LongStream.generate(s));
   }
 
-  /**
-   * Concat ref long stream.
-   *
-   * @param a the a
-   * @param b the b
-   * @return the ref long stream
-   */
   @NotNull
   public static RefLongStream concat(@NotNull RefLongStream a, @NotNull RefLongStream b) {
     return new RefLongStream(LongStream.concat(a.inner, b.inner));

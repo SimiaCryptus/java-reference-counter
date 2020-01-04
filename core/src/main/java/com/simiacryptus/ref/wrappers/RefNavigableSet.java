@@ -20,21 +20,43 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Deque;
+import java.util.NavigableSet;
+import java.util.SortedSet;
 
 @RefAware
-@RefIgnore
-@SuppressWarnings("unused")
-public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
+public interface RefNavigableSet<T> extends NavigableSet<T>, RefSet<T> {
+  @NotNull
+  @Override
+  RefNavigableSet<T> descendingSet();
 
   @NotNull
-  public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
-        .toArray((x) -> new RefDeque[x]);
-  }
+  @Override
+  RefNavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive);
 
-  @NotNull RefDeque<T> addRef();
+  @NotNull
+  @Override
+  RefNavigableSet<T> headSet(T toElement, boolean inclusive);
+
+  @NotNull
+  @Override
+  RefNavigableSet<T> tailSet(T fromElement, boolean inclusive);
+
+  @NotNull
+  @Override
+  RefSortedSet<T> subSet(T fromElement, T toElement);
+
+  @NotNull
+  @Override
+  RefSortedSet<T> headSet(T toElement);
+
+  @NotNull
+  @Override
+  RefSortedSet<T> tailSet(T fromElement);
+
+  @Override
+  default RefSpliterator<T> spliterator() {
+    return RefSet.super.spliterator();
+  }
 }

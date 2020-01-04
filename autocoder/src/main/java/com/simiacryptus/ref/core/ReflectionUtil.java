@@ -29,19 +29,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 
-/**
- * The type Reflection util.
- */
 public class ReflectionUtil {
 
-  /**
-   * Gets field.
-   *
-   * @param <T>  the type parameter
-   * @param obj  the obj
-   * @param name the name
-   * @return the field
-   */
   @Nullable
   public static <T> T getField(@NotNull Object obj, String name) {
     final Field value = Arrays.stream(obj.getClass().getDeclaredFields()).filter(x -> x.getName().equals(name)).findFirst().orElse(null);
@@ -56,15 +45,6 @@ public class ReflectionUtil {
     return null;
   }
 
-  /**
-   * Invoke method t.
-   *
-   * @param <T>  the type parameter
-   * @param obj  the obj
-   * @param name the name
-   * @param args the args
-   * @return the t
-   */
   @NotNull
   public static <T> T invokeMethod(@NotNull Object obj, String name, @NotNull Object... args) {
     final Method value = Arrays.stream(obj.getClass().getDeclaredMethods())
@@ -92,13 +72,6 @@ public class ReflectionUtil {
     throw new RuntimeException(String.format("Method %s.%s(%s) not found", obj.getClass(), name, Arrays.stream(args).map(x -> x.getClass().getSimpleName()).reduce((a, b) -> a + ", " + b).get()));
   }
 
-  /**
-   * Gets field.
-   *
-   * @param nodeClass the node class
-   * @param name      the name
-   * @return the field
-   */
   @NotNull
   public static Field getField(@NotNull Class<?> nodeClass, String name) {
     final Field[] fields = nodeClass.getDeclaredFields();
@@ -116,15 +89,6 @@ public class ReflectionUtil {
     return field;
   }
 
-  /**
-   * Sets field.
-   *
-   * @param <T>     the type parameter
-   * @param astNode the ast node
-   * @param name    the name
-   * @param value   the value
-   * @return the field
-   */
   @SuppressWarnings("unused")
   @NotNull
   public static <T> T setField(@NotNull T astNode, String name, Object value) {

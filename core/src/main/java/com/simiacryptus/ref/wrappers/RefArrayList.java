@@ -27,11 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * The type Ref array list.
- *
- * @param <T> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -39,18 +34,14 @@ public class RefArrayList<T> extends RefAbstractList<T> {
   @NotNull
   private final List<T> inner;
 
-  /**
-   * Instantiates a new Ref array list.
-   */
   public RefArrayList() {
     this.inner = new ArrayList<>();
   }
 
-  /**
-   * Instantiates a new Ref array list.
-   *
-   * @param list the list
-   */
+  public RefArrayList(int length) {
+    this.inner = new ArrayList<>(length);
+  }
+
   public RefArrayList(@NotNull Collection<T> list) {
     this();
     addAll(list);
@@ -62,13 +53,6 @@ public class RefArrayList<T> extends RefAbstractList<T> {
     return inner;
   }
 
-  /**
-   * Add refs ref array list [ ].
-   *
-   * @param <T>   the type parameter
-   * @param array the array
-   * @return the ref array list [ ]
-   */
   @NotNull
   public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)

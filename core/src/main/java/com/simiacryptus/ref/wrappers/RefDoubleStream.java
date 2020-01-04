@@ -29,9 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.DoubleStream;
 
-/**
- * The type Ref double stream.
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -40,11 +37,6 @@ public class RefDoubleStream implements DoubleStream {
   private final Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
-  /**
-   * Instantiates a new Ref double stream.
-   *
-   * @param stream the stream
-   */
   RefDoubleStream(DoubleStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
@@ -54,13 +46,6 @@ public class RefDoubleStream implements DoubleStream {
     });
   }
 
-  /**
-   * Instantiates a new Ref double stream.
-   *
-   * @param stream  the stream
-   * @param lambdas the lambdas
-   * @param refs    the refs
-   */
   RefDoubleStream(DoubleStream stream, List<ReferenceCounting> lambdas, Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
@@ -73,58 +58,26 @@ public class RefDoubleStream implements DoubleStream {
     return inner.isParallel();
   }
 
-  /**
-   * Generate ref double stream.
-   *
-   * @param s the s
-   * @return the ref double stream
-   */
   @NotNull
   public static RefDoubleStream generate(@NotNull DoubleSupplier s) {
     return new RefDoubleStream(DoubleStream.generate(s));
   }
 
-  /**
-   * Iterate ref double stream.
-   *
-   * @param seed the seed
-   * @param f    the f
-   * @return the ref double stream
-   */
   @NotNull
   public static RefDoubleStream iterate(final double seed, @NotNull final DoubleUnaryOperator f) {
     return new RefDoubleStream(DoubleStream.iterate(seed, f));
   }
 
-  /**
-   * Of ref double stream.
-   *
-   * @param x the x
-   * @return the ref double stream
-   */
   @NotNull
   public static RefDoubleStream of(double x) {
     return new RefDoubleStream(DoubleStream.of(x));
   }
 
-  /**
-   * Of ref double stream.
-   *
-   * @param array the array
-   * @return the ref double stream
-   */
   @NotNull
   public static RefDoubleStream of(double... array) {
     return new RefDoubleStream(DoubleStream.of(array));
   }
 
-  /**
-   * Concat ref double stream.
-   *
-   * @param a the a
-   * @param b the b
-   * @return the ref double stream
-   */
   @NotNull
   public static RefDoubleStream concat(@NotNull RefDoubleStream a, @NotNull RefDoubleStream b) {
     return new RefDoubleStream(DoubleStream.concat(a.inner, b.inner));

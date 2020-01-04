@@ -27,19 +27,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * The type Inline temp vars.
- */
 @RefIgnore
 public class InlineTempVars extends RefASTOperator {
 
-  /**
-   * Instantiates a new Inline temp vars.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public InlineTempVars(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }

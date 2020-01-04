@@ -33,32 +33,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * The type Insert methods.
- */
 @RefIgnore
 public class InsertMethods extends RefASTOperator {
 
-  /**
-   * Instantiates a new Insert methods.
-   *
-   * @param projectInfo the project info
-   * @param cu          the cu
-   * @param file        the file
-   */
   protected InsertMethods(ProjectInfo projectInfo, CompilationUnit cu, File file) {
     super(projectInfo, cu, file);
   }
 
-  /**
-   * Method add ref method declaration.
-   *
-   * @param node           the node
-   * @param name           the name
-   * @param isInterface    the is interface
-   * @param typeParameters the type parameters
-   * @return the method declaration
-   */
   @NotNull
   public MethodDeclaration method_addRef(@NotNull ASTNode node, @NotNull SimpleName name, boolean isInterface, TypeParameter... typeParameters) {
     final String fqTypeName = name.getFullyQualifiedName();
@@ -83,13 +64,6 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  /**
-   * Method add refs method declaration.
-   *
-   * @param ast  the ast
-   * @param name the name
-   * @return the method declaration
-   */
   @NotNull
   public MethodDeclaration method_addRefs(@NotNull AST ast, @NotNull SimpleName name) {
     final String fqTypeName = name.getFullyQualifiedName();
@@ -176,13 +150,6 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  /**
-   * Method add refs 2 method declaration.
-   *
-   * @param ast  the ast
-   * @param name the name
-   * @return the method declaration
-   */
   @NotNull
   public MethodDeclaration method_addRefs2(@NotNull AST ast, @NotNull SimpleName name) {
     final String fqTypeName = name.getFullyQualifiedName();
@@ -269,14 +236,6 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  /**
-   * Method free method declaration.
-   *
-   * @param ast        the ast
-   * @param isAbstract the is abstract
-   * @param isOverride the is override
-   * @return the method declaration
-   */
   @NotNull
   public MethodDeclaration method_free(@NotNull AST ast, boolean isAbstract, boolean isOverride) {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
@@ -316,18 +275,8 @@ public class InsertMethods extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify type declaration.
-   */
   @RefIgnore
   public static class ModifyTypeDeclaration extends InsertMethods {
-    /**
-     * Instantiates a new Modify type declaration.
-     *
-     * @param projectInfo the project info
-     * @param cu          the cu
-     * @param file        the file
-     */
     public ModifyTypeDeclaration(ProjectInfo projectInfo, CompilationUnit cu, File file) {
       super(projectInfo, cu, file);
     }
@@ -366,18 +315,8 @@ public class InsertMethods extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify anonymous class declaration.
-   */
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InsertMethods {
-    /**
-     * Instantiates a new Modify anonymous class declaration.
-     *
-     * @param projectInfo the project info
-     * @param cu          the cu
-     * @param file        the file
-     */
     public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, CompilationUnit cu, File file) {
       super(projectInfo, cu, file);
     }

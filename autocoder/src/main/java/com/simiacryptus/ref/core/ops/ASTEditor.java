@@ -34,72 +34,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * The type Ast editor.
- */
 public abstract class ASTEditor extends LoggingASTVisitor {
-  /**
-   * The Project info.
-   */
   protected final ProjectInfo projectInfo;
-  /**
-   * The Initial content.
-   */
   protected final String initialContent;
   @Nullable
   private ASTMapping reparsed = null;
 
-  /**
-   * Instantiates a new Ast editor.
-   *
-   * @param compilationUnit the compilation unit
-   * @param projectInfo     the project info
-   * @param file            the file
-   */
   public ASTEditor(@NotNull CompilationUnit compilationUnit, ProjectInfo projectInfo, @Nonnull File file) {
     super(compilationUnit, file);
     this.projectInfo = projectInfo;
     this.initialContent = AutoCoder.read(this.file);
   }
 
-  /**
-   * Instantiates a new Ast editor.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   * @param record          the record
-   */
   public ASTEditor(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean record) {
     this(compilationUnit, projectInfo, file);
     if (record) compilationUnit.recordModifications();
   }
 
-  /**
-   * Gets reparsed.
-   *
-   * @return the reparsed
-   */
   @Nullable
   public ASTMapping getReparsed() {
     return reparsed;
   }
 
-  /**
-   * Sets reparsed.
-   *
-   * @param reparsed the reparsed
-   */
   protected void setReparsed(ASTMapping reparsed) {
     this.reparsed = reparsed;
   }
 
-  /**
-   * Write boolean.
-   *
-   * @param format the format
-   * @return the boolean
-   */
   public boolean write(boolean format) {
     final String finalSrc = updateContent();
     if (initialContent.equals(finalSrc)) return false;
@@ -107,11 +67,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return true;
   }
 
-  /**
-   * Revert boolean.
-   *
-   * @return the boolean
-   */
   public boolean revert() {
     final String currentContent = AutoCoder.read(this.file);
     if (currentContent.equals(initialContent)) return false;
@@ -119,24 +74,11 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return true;
   }
 
-  /**
-   * Write final boolean.
-   *
-   * @param format the format
-   * @return the boolean
-   */
   public boolean writeFinal(boolean format) {
     update(true, format);
     return !AutoCoder.read(this.file).equals(initialContent);
   }
 
-  /**
-   * Copy if attached t.
-   *
-   * @param <T>  the type parameter
-   * @param node the node
-   * @return the t
-   */
   @NotNull
   protected <T extends ASTNode> T copyIfAttached(@NotNull T node) {
     if (node.getParent() == null) {
@@ -147,12 +89,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  /**
-   * Replace.
-   *
-   * @param child    the child
-   * @param newChild the new child
-   */
   protected final void replace(@NotNull ASTNode child, ASTNode newChild) {
     final ASTNode parent = child.getParent();
     if (parent instanceof QualifiedName) {
@@ -184,14 +120,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  /**
-   * Update ast mapping.
-   *
-   * @param <T>    the type parameter
-   * @param write  the write
-   * @param format the format
-   * @return the ast mapping
-   */
   @NotNull
   protected <T extends ASTNode> ASTMapping update(boolean write, boolean format) {
     if (write) {
@@ -211,11 +139,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return align;
   }
 
-  /**
-   * Write.
-   *
-   * @param data the data
-   */
   protected void write(String data) {
     try {
       synchronized (ProjectInfo.class) {
@@ -227,12 +150,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  /**
-   * Gets span.
-   *
-   * @param node the node
-   * @return the span
-   */
   @NotNull
   protected ASTEditor.Span getSpan(@NotNull ASTNode node) {
     final int startPosition = node.getStartPosition();
@@ -286,29 +203,11 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return ASTUtil.updateContent(initialContent, compilationUnit);
   }
 
-  /**
-   * The type Ast mapping.
-   */
   public static class ASTMapping {
-    /**
-     * The Matches.
-     */
     public final HashMap<ASTNode, ASTNode> matches = new HashMap<>();
-    /**
-     * The Mismatches.
-     */
     public final HashMap<ASTNode, ASTNode> mismatches = new HashMap<>();
-    /**
-     * The Errors.
-     */
     public final List<String> errors = new ArrayList<>();
 
-    /**
-     * Put all ast mapping.
-     *
-     * @param other the other
-     * @return the ast mapping
-     */
     @NotNull
     public ASTMapping putAll(@NotNull ASTMapping other) {
       matches.putAll(other.matches);
@@ -318,34 +217,13 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  /**
-   * The type Span.
-   */
   public static class Span {
-    /**
-     * The Line start.
-     */
     public final int lineStart;
-    /**
-     * The Col start.
-     */
     public final int colStart;
-    /**
-     * The Line end.
-     */
     public final int lineEnd;
     private final int colEnd;
     private final File file;
 
-    /**
-     * Instantiates a new Span.
-     *
-     * @param file      the file
-     * @param lineStart the line start
-     * @param colStart  the col start
-     * @param lineEnd   the line end
-     * @param colEnd    the col end
-     */
     public Span(File file, int lineStart, int colStart, int lineEnd, int colEnd) {
       this.file = file;
       this.lineStart = lineStart;

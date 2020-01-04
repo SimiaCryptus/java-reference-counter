@@ -21,36 +21,22 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
-/**
- * The type Ref tree map.
- *
- * @param <K> the type parameter
- * @param <V> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
-public class RefTreeMap<K, V> extends RefAbstractMap<K, V> {
+public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigableMap<K, V> {
   @NotNull
-  private final Map<K, KeyValue<K, V>> inner;
+  private final TreeMap<K, KeyValue<K, V>> inner;
 
-  /**
-   * Instantiates a new Ref tree map.
-   */
   public RefTreeMap() {
     this.inner = new TreeMap<>();
   }
 
-  /**
-   * Instantiates a new Ref tree map.
-   *
-   * @param values the values
-   */
   public RefTreeMap(@NotNull Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
@@ -58,22 +44,143 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> {
 
   @NotNull
   @Override
-  public Map<K, KeyValue<K, V>> getInner() {
+  public TreeMap<K, KeyValue<K, V>> getInner() {
     return inner;
   }
 
-  /**
-   * Add refs ref tree map [ ].
-   *
-   * @param <K>   the type parameter
-   * @param <V>   the type parameter
-   * @param array the array
-   * @return the ref tree map [ ]
-   */
   @NotNull
   public static <K, V> RefTreeMap<K, V>[] addRefs(@NotNull RefTreeMap<K, V>[] array) {
     return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef)
         .toArray((x) -> new RefTreeMap[x]);
   }
 
+  @Override
+  public Entry<K, V> lowerEntry(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public K lowerKey(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Entry<K, V> floorEntry(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public K floorKey(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Entry<K, V> ceilingEntry(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public K ceilingKey(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Entry<K, V> higherEntry(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public K higherKey(K key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Entry<K, V> firstEntry() {
+    return wrap(inner.firstEntry());
+  }
+
+  public Entry<K, V> lastEntry() {
+    return wrap(inner.lastEntry());
+  }
+
+  @Override
+  public Entry<K, V> pollFirstEntry() {
+    return wrap(inner.pollFirstEntry());
+  }
+
+  @Override
+  public Entry<K, V> pollLastEntry() {
+    return wrap(inner.pollLastEntry());
+  }
+
+  @Override
+  public RefNavigableMap<K, V> descendingMap() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefNavigableSet<K> navigableKeySet() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefNavigableSet<K> descendingKeySet() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefNavigableMap<K, V> headMap(K toKey, boolean inclusive) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefNavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Comparator<? super K> comparator() {
+    return inner.comparator();
+  }
+
+  @Override
+  public RefSortedMap<K, V> subMap(K fromKey, K toKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefSortedMap<K, V> headMap(K toKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RefSortedMap<K, V> tailMap(K fromKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public K firstKey() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public K lastKey() {
+    throw new UnsupportedOperationException();
+  }
+
+  @NotNull
+  private Map.Entry<K, V> wrap(Entry<K, KeyValue<K, V>> entry) {
+    final KeyValue<K, V> keyValue = entry.getValue();
+    return new RefEntry<K, V>(RefUtil.addRef(keyValue.key), RefUtil.addRef(keyValue.value)) {
+      @Override
+      public Object setValue(Object value) {
+        throw new UnsupportedOperationException();
+      }
+    };
+  }
 }

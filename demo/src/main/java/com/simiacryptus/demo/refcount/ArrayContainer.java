@@ -32,7 +32,8 @@ public class ArrayContainer extends ReferenceCountingBase {
     }
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     values = null;
     super._free();
   }
@@ -76,7 +77,8 @@ public class ArrayContainer extends ReferenceCountingBase {
         x.setValue(x.getValue() + right.getValue());
       }
 
-      public @Override void _free() {
+      public @Override
+      void _free() {
         super._free();
       }
     });

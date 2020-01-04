@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
-/**
- * The type Modify api.
- */
 @RefIgnore
 @Mojo(name = "modifyAPI")
 public class ModifyAPI extends RefAutoCoderMojo {
@@ -40,15 +37,7 @@ public class ModifyAPI extends RefAutoCoderMojo {
     return new Coder(projectInfo);
   }
 
-  /**
-   * The type Coder.
-   */
   public static class Coder extends AutoCoder {
-    /**
-     * Instantiates a new Coder.
-     *
-     * @param projectInfo the project info
-     */
     public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
     }
@@ -56,6 +45,7 @@ public class ModifyAPI extends RefAutoCoderMojo {
     @Override
     @Nonnull
     public void rewrite() {
+      new Check.Coder(projectInfo).rewrite();
       rewrite(RemoveRefMethods::new);
       rewrite(RemoveAnnotations::new);
       rewrite(InsertAnnotations::new);

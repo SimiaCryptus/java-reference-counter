@@ -28,19 +28,9 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
 
-/**
- * The type Distinct imports.
- */
 @RefIgnore
 public class DistinctImports extends RefASTOperator {
 
-  /**
-   * Instantiates a new Distinct imports.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   public DistinctImports(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
   }

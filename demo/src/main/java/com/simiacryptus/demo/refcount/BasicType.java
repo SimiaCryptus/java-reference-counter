@@ -52,7 +52,8 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     this.value = value;
   }
 
-  public @Override void _free() {
+  public @Override
+  void _free() {
     value = -1;
     super._free();
   }

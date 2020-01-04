@@ -28,34 +28,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * The type Ref collections.
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefCollections {
 
-  /**
-   * Gets inner stream.
-   *
-   * @param <T> the type parameter
-   * @param c   the c
-   * @return the inner stream
-   */
   public static <T> Stream<T> getInnerStream(@NotNull Collection<T> c) {
     final Stream<T> stream = getInnerCollection(c).stream();
     assert !(stream instanceof RefStream);
     return stream;
   }
 
-  /**
-   * Gets inner collection.
-   *
-   * @param <T> the type parameter
-   * @param c   the c
-   * @return the inner collection
-   */
   public static <T> Collection<T> getInnerCollection(@NotNull Collection<T> c) {
     if (c instanceof RefCollection) {
       return ((RefCollection<T>) c).getInner();
@@ -64,37 +47,20 @@ public class RefCollections {
     }
   }
 
-  /**
-   * Unmodifiable map ref map.
-   *
-   * @param <K> the type parameter
-   * @param <V> the type parameter
-   * @param map the map
-   * @return the ref map
-   */
   @NotNull
   public static <K, V> RefMap<K, V> unmodifiableMap(RefMap<K, V> map) {
     return map; // TODO: Implement Me
   }
 
-  /**
-   * Shuffle.
-   *
-   * @param <T>  the type parameter
-   * @param list the list
-   */
   public static <T> void shuffle(@NotNull List<T> list) {
     Collections.shuffle(list);
   }
 
-  /**
-   * Unmodifiable list ref list.
-   *
-   * @param <T>  the type parameter
-   * @param list the list
-   * @return the ref list
-   */
   public static <T> RefList<T> unmodifiableList(RefList<T> list) {
+    return list; // TODO: Implement me
+  }
+
+  public static <T> RefList<T> synchronizedList(RefList<T> list) {
     return list; // TODO: Implement me
   }
 }

@@ -33,9 +33,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * The type Ref settings.
- */
 @RefAware
 @RefIgnore
 public class RefSettings implements Settings {
@@ -49,9 +46,6 @@ public class RefSettings implements Settings {
   private final PersistanceMode doubleCacheMode;
   private final Set<Class<?>> watchedClasses;
 
-  /**
-   * Instantiates a new Ref settings.
-   */
   protected RefSettings() {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
     this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", true);
@@ -88,21 +82,11 @@ public class RefSettings implements Settings {
     }).filter(x -> x != null).collect(Collectors.toSet());
   }
 
-  /**
-   * Gets double cache mode.
-   *
-   * @return the double cache mode
-   */
   @NotNull
   public PersistanceMode getDoubleCacheMode() {
     return doubleCacheMode;
   }
 
-  /**
-   * Instance ref settings.
-   *
-   * @return the ref settings
-   */
   @Nullable
   public static RefSettings INSTANCE() {
     if (null == INSTANCE) {
@@ -116,12 +100,6 @@ public class RefSettings implements Settings {
     return INSTANCE;
   }
 
-  /**
-   * Is lifecycle debug boolean.
-   *
-   * @param obj the obj
-   * @return the boolean
-   */
   public boolean isLifecycleDebug(@NotNull ReferenceCountingBase obj) {
     if (watchedClasses.contains(obj.getClass())) {
       return true;

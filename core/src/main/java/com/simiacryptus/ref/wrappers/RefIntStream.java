@@ -28,9 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
-/**
- * The type Ref int stream.
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -39,11 +36,6 @@ public class RefIntStream implements IntStream {
   private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
-  /**
-   * Instantiates a new Ref int stream.
-   *
-   * @param stream the stream
-   */
   RefIntStream(IntStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
@@ -53,13 +45,6 @@ public class RefIntStream implements IntStream {
     });
   }
 
-  /**
-   * Instantiates a new Ref int stream.
-   *
-   * @param stream  the stream
-   * @param lambdas the lambdas
-   * @param refs    the refs
-   */
   RefIntStream(IntStream stream, List<ReferenceCounting> lambdas, Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
@@ -72,46 +57,25 @@ public class RefIntStream implements IntStream {
     return inner.isParallel();
   }
 
-  /**
-   * Generate ref int stream.
-   *
-   * @param s the s
-   * @return the ref int stream
-   */
   @NotNull
   public static RefIntStream generate(@NotNull IntSupplier s) {
     return new RefIntStream(IntStream.generate(s));
   }
 
-  /**
-   * Range ref int stream.
-   *
-   * @param startInclusive the start inclusive
-   * @param endExclusive   the end exclusive
-   * @return the ref int stream
-   */
   @NotNull
   public static RefIntStream range(int startInclusive, int endExclusive) {
     return new RefIntStream(IntStream.range(startInclusive, endExclusive));
   }
 
-  /**
-   * Of ref int stream.
-   *
-   * @param x the x
-   * @return the ref int stream
-   */
+  public static IntStream rangeClosed(int startInclusive, int endInclusive) {
+    return new RefIntStream(IntStream.rangeClosed(startInclusive, endInclusive));
+  }
+
   @NotNull
   public static RefIntStream of(int x) {
     return new RefIntStream(IntStream.of(x));
   }
 
-  /**
-   * Of ref int stream.
-   *
-   * @param array the array
-   * @return the ref int stream
-   */
   @NotNull
   public static RefIntStream of(@NotNull int... array) {
     return new RefIntStream(IntStream.of(array).onClose(() -> {
@@ -119,25 +83,11 @@ public class RefIntStream implements IntStream {
     }));
   }
 
-  /**
-   * Concat ref int stream.
-   *
-   * @param a the a
-   * @param b the b
-   * @return the ref int stream
-   */
   @NotNull
   public static RefIntStream concat(@NotNull RefIntStream a, @NotNull RefIntStream b) {
     return new RefIntStream(IntStream.concat(a.inner, b.inner));
   }
 
-  /**
-   * Iterate ref int stream.
-   *
-   * @param seed the seed
-   * @param f    the f
-   * @return the ref int stream
-   */
   @NotNull
   public static RefIntStream iterate(final int seed, @NotNull final IntUnaryOperator f) {
     return new RefIntStream(IntStream.iterate(seed, f));

@@ -33,29 +33,29 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * The type Insert free refs.
- */
 @RefIgnore
 public class InsertFreeRefs extends RefASTOperator {
 
-  /**
-   * Instantiates a new Insert free refs.
-   *
-   * @param projectInfo     the project info
-   * @param compilationUnit the compilation unit
-   * @param file            the file
-   */
   protected InsertFreeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  /**
-   * Add free ref.
-   *
-   * @param declaration the declaration
-   * @param typeBinding the type binding
-   */
+  private static int firstLine(@NotNull Block body, int declaredAt) {
+    final List<Statement> statements = body.statements();
+    for (int i = Math.max(declaredAt, 0); i < statements.size(); i++) {
+      final Statement statement = statements.get(i);
+      if (statement instanceof ConstructorInvocation) {
+        declaredAt = i;
+        break;
+      }
+      if (statement instanceof SuperConstructorInvocation) {
+        declaredAt = i;
+        break;
+      }
+    }
+    return declaredAt;
+  }
+
   public void addFreeRef(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding) {
     if (skip(declaration)) return;
     if (null == typeBinding) {
@@ -99,7 +99,9 @@ public class InsertFreeRefs extends RefASTOperator {
           warn(declaration, "Cannot add freeRef for %s (VariableDeclarationStatement) in %s : %s", name, parentParent.getClass(), parentParent.toString().trim());
         }
       } else if (parent instanceof FieldDeclaration) {
-        add_freeRef_entry(declaration, typeBinding, name, parent);
+        if(!Modifier.isStatic(((FieldDeclaration)parent).getModifiers())) {
+          add_freeRef_entry(declaration, typeBinding, name, parent);
+        }
       } else {
         warn(declaration, "Cannot add freeRef for %s in %s : %s",
             name,
@@ -110,14 +112,6 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Add free ref entry.
-   *
-   * @param declaration the declaration
-   * @param typeBinding the type binding
-   * @param name        the name
-   * @param parent      the parent
-   */
   public void add_freeRef_entry(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding, @NotNull SimpleName name, @NotNull ASTNode parent) {
     final ASTNode fieldParent = parent.getParent();
     if (fieldParent instanceof TypeDeclaration) {
@@ -127,53 +121,18 @@ public class InsertFreeRefs extends RefASTOperator {
         debug(declaration, "Adding freeRef for %s to (%s)", name, getLocation(name));
         final boolean isFinal = isFinal(declaration);
         final List<Statement> statements = freeMethodOpt.get().getBody().statements();
-        if(!isFinal) {
+        if (!isFinal) {
           statements.add(0, ast.newExpressionStatement(setToNull(name)));
         }
         statements.add(0, isFinal && ASTUtil.hasAnnotation(declaration.resolveBinding(), Nonnull.class) ? newFreeRef(name, typeBinding) : freeRefStatement(name, typeBinding));
       } else {
-        warn(declaration, "Cannot add freeRef for %s::%s - no _free method", typeDeclaration.getName(), declaration.getName());
+        fatal(declaration, "Cannot add freeRef for %s::%s - no _free method", typeDeclaration.getName(), declaration.getName());
       }
     } else {
-      warn(declaration, "Cannot add freeRef for %s (FieldDeclaration) in %s : %s", name, fieldParent.getClass(), fieldParent.toString().trim());
+      fatal(declaration, "Cannot add freeRef for %s (FieldDeclaration) in %s : %s", name, fieldParent.getClass(), fieldParent.toString().trim());
     }
   }
 
-  protected boolean isFinal(@Nonnull VariableDeclaration declaration) {
-    if(declaration instanceof SingleVariableDeclaration) {
-      return Modifier.isFinal(((SingleVariableDeclaration) declaration).getModifiers());
-    } else {
-      final ASTNode declarationParent = declaration.getParent();
-      if(declarationParent instanceof VariableDeclarationExpression) {
-        return Modifier.isFinal(((VariableDeclarationExpression) declarationParent).getModifiers());
-      } else if(declarationParent instanceof VariableDeclarationStatement) {
-        return Modifier.isFinal(((VariableDeclarationStatement) declarationParent).getModifiers());
-      } else if(declarationParent instanceof FieldDeclaration) {
-        return Modifier.isFinal(((FieldDeclaration) declarationParent).getModifiers());
-      } else {
-        throw new RuntimeException(declarationParent.getClass().getName());
-      }
-    }
-  }
-
-  @NotNull
-  private Assignment setToNull(@NotNull SimpleName name) {
-    final Assignment assignment = ast.newAssignment();
-    assignment.setLeftHandSide(copyIfAttached(name));
-    assignment.setOperator(Assignment.Operator.ASSIGN);
-    assignment.setRightHandSide(ast.newNullLiteral());
-    return assignment;
-  }
-
-  /**
-   * Insert free ref.
-   *
-   * @param typeBinding the type binding
-   * @param node        the node
-   * @param body        the body
-   * @param line        the line
-   * @param isNonNull   the is non null
-   */
   public void insertFreeRef(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block body, int line, boolean isNonNull) {
     final Statement statement = isNonNull ? newFreeRef(node, typeBinding) : freeRefStatement(node, typeBinding);
     if (line < 0) {
@@ -184,15 +143,6 @@ public class InsertFreeRefs extends RefASTOperator {
     debug(1, body, "Added freeRef for value %s (%s) at line %s", node, typeBinding.getQualifiedName(), line);
   }
 
-  /**
-   * Insert free refs.
-   *
-   * @param typeBinding the type binding
-   * @param node        the node
-   * @param body        the body
-   * @param declaredAt  the declared at
-   * @param isNonNull   the is non null
-   */
   public void insertFreeRefs(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block body, int declaredAt, boolean isNonNull) {
     debug(1, node, "Insert freeRef for %s", node);
     if (null == body) {
@@ -260,28 +210,23 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  private static int firstLine(@NotNull Block body, int declaredAt) {
-    final List<Statement> statements = body.statements();
-    for (int i = Math.max(declaredAt, 0); i < statements.size(); i++) {
-      final Statement statement = statements.get(i);
-      if (statement instanceof ConstructorInvocation) {
-        declaredAt = i;
-        break;
-      }
-      if (statement instanceof SuperConstructorInvocation) {
-        declaredAt = i;
-        break;
+  protected boolean isFinal(@Nonnull VariableDeclaration declaration) {
+    if (declaration instanceof SingleVariableDeclaration) {
+      return Modifier.isFinal(((SingleVariableDeclaration) declaration).getModifiers());
+    } else {
+      final ASTNode declarationParent = declaration.getParent();
+      if (declarationParent instanceof VariableDeclarationExpression) {
+        return Modifier.isFinal(((VariableDeclarationExpression) declarationParent).getModifiers());
+      } else if (declarationParent instanceof VariableDeclarationStatement) {
+        return Modifier.isFinal(((VariableDeclarationStatement) declarationParent).getModifiers());
+      } else if (declarationParent instanceof FieldDeclaration) {
+        return Modifier.isFinal(((FieldDeclaration) declarationParent).getModifiers());
+      } else {
+        throw new RuntimeException(declarationParent.getClass().getName());
       }
     }
-    return declaredAt;
   }
 
-  /**
-   * Apply.
-   *
-   * @param node        the node
-   * @param typeBinding the type binding
-   */
   protected void freeExpressionResult(@NotNull Expression node, @NotNull ITypeBinding typeBinding) {
     if (isRefCounted(node, typeBinding)) {
       debug(node, "Ref-returning method: %s", node);
@@ -356,26 +301,12 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Can flow past boolean.
-   *
-   * @param body the body
-   * @param line the line
-   * @return the boolean
-   */
   protected boolean canFlowPast(@NotNull Block body, int line) {
     final List statements = body.statements();
     if (statements.size() - 1 > line) return true;
     return !isTerminal((Statement) statements.get(line));
   }
 
-  /**
-   * Free refs.
-   *
-   * @param node        the node
-   * @param typeBinding the type binding
-   * @param isNonNull   the is non null
-   */
   protected void freeRefs(@NotNull Expression node, @NotNull ITypeBinding typeBinding, boolean isNonNull) {
     final LambdaExpression lambda = ASTUtil.getLambda(node);
     if (null != lambda) {
@@ -432,14 +363,6 @@ public class InsertFreeRefs extends RefASTOperator {
     debug(node, "Wrapped method call with freeRef for %s at line %s", name, lineNumber);
   }
 
-  /**
-   * Gets type.
-   *
-   * @param node          the node
-   * @param typeBinding   the type binding
-   * @param isDeclaration the is declaration
-   * @return the type
-   */
   @Nullable
   protected Type getType(@NotNull Expression node, @NotNull ITypeBinding typeBinding, boolean isDeclaration) {
     final Type type = getType(node, typeBinding.getQualifiedName(), isDeclaration);
@@ -452,12 +375,6 @@ public class InsertFreeRefs extends RefASTOperator {
     return type;
   }
 
-  /**
-   * Has break boolean.
-   *
-   * @param statement the statement
-   * @return the boolean
-   */
   protected boolean hasBreak(Statement statement) {
     if (statement instanceof BreakStatement) {
       return true;
@@ -488,14 +405,6 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Has return value boolean.
-   *
-   * @param node          the node
-   * @param lambdaParent  the lambda parent
-   * @param methodBinding the method binding
-   * @return the boolean
-   */
   protected boolean hasReturnValue(LambdaExpression node, ASTNode lambdaParent, @Nullable IMethodBinding methodBinding) {
     if (null != methodBinding) {
       if (methodBinding.getReturnType().toString().equals("void")) {
@@ -512,15 +421,6 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Insert free ref complex return.
-   *
-   * @param typeBinding the type binding
-   * @param node        the node
-   * @param block       the block
-   * @param line        the line
-   * @param isNonNull   the is non null
-   */
   protected void insertFreeRef_ComplexReturn(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block block, int line, boolean isNonNull) {
     debug(1, node, "Adding freeRef for %s at %s", node, line);
     ReturnStatement returnStatement = (ReturnStatement) block.statements().get(line);
@@ -544,15 +444,6 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Insert free ref complex throw.
-   *
-   * @param typeBinding the type binding
-   * @param node        the node
-   * @param block       the block
-   * @param line        the line
-   * @param isNonNull   the is non null
-   */
   @SuppressWarnings("unused")
   protected void insertFreeRef_ComplexThrow(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block block, int line, boolean isNonNull) {
     ThrowStatement throwStatement = (ThrowStatement) block.statements().get(line);
@@ -576,12 +467,6 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * Is terminal boolean.
-   *
-   * @param statement the statement
-   * @return the boolean
-   */
   protected boolean isTerminal(Statement statement) {
     if (statement instanceof ReturnStatement) return true;
     else if (statement instanceof ThrowStatement) return true;
@@ -624,18 +509,17 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify variable declaration fragment.
-   */
+  @NotNull
+  private Assignment setToNull(@NotNull SimpleName name) {
+    final Assignment assignment = ast.newAssignment();
+    assignment.setLeftHandSide(copyIfAttached(name));
+    assignment.setOperator(Assignment.Operator.ASSIGN);
+    assignment.setRightHandSide(ast.newNullLiteral());
+    return assignment;
+  }
+
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertFreeRefs {
-    /**
-     * Instantiates a new Modify variable declaration fragment.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -686,18 +570,8 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify single variable declaration.
-   */
   @RefIgnore
   public static class ModifySingleVariableDeclaration extends InsertFreeRefs {
-    /**
-     * Instantiates a new Modify single variable declaration.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifySingleVariableDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -715,18 +589,8 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify class instance creation.
-   */
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertFreeRefs {
-    /**
-     * Instantiates a new Modify class instance creation.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }
@@ -747,18 +611,8 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  /**
-   * The type Modify method invocation.
-   */
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertFreeRefs {
-    /**
-     * Instantiates a new Modify method invocation.
-     *
-     * @param projectInfo     the project info
-     * @param compilationUnit the compilation unit
-     * @param file            the file
-     */
     public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
       super(projectInfo, compilationUnit, file);
     }

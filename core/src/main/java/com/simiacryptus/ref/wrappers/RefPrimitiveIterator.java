@@ -28,12 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.PrimitiveIterator;
 
-/**
- * The type Ref primitive iterator.
- *
- * @param <T>      the type parameter
- * @param <T_CONS> the type parameter
- */
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
@@ -41,11 +35,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   private final PrimitiveIterator<T, T_CONS> inner;
 
-  /**
-   * Instantiates a new Ref primitive iterator.
-   *
-   * @param inner the inner
-   */
   public RefPrimitiveIterator(PrimitiveIterator<T, T_CONS> inner) {
     this.inner = inner;
   }
@@ -55,20 +44,12 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     return inner;
   }
 
-  /**
-   * The type Of int.
-   */
   @RefAware
   @RefIgnore
   public static class OfInt extends ReferenceCountingBase implements PrimitiveIterator.OfInt {
     private final PrimitiveIterator.OfInt inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    /**
-     * Instantiates a new Of int.
-     *
-     * @param inner the inner
-     */
     public OfInt(OfInt inner) {
       this.inner = inner;
     }
@@ -83,12 +64,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return inner.nextInt();
     }
 
-    /**
-     * Track ref primitive iterator . of int.
-     *
-     * @param obj the obj
-     * @return the ref primitive iterator . of int
-     */
     @NotNull
     public RefPrimitiveIterator.OfInt track(ReferenceCounting obj) {
       list.add(obj);
@@ -104,20 +79,12 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   }
 
-  /**
-   * The type Of long.
-   */
   @RefAware
   @RefIgnore
   public static class OfLong extends ReferenceCountingBase implements PrimitiveIterator.OfLong {
     private final PrimitiveIterator.OfLong inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    /**
-     * Instantiates a new Of long.
-     *
-     * @param inner the inner
-     */
     public OfLong(OfLong inner) {
       this.inner = inner;
     }
@@ -132,12 +99,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return inner.nextLong();
     }
 
-    /**
-     * Track ref primitive iterator . of long.
-     *
-     * @param obj the obj
-     * @return the ref primitive iterator . of long
-     */
     @NotNull
     public RefPrimitiveIterator.OfLong track(ReferenceCounting obj) {
       list.add(obj);
@@ -153,20 +114,12 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   }
 
-  /**
-   * The type Of double.
-   */
   @RefAware
   @RefIgnore
   public static class OfDouble extends ReferenceCountingBase implements PrimitiveIterator.OfDouble {
     private final PrimitiveIterator.OfDouble inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    /**
-     * Instantiates a new Of double.
-     *
-     * @param inner the inner
-     */
     public OfDouble(OfDouble inner) {
       this.inner = inner;
     }
@@ -181,12 +134,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       return inner.nextDouble();
     }
 
-    /**
-     * Track ref primitive iterator . of double.
-     *
-     * @param obj the obj
-     * @return the ref primitive iterator . of double
-     */
     @NotNull
     public RefPrimitiveIterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
