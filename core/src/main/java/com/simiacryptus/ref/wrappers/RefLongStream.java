@@ -353,19 +353,19 @@ public class RefLongStream implements LongStream {
     return new RefLongStream(inner.unordered(), lambdas, refs);
   }
 
+  RefLongStream track(@NotNull Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
+    return this;
+  }
+
   private <U> U getRef(U u) {
     return RefStream.getRef(u, this.refs);
   }
 
   private <U> U storeRef(U u) {
     return RefStream.storeRef(u, refs);
-  }
-
-  RefLongStream track(@NotNull Object... lambda) {
-    for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
-    }
-    return this;
   }
 
 }

@@ -48,9 +48,9 @@ public class RefWeakReference<T> {
   @SuppressWarnings("unused")
   public T get() {
     final T t = inner.get();
-    if(t instanceof ReferenceCounting) {
+    if (t instanceof ReferenceCounting) {
       final ReferenceCounting referenceCounting = (ReferenceCounting) t;
-      if(!referenceCounting.isFinalized()) return null;
+      if (!referenceCounting.isFinalized()) return null;
       return (T) referenceCounting.addRef();
     }
     return t;

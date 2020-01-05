@@ -51,7 +51,7 @@ public class RefSettings implements Settings {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
     this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", true);
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
-    this.ignoredClasses= Stream.<String>of(
+    this.ignoredClasses = Stream.<String>of(
         "com.simiacryptus.mindseye.lang.Tensor"
     ).map(name -> {
       try {

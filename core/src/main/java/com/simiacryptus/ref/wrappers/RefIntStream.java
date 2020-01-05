@@ -369,18 +369,18 @@ public class RefIntStream implements IntStream {
     return new RefIntStream(inner.unordered(), lambdas, refs);
   }
 
+  RefIntStream track(@NotNull Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
+    return this;
+  }
+
   private <U> U getRef(U u) {
     return RefStream.getRef(u, this.refs);
   }
 
   private <U> U storeRef(U u) {
     return RefStream.storeRef(u, refs);
-  }
-
-  RefIntStream track(@NotNull Object... lambda) {
-    for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
-    }
-    return this;
   }
 }

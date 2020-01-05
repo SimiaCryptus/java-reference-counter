@@ -471,6 +471,13 @@ public class RefStream<T> implements Stream<T> {
     return new RefStream(getInner().unordered(), lambdas, refs);
   }
 
+  RefStream<T> track(@NotNull Object... lambda) {
+    for (Object l : lambda) {
+      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+    }
+    return this;
+  }
+
   @NotNull
   private <A> BiConsumer<A, A> getBiConsumer(@NotNull BinaryOperator<A> combiner) {
     return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
@@ -478,13 +485,6 @@ public class RefStream<T> implements Stream<T> {
 
   private <U> U getRef(U u) {
     return getRef(u, this.refs);
-  }
-
-  RefStream<T> track(@NotNull Object... lambda) {
-    for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
-    }
-    return this;
   }
 
   @RefAware
