@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
@@ -61,7 +62,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   @NotNull
   public static <T> RefSpliterator<T>[] addRefs(@NotNull RefSpliterator<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
         .toArray((x) -> new RefSpliterator[x]);
   }
 

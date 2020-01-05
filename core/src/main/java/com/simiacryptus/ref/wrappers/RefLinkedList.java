@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
 
   @NotNull
   public static <T> RefLinkedList<T>[] addRefs(@NotNull RefLinkedList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedList::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedList::addRef)
         .toArray((x) -> new RefLinkedList[x]);
   }
 

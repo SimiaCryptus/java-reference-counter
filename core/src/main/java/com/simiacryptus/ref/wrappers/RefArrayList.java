@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class RefArrayList<T> extends RefAbstractList<T> {
 
   @NotNull
   public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
         .toArray((x) -> new RefArrayList[x]);
   }
 

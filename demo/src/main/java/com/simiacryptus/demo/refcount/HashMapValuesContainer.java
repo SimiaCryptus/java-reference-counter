@@ -22,12 +22,14 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class HashMapValuesContainer extends ReferenceCountingBase {
-  public static void testBasicOperations(@NotNull java.util.HashMap<Integer, BasicType> valuesMap) {
-    final java.util.HashMap<Integer, BasicType> copyMap = new java.util.HashMap<>();
+  public static void testBasicOperations(@NotNull HashMap<Integer, BasicType> valuesMap) {
+    final HashMap<Integer, BasicType> copyMap = new HashMap<>();
     copyMap.putAll(valuesMap);
     valuesMap.clear();
     assert valuesMap.isEmpty();
@@ -52,7 +54,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  public static void testStreamOperations(@NotNull java.util.HashMap<Integer, BasicType> values) {
+  public static void testStreamOperations(@NotNull HashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
@@ -61,13 +63,13 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testEntries();
-      testBasicOperations(new java.util.HashMap<>());
-      testStreamOperations(new java.util.HashMap<>());
+      testBasicOperations(new HashMap<>());
+      testStreamOperations(new HashMap<>());
     }
   }
 
-  private static void test(@NotNull java.util.function.Consumer<java.util.HashMap<Integer, BasicType>> fn) {
-    final java.util.HashMap<Integer, BasicType> hashMap = new java.util.HashMap<>();
+  private static void test(@NotNull Consumer<HashMap<Integer, BasicType>> fn) {
+    final HashMap<Integer, BasicType> hashMap = new HashMap<>();
     fn.accept(hashMap);
   }
 
@@ -84,8 +86,8 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     test(values -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
-        if (1 == ((int) fooEntry2.getKey())) {
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
+        if (1 == fooEntry2.getKey()) {
           if (null == fooEntry2.getValue()) {
             throw new AssertionError();
           }
@@ -98,12 +100,12 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       };
       values.entrySet().forEach(entryConsumer);
     });
-    test((java.util.HashMap<Integer, BasicType> values) -> {
+    test((HashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<java.util.Map.Entry<java.lang.Integer, com.simiacryptus.demo.refcount.BasicType>>) lambdaParameter -> {
-        if (1 == ((int) lambdaParameter.getKey())) {
+      final HashMap<Integer, BasicType> closureMap = new HashMap<>();
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = lambdaParameter -> {
+        if (1 == lambdaParameter.getKey()) {
           if (null == lambdaParameter.getValue()) {
             throw new AssertionError();
           }
@@ -117,14 +119,14 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       values.entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();
     });
-    test((java.util.HashMap<Integer, BasicType> values) -> {
+    test((HashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.HashMap<Integer, BasicType> closureMap = new java.util.HashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new java.util.function.Consumer<Map.Entry<Integer, BasicType>>() {
+      final HashMap<Integer, BasicType> closureMap = new HashMap<>();
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
         public void accept(@NotNull Map.Entry<Integer, BasicType> anonymousParameter) {
-          if (1 == ((int) anonymousParameter.getKey())) {
+          if (1 == anonymousParameter.getKey()) {
             if (null == anonymousParameter.getValue()) {
               throw new AssertionError();
             }

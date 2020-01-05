@@ -350,10 +350,11 @@ public class RefDoubleStream implements DoubleStream {
     return RefStream.storeRef(u, refs);
   }
 
-  private void track(@NotNull Object... lambda) {
+  RefDoubleStream track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }
+    return this;
   }
 
 }

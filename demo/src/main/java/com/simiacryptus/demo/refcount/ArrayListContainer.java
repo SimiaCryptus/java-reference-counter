@@ -19,6 +19,7 @@
 
 package com.simiacryptus.demo.refcount;
 
+import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
@@ -27,7 +28,22 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.*;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @SuppressWarnings("unused")
 public @RefAware
@@ -50,15 +66,15 @@ class ArrayListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testOperations(@NotNull java.util.function.Consumer<java.util.ArrayList<BasicType>> fn) {
-    java.util.ArrayList<BasicType> values = new java.util.ArrayList<>();
+  private static void testOperations(@NotNull Consumer<ArrayList<BasicType>> fn) {
+    ArrayList<BasicType> values = new ArrayList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
     }
     fn.accept(values);
   }
 
-  private static void testArrayOperations(@NotNull java.util.ArrayList<BasicType> values) {
+  private static void testArrayOperations(@NotNull ArrayList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
     }
@@ -115,9 +131,9 @@ class ArrayListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
       final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
-      values.addAll(java.util.Arrays.asList(basicTypeN));
+      values.addAll(Arrays.asList(basicTypeN));
       values.add(1, basicType1);
-      values.addAll(1, java.util.Arrays.asList(basicTypeN));
+      values.addAll(1, Arrays.asList(basicTypeN));
       if (values.indexOf(basicType1) != 4) {
         throw new RuntimeException();
       }
@@ -141,7 +157,7 @@ class ArrayListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
         return x;
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values101 -> {
       assert values101.size() == values101.stream().map(x156 -> {
@@ -150,7 +166,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         } else {
           throw new RuntimeException();
         }
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values110 -> {
       assert values110.size() == values110.stream().map(x111 -> {
@@ -159,7 +175,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values110 -> {
       assert values110.size() == values110.stream().map(x111 -> {
@@ -168,7 +184,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values110 -> {
       assert values110.size() == values110.stream().map(x111 -> {
@@ -179,7 +195,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         }
       }).map(x -> {
         return x.getInner();
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values110 -> {
       assert values110.size() == values110.stream().filter(x111 -> {
@@ -188,7 +204,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values110 -> {
       assert values110.size() == values110.stream().filter(x111 -> {
@@ -197,7 +213,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-      }).collect(java.util.stream.Collectors.toList()).size();
+      }).collect(Collectors.toList()).size();
     });
     testOperations(values110 -> {
       assert values110.size() == getCount1(values110.iterator());
@@ -207,8 +223,8 @@ class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
-  private static long getCount1(@NotNull java.util.Iterator<BasicType> iterator) {
-    return java.util.stream.StreamSupport.stream(java.util.Spliterators.spliterator(new RefIteratorBase<BasicType>() {
+  private static long getCount1(@NotNull Iterator<BasicType> iterator) {
+    return StreamSupport.stream(Spliterators.spliterator(new RefIteratorBase<BasicType>() {
       @Override
       public boolean hasNext() {
         return iterator.hasNext();
@@ -232,8 +248,8 @@ class ArrayListContainer extends ReferenceCountingBase {
     }).count();
   }
 
-  private static long getCount2(@NotNull java.util.Iterator<BasicType> iterator) {
-    return java.util.stream.StreamSupport.stream(java.util.Spliterators.spliterator(new RefIteratorBase<BasicType>() {
+  private static long getCount2(@NotNull Iterator<BasicType> iterator) {
+    return StreamSupport.stream(Spliterators.spliterator(new RefIteratorBase<BasicType>() {
       @Override
       public boolean hasNext() {
         return iterator.hasNext();
@@ -254,7 +270,7 @@ class ArrayListContainer extends ReferenceCountingBase {
       return x.getValue() >= 0;
     }).filter((Predicate<? super BasicType>) x -> {
       return x != null;
-    }).collect(java.util.stream.Collectors.toList()).size();
+    }).collect(Collectors.toList()).size();
   }
 
   private static boolean test1(@NotNull BasicType x) {
@@ -267,51 +283,51 @@ class ArrayListContainer extends ReferenceCountingBase {
 
   private static void testCollectionOperations() {
     testOperations(values289 -> {
-      assert values289.size() == values289.stream().collect(java.util.stream.Collectors.mapping(x291 -> {
+      assert values289.size() == values289.stream().collect(Collectors.mapping(x291 -> {
         return x291.getValue();
-      }, java.util.stream.Collectors.toList())).size();
+      }, Collectors.toList())).size();
     });
     testOperations(values296 -> {
       assert values296.size() == values296.stream()
-          .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toList(), x191 -> {
-            return new java.util.HashSet(x191);
+          .collect(Collectors.collectingAndThen(Collectors.toList(), x191 -> {
+            return new HashSet(x191);
           })).size();
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .collect(java.util.stream.Collectors.reducing(0, (Function<? super BasicType, ? extends Integer>) x -> {
+          .collect(Collectors.reducing(0, (Function<? super BasicType, ? extends Integer>) x -> {
             return 1;
           }, (a, b) -> a + b));
     });
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
         return x.getValue();
-      }).collect(java.util.stream.Collectors.reducing((a, b) -> a + b)).get();
+      }).collect(Collectors.reducing((a, b) -> a + b)).get();
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.mapping(x -> {
+      assert values.size() == values.stream().collect(Collectors.mapping(x -> {
         return 1;
-      }, java.util.stream.Collectors.reducing((a, b) -> a + b))).get();
+      }, Collectors.reducing((a, b) -> a + b))).get();
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .collect(java.util.stream.Collectors.mapping((Function<? super BasicType, ? extends Integer>) x -> {
+          .collect(Collectors.mapping((Function<? super BasicType, ? extends Integer>) x -> {
             return 1;
-          }, java.util.stream.Collectors.counting()));
+          }, Collectors.counting()));
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.counting());
+      assert values.size() == values.stream().collect(Collectors.counting());
     });
     testOperations(values -> {
-      final java.util.List<java.util.List<BasicType>> partitions = com.google.common.collect.Lists.partition(values, 2);
-      partitions.forEach((java.util.function.Consumer<? super java.util.List<BasicType>>) x -> {
+      final List<List<BasicType>> partitions = Lists.partition(values, 2);
+      partitions.forEach((Consumer<? super List<BasicType>>) x -> {
         assert x != null;
       });
     });
     testOperations(values -> {
       values.add(new BasicType());
       final BasicType basicType = new BasicType();
-      final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);
+      final List<BasicType> list = Arrays.asList(basicType);
       if (!values.addAll(list)) {
         throw new RuntimeException();
       }
@@ -332,14 +348,14 @@ class ArrayListContainer extends ReferenceCountingBase {
 
   private static void testIteratorOperations() {
     testOperations(values -> {
-      final java.util.Iterator<BasicType> iterator = values.iterator();
+      final Iterator<BasicType> iterator = values.iterator();
       while (iterator.hasNext()) {
         iterator.next();
         iterator.remove();
       }
     });
     testOperations(values -> {
-      final java.util.ListIterator<BasicType> iterator = values.listIterator();
+      final ListIterator<BasicType> iterator = values.listIterator();
       assert 0 == iterator.nextIndex();
       if (iterator.hasNext()) {
         iterator.next();
@@ -358,8 +374,8 @@ class ArrayListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      final java.util.Spliterator<BasicType> spliterator = values.spliterator();
-      while (spliterator.tryAdvance((java.util.function.Consumer<? super BasicType>) x -> {
+      final Spliterator<BasicType> spliterator = values.spliterator();
+      while (spliterator.tryAdvance((Consumer<? super BasicType>) x -> {
         assert null != x;
       })) {
       }
@@ -369,7 +385,7 @@ class ArrayListContainer extends ReferenceCountingBase {
   private static void testStreamOperations() {
     testOperations(values -> {
       assert values.size() == values.stream()
-          .flatMap((Function<? super BasicType, ? extends java.util.stream.Stream<? extends BasicType>>) x -> {
+          .flatMap((Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
             return values.stream();
           }).distinct().count();
     });
@@ -386,7 +402,7 @@ class ArrayListContainer extends ReferenceCountingBase {
       for (int j = 0; j < outputPrototype377.length; j++) {
         final int j_ = j;
         @Nonnull final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
-        final WrapperType[] copyInput = java.util.Arrays.stream(array374)
+        final WrapperType[] copyInput = Arrays.stream(array374)
             .map((Function<? super BasicType, ? extends WrapperType>) x -> {
               return new WrapperType(x);
             }).toArray(i -> new WrapperType[i]);
@@ -440,17 +456,17 @@ class ArrayListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .flatMap((Function<? super BasicType, ? extends java.util.stream.Stream<? extends BasicType>>) x -> {
+          .flatMap((Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
             x.setValue(x.getValue() + 1);
-            return java.util.stream.Stream.of(x);
+            return Stream.of(x);
           }).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       values.stream()
-          .flatMap((Function<? super BasicType, ? extends java.util.stream.Stream<? extends BasicType>>) x -> {
+          .flatMap((Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
             x.setValue(x.getValue() + 1);
-            return java.util.stream.Stream.of(x, new BasicType());
-          }).forEach((java.util.function.Consumer<? super BasicType>) x -> {
+            return Stream.of(x, new BasicType());
+          }).forEach((Consumer<? super BasicType>) x -> {
         assert x != null;
       });
     });
@@ -460,7 +476,7 @@ class ArrayListContainer extends ReferenceCountingBase {
       });
     });
     testOperations(values -> {
-      assert values.size() == values.stream().peek((java.util.function.Consumer<? super BasicType>) x -> {
+      assert values.size() == values.stream().peek((Consumer<? super BasicType>) x -> {
         assert x != null;
       }).count();
     });
@@ -483,11 +499,11 @@ class ArrayListContainer extends ReferenceCountingBase {
           }) != null;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.toList()).size() : values.size()
-          + " != " + values.stream().collect(java.util.stream.Collectors.toList()).size();
+      assert values.size() == values.stream().collect(Collectors.toList()).size() : values.size()
+          + " != " + values.stream().collect(Collectors.toList()).size();
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.toSet()).size();
+      assert values.size() == values.stream().collect(Collectors.toSet()).size();
     });
     testOperations(values -> {
       assert values.stream().anyMatch((Predicate<? super BasicType>) x -> {
@@ -510,49 +526,49 @@ class ArrayListContainer extends ReferenceCountingBase {
       }).findFirst().isPresent();
     });
     testOperations(values -> {
-      java.util.Iterator<BasicType> iter = values.stream().iterator();
+      Iterator<BasicType> iter = values.stream().iterator();
       while (iter.hasNext()) {
         assert iter.next() != null;
       }
     });
     testOperations(values -> {
       @NotNull
-      java.util.Spliterator<BasicType> iter = values.stream().spliterator();
-      while (iter.tryAdvance((java.util.function.Consumer<? super BasicType>) x -> {
+      Spliterator<BasicType> iter = values.stream().spliterator();
+      while (iter.tryAdvance((Consumer<? super BasicType>) x -> {
         assert x != null;
       })) {
       }
     });
     testOperations(values -> {
       @NotNull
-      java.util.ListIterator<BasicType> iter = values.listIterator();
+      ListIterator<BasicType> iter = values.listIterator();
       while (iter.hasNext()) {
         assert iter.next() != null;
       }
     });
     testOperations(values -> {
       assert values
-          .size() == values.stream().sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+          .size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert values
-          .size() == values.stream().sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+          .size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert values.size() == values.stream().map((Function<? super BasicType, ? extends BasicType>) x -> {
         x.setValue(x.getValue() + 1);
         return x;
-      }).sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      }).sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert null != values.stream()
-          .max(java.util.Comparator.comparing((Function<? super BasicType, ? extends Integer>) x -> {
+          .max(Comparator.comparing((Function<? super BasicType, ? extends Integer>) x -> {
             return x.getValue();
           })).get();
     });
     testOperations(values -> {
       assert null != values.stream()
-          .min(java.util.Comparator.comparing((Function<? super BasicType, ? extends Integer>) x -> {
+          .min(Comparator.comparing((Function<? super BasicType, ? extends Integer>) x -> {
             return x.getValue();
           })).get();
     });
@@ -560,23 +576,23 @@ class ArrayListContainer extends ReferenceCountingBase {
       if (values.size() > 4 && values.stream().skip(1).limit(5).count() != 4) {
         throw new AssertionError();
       }
-      values.stream().forEach((java.util.function.Consumer<? super BasicType>) x -> {
+      values.stream().forEach((Consumer<? super BasicType>) x -> {
         x.setValue(x.getValue() + 1);
       });
     });
     testOperations(values -> {
-      values.stream().parallel().forEach((java.util.function.Consumer<? super BasicType>) x -> {
+      values.stream().parallel().forEach((Consumer<? super BasicType>) x -> {
         x.setValue(x.getValue() + 1);
       });
     });
     testOperations(values -> {
-      final java.util.stream.Stream<BasicType> parallel = values.stream().parallel();
+      final Stream<BasicType> parallel = values.stream().parallel();
       if (!parallel.isParallel())
         throw new AssertionError();
       parallel.close();
     });
     testOperations(values -> {
-      values.stream().forEachOrdered((java.util.function.Consumer<? super BasicType>) x -> {
+      values.stream().forEachOrdered((Consumer<? super BasicType>) x -> {
         x.setValue(x.getValue() + 1);
       });
     });
@@ -604,20 +620,20 @@ class ArrayListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .flatMapToInt((Function<? super BasicType, ? extends java.util.stream.IntStream>) foobar1 -> {
-            return java.util.stream.IntStream.of(foobar1.getValue());
+          .flatMapToInt((Function<? super BasicType, ? extends IntStream>) foobar1 -> {
+            return IntStream.of(foobar1.getValue());
           }).toArray().length;
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .flatMapToDouble((Function<? super BasicType, ? extends java.util.stream.DoubleStream>) x -> {
-            return java.util.stream.DoubleStream.of(x.getValue());
+          .flatMapToDouble((Function<? super BasicType, ? extends DoubleStream>) x -> {
+            return DoubleStream.of(x.getValue());
           }).toArray().length;
     });
     testOperations(values -> {
       final long[] longs = values.stream()
-          .flatMapToLong((Function<? super BasicType, ? extends java.util.stream.LongStream>) x -> {
-            return java.util.stream.LongStream.of(x.getValue());
+          .flatMapToLong((Function<? super BasicType, ? extends LongStream>) x -> {
+            return LongStream.of(x.getValue());
           }).toArray();
       assert values.size() == longs.length;
     });

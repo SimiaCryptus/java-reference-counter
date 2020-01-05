@@ -21,6 +21,7 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
@@ -46,7 +47,13 @@ public class RefWeakReference<T> {
   @Nullable
   @SuppressWarnings("unused")
   public T get() {
-    return inner.get();
+    final T t = inner.get();
+    if(t instanceof ReferenceCounting) {
+      final ReferenceCounting referenceCounting = (ReferenceCounting) t;
+      if(!referenceCounting.isFinalized()) return null;
+      return (T) referenceCounting.addRef();
+    }
+    return t;
   }
 
   @SuppressWarnings("unused")

@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RefAware
@@ -35,7 +36,7 @@ public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T>
 
   @NotNull
   public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef)
         .toArray((x) -> new RefList[x]);
   }
 

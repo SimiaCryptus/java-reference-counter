@@ -26,6 +26,7 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,7 +66,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
 
   @NotNull
   public static <T> RefHashSet<T>[] addRefs(@NotNull RefHashSet<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef)
         .toArray((x) -> new RefHashSet[x]);
   }
 

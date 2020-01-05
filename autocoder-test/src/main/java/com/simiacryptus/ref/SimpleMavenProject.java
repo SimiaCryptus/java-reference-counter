@@ -84,7 +84,7 @@ public class SimpleMavenProject {
   @NotNull
   public static SimpleMavenProject load(String root) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     SimpleMavenProject mavenProject = new SimpleMavenProject(root);
-    mavenProject.resolve().getDependencies().forEach((org.eclipse.aether.graph.Dependency dependency) -> {
+    mavenProject.resolve().getDependencies().forEach((Dependency dependency) -> {
       logger.info(String.format("Dependency: %s (%s)", dependency.getArtifact().getFile().getAbsolutePath(), dependency));
     });
     return mavenProject;

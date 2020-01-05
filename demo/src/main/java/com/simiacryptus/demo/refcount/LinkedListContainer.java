@@ -23,29 +23,44 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class LinkedListContainer extends ReferenceCountingBase {
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
-      testCollectionOperations(new java.util.LinkedList<>());
-      testElementOperations(new java.util.LinkedList<>());
+      testCollectionOperations(new LinkedList<>());
+      testElementOperations(new LinkedList<>());
       testStreamOperations();
       testIteratorOperations();
     }
   }
 
-  private static void testOperations(@NotNull java.util.function.Consumer<java.util.LinkedList<BasicType>> fn) {
-    java.util.LinkedList<BasicType> values = new java.util.LinkedList<>();
+  private static void testOperations(@NotNull Consumer<LinkedList<BasicType>> fn) {
+    LinkedList<BasicType> values = new LinkedList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
     }
     fn.accept(values);
   }
 
-  private static void testArrayOperations(@NotNull java.util.LinkedList<BasicType> values) {
+  private static void testArrayOperations(@NotNull LinkedList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
     }
@@ -59,7 +74,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testElementOperations(@NotNull java.util.LinkedList<BasicType> values) {
+  private static void testElementOperations(@NotNull LinkedList<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
@@ -98,9 +113,9 @@ public class LinkedListContainer extends ReferenceCountingBase {
       throw new RuntimeException();
     }
     final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
-    values.addAll(java.util.Arrays.asList(basicTypeN));
+    values.addAll(Arrays.asList(basicTypeN));
     values.add(1, basicType1);
-    values.addAll(1, java.util.Arrays.asList(basicTypeN));
+    values.addAll(1, Arrays.asList(basicTypeN));
     if (values.indexOf(basicType1) != 4) {
       throw new RuntimeException();
     }
@@ -119,10 +134,10 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testCollectionOperations(@NotNull java.util.LinkedList<BasicType> values) {
+  private static void testCollectionOperations(@NotNull LinkedList<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
-    final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);
+    final List<BasicType> list = Arrays.asList(basicType);
     if (!values.addAll(list)) {
       throw new RuntimeException();
     }
@@ -142,19 +157,19 @@ public class LinkedListContainer extends ReferenceCountingBase {
 
   private static void testDoubleStream() {
     testOperations(values -> {
-      final java.util.stream.DoubleStream doubleStream = values.stream().mapToDouble(foobar1 -> {
+      final DoubleStream doubleStream = values.stream().mapToDouble(foobar1 -> {
         return foobar1.getValue();
       });
-      final java.util.PrimitiveIterator.OfDouble iterator = doubleStream.iterator();
+      final PrimitiveIterator.OfDouble iterator = doubleStream.iterator();
       while (iterator.hasNext()) {
         assert null != iterator.next();
       }
     });
     testOperations(values -> {
-      final java.util.stream.DoubleStream intStream = values.stream().mapToDouble(foobar1 -> {
+      final DoubleStream intStream = values.stream().mapToDouble(foobar1 -> {
         return foobar1.getValue();
       });
-      final java.util.Spliterator.OfDouble iterator = intStream.spliterator();
+      final Spliterator.OfDouble iterator = intStream.spliterator();
       iterator.forEachRemaining((double i) -> {
         assert i > 0;
       });
@@ -227,7 +242,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().mapToDouble(foobar1 -> {
         return foobar1.getValue();
-      }).flatMap(i -> java.util.stream.DoubleStream.of(i, i, i)).skip(values.size()).limit(values.size()).count();
+      }).flatMap(i -> DoubleStream.of(i, i, i)).skip(values.size()).limit(values.size()).count();
     });
     testOperations(values -> {
       assert values.size() == values.stream().mapToDouble(foobar1 -> {
@@ -235,7 +250,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).sorted().summaryStatistics().getCount();
     });
     testOperations(values -> {
-      final java.util.stream.DoubleStream parallel = values.stream().mapToDouble(foobar1 -> {
+      final DoubleStream parallel = values.stream().mapToDouble(foobar1 -> {
         return foobar1.getValue();
       }).parallel();
       assert parallel.isParallel();
@@ -250,60 +265,60 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.stream().flatMapToDouble(foobar1 -> {
-        return java.util.stream.DoubleStream.of(foobar1.getValue());
+        return DoubleStream.of(foobar1.getValue());
       }).max().isPresent();
     });
     testOperations(values -> {
       assert values.stream().flatMapToDouble(foobar1 -> {
-        return java.util.stream.DoubleStream.of(foobar1.getValue());
+        return DoubleStream.of(foobar1.getValue());
       }).min().isPresent();
     });
     testOperations(values -> {
       assert values.size() == values.stream().flatMapToDouble(foobar1 -> {
-        return java.util.stream.DoubleStream.of(foobar1.getValue());
+        return DoubleStream.of(foobar1.getValue());
       }).peek(i -> {
         assert 0 < i;
       }).toArray().length;
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToDouble(foobar1 -> {
-        return java.util.stream.DoubleStream.of(foobar1.getValue());
+        return DoubleStream.of(foobar1.getValue());
       }).reduce((a, b) -> a + b).getAsDouble();
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToDouble(foobar1 -> {
-        return java.util.stream.DoubleStream.of(foobar1.getValue());
+        return DoubleStream.of(foobar1.getValue());
       }).reduce(0, (a, b) -> a + b);
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToDouble(foobar1 -> {
-        return java.util.stream.DoubleStream.of(foobar1.getValue());
+        return DoubleStream.of(foobar1.getValue());
       }).collect(AtomicDouble::new, (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
     });
     testOperations(values -> {
-      final double sum = java.util.stream.DoubleStream.iterate(1, x -> x + 1).limit(10).sum();
+      final double sum = DoubleStream.iterate(1, x -> x + 1).limit(10).sum();
       assert 0 < sum : "0 >= " + sum;
     });
     testOperations(values -> {
-      assert 0 < java.util.stream.DoubleStream.generate(() -> (int) (Math.random() * 5)).limit(10).sum();
+      assert 0 < DoubleStream.generate(() -> (int) (Math.random() * 5)).limit(10).sum();
     });
   }
 
   private static void testIntStream() {
     testOperations(values -> {
-      final java.util.stream.IntStream intStream = values.stream().mapToInt(foobar1 -> {
+      final IntStream intStream = values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
       });
-      final java.util.PrimitiveIterator.OfInt iterator = intStream.iterator();
+      final PrimitiveIterator.OfInt iterator = intStream.iterator();
       while (iterator.hasNext()) {
         assert null != iterator.next();
       }
     });
     testOperations(values -> {
-      final java.util.stream.IntStream intStream = values.stream().mapToInt(foobar1 -> {
+      final IntStream intStream = values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
       });
-      final java.util.Spliterator.OfInt iterator = intStream.spliterator();
+      final Spliterator.OfInt iterator = intStream.spliterator();
       iterator.forEachRemaining((int i) -> {
         assert i > 0;
       });
@@ -386,7 +401,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
-      }).flatMap(i -> java.util.stream.IntStream.of(i, i, i)).skip(values.size()).limit(values.size()).count();
+      }).flatMap(i -> IntStream.of(i, i, i)).skip(values.size()).limit(values.size()).count();
     });
     testOperations(values -> {
       assert values.size() == values.stream().mapToInt(foobar1 -> {
@@ -394,7 +409,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).sorted().summaryStatistics().getCount();
     });
     testOperations(values -> {
-      final java.util.stream.IntStream parallel = values.stream().mapToInt(foobar1 -> {
+      final IntStream parallel = values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
       }).parallel();
       assert parallel.isParallel();
@@ -409,48 +424,48 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream.of(foobar1.getValue());
+        return IntStream.of(foobar1.getValue());
       }).max().isPresent();
     });
     testOperations(values -> {
       assert values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream.of(foobar1.getValue());
+        return IntStream.of(foobar1.getValue());
       }).min().isPresent();
     });
     testOperations(values -> {
       assert values.size() == values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream.of(foobar1.getValue());
+        return IntStream.of(foobar1.getValue());
       }).peek(i -> {
         assert 0 < i;
       }).toArray().length;
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream.of(foobar1.getValue());
+        return IntStream.of(foobar1.getValue());
       }).reduce((a, b) -> a + b).getAsInt();
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream.of(foobar1.getValue());
+        return IntStream.of(foobar1.getValue());
       }).reduce(0, (a, b) -> a + b);
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToInt(foobar1 -> {
-        return java.util.stream.IntStream.of(foobar1.getValue());
+        return IntStream.of(foobar1.getValue());
       }).collect(AtomicInteger::new, (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
     });
     testOperations(values -> {
-      final int sum = java.util.stream.IntStream.range(1, 5).sum();
+      final int sum = IntStream.range(1, 5).sum();
       assert 0 < sum : "0 >= " + sum;
     });
     testOperations(values -> {
-      assert 0 < java.util.stream.IntStream.generate(() -> (int) (Math.random() * 5)).limit(10).sum();
+      assert 0 < IntStream.generate(() -> (int) (Math.random() * 5)).limit(10).sum();
     });
   }
 
   private static void testIteratorOperations() {
     testOperations(values -> {
-      final java.util.Iterator<com.simiacryptus.demo.refcount.BasicType> iterator = values.iterator();
+      final Iterator<BasicType> iterator = values.iterator();
       while (iterator.hasNext()) {
         iterator.next();
         iterator.remove();
@@ -458,7 +473,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       if (values.size() > 3) {
-        final java.util.ListIterator<com.simiacryptus.demo.refcount.BasicType> iterator = values.listIterator();
+        final ListIterator<BasicType> iterator = values.listIterator();
         assert 0 == iterator.nextIndex();
         if (iterator.hasNext()) {
           iterator.next();
@@ -479,7 +494,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      final java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> spliterator647 = values.spliterator();
+      final Spliterator<BasicType> spliterator647 = values.spliterator();
       while (spliterator647.tryAdvance(x -> {
         assert null != x;
       })) {
@@ -489,19 +504,19 @@ public class LinkedListContainer extends ReferenceCountingBase {
 
   private static void testLongStream() {
     testOperations(values -> {
-      final java.util.stream.LongStream intStream = values.stream().mapToLong(foobar1 -> {
+      final LongStream intStream = values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
       });
-      final java.util.PrimitiveIterator.OfLong iterator = intStream.iterator();
+      final PrimitiveIterator.OfLong iterator = intStream.iterator();
       while (iterator.hasNext()) {
         assert null != iterator.next();
       }
     });
     testOperations(values -> {
-      final java.util.stream.LongStream intStream = values.stream().mapToLong(foobar1 -> {
+      final LongStream intStream = values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
       });
-      final java.util.Spliterator.OfLong iterator = intStream.spliterator();
+      final Spliterator.OfLong iterator = intStream.spliterator();
       iterator.forEachRemaining((long i) -> {
         assert i > 0;
       });
@@ -579,7 +594,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
-      }).flatMap(i -> java.util.stream.LongStream.of(i, i, i)).skip(values.size()).limit(values.size()).count();
+      }).flatMap(i -> LongStream.of(i, i, i)).skip(values.size()).limit(values.size()).count();
     });
     testOperations(values -> {
       assert values.size() == values.stream().mapToLong(foobar1 -> {
@@ -587,7 +602,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).sorted().summaryStatistics().getCount();
     });
     testOperations(values -> {
-      final java.util.stream.LongStream parallel = values.stream().mapToLong(foobar1 -> {
+      final LongStream parallel = values.stream().mapToLong(foobar1 -> {
         return foobar1.getValue();
       }).parallel();
       assert parallel.isParallel();
@@ -602,42 +617,42 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       assert values.stream().flatMapToLong(foobar1 -> {
-        return java.util.stream.LongStream.of(foobar1.getValue());
+        return LongStream.of(foobar1.getValue());
       }).max().isPresent();
     });
     testOperations(values -> {
       assert values.stream().flatMapToLong(foobar1 -> {
-        return java.util.stream.LongStream.of(foobar1.getValue());
+        return LongStream.of(foobar1.getValue());
       }).min().isPresent();
     });
     testOperations(values -> {
       assert values.size() == values.stream().flatMapToLong(foobar1 -> {
-        return java.util.stream.LongStream.of(foobar1.getValue());
+        return LongStream.of(foobar1.getValue());
       }).peek(i -> {
         assert 0 < i;
       }).toArray().length;
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToLong(foobar1 -> {
-        return java.util.stream.LongStream.of(foobar1.getValue());
+        return LongStream.of(foobar1.getValue());
       }).reduce((a, b) -> a + b).getAsLong();
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToLong(foobar1 -> {
-        return java.util.stream.LongStream.of(foobar1.getValue());
+        return LongStream.of(foobar1.getValue());
       }).reduce(0, (a, b) -> a + b);
     });
     testOperations(values -> {
       assert 0 < values.stream().flatMapToLong(foobar1 -> {
-        return java.util.stream.LongStream.of(foobar1.getValue());
+        return LongStream.of(foobar1.getValue());
       }).collect(AtomicLong::new, (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
     });
     testOperations(values -> {
-      final long sum = java.util.stream.LongStream.range(1, 5).sum();
+      final long sum = LongStream.range(1, 5).sum();
       assert 0 < sum : "0 >= " + sum;
     });
     testOperations(values -> {
-      assert 0 < java.util.stream.LongStream.generate(() -> (int) (Math.random() * 5)).limit(10).sum();
+      assert 0 < LongStream.generate(() -> (int) (Math.random() * 5)).limit(10).sum();
     });
   }
 
@@ -645,7 +660,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     if (false)
       testOperations(values -> {
         assert values.size() == values.stream().flatMap(
-            (java.util.function.Function<? super BasicType, ? extends java.util.stream.Stream<? extends BasicType>>) x -> {
+            (Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
               return values.stream();
             }).distinct().count();
       });
@@ -665,13 +680,13 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert values.size() == values.stream().flatMap(x -> {
         x.setValue(x.getValue() + 1);
-        return java.util.stream.Stream.of(x);
+        return Stream.of(x);
       }).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       values.stream().flatMap(x -> {
         x.setValue(x.getValue() + 1);
-        return java.util.stream.Stream.of(x, new BasicType());
+        return Stream.of(x, new BasicType());
       }).forEach(x -> {
         assert x != null;
       });
@@ -704,20 +719,20 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }) != null;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.toList()).size();
+      assert values.size() == values.stream().collect(Collectors.toList()).size();
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.toSet()).size();
+      assert values.size() == values.stream().collect(Collectors.toSet()).size();
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.toMap(x -> {
+      assert values.size() == values.stream().collect(Collectors.toMap(x -> {
         return x;
       }, x -> {
         return x.getValue();
       })).size();
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(java.util.stream.Collectors.groupingBy(x -> {
+      assert values.size() == values.stream().collect(Collectors.groupingBy(x -> {
         return x;
       })).size();
     });
@@ -742,14 +757,14 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).findFirst().isPresent();
     });
     testOperations(values -> {
-      java.util.Iterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream().iterator();
+      Iterator<BasicType> iter = values.stream().iterator();
       while (iter.hasNext()) {
         assert iter.next() != null;
       }
     });
     testOperations(values -> {
       @NotNull
-      java.util.Spliterator<com.simiacryptus.demo.refcount.BasicType> iter = values.stream().spliterator();
+      Spliterator<BasicType> iter = values.stream().spliterator();
       while (iter.tryAdvance(x -> {
         assert x != null;
       })) {
@@ -757,32 +772,32 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
     testOperations(values -> {
       @NotNull
-      java.util.ListIterator<com.simiacryptus.demo.refcount.BasicType> iter1056 = values.listIterator();
+      ListIterator<BasicType> iter1056 = values.listIterator();
       while (iter1056.hasNext()) {
         assert iter1056.next() != null;
       }
     });
     testOperations(values -> {
       assert values
-          .size() == values.stream().sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+          .size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert values
-          .size() == values.stream().sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+          .size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
         x.setValue(x.getValue() + 1);
         return x;
-      }).sorted(java.util.Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      }).sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert null != values.stream().max(java.util.Comparator.comparing(x -> {
+      assert null != values.stream().max(Comparator.comparing(x -> {
         return x.getValue();
       })).get();
     });
     testOperations(values -> {
-      assert null != values.stream().min(java.util.Comparator.comparing(x -> {
+      assert null != values.stream().min(Comparator.comparing(x -> {
         return x.getValue();
       })).get();
     });
@@ -800,7 +815,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       });
     });
     testOperations(values -> {
-      final java.util.stream.Stream<BasicType> stream = values.stream().parallel();
+      final Stream<BasicType> stream = values.stream().parallel();
       if (!stream.isParallel())
         throw new AssertionError();
       stream.close();

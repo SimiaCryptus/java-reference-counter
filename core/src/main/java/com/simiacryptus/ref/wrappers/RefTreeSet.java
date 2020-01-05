@@ -70,7 +70,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @NotNull
   public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
         .toArray((x) -> new RefTreeSet[x]);
   }
 

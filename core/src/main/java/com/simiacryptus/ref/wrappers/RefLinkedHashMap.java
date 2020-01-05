@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -50,7 +51,7 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
 
   @NotNull
   public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@NotNull RefLinkedHashMap<K, V>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
         .toArray((x) -> new RefLinkedHashMap[x]);
   }
 

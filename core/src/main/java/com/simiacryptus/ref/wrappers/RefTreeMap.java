@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -52,7 +53,7 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
 
   @NotNull
   public static <K, V> RefTreeMap<K, V>[] addRefs(@NotNull RefTreeMap<K, V>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef)
         .toArray((x) -> new RefTreeMap[x]);
   }
 

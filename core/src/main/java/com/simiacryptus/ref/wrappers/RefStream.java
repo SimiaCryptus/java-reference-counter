@@ -480,10 +480,11 @@ public class RefStream<T> implements Stream<T> {
     return getRef(u, this.refs);
   }
 
-  private void track(@NotNull Object... lambda) {
+  RefStream<T> track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }
+    return this;
   }
 
   @RefAware

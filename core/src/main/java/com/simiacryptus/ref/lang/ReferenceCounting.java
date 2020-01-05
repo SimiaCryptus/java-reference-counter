@@ -21,6 +21,8 @@ package com.simiacryptus.ref.lang;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+
 @RefAware
 @RefIgnore
 public interface ReferenceCounting {
@@ -30,15 +32,15 @@ public interface ReferenceCounting {
   }
 
   static <T extends ReferenceCounting> void freeRefs(@NotNull T[] array) {
-    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
+    Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
   }
 
   static <T extends ReferenceCounting> void freeRefs(@NotNull T[][] array) {
-    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+    Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
   }
 
   static <T extends ReferenceCounting> void freeRefs(@NotNull T[][][] array) {
-    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+    Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
   }
 
   default ReferenceCounting addRef() {

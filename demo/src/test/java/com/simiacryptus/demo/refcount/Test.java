@@ -20,6 +20,7 @@
 package com.simiacryptus.demo.refcount;
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
@@ -37,7 +38,7 @@ public class Test {
 
   @org.junit.Test
   public void test() throws InterruptedException {
-    ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory
+    Logger logger = (Logger) LoggerFactory
         .getLogger(ReferenceCountingBase.class.getCanonicalName());
     logger.setLevel(Level.ALL);
     logger.setAdditive(false);

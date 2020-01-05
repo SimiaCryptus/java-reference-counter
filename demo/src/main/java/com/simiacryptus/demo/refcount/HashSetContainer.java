@@ -22,6 +22,11 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.Consumer;
+
 @SuppressWarnings("unused")
 public class HashSetContainer extends ReferenceCountingBase {
   public static void test() {
@@ -95,8 +100,8 @@ public class HashSetContainer extends ReferenceCountingBase {
   }
 
   private static void testOperations(
-      @NotNull java.util.function.Consumer<java.util.HashSet<BasicType>> setRefConsumer) {
-    java.util.HashSet<BasicType> values = new java.util.HashSet<>();
+      @NotNull Consumer<HashSet<BasicType>> setRefConsumer) {
+    HashSet<BasicType> values = new HashSet<>();
     setRefConsumer.accept(values);
   }
 
@@ -104,7 +109,7 @@ public class HashSetContainer extends ReferenceCountingBase {
     testOperations(setValues -> {
       setValues.add(new BasicType());
       final BasicType basicType = new BasicType();
-      final java.util.List<com.simiacryptus.demo.refcount.BasicType> list = java.util.Arrays.asList(basicType);
+      final List<BasicType> list = Arrays.asList(basicType);
       if (!setValues.addAll(list)) {
         throw new RuntimeException();
       }

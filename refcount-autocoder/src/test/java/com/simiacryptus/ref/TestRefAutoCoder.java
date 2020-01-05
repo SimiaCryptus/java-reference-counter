@@ -41,7 +41,7 @@ public class TestRefAutoCoder {
   public static class Add {
     public static void main(String[] args) {
       try {
-        new com.simiacryptus.ref.Insert.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();
+        new Insert.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();
       } catch (Exception e) {
         e.printStackTrace();
       }

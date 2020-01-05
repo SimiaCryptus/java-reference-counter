@@ -19,10 +19,7 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import com.simiacryptus.ref.lang.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,7 +71,9 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   @Override
   public RefHashSet<Entry<K, V>> entrySet() {
     final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
-    getInner().values().stream().map(x -> new RefEntry<K, V>(RefUtil.addRef(x.key), RefUtil.addRef(x.value)) {
+    final Map<K, KeyValue<K, V>> inner = getInner();
+    assert !(inner instanceof ReferenceCounting);
+    inner.values().stream().map(x -> new RefEntry<K, V>(RefUtil.addRef(x.key), RefUtil.addRef(x.value)) {
       @Nullable
       @Override
       public V setValue(V value) {

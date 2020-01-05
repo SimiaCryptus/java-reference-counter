@@ -82,7 +82,7 @@ public class RefUtil {
   }
 
   public static <T> void freeRefs(@NotNull T[] array) {
-    java.util.Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
+    Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
   }
 
 }

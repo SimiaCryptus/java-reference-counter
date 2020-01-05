@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.Collector;
@@ -31,7 +32,7 @@ import java.util.stream.Collector;
 @RefIgnore
 public class DoubleStatistics extends DoubleSummaryStatistics {
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @SuppressWarnings("unused")
   public static Collector<Double, DoubleStatistics, DoubleStatistics> COLLECTOR = Collector.of(
       DoubleStatistics::new,
@@ -40,7 +41,7 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
       d -> d
   );
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @SuppressWarnings("unused")
   public static Collector<Number, DoubleStatistics, DoubleStatistics> NUMBERS = Collector.of(
       DoubleStatistics::new,
@@ -73,14 +74,14 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
     sumOfSquareWithCompensation(squareValue);
   }
 
-  @javax.annotation.Nonnull
-  public DoubleStatistics accept(@javax.annotation.Nonnull final double[] value) {
+  @Nonnull
+  public DoubleStatistics accept(@Nonnull final double[] value) {
     Arrays.stream(value).forEach(this::accept);
     return this;
   }
 
-  @javax.annotation.Nonnull
-  public DoubleStatistics combine(@javax.annotation.Nonnull final DoubleStatistics other) {
+  @Nonnull
+  public DoubleStatistics combine(@Nonnull final DoubleStatistics other) {
     super.combine(other);
     simpleSumOfSquare += other.simpleSumOfSquare;
     sumOfSquareWithCompensation(other.sumOfSquare);

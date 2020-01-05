@@ -51,7 +51,7 @@ public abstract class BaseMojo extends AbstractMojo {
     return project.getDependencies().stream()
         .map(x -> toArtifact(x))
         .flatMap(x -> resolve(x).getArtifacts().stream())
-        .map(org.apache.maven.artifact.Artifact::getFile)
+        .map(Artifact::getFile)
         .map(File::getAbsolutePath)
         .distinct()
         .toArray(i -> new String[i]);

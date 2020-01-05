@@ -22,6 +22,11 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.function.Consumer;
+
 @SuppressWarnings("unused")
 public class TreeSetContainer extends ReferenceCountingBase {
   public static void test() {
@@ -95,8 +100,8 @@ public class TreeSetContainer extends ReferenceCountingBase {
   }
 
   private static void testOperations(
-      @NotNull java.util.function.Consumer<java.util.TreeSet<BasicType>> setRefConsumer) {
-    java.util.TreeSet<BasicType> values = new java.util.TreeSet<>();
+      @NotNull Consumer<TreeSet<BasicType>> setRefConsumer) {
+    TreeSet<BasicType> values = new TreeSet<>();
     setRefConsumer.accept(values);
   }
 
@@ -104,7 +109,7 @@ public class TreeSetContainer extends ReferenceCountingBase {
     testOperations(setValues -> {
       setValues.add(new BasicType());
       final BasicType basicType = new BasicType();
-      final java.util.List<BasicType> list = java.util.Arrays.asList(basicType);
+      final List<BasicType> list = Arrays.asList(basicType);
       if (!setValues.addAll(list)) {
         throw new RuntimeException();
       }

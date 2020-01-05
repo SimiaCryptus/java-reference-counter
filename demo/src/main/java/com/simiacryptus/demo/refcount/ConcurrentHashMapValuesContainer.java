@@ -23,6 +23,8 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
@@ -30,8 +32,8 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
   }
 
   public static void testBasicOperations(
-      @NotNull java.util.concurrent.ConcurrentHashMap<Integer, BasicType> valuesMap) {
-    final java.util.concurrent.ConcurrentHashMap<Integer, BasicType> copyMap = new java.util.concurrent.ConcurrentHashMap<>();
+      @NotNull ConcurrentHashMap<Integer, BasicType> valuesMap) {
+    final ConcurrentHashMap<Integer, BasicType> copyMap = new ConcurrentHashMap<>();
     copyMap.putAll(valuesMap);
     valuesMap.clear();
     assert valuesMap.isEmpty();
@@ -56,15 +58,15 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  public static void testStreamOperations(@NotNull java.util.concurrent.ConcurrentHashMap<Integer, BasicType> values) {
+  public static void testStreamOperations(@NotNull ConcurrentHashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
   private static void test(
-      @NotNull java.util.function.Consumer<java.util.concurrent.ConcurrentHashMap<Integer, BasicType>> fn) {
-    final java.util.concurrent.ConcurrentHashMap<Integer, BasicType> hashMap = new java.util.concurrent.ConcurrentHashMap<>();
+      @NotNull Consumer<ConcurrentHashMap<Integer, BasicType>> fn) {
+    final ConcurrentHashMap<Integer, BasicType> hashMap = new ConcurrentHashMap<>();
     fn.accept(hashMap);
   }
 
@@ -81,8 +83,8 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
     test(values -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
-        if (1 == ((int) fooEntry2.getKey())) {
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = fooEntry2 -> {
+        if (1 == fooEntry2.getKey()) {
           if (null == fooEntry2.getValue()) {
             throw new AssertionError();
           }
@@ -95,12 +97,12 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       };
       values.entrySet().forEach(entryConsumer);
     });
-    test((java.util.concurrent.ConcurrentHashMap<Integer, BasicType> values) -> {
+    test((ConcurrentHashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.concurrent.ConcurrentHashMap<Integer, BasicType> closureMap = new java.util.concurrent.ConcurrentHashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = (java.util.function.Consumer<Map.Entry<Integer, BasicType>>) lambdaParameter -> {
-        if (1 == ((int) lambdaParameter.getKey())) {
+      final ConcurrentHashMap<Integer, BasicType> closureMap = new ConcurrentHashMap<>();
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = lambdaParameter -> {
+        if (1 == lambdaParameter.getKey()) {
           if (null == lambdaParameter.getValue()) {
             throw new AssertionError();
           }
@@ -114,14 +116,14 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       values.entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();
     });
-    test((java.util.concurrent.ConcurrentHashMap<Integer, BasicType> values) -> {
+    test((ConcurrentHashMap<Integer, BasicType> values) -> {
       values.put(1, new BasicType());
       values.put(2, new BasicType());
-      final java.util.concurrent.ConcurrentHashMap<Integer, BasicType> closureMap = new java.util.concurrent.ConcurrentHashMap<>();
-      final java.util.function.Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new java.util.function.Consumer<Map.Entry<Integer, BasicType>>() {
+      final ConcurrentHashMap<Integer, BasicType> closureMap = new ConcurrentHashMap<>();
+      final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
         public void accept(@NotNull Map.Entry<Integer, BasicType> anonymousParameter) {
-          if (1 == ((int) anonymousParameter.getKey())) {
+          if (1 == anonymousParameter.getKey()) {
             if (null == anonymousParameter.getValue()) {
               throw new AssertionError();
             }
@@ -150,8 +152,8 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
   public void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testEntries();
-      testBasicOperations(new java.util.concurrent.ConcurrentHashMap<>());
-      testStreamOperations(new java.util.concurrent.ConcurrentHashMap<>());
+      testBasicOperations(new ConcurrentHashMap<>());
+      testStreamOperations(new ConcurrentHashMap<>());
     }
   }
 }

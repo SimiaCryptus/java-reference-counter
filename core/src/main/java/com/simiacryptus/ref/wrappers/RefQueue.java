@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Queue;
 
 @RefAware
@@ -33,7 +34,7 @@ public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
   @NotNull
   public static <T> RefQueue<T>[] addRefs(@NotNull RefQueue<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefQueue::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefQueue::addRef)
         .toArray((x) -> new RefQueue[x]);
   }
 

@@ -231,27 +231,27 @@ public class RefIntStream implements IntStream {
   @Override
   public RefIntStream map(@NotNull IntUnaryOperator mapper) {
     track(mapper);
-    return new RefIntStream(inner.map(t -> storeRef(mapper.applyAsInt(t))), lambdas, refs);
+    return new RefIntStream(inner.map(t -> storeRef(mapper.applyAsInt(t))), lambdas, refs).track(mapper);
   }
 
   @NotNull
   @Override
   public RefDoubleStream mapToDouble(@NotNull IntToDoubleFunction mapper) {
     track(mapper);
-    return new RefDoubleStream(inner.mapToDouble((int value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs);
+    return new RefDoubleStream(inner.mapToDouble((int value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs).track(mapper);
   }
 
   @NotNull
   @Override
   public RefLongStream mapToLong(@NotNull IntToLongFunction mapper) {
     track(mapper);
-    return new RefLongStream(inner.mapToLong((int value) -> mapper.applyAsLong(getRef(value))), lambdas, refs);
+    return new RefLongStream(inner.mapToLong((int value) -> mapper.applyAsLong(getRef(value))), lambdas, refs).track(mapper);
   }
 
   @NotNull
   @Override
   public <U> RefStream<U> mapToObj(IntFunction<? extends U> mapper) {
-    return new RefStream<>(inner.mapToObj(mapper), lambdas, refs);
+    return new RefStream<U>(inner.mapToObj(mapper), lambdas, refs).track(mapper);
   }
 
   @Override
@@ -377,9 +377,10 @@ public class RefIntStream implements IntStream {
     return RefStream.storeRef(u, refs);
   }
 
-  private void track(@NotNull Object... lambda) {
+  RefIntStream track(@NotNull Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
     }
+    return this;
   }
 }

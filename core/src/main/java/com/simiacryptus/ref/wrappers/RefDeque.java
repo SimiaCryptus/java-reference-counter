@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Deque;
 
 @RefAware
@@ -32,7 +33,7 @@ public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
   @NotNull
   public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
         .toArray((x) -> new RefDeque[x]);
   }
 

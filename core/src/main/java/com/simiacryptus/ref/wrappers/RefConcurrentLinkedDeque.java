@@ -25,6 +25,7 @@ import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -63,7 +64,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
 
   @NotNull
   public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@NotNull RefConcurrentLinkedDeque<T>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)
         .toArray((x) -> new RefConcurrentLinkedDeque[x]);
   }
 

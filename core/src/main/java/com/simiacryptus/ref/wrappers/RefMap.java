@@ -25,6 +25,7 @@ import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -37,7 +38,7 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @NotNull
   public static <K, V> RefMap<K, V>[] addRefs(@NotNull RefMap<K, V>[] array) {
-    return java.util.Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef)
+    return Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef)
         .toArray((x) -> new RefMap[x]);
   }
 

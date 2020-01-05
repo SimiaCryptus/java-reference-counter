@@ -45,11 +45,22 @@ public class RefSettings implements Settings {
   @NotNull
   private final PersistanceMode doubleCacheMode;
   private final Set<Class<?>> watchedClasses;
+  private final Set<Class<?>> ignoredClasses;
 
   protected RefSettings() {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
     this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", true);
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
+    this.ignoredClasses= Stream.<String>of(
+        "com.simiacryptus.mindseye.lang.Tensor"
+    ).map(name -> {
+      try {
+        return Class.forName(name);
+      } catch (ClassNotFoundException e) {
+        logger.warn("No Class Found: " + name);
+        return null;
+      }
+    }).filter(x -> x != null).collect(Collectors.toSet());
     this.watchedClasses = Stream.<String>of(
 //        "com.simiacryptus.mindseye.art.util.VisualStyleContentNetwork.TileTrainer",
 //        "com.simiacryptus.mindseye.lang.Tensor"
@@ -101,11 +112,7 @@ public class RefSettings implements Settings {
   }
 
   public boolean isLifecycleDebug(@NotNull ReferenceCountingBase obj) {
-    if (watchedClasses.contains(obj.getClass())) {
-      return true;
-    } else {
-      return lifecycleDebug;
-    }
+    return watchedClasses.contains(obj.getClass()) || (lifecycleDebug && !ignoredClasses.contains(obj.getClass()));
   }
 
 }

@@ -47,8 +47,10 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
   @Nullable
   @Override
   public T next() {
-    current = getInner().next();
-    return RefUtil.addRef((T) current);
+    final Iterator<T> inner = getInner();
+    assert !(inner instanceof ReferenceCounting);
+    current = inner.next();
+    return RefUtil.addRef(current);
   }
 
   @Override

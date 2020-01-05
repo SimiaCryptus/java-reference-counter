@@ -22,6 +22,9 @@ package com.simiacryptus.demo.refcount;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.function.Consumer;
+
 @SuppressWarnings("unused")
 public class ArrayContainer extends ReferenceCountingBase {
   public BasicType[] values;
@@ -39,7 +42,7 @@ public class ArrayContainer extends ReferenceCountingBase {
   }
 
   public void test() {
-    java.util.Arrays.stream(this.values).forEach(x -> {
+    Arrays.stream(this.values).forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
@@ -47,18 +50,18 @@ public class ArrayContainer extends ReferenceCountingBase {
   @NotNull
   @Override
   public String toString() {
-    return "ArrayContainer{" + "values=" + java.util.Arrays.toString(values) + '}';
+    return "ArrayContainer{" + "values=" + Arrays.toString(values) + '}';
   }
 
   public void useClosures1(@NotNull BasicType right) {
-    java.util.Arrays.stream(this.values)
-        .forEach((java.util.function.Consumer<? super com.simiacryptus.demo.refcount.BasicType>) x -> {
+    Arrays.stream(this.values)
+        .forEach((Consumer<? super BasicType>) x -> {
           x.setValue(x.getValue() + right.getValue());
         });
   }
 
   public void useClosures2(@NotNull BasicType right) {
-    java.util.Arrays.stream(this.values).forEach(new java.util.function.Consumer<BasicType>() {
+    Arrays.stream(this.values).forEach(new Consumer<BasicType>() {
       @Override
       public void accept(@NotNull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
@@ -71,7 +74,7 @@ public class ArrayContainer extends ReferenceCountingBase {
   }
 
   public void useClosures3(@NotNull BasicType right) {
-    java.util.Arrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
+    Arrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
       @Override
       public void accept(@NotNull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
