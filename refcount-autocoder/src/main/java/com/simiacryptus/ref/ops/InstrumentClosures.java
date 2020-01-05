@@ -176,7 +176,7 @@ public class InstrumentClosures extends RefASTOperator {
       final Collection<SymbolIndex.BindingID> closures = getClosures(node);
       if (closures.size() > 0) {
         final ITypeBinding typeBinding = resolveBinding(node);
-        final SymbolIndex.BindingID bindingID = index.getBindingID(typeBinding);
+        final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
         if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object") && typeBinding.getInterfaces().length > 0) {
           debug(node, String.format("Closures in anonymous interface %s at %s: %s",
               bindingID,
@@ -209,7 +209,7 @@ public class InstrumentClosures extends RefASTOperator {
     public void endVisit(@NotNull LambdaExpression node) {
       final IMethodBinding methodBinding = resolveMethodBinding(node);
       if (null == methodBinding) return;
-      final SymbolIndex.BindingID bindingID = index.getBindingID(methodBinding);
+      final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(methodBinding);
       final Collection<SymbolIndex.BindingID> closures = getClosures(node);
       if (closures.size() > 0) {
         debug(node, String.format("Closures in %s (body at %s)\n\t%s",

@@ -105,7 +105,7 @@ public class TestOperations extends ReferenceCountingBase {
       this.deququeContainer = new DeququeContainer();
     }
     for (int i = 0; i < count; i++) {
-      deququeContainer.test();
+      DeququeContainer.test();
     }
   }
 
@@ -114,13 +114,13 @@ public class TestOperations extends ReferenceCountingBase {
       this.arrayListContainer = new ArrayListContainer();
     }
     for (int i = 0; i < count; i++) {
-      arrayListContainer.test();
+      ArrayListContainer.test();
     }
     {
       this.linkedListContainer = new LinkedListContainer();
     }
     for (int i = 0; i < count; i++) {
-      linkedListContainer.test();
+      LinkedListContainer.test();
     }
   }
 
@@ -129,13 +129,13 @@ public class TestOperations extends ReferenceCountingBase {
       this.hashMapValuesContainer = new HashMapValuesContainer();
     }
     for (int i = 0; i < count; i++) {
-      hashMapValuesContainer.test();
+      HashMapValuesContainer.test();
     }
     {
       this.linkedHashMapValuesContainer = new LinkedHashMapValuesContainer();
     }
     for (int i = 0; i < count; i++) {
-      linkedHashMapValuesContainer.test();
+      LinkedHashMapValuesContainer.test();
     }
     {
       this.concurrentHashMapValuesContainer = new ConcurrentHashMapValuesContainer();
@@ -150,13 +150,13 @@ public class TestOperations extends ReferenceCountingBase {
       this.hashSetContainer = new HashSetContainer();
     }
     for (int i = 0; i < count; i++) {
-      hashSetContainer.test();
+      HashSetContainer.test();
     }
     {
       this.treeSetContainer = new TreeSetContainer();
     }
     for (int i = 0; i < count; i++) {
-      treeSetContainer.test();
+      TreeSetContainer.test();
     }
   }
 

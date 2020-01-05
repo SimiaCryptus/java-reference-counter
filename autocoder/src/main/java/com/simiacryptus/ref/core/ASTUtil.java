@@ -149,8 +149,20 @@ public class ASTUtil {
 
   @NotNull
   public static MarkerAnnotation annotation_override(@NotNull AST ast) {
+    return newMarkerAnnotation(ast, "Override");
+  }
+
+  @NotNull
+  public static MarkerAnnotation newMarkerAnnotation(@NotNull AST ast, String name) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
-    annotation.setTypeName(ast.newSimpleName("Override"));
+    annotation.setTypeName(ast.newSimpleName(name));
+    return annotation;
+  }
+
+  @NotNull
+  public static MarkerAnnotation newMarkerAnnotation(@NotNull AST ast, Class<?> aClass) {
+    final MarkerAnnotation annotation = ast.newMarkerAnnotation();
+    annotation.setTypeName(newQualifiedName(ast, aClass));
     return annotation;
   }
 
@@ -167,7 +179,11 @@ public class ASTUtil {
   public static boolean hasAnnotation(@Nullable IBinding declaringClass, @NotNull Class<?> aClass) {
     if (declaringClass == null) return false;
     if (declaringClass.toString().startsWith("Anonymous")) return false;
-    return Arrays.stream(declaringClass.getAnnotations())
+    return hasAnnotation(aClass, declaringClass.getAnnotations());
+  }
+
+  public static boolean hasAnnotation(@NotNull Class<?> aClass, IAnnotationBinding... annotations) {
+    return Arrays.stream(annotations)
         .map(annotation -> annotation.getAnnotationType().getQualifiedName())
         .anyMatch(qualifiedName -> qualifiedName.equals(aClass.getCanonicalName()));
   }

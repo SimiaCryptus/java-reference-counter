@@ -122,7 +122,7 @@ public class IndexSymbols extends ASTScanner {
       if (isVerbose()) debug(node, "Unresolved element for %s", binding.getName());
       return;
     }
-    SymbolIndex.BindingID bindingID = index.getBindingID(binding);
+    SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(binding);
     if (null == bindingID) return;
     final SymbolIndex.ContextLocation contextLocation = getContextLocation(node);
     final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + getSpan(e.getValue())).reduce((a, b) -> a + "\n\t" + b).orElse("-");
@@ -137,7 +137,7 @@ public class IndexSymbols extends ASTScanner {
 
   private void indexDef(@NotNull ASTNode node, @Nullable IBinding binding) {
     if (null == binding) return;
-    final SymbolIndex.BindingID bindingID = index.getBindingID(binding);
+    final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(binding);
     if (null == bindingID) return;
     final SymbolIndex.ContextLocation contextLocation = getContextLocation(node);
     final String contextPath = contextLocation.context.entrySet().stream().map(e -> e.getKey() + " at " + getSpan(e.getValue())).reduce((a, b) -> a + "\n\t" + b).orElse("-");
