@@ -31,7 +31,8 @@ public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCoun
   private volatile T val = null;
 
   @NotNull
-  public static <T extends ReferenceCounting> LazyVal<T> wrap(@NotNull Supplier<T> fn) {
+  public static <T extends ReferenceCounting> LazyVal<T> wrap(
+      @NotNull @RefAware Supplier<T> fn) {
     return new LazyVal<T>() {
       @NotNull
       @Override

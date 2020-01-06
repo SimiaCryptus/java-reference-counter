@@ -40,12 +40,12 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   private final ArrayList<ReferenceCounting> list = new ArrayList<>();
   private long size;
 
-  public RefSpliterator(Spliterator<T> inner) {
+  public RefSpliterator(@RefAware Spliterator<T> inner) {
     this(inner, Long.MAX_VALUE);
 
   }
 
-  public RefSpliterator(Spliterator<T> inner, long size) {
+  public RefSpliterator(@RefAware Spliterator<T> inner, long size) {
     if (inner instanceof RefSpliterator) {
       this.inner = ((RefSpliterator) inner).getInner();
       assert !(this.inner instanceof RefSpliterator);
@@ -88,7 +88,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   }
 
   @Override
-  public boolean tryAdvance(@NotNull Consumer<? super T> action) {
+  public boolean tryAdvance(@NotNull @RefAware Consumer<? super T> action) {
     return getInner().tryAdvance(t -> action.accept(getRef(t)));
   }
 
@@ -96,8 +96,8 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   @Override
   public Spliterator<T> trySplit() {
     return this.getInner().trySplit();
-//    final Spliterator<T> trySplit = this.inner.trySplit();
-//    return null == trySplit ? null : new RefSpliterator<>(trySplit, size).track(this.addRef());
+    //    final Spliterator<T> trySplit = this.inner.trySplit();
+    //    return null == trySplit ? null : new RefSpliterator<>(trySplit, size).track(this.addRef());
   }
 
   @Override
@@ -109,7 +109,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
   }
 
   @Nullable
-  protected T getRef(T t) {
+  protected T getRef(@RefAware T t) {
     return RefUtil.addRef(t);
   }
 
@@ -120,7 +120,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     private final Spliterator.OfDouble inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    public OfDouble(OfDouble inner) {
+    public OfDouble(@RefAware OfDouble inner) {
       this.inner = inner;
     }
 
@@ -141,7 +141,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     }
 
     @Override
-    public boolean tryAdvance(DoubleConsumer action) {
+    public boolean tryAdvance(@RefAware DoubleConsumer action) {
       return this.inner.tryAdvance(action);
     }
 
@@ -167,7 +167,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     private final Spliterator.OfLong inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    public OfLong(OfLong inner) {
+    public OfLong(@RefAware OfLong inner) {
       this.inner = inner;
     }
 
@@ -190,7 +190,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     ;
 
     @Override
-    public boolean tryAdvance(LongConsumer action) {
+    public boolean tryAdvance(@RefAware LongConsumer action) {
       return this.inner.tryAdvance(action);
     }
 
@@ -207,7 +207,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       super._free();
     }
 
-
   }
 
   @RefAware
@@ -217,7 +216,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     private final Spliterator.OfInt inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    public OfInt(OfInt inner) {
+    public OfInt(@RefAware OfInt inner) {
       this.inner = inner;
     }
 
@@ -238,7 +237,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     }
 
     @Override
-    public boolean tryAdvance(IntConsumer action) {
+    public boolean tryAdvance(@RefAware IntConsumer action) {
       return this.inner.tryAdvance(action);
     }
 
@@ -254,7 +253,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       list.clear();
       super._free();
     }
-
 
   }
 }

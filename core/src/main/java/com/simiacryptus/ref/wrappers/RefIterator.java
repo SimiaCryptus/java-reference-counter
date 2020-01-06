@@ -32,7 +32,7 @@ public class RefIterator<T> extends RefIteratorBase<T> {
 
   private final Iterator<T> inner;
 
-  public RefIterator(Iterator<T> inner) {
+  public RefIterator(@RefAware Iterator<T> inner) {
     if (inner instanceof RefIterator) {
       this.inner = ((RefIterator<T>) inner).getInner();
     } else {

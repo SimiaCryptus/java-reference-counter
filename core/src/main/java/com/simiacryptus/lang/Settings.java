@@ -44,50 +44,54 @@ public interface Settings {
     return enable;
   }
 
-  static boolean get(@NotNull final String key, final boolean defaultValue) {
+  static boolean get(@NotNull final @RefAware String key, final boolean defaultValue) {
     boolean value = Boolean.parseBoolean(System.getProperty(key, Boolean.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
   @NotNull
-  static <T extends Enum<T>> T get(@NotNull final String key, @Nonnull final T defaultValue) {
-    T value = Enum.valueOf((Class<T>) defaultValue.getClass().getSuperclass(), System.getProperty(key, defaultValue.toString().toUpperCase()));
+  static <T extends Enum<T>> T get(@NotNull final @RefAware String key,
+      @Nonnull final @RefAware T defaultValue) {
+    T value = Enum.valueOf((Class<T>) defaultValue.getClass().getSuperclass(),
+        System.getProperty(key, defaultValue.toString().toUpperCase()));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static String get(@NotNull final String key, final String defaultValue) {
+  static String get(@NotNull final @RefAware String key,
+      final @RefAware String defaultValue) {
     String value = System.getProperty(key, defaultValue);
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static int get(@NotNull final String key, final int defaultValue) {
+  static int get(@NotNull final @RefAware String key, final int defaultValue) {
     int value = Integer.parseInt(System.getProperty(key, Integer.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static double get(@NotNull final String key, final double defaultValue) {
+  static double get(@NotNull final @RefAware String key, final double defaultValue) {
     double value = Double.parseDouble(System.getProperty(key, Double.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static long get(@NotNull final String key, final long defaultValue) {
+  static long get(@NotNull final @RefAware String key, final long defaultValue) {
     long value = Long.parseLong(System.getProperty(key, Long.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
   @NotNull
-  static CharSequence toJson(final Object obj) {
+  static CharSequence toJson(final @RefAware Object obj) {
     return toJson(obj, getMapper());
   }
 
   @Nonnull
-  static CharSequence toJson(final Object obj, @NotNull final ObjectMapper objectMapper) {
+  static CharSequence toJson(final @RefAware Object obj,
+      @NotNull final @RefAware ObjectMapper objectMapper) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
       objectMapper.writeValue(outputStream, obj);

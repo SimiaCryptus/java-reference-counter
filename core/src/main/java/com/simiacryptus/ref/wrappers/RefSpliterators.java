@@ -33,21 +33,24 @@ import java.util.Spliterators;
 @RefIgnore
 public class RefSpliterators {
   @NotNull
-  public static <T> RefSpliterator<T> spliterator(Iterator<T> iterator, int size, int characteristics) {
+  public static <T> RefSpliterator<T> spliterator(@RefAware Iterator<T> iterator, int size,
+                                                  int characteristics) {
     if (iterator instanceof RefIterator) {
       Iterator<T> inner = ((RefIterator<T>) iterator).getInner();
       assert null != inner;
-      return new RefSpliterator<T>(Spliterators.spliterator(inner, size, characteristics)).track((ReferenceCounting) iterator);
+      return new RefSpliterator<T>(Spliterators.spliterator(inner, size, characteristics))
+          .track((ReferenceCounting) iterator);
     } else if (iterator instanceof RefIteratorBase) {
       return new RefSpliterator<T>(RefUtil.wrapInterface(Spliterators.spliterator(iterator, size, characteristics))) {
         @Nullable
         @Override
-        protected T getRef(T t) {
+        protected T getRef(@RefAware T t) {
           return t;
         }
       }.track((ReferenceCounting) iterator);
     } else {
-      RefSpliterator<T> refSpliterator = new RefSpliterator<>(Spliterators.spliterator(iterator, size, characteristics));
+      RefSpliterator<T> refSpliterator = new RefSpliterator<>(
+          Spliterators.spliterator(iterator, size, characteristics));
       if (iterator instanceof ReferenceCounting) {
         refSpliterator.track((ReferenceCounting) iterator);
       }
@@ -55,21 +58,25 @@ public class RefSpliterators {
     }
   }
 
-  public static <T> RefSpliterator<T> spliteratorUnknownSize(Iterator<T> iterator, int characteristics) {
+  public static <T> RefSpliterator<T> spliteratorUnknownSize(@RefAware Iterator<T> iterator,
+      int characteristics) {
     if (iterator instanceof RefIterator) {
       Iterator<T> inner = ((RefIterator<T>) iterator).getInner();
       assert null != inner;
-      return new RefSpliterator<T>(Spliterators.spliteratorUnknownSize(inner, characteristics)).track((ReferenceCounting) iterator);
+      return new RefSpliterator<T>(Spliterators.spliteratorUnknownSize(inner, characteristics))
+          .track((ReferenceCounting) iterator);
     } else if (iterator instanceof RefIteratorBase) {
-      return new RefSpliterator<T>(RefUtil.wrapInterface(Spliterators.spliteratorUnknownSize(iterator, characteristics))) {
+      return new RefSpliterator<T>(
+          RefUtil.wrapInterface(Spliterators.spliteratorUnknownSize(iterator, characteristics))) {
         @Nullable
         @Override
-        protected T getRef(T t) {
+        protected T getRef(@RefAware T t) {
           return t;
         }
       }.track((ReferenceCounting) iterator);
     } else {
-      RefSpliterator<T> refSpliterator = new RefSpliterator<>(Spliterators.spliteratorUnknownSize(iterator, characteristics));
+      RefSpliterator<T> refSpliterator = new RefSpliterator<>(
+          Spliterators.spliteratorUnknownSize(iterator, characteristics));
       if (iterator instanceof ReferenceCounting) {
         refSpliterator.track((ReferenceCounting) iterator);
       }

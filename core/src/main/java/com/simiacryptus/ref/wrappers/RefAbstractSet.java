@@ -43,7 +43,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   public abstract Map<T, T> getInnerMap();
 
   @Override
-  public final boolean add(T o) {
+  public final boolean add(@RefAware T o) {
     assertAlive();
     final T replaced = getInnerMap().put(o, o);
     if (null != replaced) {
@@ -55,7 +55,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public final boolean addAll(@NotNull Collection<? extends T> c) {
+  public final boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
     assertAlive();
     final Collection<? extends T> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -63,14 +63,14 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
     } else {
       c_inner = c;
     }
-    final boolean returnValue = c_inner.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b).orElse(false);
+    final boolean returnValue = c_inner.stream().map(o -> add(RefUtil.addRef(o))).reduce((a, b) -> a || b)
+        .orElse(false);
     RefUtil.freeRef(c);
     return returnValue;
   }
 
   @NotNull
-  public @Override
-  RefAbstractSet<T> addRef() {
+  public @Override RefAbstractSet<T> addRef() {
     return (RefAbstractSet<T>) super.addRef();
   }
 
@@ -81,7 +81,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public void forEach(@NotNull Consumer<? super T> action) {
+  public void forEach(@NotNull @RefAware Consumer<? super T> action) {
     assertAlive();
     for (T t : getInnerMap().keySet()) {
       action.accept(RefUtil.addRef(t));
@@ -90,7 +90,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public final boolean remove(Object o) {
+  public final boolean remove(@RefAware Object o) {
     assertAlive();
     final T removed = getInnerMap().remove(o);
     RefUtil.freeRef(o);
@@ -103,7 +103,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public synchronized final boolean removeAll(@NotNull Collection<?> c) {
+  public synchronized final boolean removeAll(@NotNull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -126,7 +126,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public synchronized final boolean retainAll(@NotNull Collection<?> c) {
+  public synchronized final boolean retainAll(@NotNull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {

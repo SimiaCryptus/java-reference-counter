@@ -34,21 +34,13 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
 
   @Nonnull
   @SuppressWarnings("unused")
-  public static Collector<Double, DoubleStatistics, DoubleStatistics> COLLECTOR = Collector.of(
-      DoubleStatistics::new,
-      DoubleStatistics::accept,
-      DoubleStatistics::combine,
-      d -> d
-  );
+  public static Collector<Double, DoubleStatistics, DoubleStatistics> COLLECTOR = Collector.of(DoubleStatistics::new,
+      DoubleStatistics::accept, DoubleStatistics::combine, d -> d);
 
   @Nonnull
   @SuppressWarnings("unused")
-  public static Collector<Number, DoubleStatistics, DoubleStatistics> NUMBERS = Collector.of(
-      DoubleStatistics::new,
-      (a, n) -> a.accept(n.doubleValue()),
-      DoubleStatistics::combine,
-      d -> d
-  );
+  public static Collector<Number, DoubleStatistics, DoubleStatistics> NUMBERS = Collector.of(DoubleStatistics::new,
+      (a, n) -> a.accept(n.doubleValue()), DoubleStatistics::combine, d -> d);
 
   private double simpleSumOfSquare; // Used to compute right sum for non-finite inputs
   private double sumOfSquare = 0.0d;
@@ -81,7 +73,7 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
   }
 
   @Nonnull
-  public DoubleStatistics combine(@Nonnull final DoubleStatistics other) {
+  public DoubleStatistics combine(@Nonnull final @RefAware DoubleStatistics other) {
     super.combine(other);
     simpleSumOfSquare += other.simpleSumOfSquare;
     sumOfSquareWithCompensation(other.sumOfSquare);
@@ -96,7 +88,8 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
   }
 
   public CharSequence toString(final double scale) {
-    return String.format("%.4e +- %.4e [%.4e - %.4e] (%d#)", getAverage() * scale, getStandardDeviation() * scale, getMin() * scale, getMax() * scale, getCount());
+    return String.format("%.4e +- %.4e [%.4e - %.4e] (%d#)", getAverage() * scale, getStandardDeviation() * scale,
+        getMin() * scale, getMax() * scale, getCount());
   }
 
   private void sumOfSquareWithCompensation(final double value) {

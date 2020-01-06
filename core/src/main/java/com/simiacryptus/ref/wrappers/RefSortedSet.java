@@ -28,15 +28,16 @@ import java.util.SortedSet;
 public interface RefSortedSet<T> extends SortedSet<T>, RefSet<T> {
   @NotNull
   @Override
-  RefSortedSet<T> subSet(T fromElement, T toElement);
+  RefSortedSet<T> subSet(@RefAware T fromElement,
+      @RefAware T toElement);
 
   @NotNull
   @Override
-  RefSortedSet<T> headSet(T toElement);
+  RefSortedSet<T> headSet(@RefAware T toElement);
 
   @NotNull
   @Override
-  RefSortedSet<T> tailSet(T fromElement);
+  RefSortedSet<T> tailSet(@RefAware T fromElement);
 
   @Override
   default RefSpliterator<T> spliterator() {

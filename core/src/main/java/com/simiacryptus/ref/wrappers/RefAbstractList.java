@@ -39,19 +39,19 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   public abstract List<T> getInner();
 
   @Override
-  public void add(int index, T element) {
+  public void add(int index, @RefAware T element) {
     assertAlive();
     getInner().add(index, element);
   }
 
   @Override
-  public final boolean add(T o) {
+  public final boolean add(@RefAware T o) {
     assertAlive();
     return getInner().add(o);
   }
 
   @Override
-  public boolean addAll(int index, @NotNull Collection<? extends T> c) {
+  public boolean addAll(int index, @NotNull @RefAware Collection<? extends T> c) {
     assertAlive();
     final boolean changed = getInner().addAll(index, c);
     RefUtil.freeRef(c);
@@ -59,20 +59,17 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public final boolean addAll(@NotNull Collection<? extends T> c) {
+  public final boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
     assertAlive();
-    final Boolean returnValue = RefCollections.getInnerStream(c)
-        .map(o -> add(RefUtil.addRef(o)))
-        .reduce((a, b) -> a || b)
-        .orElse(false);
+    final Boolean returnValue = RefCollections.getInnerStream(c).map(o -> add(RefUtil.addRef(o)))
+        .reduce((a, b) -> a || b).orElse(false);
     RefUtil.freeRef(c);
     return returnValue;
 
   }
 
   @NotNull
-  public @Override
-  RefAbstractList<T> addRef() {
+  public @Override RefAbstractList<T> addRef() {
     assertAlive();
     return (RefAbstractList<T>) super.addRef();
   }
@@ -85,7 +82,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public int indexOf(Object o) {
+  public int indexOf(@RefAware Object o) {
     assertAlive();
     final int index = getInner().indexOf(o);
     RefUtil.freeRef(o);
@@ -93,7 +90,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public int lastIndexOf(Object o) {
+  public int lastIndexOf(@RefAware Object o) {
     assertAlive();
     final int index = getInner().lastIndexOf(o);
     RefUtil.freeRef(o);
@@ -121,7 +118,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public final boolean remove(Object item) {
+  public final boolean remove(@RefAware Object item) {
     assertAlive();
     final int index = getInner().indexOf(item);
     if (index >= 0) {
@@ -137,7 +134,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public synchronized final boolean retainAll(@NotNull Collection<?> c) {
+  public synchronized final boolean retainAll(@NotNull @RefAware Collection<?> c) {
     assertAlive();
     final int[] indicesToRemove;
     if (c instanceof ReferenceCounting) {
@@ -155,7 +152,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public T set(int index, T element) {
+  public T set(int index, @RefAware T element) {
     assertAlive();
     return getInner().set(index, element);
   }

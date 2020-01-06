@@ -29,7 +29,8 @@ public class ReferenceWrapper<T> {
   final Consumer<T> destructor;
   final AtomicBoolean isFinalized = new AtomicBoolean(false);
 
-  public ReferenceWrapper(final T obj, final Consumer<T> destructor) {
+  public ReferenceWrapper(final @RefAware T obj,
+      final @RefAware Consumer<T> destructor) {
     this.obj = obj;
     this.destructor = destructor;
   }

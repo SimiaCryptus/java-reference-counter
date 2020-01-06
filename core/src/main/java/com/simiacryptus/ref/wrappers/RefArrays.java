@@ -34,21 +34,21 @@ import java.util.function.IntUnaryOperator;
 @SuppressWarnings("unused")
 public class RefArrays {
   @NotNull
-  public static <T> RefStream<T> stream(@NotNull T[] array) {
+  public static <T> RefStream<T> stream(@NotNull @RefAware T[] array) {
     return new RefStream<>(Arrays.stream(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
   }
 
   @NotNull
-  public static <T> String toString(@NotNull T[] values) {
+  public static <T> String toString(@NotNull @RefAware T[] values) {
     final String result = Arrays.toString(values);
     Arrays.stream(values).forEach(RefUtil::freeRef);
     return result;
   }
 
   @NotNull
-  public static <T> RefList<T> asList(@NotNull T... items) {
+  public static <T> RefList<T> asList(@NotNull @RefAware T... items) {
     final RefArrayList<T> ts = new RefArrayList<>(Arrays.asList(items));
     for (T item : items) {
       RefUtil.freeRef(item);
@@ -57,7 +57,7 @@ public class RefArrays {
   }
 
   @NotNull
-  public static <T> T[] copyOf(@NotNull T[] data, int length) {
+  public static <T> T[] copyOf(@NotNull @RefAware T[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
@@ -120,27 +120,27 @@ public class RefArrays {
     return Arrays.toString(ints);
   }
 
-  public static void parallelSetAll(@NotNull double[] data, @NotNull IntToDoubleFunction fn) {
+  public static void parallelSetAll(@NotNull double[] data, @NotNull @RefAware IntToDoubleFunction fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
-  public static void parallelSetAll(@NotNull int[] data, @NotNull IntUnaryOperator fn) {
+  public static void parallelSetAll(@NotNull int[] data, @NotNull @RefAware IntUnaryOperator fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
-  public static <T> void parallelSetAll(@NotNull T[] data, @NotNull IntFunction<T> fn) {
+  public static <T> void parallelSetAll(@NotNull @RefAware T[] data, @NotNull @RefAware IntFunction<T> fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
-  public static void setAll(@NotNull double[] data, @NotNull IntToDoubleFunction fn) {
+  public static void setAll(@NotNull double[] data, @NotNull @RefAware IntToDoubleFunction fn) {
     Arrays.setAll(data, fn);
   }
 
-  public static void setAll(@NotNull int[] data, @NotNull IntUnaryOperator fn) {
+  public static void setAll(@NotNull int[] data, @NotNull @RefAware IntUnaryOperator fn) {
     Arrays.setAll(data, fn);
   }
 
-  public static <T> void setAll(@NotNull T[] data, @NotNull IntFunction<T> fn) {
+  public static <T> void setAll(@NotNull @RefAware T[] data, @NotNull @RefAware IntFunction<T> fn) {
     Arrays.setAll(data, fn);
   }
 
@@ -193,20 +193,20 @@ public class RefArrays {
   }
 
   @NotNull
-  public static CharSequence deepToString(Object[] a) {
+  public static CharSequence deepToString(@RefAware Object[] a) {
     return Arrays.deepToString(a);
   }
 
-  public static boolean deepEquals(Object[] a, Object[] b) {
+  public static boolean deepEquals(@RefAware Object[] a, @RefAware Object[] b) {
     return Arrays.deepEquals(a, b);
   }
 
-  public static int deepHashCode(Object a[]) {
+  public static int deepHashCode(@RefAware Object a[]) {
     return Arrays.deepHashCode(a);
   }
 
   @NotNull
-  public static <T> T[] copyOfRange(@NotNull T[] original, int from, int to) {
+  public static <T> T[] copyOfRange(@NotNull @RefAware T[] original, int from, int to) {
     return Arrays.copyOfRange(original, from, to);
   }
 
@@ -220,7 +220,7 @@ public class RefArrays {
     return Arrays.toString(obj);
   }
 
-  public static void fill(@NotNull Object[] array, Object value) {
+  public static void fill(@NotNull @RefAware Object[] array, @RefAware Object value) {
     Arrays.fill(array, value);
   }
 

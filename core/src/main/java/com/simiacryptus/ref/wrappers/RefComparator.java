@@ -35,7 +35,7 @@ import java.util.function.ToLongFunction;
 @SuppressWarnings("unused")
 public interface RefComparator<T> extends Comparator<T> {
 
-  public static <T> RefComparator<T> create(Comparator<T> inner) {
+  public static <T> RefComparator<T> create(@RefAware Comparator<T> inner) {
     return inner::compare;
   }
 
@@ -50,36 +50,43 @@ public interface RefComparator<T> extends Comparator<T> {
   }
 
   @NotNull
-  public static <T, U extends Comparable<? super U>> RefComparator<? super T> comparing(@NotNull Function<? super T, ? extends U> fn) {
+  public static <T, U extends Comparable<? super U>> RefComparator<? super T> comparing(
+      @NotNull @RefAware Function<? super T, ? extends U> fn) {
     return RefComparator.create((a, b) -> fn.apply(a).compareTo(RefUtil.addRef(fn.apply(b))));
   }
 
   @NotNull
-  public static <T> RefComparator<T> comparingInt(@NotNull ToIntFunction<? super T> keyExtractor) {
+  public static <T> RefComparator<T> comparingInt(
+      @NotNull @RefAware ToIntFunction<? super T> keyExtractor) {
     return RefComparator.create(Comparator.comparingInt(keyExtractor));
   }
 
   @NotNull
-  public static <T> RefComparator<T> comparingLong(@NotNull ToLongFunction<? super T> keyExtractor) {
+  public static <T> RefComparator<T> comparingLong(
+      @NotNull @RefAware ToLongFunction<? super T> keyExtractor) {
     return RefComparator.create(Comparator.comparingLong(keyExtractor));
   }
 
   @NotNull
-  public static <T> RefComparator<T> comparingDouble(@NotNull ToDoubleFunction<? super T> keyExtractor) {
+  public static <T> RefComparator<T> comparingDouble(
+      @NotNull @RefAware ToDoubleFunction<? super T> keyExtractor) {
     return RefComparator.create(Comparator.comparingDouble(keyExtractor));
   }
 
-  default <U extends Comparable<? super U>> RefComparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor) {
+  default <U extends Comparable<? super U>> RefComparator<T> thenComparing(
+      @RefAware Function<? super T, ? extends U> keyExtractor) {
     return thenComparing(comparing(keyExtractor));
   }
 
   @NotNull
-  public default RefComparator<T> thenComparingInt(@NotNull ToIntFunction<? super T> keyExtractor) {
+  public default RefComparator<T> thenComparingInt(
+      @NotNull @RefAware ToIntFunction<? super T> keyExtractor) {
     return RefComparator.create(thenComparing(comparingInt(keyExtractor)));
   }
 
   @NotNull
-  public default RefComparator<T> thenComparing(@NotNull Comparator<? super T> other) {
+  public default RefComparator<T> thenComparing(
+      @NotNull @RefAware Comparator<? super T> other) {
     return RefComparator.create((c1, c2) -> {
       int res = compare(c1, c2);
       return (res != 0) ? res : other.compare(c1, c2);

@@ -37,24 +37,23 @@ public class StackCounter {
   @Nonnull
   Map<StackFrame, DoubleStatistics> stats = new ConcurrentHashMap<>();
 
-  public static String toString(@Nonnull final StackCounter left, @Nonnull final StackCounter right, @Nonnull final BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
+  public static String toString(@Nonnull final @RefAware StackCounter left,
+      @Nonnull final @RefAware StackCounter right,
+      @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     Comparator<StackFrame> comparing = Comparator.comparing(key -> {
       return -fn.apply(left.stats.get(key), right.stats.get(key)).doubleValue();
     });
     comparing = comparing.thenComparing(Comparator.comparing(key -> key.toString()));
-    return Stream.concat(left.stats.keySet().stream(), right.stats.keySet().stream())
-        .distinct()
-        .filter(k -> left.stats.containsKey(k) && right.stats.containsKey(k))
-        .sorted(comparing)
+    return Stream.concat(left.stats.keySet().stream(), right.stats.keySet().stream()).distinct()
+        .filter(k -> left.stats.containsKey(k) && right.stats.containsKey(k)).sorted(comparing)
         .map(key -> String.format("%s - %s", key.toString(), fn.apply(left.stats.get(key), right.stats.get(key))))
-        .limit(100)
-        .reduce((a, b) -> a + "\n" + b)
-        .orElse("");
+        .limit(100).reduce((a, b) -> a + "\n" + b).orElse("");
   }
 
   public void increment(final long length) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    for (@Nonnull final StackTraceElement frame : stackTrace) {
+    for (@Nonnull
+    final StackTraceElement frame : stackTrace) {
       stats.computeIfAbsent(new StackFrame(frame), f -> new DoubleStatistics()).accept(length);
     }
   }
@@ -64,22 +63,23 @@ public class StackCounter {
     return toString(this::summaryStat);
   }
 
-  public String toString(@Nonnull final Function<DoubleStatistics, Number> fn) {
-    Comparator<Map.Entry<StackFrame, DoubleStatistics>> comparing = Comparator.comparing(e -> -fn.apply(e.getValue()).doubleValue());
+  public String toString(@Nonnull final @RefAware Function<DoubleStatistics, Number> fn) {
+    Comparator<Map.Entry<StackFrame, DoubleStatistics>> comparing = Comparator
+        .comparing(e -> -fn.apply(e.getValue()).doubleValue());
     comparing = comparing.thenComparing(Comparator.comparing(e -> e.getKey().toString()));
-    return stats.entrySet().stream()
-        .sorted(comparing)
-        .map(e -> String.format("%s - %s", e.getKey().toString(), fn.apply(e.getValue())))
-        .limit(100).reduce((a, b) -> a + "\n" + b).orElse(super.toString());
+    return stats.entrySet().stream().sorted(comparing)
+        .map(e -> String.format("%s - %s", e.getKey().toString(), fn.apply(e.getValue()))).limit(100)
+        .reduce((a, b) -> a + "\n" + b).orElse(super.toString());
   }
 
   @SuppressWarnings("unused")
-  public CharSequence toString(@Nonnull final StackCounter other, @Nonnull final BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
+  public CharSequence toString(@Nonnull final @RefAware StackCounter other,
+      @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     return StackCounter.toString(this, other, fn);
   }
 
   @Nonnull
-  protected Number summaryStat(@Nonnull final DoubleStatistics value) {
+  protected Number summaryStat(@Nonnull final @RefAware DoubleStatistics value) {
     return (int) value.getSum();
   }
 
@@ -91,11 +91,13 @@ public class StackCounter {
     public final int lineNumber;
     public final String methodName;
 
-    public StackFrame(@Nonnull final StackTraceElement frame) {
+    public StackFrame(@Nonnull final @RefAware StackTraceElement frame) {
       this(frame.getClassName(), frame.getMethodName(), frame.getFileName(), frame.getLineNumber());
     }
 
-    public StackFrame(final String declaringClass, final String methodName, final String fileName, final int lineNumber) {
+    public StackFrame(final @RefAware String declaringClass,
+                      final @RefAware String methodName,
+                      final @RefAware String fileName, final int lineNumber) {
       this.declaringClass = declaringClass;
       this.methodName = methodName;
       this.fileName = fileName;
@@ -103,17 +105,22 @@ public class StackCounter {
     }
 
     @Override
-    public boolean equals(final Object o) {
-      if (this == o) return true;
-      if (!(o instanceof StackFrame)) return false;
+    public boolean equals(final @RefAware Object o) {
+      if (this == o)
+        return true;
+      if (!(o instanceof StackFrame))
+        return false;
 
-      @Nonnull final StackFrame that = (StackFrame) o;
+      @Nonnull
+      final StackFrame that = (StackFrame) o;
 
-      if (lineNumber != that.lineNumber) return false;
+      if (lineNumber != that.lineNumber)
+        return false;
       if (declaringClass != null ? !declaringClass.equals(that.declaringClass) : that.declaringClass != null) {
         return false;
       }
-      if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null) return false;
+      if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null)
+        return false;
       return fileName != null ? fileName.equals(that.fileName) : that.fileName == null;
     }
 

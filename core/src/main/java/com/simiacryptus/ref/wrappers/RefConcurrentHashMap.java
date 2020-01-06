@@ -38,7 +38,7 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
     this.inner = new ConcurrentHashMap<>();
   }
 
-  public RefConcurrentHashMap(@NotNull Map<? extends K, ? extends V> values) {
+  public RefConcurrentHashMap(@NotNull @RefAware Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }

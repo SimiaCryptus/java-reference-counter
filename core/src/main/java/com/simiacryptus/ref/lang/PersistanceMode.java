@@ -31,32 +31,32 @@ import java.util.function.Supplier;
 public enum PersistanceMode {
   SOFT {
     @Override
-    public <T> Supplier<T> wrap(T obj) {
+    public <T> Supplier<T> wrap(@RefAware T obj) {
       return new SoftReference<>(obj)::get;
     }
   },
   WEAK {
     @Override
-    public <T> Supplier<T> wrap(T obj) {
+    public <T> Supplier<T> wrap(@RefAware T obj) {
       return new WeakReference<>(obj)::get;
     }
   },
   STRONG {
     @Nonnull
     @Override
-    public <T> Supplier<T> wrap(@Nonnull T obj) {
+    public <T> Supplier<T> wrap(@Nonnull @RefAware T obj) {
       return () -> obj;
     }
   },
   NULL {
     @Nullable
     @Override
-    public <T> Supplier<T> wrap(T obj) {
+    public <T> Supplier<T> wrap(@RefAware T obj) {
       return () -> null;
     }
   };
 
   @org.jetbrains.annotations.Nullable
   @Nullable
-  public abstract <T> Supplier<T> wrap(T obj);
+  public abstract <T> Supplier<T> wrap(@RefAware T obj);
 }

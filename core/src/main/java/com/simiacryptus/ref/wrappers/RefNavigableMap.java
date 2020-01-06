@@ -36,20 +36,21 @@ public interface RefNavigableMap<K, V> extends NavigableMap<K, V>, RefMap<K, V> 
   RefNavigableSet<K> descendingKeySet();
 
   @Override
-  RefNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive);
+  RefNavigableMap<K, V> subMap(@RefAware K fromKey, boolean fromInclusive,
+                               @RefAware K toKey, boolean toInclusive);
 
   @Override
-  RefNavigableMap<K, V> headMap(K toKey, boolean inclusive);
+  RefNavigableMap<K, V> headMap(@RefAware K toKey, boolean inclusive);
 
   @Override
-  RefNavigableMap<K, V> tailMap(K fromKey, boolean inclusive);
+  RefNavigableMap<K, V> tailMap(@RefAware K fromKey, boolean inclusive);
 
   @Override
-  RefSortedMap<K, V> subMap(K fromKey, K toKey);
+  RefSortedMap<K, V> subMap(@RefAware K fromKey, @RefAware K toKey);
 
   @Override
-  RefSortedMap<K, V> headMap(K toKey);
+  RefSortedMap<K, V> headMap(@RefAware K toKey);
 
   @Override
-  RefSortedMap<K, V> tailMap(K fromKey);
+  RefSortedMap<K, V> tailMap(@RefAware K fromKey);
 }

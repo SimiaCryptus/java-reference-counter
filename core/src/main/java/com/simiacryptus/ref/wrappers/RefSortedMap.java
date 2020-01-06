@@ -28,13 +28,13 @@ import java.util.SortedMap;
 public interface RefSortedMap<K, V> extends SortedMap<K, V>, RefMap<K, V> {
   @NotNull
   @Override
-  RefSortedMap<K, V> subMap(K fromKey, K toKey);
+  RefSortedMap<K, V> subMap(@RefAware K fromKey, @RefAware K toKey);
 
   @NotNull
   @Override
-  RefSortedMap<K, V> headMap(K toKey);
+  RefSortedMap<K, V> headMap(@RefAware K toKey);
 
   @NotNull
   @Override
-  RefSortedMap<K, V> tailMap(K fromKey);
+  RefSortedMap<K, V> tailMap(@RefAware K fromKey);
 }

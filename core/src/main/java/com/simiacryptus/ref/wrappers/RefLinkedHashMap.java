@@ -38,7 +38,7 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
     this.inner = new LinkedHashMap<>();
   }
 
-  public RefLinkedHashMap(@NotNull Map<? extends K, ? extends V> values) {
+  public RefLinkedHashMap(@NotNull @RefAware Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }

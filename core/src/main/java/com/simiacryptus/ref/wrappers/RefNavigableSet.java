@@ -32,27 +32,29 @@ public interface RefNavigableSet<T> extends NavigableSet<T>, RefSet<T> {
 
   @NotNull
   @Override
-  RefNavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive);
+  RefNavigableSet<T> subSet(@RefAware T fromElement, boolean fromInclusive,
+                            @RefAware T toElement, boolean toInclusive);
 
   @NotNull
   @Override
-  RefNavigableSet<T> headSet(T toElement, boolean inclusive);
+  RefNavigableSet<T> headSet(@RefAware T toElement, boolean inclusive);
 
   @NotNull
   @Override
-  RefNavigableSet<T> tailSet(T fromElement, boolean inclusive);
+  RefNavigableSet<T> tailSet(@RefAware T fromElement, boolean inclusive);
 
   @NotNull
   @Override
-  RefSortedSet<T> subSet(T fromElement, T toElement);
+  RefSortedSet<T> subSet(@RefAware T fromElement,
+      @RefAware T toElement);
 
   @NotNull
   @Override
-  RefSortedSet<T> headSet(T toElement);
+  RefSortedSet<T> headSet(@RefAware T toElement);
 
   @NotNull
   @Override
-  RefSortedSet<T> tailSet(T fromElement);
+  RefSortedSet<T> tailSet(@RefAware T fromElement);
 
   @Override
   default RefSpliterator<T> spliterator() {

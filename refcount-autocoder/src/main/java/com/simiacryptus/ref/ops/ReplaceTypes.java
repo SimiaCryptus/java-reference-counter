@@ -37,6 +37,7 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 import java.util.stream.*;
 
@@ -82,6 +83,7 @@ public class ReplaceTypes extends RefASTOperator {
     replacements.put(Arrays.class, RefArrays.class);
     replacements.put(Assert.class, RefAssert.class);
     replacements.put(Collection.class, RefCollection.class);
+    replacements.put(LinkedBlockingQueue.class, RefLinkedBlockingQueue.class);
     replacements.put(Collections.class, RefCollections.class);
     replacements.put(Collectors.class, RefCollectors.class);
     replacements.put(Comparator.class, RefComparator.class);

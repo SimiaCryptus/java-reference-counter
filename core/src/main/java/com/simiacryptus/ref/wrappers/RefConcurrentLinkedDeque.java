@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
-public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implements RefDeque<T> {
+public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements RefDeque<T> {
 
   @NotNull
   private final ConcurrentLinkedDeque<T> inner;
@@ -61,6 +61,10 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     assertAlive();
     return RefUtil.addRef(getInner().getLast());
   }
+  @NotNull
+  public @Override RefConcurrentLinkedDeque<T> addRef() {
+    return (RefConcurrentLinkedDeque<T>) super.addRef();
+  }
 
   @NotNull
   public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@NotNull RefConcurrentLinkedDeque<T>[] array) {
@@ -69,13 +73,13 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public boolean add(T t) {
+  public boolean add(@RefAware T t) {
     assertAlive();
     return getInner().add(t);
   }
 
   @Override
-  public boolean addAll(@NotNull Collection<? extends T> c) {
+  public boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
     assertAlive();
     final Deque<T> inner = getInner();
     final boolean b = c.stream().allMatch(inner::add);
@@ -84,21 +88,15 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public void addFirst(T t) {
+  public void addFirst(@RefAware T t) {
     assertAlive();
     getInner().addFirst(t);
   }
 
   @Override
-  public void addLast(T t) {
+  public void addLast(@RefAware T t) {
     assertAlive();
     getInner().addLast(t);
-  }
-
-  @NotNull
-  public @Override
-  RefConcurrentLinkedDeque<T> addRef() {
-    return (RefConcurrentLinkedDeque<T>) super.addRef();
   }
 
   @NotNull
@@ -108,42 +106,31 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     return new RefIterator(getInner().descendingIterator()).track(this.addRef());
   }
 
-  @Nullable
   @Override
-  public T element() {
-    assertAlive();
-    return RefUtil.addRef(getInner().element());
-  }
-
-  @Override
-  public boolean offer(T t) {
+  public boolean offer(@RefAware T t) {
     assertAlive();
     final boolean b = getInner().offer(t);
-    if (!b) RefUtil.freeRef(t);
+    if (!b)
+      RefUtil.freeRef(t);
     return b;
   }
 
   @Override
-  public boolean offerFirst(T t) {
+  public boolean offerFirst(@RefAware T t) {
     assertAlive();
     final boolean b = getInner().offerFirst(t);
-    if (!b) RefUtil.freeRef(t);
+    if (!b)
+      RefUtil.freeRef(t);
     return b;
   }
 
   @Override
-  public boolean offerLast(T t) {
+  public boolean offerLast(@RefAware T t) {
     assertAlive();
     final boolean b = getInner().offerLast(t);
-    if (!b) RefUtil.freeRef(t);
+    if (!b)
+      RefUtil.freeRef(t);
     return b;
-  }
-
-  @Nullable
-  @Override
-  public T peek() {
-    assertAlive();
-    return RefUtil.addRef(getInner().peek());
   }
 
   @Nullable
@@ -158,13 +145,6 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   public T peekLast() {
     assertAlive();
     return RefUtil.addRef(getInner().peekLast());
-  }
-
-  @Nullable
-  @Override
-  public T poll() {
-    assertAlive();
-    return getInner().poll();
   }
 
   @Nullable
@@ -188,24 +168,9 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public void push(T t) {
+  public void push(@RefAware T t) {
     assertAlive();
     getInner().push(t);
-  }
-
-  @Override
-  public boolean remove(Object o) {
-    assertAlive();
-    final boolean remove = getInner().remove(o);
-    if (remove) RefUtil.freeRef(o);
-    RefUtil.freeRef(o);
-    return remove;
-  }
-
-  @Override
-  public T remove() {
-    assertAlive();
-    return getInner().remove();
   }
 
   @Override
@@ -215,10 +180,11 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public boolean removeFirstOccurrence(Object o) {
+  public boolean removeFirstOccurrence(@RefAware Object o) {
     assertAlive();
     final boolean remove = getInner().removeFirstOccurrence(o);
-    if (remove) RefUtil.freeRef(o);
+    if (remove)
+      RefUtil.freeRef(o);
     RefUtil.freeRef(o);
     return remove;
   }
@@ -230,10 +196,11 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public boolean removeLastOccurrence(Object o) {
+  public boolean removeLastOccurrence(@RefAware Object o) {
     assertAlive();
     final boolean remove = getInner().removeLastOccurrence(o);
-    if (remove) RefUtil.freeRef(o);
+    if (remove)
+      RefUtil.freeRef(o);
     RefUtil.freeRef(o);
     return remove;
   }
@@ -244,6 +211,5 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractCollection<T> implem
     inner.clear();
     super._free();
   }
-
 
 }

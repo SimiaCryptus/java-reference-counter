@@ -47,17 +47,18 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
     new TreeSet<>();
   }
 
-  public RefTreeSet(Comparator<? super T> comparator) {
+  public RefTreeSet(@RefAware Comparator<? super T> comparator) {
     this(new TreeMap<>(comparator));
   }
 
-  RefTreeSet(@Nonnull TreeMap<T, T> inner) {
-    if (inner instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
+  RefTreeSet(@Nonnull @RefAware TreeMap<T, T> inner) {
+    if (inner instanceof ReferenceCounting)
+      throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
     this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
-  public RefTreeSet(@NotNull Collection<T> values) {
+  public RefTreeSet(@NotNull @RefAware Collection<T> values) {
     this();
     addAll(values);
   }
@@ -70,37 +71,35 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @NotNull
   public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef)
-        .toArray((x) -> new RefTreeSet[x]);
+    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef).toArray((x) -> new RefTreeSet[x]);
   }
 
   @NotNull
-  public @Override
-  RefTreeSet<T> addRef() {
+  public @Override RefTreeSet<T> addRef() {
     return (RefTreeSet<T>) super.addRef();
   }
 
   @Nullable
   @Override
-  public T lower(T t) {
+  public T lower(@RefAware T t) {
     throw new UnsupportedOperationException();
   }
 
   @Nullable
   @Override
-  public T floor(T t) {
+  public T floor(@RefAware T t) {
     throw new UnsupportedOperationException();
   }
 
   @Nullable
   @Override
-  public T ceiling(T t) {
+  public T ceiling(@RefAware T t) {
     throw new UnsupportedOperationException();
   }
 
   @Nullable
   @Override
-  public T higher(T t) {
+  public T higher(@RefAware T t) {
     throw new UnsupportedOperationException();
   }
 
@@ -129,19 +128,20 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @NotNull
   @Override
-  public RefNavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive) {
+  public RefNavigableSet<T> subSet(@RefAware T fromElement, boolean fromInclusive,
+                                   @RefAware T toElement, boolean toInclusive) {
     throw new UnsupportedOperationException();
   }
 
   @NotNull
   @Override
-  public RefNavigableSet<T> headSet(T toElement, boolean inclusive) {
+  public RefNavigableSet<T> headSet(@RefAware T toElement, boolean inclusive) {
     throw new UnsupportedOperationException();
   }
 
   @NotNull
   @Override
-  public RefNavigableSet<T> tailSet(T fromElement, boolean inclusive) {
+  public RefNavigableSet<T> tailSet(@RefAware T fromElement, boolean inclusive) {
     throw new UnsupportedOperationException();
   }
 
@@ -153,19 +153,20 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @NotNull
   @Override
-  public RefSortedSet<T> subSet(T fromElement, T toElement) {
+  public RefSortedSet<T> subSet(@RefAware T fromElement,
+      @RefAware T toElement) {
     throw new UnsupportedOperationException();
   }
 
   @NotNull
   @Override
-  public RefSortedSet<T> headSet(T toElement) {
+  public RefSortedSet<T> headSet(@RefAware T toElement) {
     throw new UnsupportedOperationException();
   }
 
   @NotNull
   @Override
-  public RefSortedSet<T> tailSet(T fromElement) {
+  public RefSortedSet<T> tailSet(@RefAware T fromElement) {
     throw new UnsupportedOperationException();
   }
 

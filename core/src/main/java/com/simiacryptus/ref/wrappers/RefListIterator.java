@@ -34,7 +34,7 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
 
   private final ListIterator<T> inner;
 
-  public RefListIterator(ListIterator<T> inner) {
+  public RefListIterator(@RefAware ListIterator<T> inner) {
     this.inner = inner;
   }
 
@@ -43,7 +43,7 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
   }
 
   @Override
-  public void add(T t) {
+  public void add(@RefAware T t) {
     getInner().add(t);
   }
 
@@ -70,7 +70,7 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
   }
 
   @Override
-  public void set(T t) {
+  public void set(@RefAware T t) {
     getInner().set(t);
     RefUtil.freeRef(current);
     current = null;

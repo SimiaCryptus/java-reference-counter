@@ -40,7 +40,7 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
     this(RefUtil.addRef(inner.getKey()), RefUtil.addRef(inner.getValue()));
   }
 
-  public RefEntry(K key, V value) {
+  public RefEntry(@RefAware K key, @RefAware V value) {
     this.key = key;
     this.value = value;
   }
@@ -58,7 +58,7 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
   }
 
   @Override
-  public abstract V setValue(V value);
+  public abstract V setValue(@RefAware V value);
 
   @Override
   protected void _free() {

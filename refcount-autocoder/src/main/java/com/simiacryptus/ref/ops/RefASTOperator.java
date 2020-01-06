@@ -72,19 +72,31 @@ abstract class RefASTOperator extends ASTOperator {
   }
 
   @Override
-  public boolean preVisit2(ASTNode node) {
+  public final boolean preVisit2(ASTNode node) {
     if (node instanceof TypeDeclaration) {
       final ITypeBinding binding = ASTOperator.resolveBinding((TypeDeclaration) node);
       if (null == binding) {
         warn(node, "Unresolved binding");
         return false;
       }
-      if (ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
-        debug(node, "Marked with RefIgnore");
+      if (skip(node, binding)) return false;
+    } else if (node instanceof MethodDeclaration) {
+      final @Nullable IMethodBinding binding = resolveBinding((MethodDeclaration) node);
+      if (null == binding) {
+        warn(node, "Unresolved binding");
         return false;
       }
+      if (skip(node, binding)) return false;
     }
     return super.preVisit2(node);
+  }
+
+  protected boolean skip(ASTNode node, IBinding binding) {
+    if (ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
+      debug(node, "Marked with RefIgnore");
+      return true;
+    }
+    return false;
   }
 
   @Nullable
@@ -156,36 +168,28 @@ abstract class RefASTOperator extends ASTOperator {
   }
 
   protected final boolean isRefCounted(ASTNode node, @NotNull ITypeBinding type) {
-    if (node instanceof MethodReference) return false;
     if (type.isPrimitive()) return false;
+    if (type.isArray()) {
+      return isRefCounted(node, type.getElementType());
+    }
+    if (ASTUtil.derives(type, ReferenceCounting.class)) {
+      debug(1, node, "Derives ReferenceCounting: %s", type.getQualifiedName());
+      return true;
+    }
     if (type.getTypeDeclaration().getQualifiedName().equals(Optional.class.getCanonicalName())) {
       final ITypeBinding[] typeArguments = type.getTypeArguments();
       if (null == typeArguments || 0 == typeArguments.length) {
         warn(1, node, "No type argument for Optional");
+        return false;
       } else {
         return isRefCounted(node, typeArguments[0]);
       }
     }
-    if (type.isArray()) {
-      type = type.getElementType();
-    }
-    if (ASTUtil.derives(type, ReferenceCounting.class)) {
-      debug(1, node, "Derives ReferenceCounting: %s (%s)", node, type.getQualifiedName());
-      return true;
-    }
     if (ASTUtil.derives(type, Map.Entry.class)) {
-      debug(1, node, "Derives Map.Entry: %s (%s)", node, type.getQualifiedName());
+      debug(1, node, "Derives Map.Entry: %s", type.getQualifiedName());
       return true;
     }
-//    if (type.isInterface() && !(node instanceof LambdaExpression)) {
-//      info(1, node, "Is potentially refcounted interface: %s (%s)", node, type.getQualifiedName());
-//      return true;
-//    }
-//    if (isRefAware(typeBinding)) {
-//      info(1, node, "Marked with @RefAware: %s (%s)", node, type);
-//      return true;
-//    }
-    debug(node, "Not refcounted: %s (%s)", node, type.getQualifiedName());
+    debug(node, "Not refcounted: %s", type.getQualifiedName());
     return false;
   }
 

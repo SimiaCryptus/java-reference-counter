@@ -33,13 +33,13 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public class RefCollections {
 
-  public static <T> Stream<T> getInnerStream(@NotNull Collection<T> c) {
+  public static <T> Stream<T> getInnerStream(@NotNull @RefAware Collection<T> c) {
     final Stream<T> stream = getInnerCollection(c).stream();
     assert !(stream instanceof RefStream);
     return stream;
   }
 
-  public static <T> Collection<T> getInnerCollection(@NotNull Collection<T> c) {
+  public static <T> Collection<T> getInnerCollection(@NotNull @RefAware Collection<T> c) {
     if (c instanceof RefCollection) {
       return ((RefCollection<T>) c).getInner();
     } else {
@@ -52,7 +52,7 @@ public class RefCollections {
     return map; // TODO: Implement Me
   }
 
-  public static <T> void shuffle(@NotNull List<T> list) {
+  public static <T> void shuffle(@NotNull @RefAware List<T> list) {
     Collections.shuffle(list);
   }
 

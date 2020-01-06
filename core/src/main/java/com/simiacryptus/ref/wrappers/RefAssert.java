@@ -30,11 +30,12 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class RefAssert {
 
-  public static void assertEquals(Object expected, Object actual) {
+  public static void assertEquals(@RefAware Object expected, @RefAware Object actual) {
     assertEquals(null, expected, actual);
   }
 
-  public static void assertEquals(@Nullable String message, Object expected, Object actual) {
+  public static void assertEquals(@Nullable @RefAware String message, @RefAware Object expected,
+      @RefAware Object actual) {
     try {
       if (!equalsRegardingNull(RefUtil.addRef(expected), RefUtil.addRef(actual))) {
         if (expected instanceof String && actual instanceof String) {
@@ -50,21 +51,21 @@ public class RefAssert {
     }
   }
 
-  public static void assertEquals(@Nullable String message, long expected, long actual) {
+  public static void assertEquals(@Nullable @RefAware String message, long expected, long actual) {
     if (expected != actual) {
       String cleanMessage = message == null ? "" : message;
       throw new ComparisonFailure(cleanMessage, Long.toString(expected), Long.toString(actual));
     }
   }
 
-  public static void assertEquals(@Nullable String message, int expected, int actual) {
+  public static void assertEquals(@Nullable @RefAware String message, int expected, int actual) {
     if (expected != actual) {
       String cleanMessage = message == null ? "" : message;
       throw new ComparisonFailure(cleanMessage, Integer.toString(expected), Integer.toString(actual));
     }
   }
 
-  public static void fail(@Nullable String message) {
+  public static void fail(@Nullable @RefAware String message) {
     if (message == null) {
       throw new AssertionError();
     } else {
@@ -79,14 +80,14 @@ public class RefAssert {
     }
   }
 
-  public static void assertArrayEquals(String message, @NotNull int[] expected, @NotNull int[] actuals) {
+  public static void assertArrayEquals(@RefAware String message, @NotNull int[] expected, @NotNull int[] actuals) {
     assertEquals(message, expected.length, actuals.length);
     for (int i = 0; i < expected.length; i++) {
       assertEquals(message, expected[i], actuals[i]);
     }
   }
 
-  private static boolean equalsRegardingNull(@Nullable Object expected, @Nullable Object actual) {
+  private static boolean equalsRegardingNull(@Nullable @RefAware Object expected, @Nullable @RefAware Object actual) {
     if (expected == null) {
       final boolean b = actual == null;
       RefUtil.freeRef(actual);
@@ -96,18 +97,18 @@ public class RefAssert {
     }
   }
 
-  private static boolean isEquals(@NotNull Object expected, Object actual) {
+  private static boolean isEquals(@NotNull @RefAware Object expected, @RefAware Object actual) {
     final boolean equals = expected.equals(actual);
     RefUtil.freeRef(equals);
     return equals;
   }
 
-  private static void failNotEquals(String message, Object expected, Object actual) {
+  private static void failNotEquals(@RefAware String message, @RefAware Object expected, @RefAware Object actual) {
     fail(format(message, expected, actual));
   }
 
   @NotNull
-  private static String format(@Nullable String message, Object expected, Object actual) {
+  private static String format(@Nullable @RefAware String message, @RefAware Object expected, @RefAware Object actual) {
     String formatted = "";
     if (message != null && !"".equals(message)) {
       formatted = message + " ";
@@ -115,11 +116,14 @@ public class RefAssert {
 
     String expectedString = String.valueOf(expected);
     String actualString = String.valueOf(actual);
-    return equalsRegardingNull(expectedString, actualString) ? formatted + "expected: " + formatClassAndValue(expected, expectedString) + " but was: " + formatClassAndValue(actual, actualString) : formatted + "expected:<" + expectedString + "> but was:<" + actualString + ">";
+    return equalsRegardingNull(expectedString, actualString)
+        ? formatted + "expected: " + formatClassAndValue(expected, expectedString) + " but was: "
+            + formatClassAndValue(actual, actualString)
+        : formatted + "expected:<" + expectedString + "> but was:<" + actualString + ">";
   }
 
   @NotNull
-  private static String formatClassAndValue(@Nullable Object value, String valueString) {
+  private static String formatClassAndValue(@Nullable @RefAware Object value, @RefAware String valueString) {
     String className = value == null ? "null" : value.getClass().getName();
     return className + "<" + valueString + ">";
   }
@@ -130,7 +134,7 @@ public class RefAssert {
     private final String expected;
     private final String actual;
 
-    public ComparisonFailure(String message, String expected, String actual) {
+    public ComparisonFailure(@RefAware String message, @RefAware String expected, @RefAware String actual) {
       super(message);
       this.expected = expected;
       this.actual = actual;

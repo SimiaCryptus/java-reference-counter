@@ -37,7 +37,6 @@ import java.util.Set;
 public class VerifyMethodCalls extends RefASTOperator {
 
   final HashMap<SymbolIndex.BindingID, Set<Integer>> missingAttributes;
-  private @NotNull SymbolIndex symbolIndex;
 
   public VerifyMethodCalls(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
     this(projectInfo, compilationUnit, file, null);
@@ -45,8 +44,27 @@ public class VerifyMethodCalls extends RefASTOperator {
 
   public VerifyMethodCalls(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, HashMap<SymbolIndex.BindingID, Set<Integer>> missingAttributes) {
     super(projectInfo, compilationUnit, file);
-    symbolIndex = getSymbolIndex(compilationUnit);
     this.missingAttributes = missingAttributes;
+  }
+
+  @Override
+  public void endVisit(MethodDeclaration node) {
+    final IMethodBinding methodBinding = node.resolveBinding();
+    if (null == methodBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    final List<IMethodBinding> superMethods = ASTUtil.superMethods(methodBinding);
+    for (int i = 0; i < methodBinding.getParameterTypes().length; i++) {
+      if(!ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(i)).isPresent()) {
+        for (IMethodBinding superMethod : superMethods) {
+          if (ASTUtil.findAnnotation(RefAware.class, superMethod.getParameterAnnotations(i)).isPresent()) {
+            fail(node, methodBinding, i);
+            break;
+          }
+        }
+      }
+    }
   }
 
   @Override
@@ -57,28 +75,39 @@ public class VerifyMethodCalls extends RefASTOperator {
       return;
     }
     final List<Expression> arguments = node.arguments();
-    for (int i = 0; i < arguments.size(); i++) {
+    final int numberOfDeclaredArguments = methodBinding.getParameterTypes().length;
+    final int numberOfArguments = arguments.size();
+    for (int i = 0; i < numberOfArguments; i++) {
       final Expression argument = arguments.get(i);
+      final ITypeBinding parameterType;
+      final IAnnotationBinding[] parameterAnnotations;
+      if(numberOfArguments > numberOfDeclaredArguments && i >= numberOfDeclaredArguments) {
+        parameterType = methodBinding.getParameterTypes()[numberOfDeclaredArguments-1].getElementType();
+        parameterAnnotations = methodBinding.getParameterAnnotations(numberOfDeclaredArguments-1);
+      } else {
+        parameterType = methodBinding.getParameterTypes()[i];
+        parameterAnnotations = methodBinding.getParameterAnnotations(i);
+      }
       final ITypeBinding resolveTypeBinding = argument.resolveTypeBinding();
       if (null == resolveTypeBinding) {
         warn(argument, "Cannot resolve type binding");
         continue;
       }
       if (isRefCounted(argument, resolveTypeBinding)) {
-        if (!isRefCounted(argument, methodBinding.getParameterTypes()[i]) || !ASTUtil.hasAnnotation(RefAware.class, methodBinding.getParameterAnnotations(i))) {
-          fail(methodBinding, i, argument);
+        if (!isRefCounted(argument, parameterType) && !ASTUtil.findAnnotation(RefAware.class, parameterAnnotations).isPresent()) {
+          fail(argument, methodBinding, i);
         }
       }
     }
   }
 
-  private void fail(IMethodBinding methodBinding, int i, Expression argument) {
+  private void fail(ASTNode node, IMethodBinding methodBinding, int i) {
     if (null == missingAttributes) {
-      fatal(argument, "Argument %s of %s is not @RefAware", i, methodBinding.getName());
+      fatal(node, "Argument %s of %s is not @RefAware", i, methodBinding.getName());
     } else {
       final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(methodBinding);
       missingAttributes.computeIfAbsent(bindingID, x -> new HashSet<>()).add(i);
-      warn(argument, "Argument %s of %s is not @RefAware", i, methodBinding.getName());
+      warn(node, "Argument %s of %s is not @RefAware", i, methodBinding.getName());
     }
   }
 }

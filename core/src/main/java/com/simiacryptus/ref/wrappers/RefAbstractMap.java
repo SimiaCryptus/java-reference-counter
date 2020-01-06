@@ -29,7 +29,8 @@ import java.util.Map;
 @RefAware
 @RefIgnore
 @SuppressWarnings("unused")
-public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase implements RefMap<K, V>, Cloneable, Serializable {
+public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
+    implements RefMap<K, V>, Cloneable, Serializable {
 
   protected abstract Map<K, KeyValue<K, V>> getInner();
 
@@ -39,8 +40,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   }
 
   @NotNull
-  public @Override
-  RefAbstractMap<K, V> addRef() {
+  public @Override RefAbstractMap<K, V> addRef() {
     return (RefAbstractMap<K, V>) super.addRef();
   }
 
@@ -54,14 +54,14 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   }
 
   @Override
-  public boolean containsKey(Object key) {
+  public boolean containsKey(@RefAware Object key) {
     final boolean containsKey = getInner().containsKey(key);
     RefUtil.freeRef(key);
     return containsKey;
   }
 
   @Override
-  public boolean containsValue(Object value) {
+  public boolean containsValue(@RefAware Object value) {
     final boolean containsValue = getInner().values().stream().anyMatch(x -> x.value.equals(value));
     RefUtil.freeRef(value);
     return containsValue;
@@ -76,7 +76,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
     inner.values().stream().map(x -> new RefEntry<K, V>(RefUtil.addRef(x.key), RefUtil.addRef(x.value)) {
       @Nullable
       @Override
-      public V setValue(V value) {
+      public V setValue(@RefAware V value) {
         return put(RefUtil.addRef(x.key), value);
       }
     }).forEach(refSet::add);
@@ -85,7 +85,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
 
   @Nullable
   @Override
-  public V get(Object key) {
+  public V get(@RefAware Object key) {
     final KeyValue<K, V> keyValue = getInner().get(key);
     RefUtil.freeRef(key);
     return RefUtil.addRef(null == keyValue ? null : keyValue.value);
@@ -98,15 +98,16 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   }
 
   @Override
-  public V put(K key, V value) {
+  public V put(@RefAware K key, @RefAware V value) {
     final KeyValue<K, V> put = getInner().put(key, new KeyValue<>(key, value));
-    if (null == put) return null;
+    if (null == put)
+      return null;
     RefUtil.freeRef(put.key);
     return put.value;
   }
 
   @Override
-  public void putAll(@NotNull Map<? extends K, ? extends V> m) {
+  public void putAll(@NotNull @RefAware Map<? extends K, ? extends V> m) {
     final Map<? extends K, ? extends V> m_inner;
     if (m instanceof RefAbstractMap) {
       m_inner = ((RefAbstractMap) m).getInner();
@@ -120,7 +121,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
   }
 
   @Override
-  public V remove(Object key) {
+  public V remove(@RefAware Object key) {
     final KeyValue<K, V> removed = getInner().remove(key);
     if (null != removed) {
       RefUtil.freeRef(removed.key);
@@ -154,7 +155,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase impleme
     public final K key;
     public final V value;
 
-    public KeyValue(K key, V value) {
+    public KeyValue(@RefAware K key, @RefAware V value) {
       this.key = key;
       this.value = value;
     }

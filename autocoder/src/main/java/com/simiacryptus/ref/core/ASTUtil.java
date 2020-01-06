@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class ASTUtil {
 
@@ -179,13 +180,13 @@ public class ASTUtil {
   public static boolean hasAnnotation(@Nullable IBinding declaringClass, @NotNull Class<?> aClass) {
     if (declaringClass == null) return false;
     if (declaringClass.toString().startsWith("Anonymous")) return false;
-    return hasAnnotation(aClass, declaringClass.getAnnotations());
+    return findAnnotation(aClass, declaringClass.getAnnotations()).isPresent();
   }
 
-  public static boolean hasAnnotation(@NotNull Class<?> aClass, IAnnotationBinding... annotations) {
+  public static Optional<IAnnotationBinding> findAnnotation(@NotNull Class<?> aClass, IAnnotationBinding... annotations) {
     return Arrays.stream(annotations)
-        .map(annotation -> annotation.getAnnotationType().getQualifiedName())
-        .anyMatch(qualifiedName -> qualifiedName.equals(aClass.getCanonicalName()));
+        .filter(qualifiedName -> qualifiedName.getAnnotationType().getQualifiedName().equals(aClass.getCanonicalName()))
+        .findAny();
   }
 
   @NotNull
@@ -343,5 +344,36 @@ public class ASTUtil {
     javaConventionsSettings.tab_char = DefaultCodeFormatterOptions.SPACE;
     javaConventionsSettings.indentation_size = 2;
     return javaConventionsSettings;
+  }
+
+  public static boolean isPrimitive(ITypeBinding type) {
+    if(type.isArray()) return isPrimitive(type.getElementType());
+    return type.isPrimitive();
+  }
+
+  public static List<IMethodBinding> superMethods(IMethodBinding methodBinding) {
+    final IMethodBinding methodDeclaration = methodBinding.getMethodDeclaration();
+    final ITypeBinding declaringClass = methodDeclaration.getDeclaringClass();
+    return superTypes(declaringClass).stream().flatMap(c -> {
+      return Arrays.stream(c.getDeclaredMethods()).filter(x -> methodDeclaration.overrides(x));
+    }).collect(Collectors.toList());
+  }
+
+  @NotNull
+  public static List<ITypeBinding> superTypes(ITypeBinding declaringClass) {
+    final ArrayList<ITypeBinding> list = new ArrayList<>();
+    for (ITypeBinding xface : declaringClass.getInterfaces()) {
+      list.add(xface);
+    }
+    final ITypeBinding superclass = declaringClass.getSuperclass();
+    if(null != superclass) list.add(superclass);
+    return list;
+  }
+
+  public static Tuple2<ASTNode, IMethodBinding> getMethod(ASTNode node) {
+    if(null == node) return null;
+    if(node instanceof MethodDeclaration) return new Tuple2<>(node, ((MethodDeclaration) node).resolveBinding());
+    if(node instanceof LambdaExpression) return new Tuple2<>(node, ((LambdaExpression) node).resolveMethodBinding());
+    return getMethod(node.getParent());
   }
 }

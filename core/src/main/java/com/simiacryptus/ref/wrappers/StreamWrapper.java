@@ -35,7 +35,7 @@ import java.util.stream.*;
 public class StreamWrapper<T> implements Stream<T> {
   private final Stream<T> inner;
 
-  public StreamWrapper(Stream<T> inner) {
+  public StreamWrapper(@RefAware Stream<T> inner) {
     this.inner = inner;
   }
 
@@ -49,12 +49,12 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public boolean allMatch(Predicate<? super T> predicate) {
+  public boolean allMatch(@RefAware Predicate<? super T> predicate) {
     return getInner().allMatch(predicate);
   }
 
   @Override
-  public boolean anyMatch(Predicate<? super T> predicate) {
+  public boolean anyMatch(@RefAware Predicate<? super T> predicate) {
     return getInner().anyMatch(predicate);
   }
 
@@ -64,12 +64,14 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super T> accumulator, BiConsumer<R, R> combiner) {
+  public <R> R collect(@RefAware Supplier<R> supplier,
+      @RefAware BiConsumer<R, ? super T> accumulator,
+      @RefAware BiConsumer<R, R> combiner) {
     return getInner().collect(supplier, accumulator, combiner);
   }
 
   @Override
-  public <R, A> R collect(Collector<? super T, A, R> collector) {
+  public <R, A> R collect(@RefAware Collector<? super T, A, R> collector) {
     return getInner().collect(collector);
   }
 
@@ -84,7 +86,7 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public Stream<T> filter(Predicate<? super T> predicate) {
+  public Stream<T> filter(@RefAware Predicate<? super T> predicate) {
     return getInner().filter(predicate);
   }
 
@@ -101,32 +103,35 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public <R> Stream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper) {
+  public <R> Stream<R> flatMap(
+      @RefAware Function<? super T, ? extends Stream<? extends R>> mapper) {
     return getInner().flatMap(mapper);
   }
 
   @Override
-  public DoubleStream flatMapToDouble(Function<? super T, ? extends DoubleStream> mapper) {
+  public DoubleStream flatMapToDouble(
+      @RefAware Function<? super T, ? extends DoubleStream> mapper) {
     return getInner().flatMapToDouble(mapper);
   }
 
   @Override
-  public IntStream flatMapToInt(Function<? super T, ? extends IntStream> mapper) {
+  public IntStream flatMapToInt(@RefAware Function<? super T, ? extends IntStream> mapper) {
     return getInner().flatMapToInt(mapper);
   }
 
   @Override
-  public LongStream flatMapToLong(Function<? super T, ? extends LongStream> mapper) {
+  public LongStream flatMapToLong(
+      @RefAware Function<? super T, ? extends LongStream> mapper) {
     return getInner().flatMapToLong(mapper);
   }
 
   @Override
-  public void forEach(Consumer<? super T> action) {
+  public void forEach(@RefAware Consumer<? super T> action) {
     getInner().forEach(action);
   }
 
   @Override
-  public void forEachOrdered(Consumer<? super T> action) {
+  public void forEachOrdered(@RefAware Consumer<? super T> action) {
     getInner().forEachOrdered(action);
   }
 
@@ -142,45 +147,45 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public <R> Stream<R> map(Function<? super T, ? extends R> mapper) {
+  public <R> Stream<R> map(@RefAware Function<? super T, ? extends R> mapper) {
     return getInner().map(mapper);
   }
 
   @Override
-  public DoubleStream mapToDouble(ToDoubleFunction<? super T> mapper) {
+  public DoubleStream mapToDouble(@RefAware ToDoubleFunction<? super T> mapper) {
     return getInner().mapToDouble(mapper);
   }
 
   @Override
-  public IntStream mapToInt(ToIntFunction<? super T> mapper) {
+  public IntStream mapToInt(@RefAware ToIntFunction<? super T> mapper) {
     return getInner().mapToInt(mapper);
   }
 
   @Override
-  public LongStream mapToLong(ToLongFunction<? super T> mapper) {
+  public LongStream mapToLong(@RefAware ToLongFunction<? super T> mapper) {
     return getInner().mapToLong(mapper);
   }
 
   @NotNull
   @Override
-  public Optional<T> max(Comparator<? super T> comparator) {
+  public Optional<T> max(@RefAware Comparator<? super T> comparator) {
     return getInner().max(comparator);
   }
 
   @NotNull
   @Override
-  public Optional<T> min(Comparator<? super T> comparator) {
+  public Optional<T> min(@RefAware Comparator<? super T> comparator) {
     return getInner().min(comparator);
   }
 
   @Override
-  public boolean noneMatch(Predicate<? super T> predicate) {
+  public boolean noneMatch(@RefAware Predicate<? super T> predicate) {
     return getInner().noneMatch(predicate);
   }
 
   @NotNull
   @Override
-  public Stream<T> onClose(Runnable closeHandler) {
+  public Stream<T> onClose(@RefAware Runnable closeHandler) {
     return getInner().onClose(closeHandler);
   }
 
@@ -191,23 +196,26 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public Stream<T> peek(Consumer<? super T> action) {
+  public Stream<T> peek(@RefAware Consumer<? super T> action) {
     return getInner().peek(action);
   }
 
   @Override
-  public T reduce(T identity, BinaryOperator<T> accumulator) {
+  public T reduce(@RefAware T identity,
+      @RefAware BinaryOperator<T> accumulator) {
     return getInner().reduce(identity, accumulator);
   }
 
   @NotNull
   @Override
-  public Optional<T> reduce(BinaryOperator<T> accumulator) {
+  public Optional<T> reduce(@RefAware BinaryOperator<T> accumulator) {
     return getInner().reduce(accumulator);
   }
 
   @Override
-  public <U> U reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner) {
+  public <U> U reduce(@RefAware U identity,
+      @RefAware BiFunction<U, ? super T, U> accumulator,
+      @RefAware BinaryOperator<U> combiner) {
     return getInner().reduce(identity, accumulator, combiner);
   }
 
@@ -228,7 +236,7 @@ public class StreamWrapper<T> implements Stream<T> {
   }
 
   @Override
-  public Stream<T> sorted(Comparator<? super T> comparator) {
+  public Stream<T> sorted(@RefAware Comparator<? super T> comparator) {
     return getInner().sorted(comparator);
   }
 
@@ -246,7 +254,7 @@ public class StreamWrapper<T> implements Stream<T> {
 
   @NotNull
   @Override
-  public <A> A[] toArray(IntFunction<A[]> generator) {
+  public <A> A[] toArray(@RefAware IntFunction<A[]> generator) {
     return getInner().toArray(generator);
   }
 

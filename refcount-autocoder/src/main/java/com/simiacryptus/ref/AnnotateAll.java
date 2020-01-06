@@ -22,16 +22,17 @@ package com.simiacryptus.ref;
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.ops.AnnotateAllMethodParams;
 import com.simiacryptus.ref.ops.VerifyMethodCalls;
-import com.simiacryptus.ref.ops.VerifyTransfers;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 
 @RefIgnore
-@Mojo(name = "verify")
-public class Verify extends RefAutoCoderMojo {
+@Mojo(name = "annotate")
+public class AnnotateAll extends RefAutoCoderMojo {
   @NotNull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
@@ -48,8 +49,7 @@ public class Verify extends RefAutoCoderMojo {
     @Override
     @Nonnull
     public void rewrite() {
-      rewrite(VerifyMethodCalls::new, isParallel(), true);
-      rewrite(VerifyTransfers::new, isParallel(), true);
+      rewrite(AnnotateAllMethodParams::new, isParallel(), true);
     }
   }
 }

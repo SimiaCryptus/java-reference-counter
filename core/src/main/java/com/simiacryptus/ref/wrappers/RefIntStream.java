@@ -36,7 +36,7 @@ public class RefIntStream implements IntStream {
   private final Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs;
   private final List<ReferenceCounting> lambdas;
 
-  RefIntStream(IntStream stream) {
+  RefIntStream(@RefAware IntStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
     onClose(() -> {
       this.lambdas.forEach(ReferenceCounting::freeRef);
@@ -45,10 +45,12 @@ public class RefIntStream implements IntStream {
     });
   }
 
-  RefIntStream(IntStream stream, List<ReferenceCounting> lambdas, Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+  RefIntStream(@RefAware IntStream stream, @RefAware List<ReferenceCounting> lambdas,
+      @RefAware Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
-    if (stream instanceof ReferenceCounting) throw new IllegalArgumentException("inner class cannot be ref-aware");
+    if (stream instanceof ReferenceCounting)
+      throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = stream;
   }
 
@@ -58,7 +60,7 @@ public class RefIntStream implements IntStream {
   }
 
   @NotNull
-  public static RefIntStream generate(@NotNull IntSupplier s) {
+  public static RefIntStream generate(@NotNull @RefAware IntSupplier s) {
     return new RefIntStream(IntStream.generate(s));
   }
 
@@ -84,17 +86,17 @@ public class RefIntStream implements IntStream {
   }
 
   @NotNull
-  public static RefIntStream concat(@NotNull RefIntStream a, @NotNull RefIntStream b) {
+  public static RefIntStream concat(@NotNull @RefAware RefIntStream a, @NotNull @RefAware RefIntStream b) {
     return new RefIntStream(IntStream.concat(a.inner, b.inner));
   }
 
   @NotNull
-  public static RefIntStream iterate(final int seed, @NotNull final IntUnaryOperator f) {
+  public static RefIntStream iterate(final int seed, @NotNull final @RefAware IntUnaryOperator f) {
     return new RefIntStream(IntStream.iterate(seed, f));
   }
 
   @Override
-  public boolean allMatch(@NotNull IntPredicate predicate) {
+  public boolean allMatch(@NotNull @RefAware IntPredicate predicate) {
     track(predicate);
     final boolean match = inner.allMatch((int t) -> predicate.test(getRef(t)));
     close();
@@ -102,7 +104,7 @@ public class RefIntStream implements IntStream {
   }
 
   @Override
-  public boolean anyMatch(@NotNull IntPredicate predicate) {
+  public boolean anyMatch(@NotNull @RefAware IntPredicate predicate) {
     track(predicate);
     final boolean match = inner.anyMatch((int t) -> predicate.test(getRef(t)));
     close();
@@ -140,15 +142,14 @@ public class RefIntStream implements IntStream {
   }
 
   @Override
-  public <R> R collect(@NotNull Supplier<R> supplier, @NotNull ObjIntConsumer<R> accumulator, @NotNull BiConsumer<R, R> combiner) {
+  public <R> R collect(@NotNull @RefAware Supplier<R> supplier, @NotNull @RefAware ObjIntConsumer<R> accumulator,
+      @NotNull @RefAware BiConsumer<R, R> combiner) {
     track(supplier);
     track(accumulator);
     track(combiner);
-    final R collect = inner.collect(
-        () -> storeRef(supplier.get()),
+    final R collect = inner.collect(() -> storeRef(supplier.get()),
         (R t1, int u1) -> accumulator.accept(RefUtil.addRef(t1), u1),
-        (R t, R u) -> combiner.accept(getRef(t), getRef(u))
-    );
+        (R t, R u) -> combiner.accept(getRef(t), getRef(u)));
     close();
     return collect;
   }
@@ -167,7 +168,7 @@ public class RefIntStream implements IntStream {
   }
 
   @NotNull
-  public RefIntStream filter(@NotNull IntPredicate predicate) {
+  public RefIntStream filter(@NotNull @RefAware IntPredicate predicate) {
     track(predicate);
     return new RefIntStream(inner.filter((int t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
   }
@@ -188,22 +189,20 @@ public class RefIntStream implements IntStream {
 
   @NotNull
   @Override
-  public RefIntStream flatMap(@NotNull IntFunction<? extends IntStream> mapper) {
+  public RefIntStream flatMap(@NotNull @RefAware IntFunction<? extends IntStream> mapper) {
     track(mapper);
-    return new RefIntStream(inner.flatMap((int t) -> mapper.apply(getRef(t))
-        .map(this::storeRef)
-    ), lambdas, refs);
+    return new RefIntStream(inner.flatMap((int t) -> mapper.apply(getRef(t)).map(this::storeRef)), lambdas, refs);
   }
 
   @Override
-  public void forEach(@NotNull IntConsumer action) {
+  public void forEach(@NotNull @RefAware IntConsumer action) {
     track(action);
     inner.forEach((int t) -> action.accept(getRef(t)));
     close();
   }
 
   @Override
-  public void forEachOrdered(@NotNull IntConsumer action) {
+  public void forEachOrdered(@NotNull @RefAware IntConsumer action) {
     track(action);
     inner.forEachOrdered((int t) -> action.accept(getRef(t)));
     close();
@@ -229,28 +228,30 @@ public class RefIntStream implements IntStream {
 
   @NotNull
   @Override
-  public RefIntStream map(@NotNull IntUnaryOperator mapper) {
+  public RefIntStream map(@NotNull @RefAware IntUnaryOperator mapper) {
     track(mapper);
     return new RefIntStream(inner.map(t -> storeRef(mapper.applyAsInt(t))), lambdas, refs).track(mapper);
   }
 
   @NotNull
   @Override
-  public RefDoubleStream mapToDouble(@NotNull IntToDoubleFunction mapper) {
+  public RefDoubleStream mapToDouble(@NotNull @RefAware IntToDoubleFunction mapper) {
     track(mapper);
-    return new RefDoubleStream(inner.mapToDouble((int value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs).track(mapper);
+    return new RefDoubleStream(inner.mapToDouble((int value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs)
+        .track(mapper);
   }
 
   @NotNull
   @Override
-  public RefLongStream mapToLong(@NotNull IntToLongFunction mapper) {
+  public RefLongStream mapToLong(@NotNull @RefAware IntToLongFunction mapper) {
     track(mapper);
-    return new RefLongStream(inner.mapToLong((int value) -> mapper.applyAsLong(getRef(value))), lambdas, refs).track(mapper);
+    return new RefLongStream(inner.mapToLong((int value) -> mapper.applyAsLong(getRef(value))), lambdas, refs)
+        .track(mapper);
   }
 
   @NotNull
   @Override
-  public <U> RefStream<U> mapToObj(IntFunction<? extends U> mapper) {
+  public <U> RefStream<U> mapToObj(@RefAware IntFunction<? extends U> mapper) {
     return new RefStream<U>(inner.mapToObj(mapper), lambdas, refs).track(mapper);
   }
 
@@ -269,7 +270,7 @@ public class RefIntStream implements IntStream {
   }
 
   @Override
-  public boolean noneMatch(@NotNull IntPredicate predicate) {
+  public boolean noneMatch(@NotNull @RefAware IntPredicate predicate) {
     track(predicate);
     final boolean match = inner.noneMatch((int t) -> predicate.test(getRef(t)));
     close();
@@ -278,7 +279,7 @@ public class RefIntStream implements IntStream {
 
   @NotNull
   @Override
-  public RefIntStream onClose(Runnable closeHandler) {
+  public RefIntStream onClose(@RefAware Runnable closeHandler) {
     track(closeHandler);
     return new RefIntStream(inner.onClose(closeHandler), lambdas, refs);
   }
@@ -291,21 +292,22 @@ public class RefIntStream implements IntStream {
 
   @NotNull
   @Override
-  public RefIntStream peek(@NotNull IntConsumer action) {
+  public RefIntStream peek(@NotNull @RefAware IntConsumer action) {
     track(action);
     return new RefIntStream(inner.peek((int t) -> action.accept(getRef(t))), lambdas, refs);
   }
 
   @Override
-  public int reduce(int identity, @NotNull IntBinaryOperator accumulator) {
+  public int reduce(int identity, @NotNull @RefAware IntBinaryOperator accumulator) {
     track(accumulator);
-    final int reduce = inner.reduce(storeRef(identity), (int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
+    final int reduce = inner.reduce(storeRef(identity),
+        (int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
     close();
     return reduce;
   }
 
   @Override
-  public OptionalInt reduce(@NotNull IntBinaryOperator accumulator) {
+  public OptionalInt reduce(@NotNull @RefAware IntBinaryOperator accumulator) {
     track(accumulator);
     final OptionalInt reduce = inner.reduce((int t, int u) -> storeRef(accumulator.applyAsInt(getRef(t), getRef(u))));
     close();
@@ -369,18 +371,19 @@ public class RefIntStream implements IntStream {
     return new RefIntStream(inner.unordered(), lambdas, refs);
   }
 
-  RefIntStream track(@NotNull Object... lambda) {
+  RefIntStream track(@NotNull @RefAware Object... lambda) {
     for (Object l : lambda) {
-      if (null != l && l instanceof ReferenceCounting) lambdas.add((ReferenceCounting) l);
+      if (null != l && l instanceof ReferenceCounting)
+        lambdas.add((ReferenceCounting) l);
     }
     return this;
   }
 
-  private <U> U getRef(U u) {
+  private <U> U getRef(@RefAware U u) {
     return RefStream.getRef(u, this.refs);
   }
 
-  private <U> U storeRef(U u) {
+  private <U> U storeRef(@RefAware U u) {
     return RefStream.storeRef(u, refs);
   }
 }

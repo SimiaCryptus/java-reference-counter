@@ -29,7 +29,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @SuppressWarnings("unused")
 public class RefMaps {
 
-  public static <K, V1, V2> RefMap<K, V2> transformEntries(RefMap<K, V1> fromMap, EntryTransformer<? super K, ? super V1, V2> transformer) {
+  public static <K, V1, V2> RefMap<K, V2> transformEntries(RefMap<K, V1> fromMap,
+      @RefAware EntryTransformer<? super K, ? super V1, V2> transformer) {
     final RefHashMap<K, V2> refHashMap = new RefHashMap<>();
     fromMap.forEach((k, v) -> refHashMap.put(RefUtil.addRef(k), transformer.transformEntry(k, v)));
     return refHashMap;
@@ -38,6 +39,7 @@ public class RefMaps {
   @RefAware
   @FunctionalInterface
   public interface EntryTransformer<K, V1, V2> {
-    V2 transformEntry(@Nullable K var1, @Nullable V1 var2);
+    V2 transformEntry(@Nullable @RefAware K var1,
+        @Nullable @RefAware V1 var2);
   }
 }

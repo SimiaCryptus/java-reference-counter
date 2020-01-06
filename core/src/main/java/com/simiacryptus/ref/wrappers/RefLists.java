@@ -33,15 +33,15 @@ import java.util.stream.Collectors;
 @RefIgnore
 public class RefLists {
   @NotNull
-  public static <T> RefList<RefList<T>> partition(List<T> list, int size) {
+  public static <T> RefList<RefList<T>> partition(@RefAware List<T> list, int size) {
     final List<T> inner;
     if (list instanceof RefList) {
       inner = ((RefList) list).getInner();
     } else {
       inner = list;
     }
-    final List<RefList<T>> innerPartitions = Lists.partition(inner, size).stream()
-        .map(RefArrayList::new).collect(Collectors.toList());
+    final List<RefList<T>> innerPartitions = Lists.partition(inner, size).stream().map(RefArrayList::new)
+        .collect(Collectors.toList());
     final RefArrayList<RefList<T>> refLists = new RefArrayList<>(innerPartitions);
     innerPartitions.forEach(ReferenceCounting::freeRef);
     RefUtil.freeRef(list);

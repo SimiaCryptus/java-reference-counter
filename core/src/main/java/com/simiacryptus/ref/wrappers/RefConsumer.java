@@ -26,5 +26,5 @@ import java.util.function.Consumer;
 @RefAware
 public interface RefConsumer<T> extends Consumer<T> {
   @Override
-  void accept(T t);
+  void accept(@RefAware T t);
 }

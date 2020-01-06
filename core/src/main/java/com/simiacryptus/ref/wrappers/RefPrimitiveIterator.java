@@ -35,7 +35,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   private final PrimitiveIterator<T, T_CONS> inner;
 
-  public RefPrimitiveIterator(PrimitiveIterator<T, T_CONS> inner) {
+  public RefPrimitiveIterator(@RefAware PrimitiveIterator<T, T_CONS> inner) {
     this.inner = inner;
   }
 
@@ -50,7 +50,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     private final PrimitiveIterator.OfInt inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    public OfInt(OfInt inner) {
+    public OfInt(@RefAware OfInt inner) {
       this.inner = inner;
     }
 
@@ -85,7 +85,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     private final PrimitiveIterator.OfLong inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    public OfLong(OfLong inner) {
+    public OfLong(@RefAware OfLong inner) {
       this.inner = inner;
     }
 
@@ -120,7 +120,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     private final PrimitiveIterator.OfDouble inner;
     private final ArrayList<ReferenceCounting> list = new ArrayList<>();
 
-    public OfDouble(OfDouble inner) {
+    public OfDouble(@RefAware OfDouble inner) {
       this.inner = inner;
     }
 

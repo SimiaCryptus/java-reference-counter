@@ -31,7 +31,8 @@ import java.util.Iterator;
 
 @RefAware
 @RefIgnore
-public abstract class RefAbstractCollection<T> extends ReferenceCountingBase implements RefCollection<T>, Cloneable, Serializable {
+public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
+    implements RefCollection<T>, Cloneable, Serializable {
 
   public abstract Collection<T> getInner();
 
@@ -42,8 +43,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   }
 
   @NotNull
-  public @Override
-  RefAbstractCollection<T> addRef() {
+  public @Override RefAbstractCollection<T> addRef() {
     return (RefAbstractCollection<T>) super.addRef();
   }
 
@@ -54,7 +54,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   }
 
   @Override
-  public final boolean contains(Object o) {
+  public final boolean contains(@RefAware Object o) {
     assertAlive();
     final boolean returnValue = getInner().contains(o);
     RefUtil.freeRef(o);
@@ -62,7 +62,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   }
 
   @Override
-  public final boolean containsAll(@NotNull Collection<?> c) {
+  public final boolean containsAll(@NotNull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -84,7 +84,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   }
 
   @Override
-  public synchronized boolean removeAll(@NotNull Collection<?> c) {
+  public synchronized boolean removeAll(@NotNull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -107,7 +107,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
   }
 
   @Override
-  public boolean retainAll(@NotNull Collection<?> c) {
+  public boolean retainAll(@NotNull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -158,7 +158,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase imp
 
   @NotNull
   @Override
-  public final <T1> T1[] toArray(@NotNull T1[] a) {
+  public final <T1> T1[] toArray(@NotNull @RefAware T1[] a) {
     assertAlive();
     final @NotNull T1[] returnValue = getInner().toArray(a);
     for (T1 x : returnValue) {

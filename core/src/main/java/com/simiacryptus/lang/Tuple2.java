@@ -35,7 +35,7 @@ public class Tuple2<A, B> implements Serializable {
     this(null, null);
   }
 
-  public Tuple2(final A a, final B b) {
+  public Tuple2(final @RefAware A a, final @RefAware B b) {
     _1 = a;
     _2 = b;
   }

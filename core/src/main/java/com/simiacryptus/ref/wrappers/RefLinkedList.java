@@ -38,7 +38,7 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
     this.inner = new LinkedList<>();
   }
 
-  public RefLinkedList(@NotNull List<T> list) {
+  public RefLinkedList(@NotNull @RefAware List<T> list) {
     this();
     this.addAll(list);
   }
@@ -56,8 +56,7 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
   }
 
   @NotNull
-  public @Override
-  RefLinkedList<T> addRef() {
+  public @Override RefLinkedList<T> addRef() {
     return (RefLinkedList<T>) super.addRef();
   }
 

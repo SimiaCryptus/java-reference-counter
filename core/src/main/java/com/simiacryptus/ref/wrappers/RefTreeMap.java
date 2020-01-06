@@ -40,7 +40,7 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
     this.inner = new TreeMap<>();
   }
 
-  public RefTreeMap(@NotNull Map<? extends K, ? extends V> values) {
+  public RefTreeMap(@NotNull @RefAware Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }
@@ -53,47 +53,46 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
 
   @NotNull
   public static <K, V> RefTreeMap<K, V>[] addRefs(@NotNull RefTreeMap<K, V>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef)
-        .toArray((x) -> new RefTreeMap[x]);
+    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef).toArray((x) -> new RefTreeMap[x]);
   }
 
   @Override
-  public Entry<K, V> lowerEntry(K key) {
+  public Entry<K, V> lowerEntry(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public K lowerKey(K key) {
+  public K lowerKey(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Entry<K, V> floorEntry(K key) {
+  public Entry<K, V> floorEntry(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public K floorKey(K key) {
+  public K floorKey(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Entry<K, V> ceilingEntry(K key) {
+  public Entry<K, V> ceilingEntry(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public K ceilingKey(K key) {
+  public K ceilingKey(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Entry<K, V> higherEntry(K key) {
+  public Entry<K, V> higherEntry(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public K higherKey(K key) {
+  public K higherKey(@RefAware K key) {
     throw new UnsupportedOperationException();
   }
 
@@ -132,17 +131,18 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
   }
 
   @Override
-  public RefNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+  public RefNavigableMap<K, V> subMap(@RefAware K fromKey, boolean fromInclusive,
+                                      @RefAware K toKey, boolean toInclusive) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public RefNavigableMap<K, V> headMap(K toKey, boolean inclusive) {
+  public RefNavigableMap<K, V> headMap(@RefAware K toKey, boolean inclusive) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public RefNavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
+  public RefNavigableMap<K, V> tailMap(@RefAware K fromKey, boolean inclusive) {
     throw new UnsupportedOperationException();
   }
 
@@ -152,17 +152,18 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
   }
 
   @Override
-  public RefSortedMap<K, V> subMap(K fromKey, K toKey) {
+  public RefSortedMap<K, V> subMap(@RefAware K fromKey,
+      @RefAware K toKey) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public RefSortedMap<K, V> headMap(K toKey) {
+  public RefSortedMap<K, V> headMap(@RefAware K toKey) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public RefSortedMap<K, V> tailMap(K fromKey) {
+  public RefSortedMap<K, V> tailMap(@RefAware K fromKey) {
     throw new UnsupportedOperationException();
   }
 
@@ -181,7 +182,7 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
     final KeyValue<K, V> keyValue = entry.getValue();
     return new RefEntry<K, V>(RefUtil.addRef(keyValue.key), RefUtil.addRef(keyValue.value)) {
       @Override
-      public Object setValue(Object value) {
+      public Object setValue(@RefAware Object value) {
         throw new UnsupportedOperationException();
       }
     };

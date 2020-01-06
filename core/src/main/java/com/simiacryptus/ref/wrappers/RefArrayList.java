@@ -43,7 +43,7 @@ public class RefArrayList<T> extends RefAbstractList<T> {
     this.inner = new ArrayList<>(length);
   }
 
-  public RefArrayList(@NotNull Collection<T> list) {
+  public RefArrayList(@NotNull @RefAware Collection<T> list) {
     this();
     addAll(list);
   }
@@ -56,13 +56,11 @@ public class RefArrayList<T> extends RefAbstractList<T> {
 
   @NotNull
   public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef)
-        .toArray((x) -> new RefArrayList[x]);
+    return Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef).toArray((x) -> new RefArrayList[x]);
   }
 
   @NotNull
-  public @Override
-  RefArrayList<T> addRef() {
+  public @Override RefArrayList<T> addRef() {
     return (RefArrayList<T>) super.addRef();
   }
 
