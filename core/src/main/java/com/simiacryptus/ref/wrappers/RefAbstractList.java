@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implements RefList<T> {
@@ -69,7 +68,8 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @NotNull
-  public @Override RefAbstractList<T> addRef() {
+  public @Override
+  RefAbstractList<T> addRef() {
     assertAlive();
     return (RefAbstractList<T>) super.addRef();
   }

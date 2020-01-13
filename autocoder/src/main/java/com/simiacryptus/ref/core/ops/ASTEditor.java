@@ -151,7 +151,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
   }
 
   @NotNull
-  protected ASTEditor.Span getSpan(@NotNull ASTNode node) {
+  public ASTEditor.Span getSpan(@NotNull ASTNode node) {
     final int startPosition = node.getStartPosition();
     final int length = node.getLength();
 

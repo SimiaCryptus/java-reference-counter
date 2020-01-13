@@ -37,7 +37,6 @@ import java.util.function.Supplier;
 
 import static com.simiacryptus.ref.lang.PersistanceMode.WEAK;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RecycleBin<T> {
@@ -390,7 +389,6 @@ public abstract class RecycleBin<T> {
     logger.warn(String.format("Clearing memory freed %s/%s bytes", previous - after, max));
   }
 
-  @RefAware
   @RefIgnore
   private class ObjectWrapper {
     public final Supplier<T> obj;

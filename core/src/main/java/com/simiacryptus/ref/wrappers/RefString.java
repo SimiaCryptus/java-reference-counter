@@ -26,17 +26,14 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.Formatter;
-import java.util.function.IntFunction;
-import java.util.function.IntToDoubleFunction;
-import java.util.function.IntUnaryOperator;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public final class RefString extends ReferenceCountingBase
     implements java.io.Serializable, Comparable<CharSequence>, CharSequence {
+
+  private final CharSequence inner;
 
   public RefString() {
     inner = new String();
@@ -73,8 +70,6 @@ public final class RefString extends ReferenceCountingBase
     RefUtil.freeRefs(args);
     return string;
   }
-
-  private final CharSequence inner;
 
   @Override
   public int length() {

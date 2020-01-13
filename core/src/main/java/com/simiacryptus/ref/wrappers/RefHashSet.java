@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefHashSet<T> extends RefAbstractSet<T> {
@@ -71,7 +70,8 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
   }
 
   @NotNull
-  public @Override RefHashSet<T> addRef() {
+  public @Override
+  RefHashSet<T> addRef() {
     return (RefHashSet<T>) super.addRef();
   }
 

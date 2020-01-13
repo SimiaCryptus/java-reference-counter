@@ -30,7 +30,6 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefComparator<T> extends Comparator<T> {

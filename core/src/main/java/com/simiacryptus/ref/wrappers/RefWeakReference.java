@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 
-@RefAware
 @RefIgnore
 public class RefWeakReference<T> {
   private final WeakReference<T> inner;

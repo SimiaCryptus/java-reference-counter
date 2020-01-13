@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RefAware
 @RefIgnore
 public class RefLists {
   @NotNull

@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<T> {
@@ -75,7 +74,8 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
   }
 
   @NotNull
-  public @Override RefTreeSet<T> addRef() {
+  public @Override
+  RefTreeSet<T> addRef() {
     return (RefTreeSet<T>) super.addRef();
   }
 
@@ -154,7 +154,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
   @NotNull
   @Override
   public RefSortedSet<T> subSet(@RefAware T fromElement,
-      @RefAware T toElement) {
+                                @RefAware T toElement) {
     throw new UnsupportedOperationException();
   }
 

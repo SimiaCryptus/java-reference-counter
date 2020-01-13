@@ -29,7 +29,6 @@ import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.IntUnaryOperator;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefArrays {

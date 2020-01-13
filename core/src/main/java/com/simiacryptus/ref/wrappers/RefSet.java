@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Set;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {

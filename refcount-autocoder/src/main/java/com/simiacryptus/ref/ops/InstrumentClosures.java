@@ -36,14 +36,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RefIgnore
-public class InstrumentClosures extends RefASTOperator {
-
-  @NotNull
-  protected final SymbolIndex index;
+public class InstrumentClosures extends VisitClosures {
 
   protected InstrumentClosures(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
     super(projectInfo, compilationUnit, file);
-    this.index = getSymbolIndex(compilationUnit);
   }
 
   public void addRefcounting(@Nonnull AnonymousClassDeclaration node, @NotNull Collection<SymbolIndex.BindingID> closures) {
@@ -55,7 +51,7 @@ public class InstrumentClosures extends RefASTOperator {
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           if (isRefCounted(node, type)) {
             final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
-            final Block freeMethodBody = freeMethodOpt.get().getBody();
+            final Block freeMethodBody = RefUtil.get(freeMethodOpt).getBody();
             final boolean isNonNull = ASTUtil.hasAnnotation(singleVariableDeclaration.resolveBinding(), Nonnull.class);
             freeMethodBody.statements().add(0, isNonNull ? newFreeRef(name, type) : freeRefStatement(name, type));
             debug(name, "Adding freeRef for %s", name);
@@ -141,30 +137,6 @@ public class InstrumentClosures extends RefASTOperator {
     }
   }
 
-  protected Collection<SymbolIndex.BindingID> getClosures(@NotNull ASTNode node) {
-    return getSymbolIndex(node).references.entrySet().stream().flatMap(e -> {
-      final SymbolIndex.BindingID bindingID = e.getKey();
-      if (!bindingID.type.equals("Type")) {
-        final ASTNode definition = index.definitions.get(bindingID);
-        if (definition == null) {
-          warn(node, "Unresolved ref %s in %s", bindingID, getSpan(node));
-        } else {
-          final List<ASTNode> references = e.getValue();
-          final String locationReport = references.stream()
-              .map(x -> getSpan(x).toString())
-              .reduce((a, b) -> a + ", " + b).get();
-          if (!ASTUtil.contains(node, definition)) {
-            debug(definition, String.format("Closure %s referenced at %s defined by %s", bindingID, locationReport, getSpan(node)));
-            if (!references.isEmpty()) return Stream.of(bindingID);
-          } else {
-            debug(definition, String.format("In-scope symbol %s referenced at %s defined by %s", bindingID, locationReport, getSpan(definition)));
-          }
-        }
-      }
-      return Stream.empty();
-    }).collect(Collectors.toList());
-  }
-
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InstrumentClosures {
     public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
@@ -181,19 +153,19 @@ public class InstrumentClosures extends RefASTOperator {
           debug(node, String.format("Closures in anonymous interface %s at %s: %s",
               bindingID,
               getSpan(node),
-              closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+              RefUtil.get(closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
           wrapInterface((Expression) node.getParent(), closures);
         } else if (isRefCounted(node, typeBinding)) {
           debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
               bindingID,
               getSpan(node),
-              closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+              RefUtil.get(closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
           addRefcounting(node, closures);
         } else {
           debug(node, String.format("Closures in Non-RefCountable %s at %s: %s",
               bindingID,
               getSpan(node),
-              closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).get()));
+              RefUtil.get(closures.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
         }
       }
     }
@@ -215,7 +187,7 @@ public class InstrumentClosures extends RefASTOperator {
         debug(node, String.format("Closures in %s (body at %s)\n\t%s",
             bindingID,
             getSpan(node),
-            closures.stream().map(x -> x.toString()).reduce((a, b) -> a + "\n\t" + b).get()));
+            RefUtil.get(closures.stream().map(x -> x.toString()).reduce((a, b) -> a + "\n\t" + b))));
         wrapInterface(node, closures);
       }
     }

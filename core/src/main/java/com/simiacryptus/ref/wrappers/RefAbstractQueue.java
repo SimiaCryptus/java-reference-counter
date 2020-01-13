@@ -26,12 +26,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Queue;
 
 public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> implements RefQueue<T> {
+  public abstract Queue<T> getInner();
+
   @NotNull
-  public @Override RefAbstractQueue<T> addRef() {
+  public @Override
+  RefAbstractQueue<T> addRef() {
     return (RefAbstractQueue<T>) super.addRef();
   }
-
-  public abstract Queue<T> getInner();
 
   @Override
   public T element() {

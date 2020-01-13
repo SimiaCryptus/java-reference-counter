@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefStringBuilder implements Appendable, CharSequence, java.io.Serializable {
@@ -39,12 +39,14 @@ public class RefStringBuilder implements Appendable, CharSequence, java.io.Seria
   @Override
   public RefStringBuilder append(@RefAware CharSequence csq) {
     inner.append(csq);
+    RefUtil.freeRef(csq);
     return this;
   }
 
   @Override
   public RefStringBuilder append(@RefAware CharSequence csq, int start, int end) {
     inner.append(csq, start, end);
+    RefUtil.freeRef(csq);
     return this;
   }
 
@@ -80,6 +82,7 @@ public class RefStringBuilder implements Appendable, CharSequence, java.io.Seria
 
   public RefStringBuilder append(@RefAware Object obj) {
     inner.append(obj);
+    RefUtil.freeRef(obj);
     return this;
   }
 

@@ -25,7 +25,6 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.function.Supplier;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public enum PersistanceMode {

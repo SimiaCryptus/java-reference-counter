@@ -91,6 +91,26 @@ abstract class RefASTOperator extends ASTOperator {
     return super.preVisit2(node);
   }
 
+  @Nullable
+  @SuppressWarnings("unused")
+  public MethodDeclaration getMethodDeclaration(ASTNode node) {
+    if (null == node) return null;
+    if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
+    if (node instanceof Statement) return null;
+    if (node instanceof TypeDeclaration) return null;
+    return getMethodDeclaration(node.getParent());
+  }
+
+  @Nullable
+  @SuppressWarnings("unused")
+  public Statement getStatement(ASTNode node) {
+    if (null == node) return null;
+    if (node instanceof Statement) return (Statement) node;
+    if (node instanceof MethodDeclaration) return null;
+    if (node instanceof TypeDeclaration) return null;
+    return getStatement(node.getParent());
+  }
+
   protected boolean skip(ASTNode node, IBinding binding) {
     if (ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
       debug(node, "Marked with RefIgnore");
@@ -99,27 +119,18 @@ abstract class RefASTOperator extends ASTOperator {
     return false;
   }
 
-  @Nullable
-  @SuppressWarnings("unused")
-  public MethodDeclaration getMethodDeclaration(ASTNode node) {
-    if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
-    if (node instanceof Statement) return null;
-    if (node instanceof TypeDeclaration) return null;
-    final ASTNode parent = node.getParent();
-    if (null != parent) return getMethodDeclaration(parent);
-    return null;
-  }
-
-  protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, @Nullable ITypeBinding expression) {
-    final String methodName = methodBinding.getName();
+  protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, int index) {
     if (ASTUtil.hasAnnotation(methodBinding, RefIgnore.class)) return false;
-    if (methodName.equals("addRefs")) {
+    if (methodBinding.getName().equals("addRefs")) {
       return false;
     }
-    if (methodName.equals("freeRefs")) {
+    if (methodBinding.getName().equals("freeRefs")) {
       return false;
     }
-    return null == expression ? isRefAware(methodBinding.getDeclaringClass()) : isRefAware(expression);
+    ITypeBinding expression = methodBinding.getReturnType();
+    if (null == expression) expression = methodBinding.getDeclaringClass();
+    if (expression.getTypeDeclaration().getQualifiedName().equals(Map.Entry.class.getCanonicalName())) return true;
+    return ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(index)).isPresent();
   }
 
   @NotNull
@@ -160,11 +171,6 @@ abstract class RefASTOperator extends ASTOperator {
       return null;
     }
     return iVariableBinding.getType();
-  }
-
-  protected final boolean isRefAware(@NotNull ITypeBinding declaringClass) {
-    if (declaringClass.getTypeDeclaration().getQualifiedName().equals(Map.Entry.class.getCanonicalName())) return true;
-    return ASTUtil.hasAnnotation(declaringClass, RefAware.class);
   }
 
   protected final boolean isRefCounted(ASTNode node, @NotNull ITypeBinding type) {

@@ -25,7 +25,6 @@ import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.HashMap;
@@ -56,9 +55,11 @@ public class VerifyMethodCalls extends RefASTOperator {
     }
     final List<IMethodBinding> superMethods = ASTUtil.superMethods(methodBinding);
     for (int i = 0; i < methodBinding.getParameterTypes().length; i++) {
-      if(!ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(i)).isPresent()) {
+      if (!ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(i)).isPresent()) {
         for (IMethodBinding superMethod : superMethods) {
           if (ASTUtil.findAnnotation(RefAware.class, superMethod.getParameterAnnotations(i)).isPresent()) {
+            ITypeBinding parameterType = methodBinding.getParameterTypes()[i];
+            if (!isRefCounted(node, parameterType) && Modifier.isFinal(parameterType.getModifiers())) continue;
             fail(node, methodBinding, i);
             break;
           }
@@ -74,18 +75,22 @@ public class VerifyMethodCalls extends RefASTOperator {
       warn(node, "Unresolved binding");
       return;
     }
+    if(isRefCounted(node, methodBinding.getReturnType()) || ASTUtil.hasAnnotation(methodBinding, RefAware.class)) {
+      assertResultConfumed(node);
+    }
     final List<Expression> arguments = node.arguments();
-    final int numberOfDeclaredArguments = methodBinding.getParameterTypes().length;
+    ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
+    final int numberOfDeclaredArguments = parameterTypes.length;
     final int numberOfArguments = arguments.size();
     for (int i = 0; i < numberOfArguments; i++) {
       final Expression argument = arguments.get(i);
       final ITypeBinding parameterType;
       final IAnnotationBinding[] parameterAnnotations;
-      if(numberOfArguments > numberOfDeclaredArguments && i >= numberOfDeclaredArguments) {
-        parameterType = methodBinding.getParameterTypes()[numberOfDeclaredArguments-1].getElementType();
-        parameterAnnotations = methodBinding.getParameterAnnotations(numberOfDeclaredArguments-1);
+      if (numberOfArguments > numberOfDeclaredArguments && i >= numberOfDeclaredArguments) {
+        parameterType = parameterTypes[numberOfDeclaredArguments - 1].getElementType();
+        parameterAnnotations = methodBinding.getParameterAnnotations(numberOfDeclaredArguments - 1);
       } else {
-        parameterType = methodBinding.getParameterTypes()[i];
+        parameterType = parameterTypes[i];
         parameterAnnotations = methodBinding.getParameterAnnotations(i);
       }
       final ITypeBinding resolveTypeBinding = argument.resolveTypeBinding();
@@ -98,6 +103,67 @@ public class VerifyMethodCalls extends RefASTOperator {
           fail(argument, methodBinding, i);
         }
       }
+    }
+  }
+
+  private void assertResultConfumed(ASTNode node) {
+    ASTNode parent = node.getParent();
+    if(parent instanceof MethodInvocation) {
+      MethodInvocation methodInvocation = (MethodInvocation) parent;
+      if(methodInvocation.getExpression() == node) {
+        if(methodInvocation.getName().toString().equals("freeRef")) return;
+        fatal(parent, "Reference tracked type used in chained method call");
+      }
+    } else if(parent instanceof Assignment) {
+      // OK
+    } else if(parent instanceof VariableDeclarationFragment) {
+      // OK
+    } else if(parent instanceof SingleVariableDeclaration) {
+      // OK
+    } else if(parent instanceof ReturnStatement) {
+      // OK
+    } else if(parent instanceof LambdaExpression) {
+      // OK
+    } else if(parent instanceof SuperConstructorInvocation) {
+      // OK
+    } else if(parent instanceof ConstructorInvocation) {
+      // OK
+    } else if(parent instanceof ExpressionStatement) {
+      ASTNode parent1 = parent.getParent();
+      if(parent1 instanceof Block) {
+        ASTNode parent2 = parent1.getParent();
+        if(parent2 instanceof Initializer)
+          return;
+      }
+      fatal(parent, "Reference tracked type discarded without freeRef");
+    } else if(parent instanceof ArrayAccess) {
+      fatal(parent, "Reference tracked array access directly upon creation");
+    } else if(parent instanceof InfixExpression) {
+      fatal(parent, "Reference tracked type used as conditional expression");
+    } else if(parent instanceof ClassInstanceCreation) {
+      // OK
+    } else if(parent instanceof SuperMethodInvocation) {
+      // OK
+    } else if(parent instanceof CastExpression) {
+      assertResultConfumed(parent);
+    } else if(parent instanceof ParenthesizedExpression) {
+      assertResultConfumed(parent);
+    } else if(parent instanceof ArrayInitializer) {
+      assertResultConfumed(parent);
+    } else if(parent instanceof ArrayCreation) {
+      assertResultConfumed(parent);
+    } else if(parent instanceof InstanceofExpression) {
+      fatal(parent, "Reference tracked type used by InstanceofExpression");
+    } else if(parent instanceof EnhancedForStatement) {
+      fatal(parent, "Reference tracked type used by EnhancedForStatement");
+    } else if(parent instanceof ConditionalExpression) {
+      if(((ConditionalExpression) parent).getExpression() == node) {
+        fatal(parent, "Reference tracked type used as conditional expression");
+      } else {
+        assertResultConfumed(parent);
+      }
+    } else {
+      fatal(node, "Unhandled MethodInvocation parent %s", parent.getClass().getSimpleName());
     }
   }
 

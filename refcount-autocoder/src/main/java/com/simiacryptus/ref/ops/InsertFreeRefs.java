@@ -23,6 +23,7 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -120,7 +121,7 @@ public class InsertFreeRefs extends RefASTOperator {
       if (freeMethodOpt.isPresent()) {
         debug(declaration, "Adding freeRef for %s to (%s)", name, getLocation(name));
         final boolean isFinal = isFinal(declaration);
-        final List<Statement> statements = freeMethodOpt.get().getBody().statements();
+        final List<Statement> statements = RefUtil.get(freeMethodOpt).getBody().statements();
         if (!isFinal) {
           statements.add(0, ast.newExpressionStatement(setToNull(name)));
         }
@@ -254,11 +255,6 @@ public class InsertFreeRefs extends RefASTOperator {
           } else {
             debug(node, "Chained method consumes ref for Ref-returning method: %s", node);
           }
-          return;
-        }
-        if (!consumesRefs(methodBinding, null == expression ? null : resolveTypeBinding(expression))) {
-          freeRefs(node, typeBinding, false);
-          debug(node, "Adding freeref for Ref-returning method: %s", node);
           return;
         }
         debug(node, "Result consumed by method");

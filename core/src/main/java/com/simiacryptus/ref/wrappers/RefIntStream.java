@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefIntStream implements IntStream {
@@ -46,7 +45,7 @@ public class RefIntStream implements IntStream {
   }
 
   RefIntStream(@RefAware IntStream stream, @RefAware List<ReferenceCounting> lambdas,
-      @RefAware Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+               @RefAware Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
     if (stream instanceof ReferenceCounting)
@@ -143,7 +142,7 @@ public class RefIntStream implements IntStream {
 
   @Override
   public <R> R collect(@NotNull @RefAware Supplier<R> supplier, @NotNull @RefAware ObjIntConsumer<R> accumulator,
-      @NotNull @RefAware BiConsumer<R, R> combiner) {
+                       @NotNull @RefAware BiConsumer<R, R> combiner) {
     track(supplier);
     track(accumulator);
     track(combiner);

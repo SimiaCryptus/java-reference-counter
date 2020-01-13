@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ListIterator;
 
-@RefAware
 @RefIgnore
 public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterator<T> {
 

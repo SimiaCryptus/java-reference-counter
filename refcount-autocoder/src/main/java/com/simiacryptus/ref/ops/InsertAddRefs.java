@@ -37,10 +37,11 @@ public class InsertAddRefs extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
-  public void addRefsToArguments(@NotNull ASTNode node, @NotNull List<ASTNode> arguments, String name) {
+  public void addRefsToArguments(@NotNull ASTNode node, @NotNull List<ASTNode> arguments, IMethodBinding methodBinding) {
+    String name = methodBinding.getReturnType().getQualifiedName();
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
-      if (shouldWrap(arg, name)) {
+      if (consumesRefs(methodBinding, i) && shouldWrap(arg, name)) {
         final Expression expression = (Expression) arg;
         final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
         if (null == resolveTypeBinding) {
@@ -53,10 +54,6 @@ public class InsertAddRefs extends RefASTOperator {
         }
       }
     }
-  }
-
-  public boolean modifyArgs(@NotNull ITypeBinding declaringClass) {
-    return isRefAware(declaringClass);
   }
 
   @Nullable
@@ -141,7 +138,7 @@ public class InsertAddRefs extends RefASTOperator {
       if (skip(node)) return;
       final ITypeBinding typeBinding = resolveTypeBinding(node);
       if (null != typeBinding) {
-        if (modifyArgs(typeBinding.getElementType())) {
+        if (isRefCounted(node, typeBinding.getElementType())) {
           final List expressions = node.expressions();
           for (int i = 0; i < expressions.size(); i++) {
             Object next = expressions.get(i);
@@ -174,18 +171,7 @@ public class InsertAddRefs extends RefASTOperator {
         warn(node, "Unresolved binding on %s", node);
         return;
       }
-      final String targetLabel;
-      if (null != expression && expression instanceof Name) {
-        targetLabel = expression.toString() + "." + node.getName();
-      } else {
-        targetLabel = methodBinding.getDeclaringClass().getQualifiedName() + "::" + node.getName();
-      }
-      if (consumesRefs(methodBinding, null == expression ? null : resolveTypeBinding(expression))) {
-        debug(node, "Refcounted method %s", node);
-        addRefsToArguments(node, node.arguments(), targetLabel);
-      } else {
-        debug(node, "Ignored method %s", targetLabel);
-      }
+      addRefsToArguments(node, node.arguments(), methodBinding);
     }
   }
 
@@ -246,12 +232,7 @@ public class InsertAddRefs extends RefASTOperator {
         warn(node, "Cannot resolve " + node);
         return;
       }
-      if (consumesRefs(methodBinding, methodBinding.getReturnType()) && node.arguments().size() > 0) {
-        debug(node, "Refcounted constructor %s", node);
-        addRefsToArguments(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
-      } else {
-        debug(node, "Non-refcounted constructor %s", node);
-      }
+      addRefsToArguments(node, node.arguments(), methodBinding);
     }
   }
 
@@ -270,15 +251,10 @@ public class InsertAddRefs extends RefASTOperator {
         warn(node, "Cannot resolve %s", node);
         return;
       }
-      if (consumesRefs(methodBinding, resolveTypeBinding(node))) {
-        debug(node, "Refcounted constructor %s", node);
-        if (node.arguments().size() > 0) {
-          addRefsToArguments(node, node.arguments(), methodBinding.getReturnType().getQualifiedName());
-        } else {
-          debug(node, "No args %s", node);
-        }
+      if (node.arguments().size() > 0) {
+        addRefsToArguments(node, node.arguments(), methodBinding);
       } else {
-        debug(node, "Non-refcounted constructor %s", node);
+        debug(node, "No args %s", node);
       }
     }
   }

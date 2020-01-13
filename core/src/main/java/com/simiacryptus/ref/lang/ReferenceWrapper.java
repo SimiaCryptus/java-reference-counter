@@ -22,7 +22,6 @@ package com.simiacryptus.ref.lang;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-@RefAware
 @RefIgnore
 public class ReferenceWrapper<T> {
   final T obj;
@@ -30,7 +29,7 @@ public class ReferenceWrapper<T> {
   final AtomicBoolean isFinalized = new AtomicBoolean(false);
 
   public ReferenceWrapper(final @RefAware T obj,
-      final @RefAware Consumer<T> destructor) {
+                          final @RefAware Consumer<T> destructor) {
     this.obj = obj;
     this.destructor = destructor;
   }

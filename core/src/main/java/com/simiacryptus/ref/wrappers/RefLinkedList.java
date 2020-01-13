@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedList<T> extends RefAbstractList<T> {
@@ -56,7 +55,8 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
   }
 
   @NotNull
-  public @Override RefLinkedList<T> addRef() {
+  public @Override
+  RefLinkedList<T> addRef() {
     return (RefLinkedList<T>) super.addRef();
   }
 

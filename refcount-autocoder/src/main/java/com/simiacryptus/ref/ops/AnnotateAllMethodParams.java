@@ -37,24 +37,19 @@ public class AnnotateAllMethodParams extends RefASTOperator {
   }
 
   @Override
-  protected boolean skip(ASTNode node, IBinding binding) {
-    return false;
-  }
-
-  @Override
   public void endVisit(MethodDeclaration node) {
     for (SingleVariableDeclaration param : (List<SingleVariableDeclaration>) node.parameters()) {
       final IVariableBinding variableBinding = param.resolveBinding();
-      if(null == variableBinding) {
+      if (null == variableBinding) {
         warn(param, "Unresolved");
         continue;
       }
-      if(ASTUtil.isPrimitive(variableBinding.getType())) {
+      if (ASTUtil.isPrimitive(variableBinding.getType())) {
         info(param, "Primitive: %s", param);
         remove(param, variableBinding);
         continue;
       }
-      if(isRefCounted(node, variableBinding.getType())) {
+      if (isRefCounted(node, variableBinding.getType())) {
         info(param, "ReferenceCounted by type: %s", param);
         remove(param, variableBinding);
         continue;
@@ -66,6 +61,11 @@ public class AnnotateAllMethodParams extends RefASTOperator {
       info(param, "Adding @RefAware to %s", param);
       param.modifiers().add(ASTUtil.newMarkerAnnotation(ast, RefAware.class));
     }
+  }
+
+  @Override
+  protected boolean skip(ASTNode node, IBinding binding) {
+    return false;
   }
 
   private void remove(SingleVariableDeclaration param, IVariableBinding variableBinding) {

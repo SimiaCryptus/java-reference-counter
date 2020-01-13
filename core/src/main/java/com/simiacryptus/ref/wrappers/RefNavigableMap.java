@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefAware;
 
 import java.util.NavigableMap;
 
-@RefAware
 public interface RefNavigableMap<K, V> extends NavigableMap<K, V>, RefMap<K, V> {
 
   @Override

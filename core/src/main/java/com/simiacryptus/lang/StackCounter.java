@@ -30,7 +30,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@RefAware
 @RefIgnore
 public class StackCounter {
 
@@ -38,8 +37,8 @@ public class StackCounter {
   Map<StackFrame, DoubleStatistics> stats = new ConcurrentHashMap<>();
 
   public static String toString(@Nonnull final @RefAware StackCounter left,
-      @Nonnull final @RefAware StackCounter right,
-      @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
+                                @Nonnull final @RefAware StackCounter right,
+                                @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     Comparator<StackFrame> comparing = Comparator.comparing(key -> {
       return -fn.apply(left.stats.get(key), right.stats.get(key)).doubleValue();
     });
@@ -52,8 +51,7 @@ public class StackCounter {
 
   public void increment(final long length) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    for (@Nonnull
-    final StackTraceElement frame : stackTrace) {
+    for (@Nonnull final StackTraceElement frame : stackTrace) {
       stats.computeIfAbsent(new StackFrame(frame), f -> new DoubleStatistics()).accept(length);
     }
   }
@@ -74,7 +72,7 @@ public class StackCounter {
 
   @SuppressWarnings("unused")
   public CharSequence toString(@Nonnull final @RefAware StackCounter other,
-      @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
+                               @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     return StackCounter.toString(this, other, fn);
   }
 
@@ -83,7 +81,6 @@ public class StackCounter {
     return (int) value.getSum();
   }
 
-  @RefAware
   @RefIgnore
   public static class StackFrame {
     public final String declaringClass;
@@ -111,8 +108,7 @@ public class StackCounter {
       if (!(o instanceof StackFrame))
         return false;
 
-      @Nonnull
-      final StackFrame that = (StackFrame) o;
+      @Nonnull final StackFrame that = (StackFrame) o;
 
       if (lineNumber != that.lineNumber)
         return false;

@@ -21,6 +21,7 @@ package com.simiacryptus.demo.refcount;
 
 import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import com.simiacryptus.ref.wrappers.RefIteratorBase;
@@ -33,8 +34,7 @@ import java.util.function.*;
 import java.util.stream.*;
 
 @SuppressWarnings("unused")
-public @RefAware
-class ArrayListContainer extends ReferenceCountingBase {
+public class ArrayListContainer extends ReferenceCountingBase {
   public ArrayListContainer() {
   }
 
@@ -70,7 +70,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
     }
-    if (values.size() != values.toArray(new BasicType[]{}).length) {
+    if (values.size() != values.toArray(new BasicType[] {}).length) {
       throw new RuntimeException();
     }
   }
@@ -117,7 +117,7 @@ class ArrayListContainer extends ReferenceCountingBase {
       if (!values.isEmpty()) {
         throw new RuntimeException();
       }
-      final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
+      final BasicType[] basicTypeN = new BasicType[] { new BasicType(), new BasicType(), new BasicType() };
       values.addAll(Arrays.asList(basicTypeN));
       values.add(1, basicType1);
       values.addAll(1, Arrays.asList(basicTypeN));
@@ -222,8 +222,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         return iterator.next();
       }
 
-      public @Override
-      void _free() {
+      public @Override void _free() {
         super._free();
       }
     }, -1, 0), false).filter(x272 -> {
@@ -247,8 +246,7 @@ class ArrayListContainer extends ReferenceCountingBase {
         return iterator.next();
       }
 
-      public @Override
-      void _free() {
+      public @Override void _free() {
         super._free();
       }
     }, -1, 0), false).filter((Predicate<? super BasicType>) x -> {
@@ -275,30 +273,29 @@ class ArrayListContainer extends ReferenceCountingBase {
       }, Collectors.toList())).size();
     });
     testOperations(values296 -> {
-      assert values296.size() == values296.stream()
-          .collect(Collectors.collectingAndThen(Collectors.toList(), x191 -> {
-            return new HashSet(x191);
-          })).size();
+      assert values296.size() == values296.stream().collect(Collectors.collectingAndThen(Collectors.toList(), x191 -> {
+        return new HashSet(x191);
+      })).size();
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .collect(Collectors.reducing(0, (Function<? super BasicType, ? extends Integer>) x -> {
+          .collect(Collectors.reducing(0, (Function<? super BasicType, Integer>) x -> {
             return 1;
           }, (a, b) -> a + b));
     });
     testOperations(values -> {
-      assert values.size() == values.stream().map(x -> {
+      assert values.size() == RefUtil.get(values.stream().map(x -> {
         return x.getValue();
-      }).collect(Collectors.reducing((a, b) -> a + b)).get();
+      }).collect(Collectors.reducing((a, b) -> a + b)));
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(Collectors.mapping(x -> {
+      assert values.size() == RefUtil.get(values.stream().collect(Collectors.mapping(x -> {
         return 1;
-      }, Collectors.reducing((a, b) -> a + b))).get();
+      }, Collectors.reducing((a, b) -> a + b))));
     });
     testOperations(values -> {
       assert values.size() == values.stream()
-          .collect(Collectors.mapping((Function<? super BasicType, ? extends Integer>) x -> {
+          .collect(Collectors.mapping((Function<? super BasicType, Integer>) x -> {
             return 1;
           }, Collectors.counting()));
     });
@@ -372,46 +369,46 @@ class ArrayListContainer extends ReferenceCountingBase {
   private static void testStreamOperations() {
     testOperations(values -> {
       assert values.size() == values.stream()
-          .flatMap((Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
+          .flatMap((Function<? super BasicType, Stream<BasicType>>) x -> {
             return values.stream();
           }).distinct().count();
     });
     testOperations(values372 -> {
 
-      final @NotNull BasicType[] array374 = values372.toArray(new BasicType[]{});
+      final @NotNull BasicType[] array374 = values372.toArray(new BasicType[] {});
       final int inputIndex = 0;
       @NotNull
       BasicType[] outputPrototype377 = array374;
 
       final BasicType inputTensor = array374[inputIndex];
       final int inputDims = inputTensor.value;
-      @Nonnull final BasicType result = new BasicType();
+      @Nonnull
+      final BasicType result = new BasicType();
       for (int j = 0; j < outputPrototype377.length; j++) {
         final int j_ = j;
-        @Nonnull final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
+        @Nonnull
+        final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
         final WrapperType[] copyInput = Arrays.stream(array374)
-            .map((Function<? super BasicType, ? extends WrapperType>) x -> {
+            .map((Function<? super BasicType, WrapperType>) x -> {
               return new WrapperType(x);
             }).toArray(i -> new WrapperType[i]);
-        {
-          copyInput[inputIndex] = new WrapperType(new BasicType()) {
-            @Override
-            public ReferenceCounting getInner() {
-              return super.getInner();
-            }
+        copyInput[inputIndex] = new WrapperType(new BasicType()) {
+          @Override
+          public ReferenceCounting getInner() {
+            return super.getInner();
+          }
 
-            public @Override
-            void _free() {
-              super._free();
-            }
-          };
-        }
-        @Nullable final WrapperType eval;
+          public @Override void _free() {
+            super._free();
+          }
+        };
+        @Nullable
+        final WrapperType eval;
         try {
           eval = new WrapperType(new BasicType());
         } finally {
           for (@Nonnull
-              WrapperType nnResult : copyInput) {
+          WrapperType nnResult : copyInput) {
             nnResult.getInner().assertAlive();
           }
         }
@@ -436,24 +433,23 @@ class ArrayListContainer extends ReferenceCountingBase {
       assert values_conditionalBlock.size() == values_conditionalBlock.stream().toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().map((Function<? super BasicType, ? extends BasicType>) x -> {
+      assert values.size() == values.stream().map((Function<? super BasicType, BasicType>) x -> {
         x.setValue(x.getValue() + 1);
         return x;
       }).sorted().toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .flatMap((Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
+      assert values
+          .size() == values.stream().flatMap((Function<? super BasicType, Stream<BasicType>>) x -> {
             x.setValue(x.getValue() + 1);
             return Stream.of(x);
           }).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      values.stream()
-          .flatMap((Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
-            x.setValue(x.getValue() + 1);
-            return Stream.of(x, new BasicType());
-          }).forEach((Consumer<? super BasicType>) x -> {
+      values.stream().flatMap((Function<? super BasicType, Stream<BasicType>>) x -> {
+        x.setValue(x.getValue() + 1);
+        return Stream.of(x, new BasicType());
+      }).forEach((Consumer<? super BasicType>) x -> {
         assert x != null;
       });
     });
@@ -486,8 +482,8 @@ class ArrayListContainer extends ReferenceCountingBase {
           }) != null;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().collect(Collectors.toList()).size() : values.size()
-          + " != " + values.stream().collect(Collectors.toList()).size();
+      assert values.size() == values.stream().collect(Collectors.toList()).size() : values.size() + " != "
+          + values.stream().collect(Collectors.toList()).size();
     });
     testOperations(values -> {
       assert values.size() == values.stream().collect(Collectors.toSet()).size();
@@ -534,41 +530,37 @@ class ArrayListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      assert values
-          .size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      assert values.size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert values
-          .size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
+      assert values.size() == values.stream().sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().map((Function<? super BasicType, ? extends BasicType>) x -> {
+      assert values.size() == values.stream().map((Function<? super BasicType, BasicType>) x -> {
         x.setValue(x.getValue() + 1);
         return x;
       }).sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert null != values.stream()
-          .max(Comparator.comparing((Function<? super BasicType, ? extends Integer>) x -> {
-            return x.getValue();
-          })).get();
+      assert null != RefUtil.get(values.stream().max(Comparator.comparing(x -> {
+        return x.getValue();
+      })));
     });
     testOperations(values -> {
-      assert null != values.stream()
-          .min(Comparator.comparing((Function<? super BasicType, ? extends Integer>) x -> {
-            return x.getValue();
-          })).get();
+      assert null != RefUtil.get(values.stream().min(Comparator.comparing(x -> {
+        return x.getValue();
+      })));
     });
     testOperations(values -> {
       if (values.size() > 4 && values.stream().skip(1).limit(5).count() != 4) {
         throw new AssertionError();
       }
-      values.stream().forEach((Consumer<? super BasicType>) x -> {
+      values.stream().forEach(x -> {
         x.setValue(x.getValue() + 1);
       });
     });
     testOperations(values -> {
-      values.stream().parallel().forEach((Consumer<? super BasicType>) x -> {
+      values.stream().parallel().forEach(x -> {
         x.setValue(x.getValue() + 1);
       });
     });
@@ -579,55 +571,53 @@ class ArrayListContainer extends ReferenceCountingBase {
       parallel.close();
     });
     testOperations(values -> {
-      values.stream().forEachOrdered((Consumer<? super BasicType>) x -> {
+      values.stream().forEachOrdered(x -> {
         x.setValue(x.getValue() + 1);
       });
     });
     testOperations(values -> {
       assert values.size() == values.stream().sequential().unordered()
-          .map((Function<? super BasicType, ? extends BasicType>) x -> {
+          .map(x -> {
             x.setValue(x.getValue() + 1);
             return x;
           }).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().mapToInt((ToIntFunction<? super BasicType>) foobar1 -> {
+      assert values.size() == values.stream().mapToInt(foobar1 -> {
         return foobar1.getValue();
       }).toArray().length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().mapToDouble((ToDoubleFunction<? super BasicType>) x -> {
+      assert values.size() == values.stream().mapToDouble(x -> {
         return x.getValue();
       }).toArray().length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream().mapToLong((ToLongFunction<? super BasicType>) x -> {
+      assert values.size() == values.stream().mapToLong(x -> {
         return x.getValue();
       }).toArray().length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .flatMapToInt((Function<? super BasicType, ? extends IntStream>) foobar1 -> {
+      assert values
+          .size() == values.stream().flatMapToInt(foobar1 -> {
             return IntStream.of(foobar1.getValue());
           }).toArray().length;
     });
     testOperations(values -> {
-      assert values.size() == values.stream()
-          .flatMapToDouble((Function<? super BasicType, ? extends DoubleStream>) x -> {
+      assert values
+          .size() == values.stream().flatMapToDouble(x -> {
             return DoubleStream.of(x.getValue());
           }).toArray().length;
     });
     testOperations(values -> {
-      final long[] longs = values.stream()
-          .flatMapToLong((Function<? super BasicType, ? extends LongStream>) x -> {
-            return LongStream.of(x.getValue());
-          }).toArray();
+      final long[] longs = values.stream().flatMapToLong(x -> {
+        return LongStream.of(x.getValue());
+      }).toArray();
       assert values.size() == longs.length;
     });
   }
 
-  public @Override
-  void _free() {
+  public @Override void _free() {
     super._free();
   }
 }

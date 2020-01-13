@@ -24,7 +24,6 @@ import com.simiacryptus.ref.lang.RefIgnore;
 
 import java.io.Serializable;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class Tuple2<A, B> implements Serializable {

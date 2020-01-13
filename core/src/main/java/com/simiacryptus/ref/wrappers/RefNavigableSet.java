@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.NavigableSet;
 
-@RefAware
 public interface RefNavigableSet<T> extends NavigableSet<T>, RefSet<T> {
   @NotNull
   @Override
@@ -46,7 +45,7 @@ public interface RefNavigableSet<T> extends NavigableSet<T>, RefSet<T> {
   @NotNull
   @Override
   RefSortedSet<T> subSet(@RefAware T fromElement,
-      @RefAware T toElement);
+                         @RefAware T toElement);
 
   @NotNull
   @Override

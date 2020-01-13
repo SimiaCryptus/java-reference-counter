@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {

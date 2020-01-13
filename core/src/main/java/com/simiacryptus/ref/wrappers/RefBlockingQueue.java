@@ -24,10 +24,8 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.concurrent.BlockingQueue;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefBlockingQueue<T> extends RefQueue<T>, BlockingQueue<T> {

@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> implements RefSet<T>, Cloneable, Serializable {
@@ -70,7 +69,8 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @NotNull
-  public @Override RefAbstractSet<T> addRef() {
+  public @Override
+  RefAbstractSet<T> addRef() {
     return (RefAbstractSet<T>) super.addRef();
   }
 

@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Queue;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefQueue<T> extends ReferenceCounting, Queue<T> {

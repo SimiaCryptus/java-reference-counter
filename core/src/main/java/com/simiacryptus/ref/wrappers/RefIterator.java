@@ -26,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 
-@RefAware
 @RefIgnore
 public class RefIterator<T> extends RefIteratorBase<T> {
 

@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.Collector;
 
-@RefAware
 @RefIgnore
 public class DoubleStatistics extends DoubleSummaryStatistics {
 

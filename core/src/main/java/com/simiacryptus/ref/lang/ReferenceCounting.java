@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
-@RefAware
 @RefIgnore
 public interface ReferenceCounting {
 

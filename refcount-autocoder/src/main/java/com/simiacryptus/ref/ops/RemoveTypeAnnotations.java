@@ -20,7 +20,6 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
@@ -28,13 +27,18 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 @RefIgnore
-public class RemoveAnnotations extends RefASTOperator {
+public class RemoveTypeAnnotations extends RefASTOperator {
 
-  public RemoveAnnotations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  List<String> toRemove;
+
+  public RemoveTypeAnnotations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, String... annotationsToRemove) {
     super(projectInfo, compilationUnit, file);
+    toRemove = Arrays.asList(annotationsToRemove);
   }
 
   @Override
@@ -43,7 +47,8 @@ public class RemoveAnnotations extends RefASTOperator {
     while (iterator.hasNext()) {
       final Object next = iterator.next();
       if (next instanceof MarkerAnnotation) {
-        if (((MarkerAnnotation) next).getTypeName().getFullyQualifiedName().equals(RefAware.class.getCanonicalName())) {
+        String fullyQualifiedName = ((MarkerAnnotation) next).getTypeName().getFullyQualifiedName();
+        if (toRemove.stream().anyMatch(x->x.endsWith(fullyQualifiedName))) {
           debug(node, "Removed @RefAware from %s", node.getName());
           iterator.remove();
         }

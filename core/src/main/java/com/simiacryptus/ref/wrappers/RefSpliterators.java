@@ -29,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Iterator;
 import java.util.Spliterators;
 
-@RefAware
 @RefIgnore
 public class RefSpliterators {
   @NotNull
@@ -59,7 +58,7 @@ public class RefSpliterators {
   }
 
   public static <T> RefSpliterator<T> spliteratorUnknownSize(@RefAware Iterator<T> iterator,
-      int characteristics) {
+                                                             int characteristics) {
     if (iterator instanceof RefIterator) {
       Iterator<T> inner = ((RefIterator<T>) iterator).getInner();
       assert null != inner;

@@ -24,10 +24,15 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import java.io.File;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 @RefIgnore
 public class AnnotateMethodCalls extends RefASTOperator {
@@ -46,7 +51,6 @@ public class AnnotateMethodCalls extends RefASTOperator {
       warn(node, "Unresolved binding");
       return;
     }
-    final List<IMethodBinding> superMethods = ASTUtil.superMethods(methodBinding);
     final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(methodBinding);
     if (missingAttributes.containsKey(bindingID)) {
       final List<SingleVariableDeclaration> parameters = node.parameters();

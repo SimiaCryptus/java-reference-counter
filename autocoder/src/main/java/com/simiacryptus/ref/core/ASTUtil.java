@@ -33,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class ASTUtil {
@@ -208,6 +207,20 @@ public class ASTUtil {
   }
 
   @NotNull
+  public static <T extends ASTNode> List<T> findExpressions(@NotNull ASTNode tree, @NotNull Class<T> searchForClass) {
+    final List<T> reference = new ArrayList<>();
+    tree.accept(new ASTVisitor() {
+      @Override
+      public void postVisit(@NotNull ASTNode node) {
+        if (node.getClass().equals(searchForClass)) {
+          reference.add((T) node);
+        }
+      }
+    });
+    return reference;
+  }
+
+  @NotNull
   public static Optional<MethodDeclaration> findMethod(@NotNull TypeDeclaration typeDeclaration, String name) {
     return Arrays.stream(typeDeclaration.getMethods()).filter(methodDeclaration -> methodDeclaration.getName().toString().equals(name)).findFirst();
   }
@@ -307,15 +320,11 @@ public class ASTUtil {
   }
 
   public static boolean contains(@NotNull ASTNode node, ASTNode searchFor) {
-    final AtomicBoolean returnValue = new AtomicBoolean(false);
-    node.accept(new ASTVisitor() {
-      @Override
-      public void postVisit(@NotNull ASTNode node) {
-        if (node.equals(searchFor)) returnValue.set(true);
-        super.postVisit(node);
-      }
-    });
-    return returnValue.get();
+    return !findExpressions(node, searchFor).isEmpty();
+  }
+
+  public static boolean contains(@NotNull ASTNode node, Class<? extends ASTNode> searchFor) {
+    return !findExpressions(node, searchFor).isEmpty();
   }
 
   public static String format(@NotNull String finalSrc) {
@@ -347,7 +356,7 @@ public class ASTUtil {
   }
 
   public static boolean isPrimitive(ITypeBinding type) {
-    if(type.isArray()) return isPrimitive(type.getElementType());
+    if (type.isArray()) return isPrimitive(type.getElementType());
     return type.isPrimitive();
   }
 
@@ -366,14 +375,74 @@ public class ASTUtil {
       list.add(xface);
     }
     final ITypeBinding superclass = declaringClass.getSuperclass();
-    if(null != superclass) list.add(superclass);
+    if (null != superclass) list.add(superclass);
     return list;
   }
 
   public static Tuple2<ASTNode, IMethodBinding> getMethod(ASTNode node) {
-    if(null == node) return null;
-    if(node instanceof MethodDeclaration) return new Tuple2<>(node, ((MethodDeclaration) node).resolveBinding());
-    if(node instanceof LambdaExpression) return new Tuple2<>(node, ((LambdaExpression) node).resolveMethodBinding());
+    if (null == node) return null;
+    if (node instanceof MethodDeclaration) return new Tuple2<>(node, ((MethodDeclaration) node).resolveBinding());
+    if (node instanceof LambdaExpression) return new Tuple2<>(node, ((LambdaExpression) node).resolveMethodBinding());
     return getMethod(node.getParent());
+  }
+
+  public static <T> List<T> copyPrepend(List<T> list, T... item) {
+    ArrayList<T> copy = new ArrayList<>();
+    Arrays.stream(item).forEach(list::add);
+    copy.addAll(list);
+    return copy;
+  }
+
+  public static <T> List<T> copyAppend(List<T> list, T... item) {
+    ArrayList<T> copy = new ArrayList<>();
+    copy.addAll(list);
+    Arrays.stream(item).forEach(list::add);
+    return copy;
+  }
+
+  public static boolean withinAnonymousClass(ASTNode code, ASTNode node) {
+    if (null == node) return false;
+    if (node instanceof AnonymousClassDeclaration) return true;
+    if (code == node) return false;
+    return withinAnonymousClass(code, node.getParent());
+  }
+
+  public static boolean withinSubMethod(ASTNode code, ASTNode node) {
+    if (null == node) return false;
+    if (node instanceof MethodDeclaration) return true;
+    if (code == node) return false;
+    return withinSubMethod(code, node.getParent());
+  }
+
+  public static boolean withinLambda(ASTNode code, ASTNode node) {
+    if (null == node) return false;
+    if (node instanceof LambdaExpression) return true;
+    if (code == node) return false;
+    return withinLambda(code, node.getParent());
+  }
+
+  public static boolean isLoopTerminal(WhileStatement whileStatement) {
+    if (whileStatement.getExpression().toString().equals("true")) {
+      if (!contains(whileStatement.getBody(), BreakStatement.class)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static boolean isLoopTerminal(DoStatement doStatement) {
+    if (doStatement.getExpression().toString().equals("true")) {
+      if (!contains(doStatement.getBody(), BreakStatement.class)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static boolean strEquals(ASTNode l, ASTNode r) {
+    if (null == r && null == l) return true;
+    if (null == r) return false;
+    if (null == l) return false;
+    return r.toString().equals(l.toString());
   }
 }

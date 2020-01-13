@@ -31,7 +31,6 @@ import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefSpliterator<T> extends ReferenceCountingBase implements Spliterator<T> {
@@ -113,7 +112,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     return RefUtil.addRef(t);
   }
 
-  @RefAware
   @RefIgnore
   public static class OfDouble<T> extends ReferenceCountingBase implements Spliterator.OfDouble {
 
@@ -160,7 +158,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   }
 
-  @RefAware
   @RefIgnore
   public static class OfLong extends ReferenceCountingBase implements Spliterator.OfLong {
 
@@ -209,7 +206,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   }
 
-  @RefAware
   @RefIgnore
   public static class OfInt extends ReferenceCountingBase implements Spliterator.OfInt {
 

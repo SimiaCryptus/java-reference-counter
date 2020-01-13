@@ -25,7 +25,6 @@ import com.simiacryptus.ref.lang.RefUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefAssert {
@@ -35,7 +34,7 @@ public class RefAssert {
   }
 
   public static void assertEquals(@Nullable @RefAware String message, @RefAware Object expected,
-      @RefAware Object actual) {
+                                  @RefAware Object actual) {
     try {
       if (!equalsRegardingNull(RefUtil.addRef(expected), RefUtil.addRef(actual))) {
         if (expected instanceof String && actual instanceof String) {
@@ -118,7 +117,7 @@ public class RefAssert {
     String actualString = String.valueOf(actual);
     return equalsRegardingNull(expectedString, actualString)
         ? formatted + "expected: " + formatClassAndValue(expected, expectedString) + " but was: "
-            + formatClassAndValue(actual, actualString)
+        + formatClassAndValue(actual, actualString)
         : formatted + "expected:<" + expectedString + "> but was:<" + actualString + ">";
   }
 
@@ -128,7 +127,6 @@ public class RefAssert {
     return className + "<" + valueString + ">";
   }
 
-  @RefAware
   @RefIgnore
   private static class ComparisonFailure extends AssertionError {
     private final String expected;

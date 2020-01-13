@@ -42,6 +42,10 @@ public class SymbolIndex {
     else return new BindingID(path, getType(binding));
   }
 
+  public static boolean equals(IBinding nameBinding, IBinding mentionBinding) {
+    return getBindingID(mentionBinding).equals(getBindingID(nameBinding));
+  }
+
   @NotNull
   private static IMethodBinding getImplementation(@NotNull IMethodBinding methodBinding) {
     while (true) {
@@ -88,7 +92,7 @@ public class SymbolIndex {
             null == declaringClass ? "null" : getPath(declaringClass),
             (split.length < 2) ? typeBinding.getKey() : split[1]);
       } else {
-        return typeBinding.getQualifiedName();
+        return typeBinding.getTypeDeclaration().getQualifiedName();
       }
     } else if (binding instanceof IPackageBinding) {
       return binding.getName();

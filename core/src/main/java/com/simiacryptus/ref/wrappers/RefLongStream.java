@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.LongStream;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLongStream implements LongStream {
@@ -46,7 +45,7 @@ public class RefLongStream implements LongStream {
   }
 
   RefLongStream(@RefAware LongStream stream, @RefAware List<ReferenceCounting> lambdas,
-      @RefAware Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+                @RefAware Map<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
     if (stream instanceof ReferenceCounting)
@@ -128,7 +127,7 @@ public class RefLongStream implements LongStream {
 
   @Override
   public <R> R collect(@NotNull @RefAware Supplier<R> supplier, @NotNull @RefAware ObjLongConsumer<R> accumulator,
-      @NotNull @RefAware BiConsumer<R, R> combiner) {
+                       @NotNull @RefAware BiConsumer<R, R> combiner) {
     track(supplier);
     track(accumulator);
     track(combiner);

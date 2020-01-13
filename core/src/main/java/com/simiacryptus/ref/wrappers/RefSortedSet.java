@@ -24,12 +24,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.SortedSet;
 
-@RefAware
 public interface RefSortedSet<T> extends SortedSet<T>, RefSet<T> {
   @NotNull
   @Override
   RefSortedSet<T> subSet(@RefAware T fromElement,
-      @RefAware T toElement);
+                         @RefAware T toElement);
 
   @NotNull
   @Override

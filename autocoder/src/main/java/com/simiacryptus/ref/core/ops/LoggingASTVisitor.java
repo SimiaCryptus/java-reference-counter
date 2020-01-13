@@ -45,7 +45,7 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
     this.file = file;
   }
 
-  protected final void debug(@NotNull ASTNode node, String formatString, Object... args) {
+  public final void debug(@NotNull ASTNode node, String formatString, Object... args) {
     debug(1, node, formatString, args);
   }
 
@@ -76,7 +76,7 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
     return caller.getFileName() + ":" + caller.getLineNumber();
   }
 
-  protected final void warn(@NotNull ASTNode node, @NotNull String formatString, Object... args) {
+  public final void warn(@NotNull ASTNode node, @NotNull String formatString, Object... args) {
     warn(1, node, formatString, args);
   }
 

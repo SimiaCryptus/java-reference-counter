@@ -29,7 +29,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigableMap<K, V> {
@@ -153,7 +152,7 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
 
   @Override
   public RefSortedMap<K, V> subMap(@RefAware K fromKey,
-      @RefAware K toKey) {
+                                   @RefAware K toKey) {
     throw new UnsupportedOperationException();
   }
 

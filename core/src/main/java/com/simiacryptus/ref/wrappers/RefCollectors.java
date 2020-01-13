@@ -30,7 +30,6 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefCollectors {
@@ -169,7 +168,6 @@ public class RefCollectors {
   @NotNull
   public static <T> RefCollector<T, ?, Optional<T>> reducing(
       @NotNull @RefAware BinaryOperator<T> op) {
-    @RefAware
     @RefIgnore
     class OptionalBox extends ReferenceCountingBase implements Consumer<T> {
       @Nullable
@@ -218,8 +216,8 @@ public class RefCollectors {
 
   @NotNull
   public static <T, U> RefCollector<T, ?, U> reducing(@RefAware U identity,
-      @NotNull @RefAware Function<? super T, ? extends U> mapper,
-      @NotNull @RefAware BinaryOperator<U> op) {
+                                                      @NotNull @RefAware Function<? super T, ? extends U> mapper,
+                                                      @NotNull @RefAware BinaryOperator<U> op) {
     return new RefCollector<>(boxSupplier(identity), RefUtil.wrapInterface((a, t) -> {
       a[0] = op.apply(a[0], mapper.apply(t));
     }, mapper, RefUtil.addRef(op)), RefUtil.wrapInterface((a, b) -> {
@@ -256,10 +254,9 @@ public class RefCollectors {
   @NotNull
   @SuppressWarnings("unchecked")
   private static <T> Supplier<T[]> boxSupplier(@RefAware T identity) {
-    return RefUtil.wrapInterface(() -> (T[]) new Object[] { RefUtil.addRef(identity) }, identity);
+    return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);
   }
 
-  @RefAware
   @RefIgnore
   public static class RefCollector<T, A, R> extends ReferenceCountingBase implements Collector<T, A, R> {
     private final Supplier<A> supplier;
@@ -269,10 +266,10 @@ public class RefCollectors {
     private final Set<Characteristics> characteristics;
 
     RefCollector(@RefAware Supplier<A> supplier,
-        @RefAware BiConsumer<A, T> accumulator,
-        @RefAware BinaryOperator<A> combiner,
-        @RefAware Function<A, R> finisher,
-        @RefAware Set<Characteristics> characteristics) {
+                 @RefAware BiConsumer<A, T> accumulator,
+                 @RefAware BinaryOperator<A> combiner,
+                 @RefAware Function<A, R> finisher,
+                 @RefAware Set<Characteristics> characteristics) {
       this.supplier = supplier;
       this.accumulator = accumulator;
       this.combiner = combiner;
@@ -281,9 +278,9 @@ public class RefCollectors {
     }
 
     RefCollector(@RefAware Supplier<A> supplier,
-        @RefAware BiConsumer<A, T> accumulator,
-        @RefAware BinaryOperator<A> combiner,
-        @RefAware Set<Characteristics> characteristics) {
+                 @RefAware BiConsumer<A, T> accumulator,
+                 @RefAware BinaryOperator<A> combiner,
+                 @RefAware Set<Characteristics> characteristics) {
       this(supplier, accumulator, combiner, i -> (R) i, characteristics);
     }
 

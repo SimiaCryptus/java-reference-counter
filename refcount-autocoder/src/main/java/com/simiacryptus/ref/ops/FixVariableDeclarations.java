@@ -22,6 +22,7 @@ package com.simiacryptus.ref.ops;
 import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
@@ -75,7 +76,7 @@ public class FixVariableDeclarations extends RefASTOperator {
       }
     }
     if (chooseType.isPresent()) {
-      Type newType = getType(type, chooseType.get().getQualifiedName(), true);
+      Type newType = getType(type, RefUtil.get(chooseType).getQualifiedName(), true);
       debug(type, "Replaced variable type %s to %s", type, newType);
       return newType;
     } else {

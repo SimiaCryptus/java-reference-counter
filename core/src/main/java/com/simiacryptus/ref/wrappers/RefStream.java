@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.*;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefStream<T> implements Stream<T> {
@@ -47,11 +46,11 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  RefStream(@RefAware Stream<T> stream,
-      @RefAware List<ReferenceCounting> lambdas,
-      @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
-    if (stream instanceof ReferenceCounting)
-      throw new IllegalArgumentException("inner class cannot be ref-aware");
+  RefStream(Stream<T> stream,
+            @RefAware List<ReferenceCounting> lambdas,
+            @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    if (stream instanceof RefStream)
+      throw new IllegalArgumentException("inner class cannot be RefStream");
     this.inner = stream;
     this.lambdas = lambdas;
     this.refs = refs;
@@ -106,7 +105,7 @@ public class RefStream<T> implements Stream<T> {
 
   @NotNull
   public static <T> RefStream<T> concat(@NotNull @RefAware Stream<? extends T> a,
-      @NotNull @RefAware Stream<? extends T> b) {
+                                        @NotNull @RefAware Stream<? extends T> b) {
     return new RefStream<>(Stream.concat(a, b));
   }
 
@@ -122,7 +121,7 @@ public class RefStream<T> implements Stream<T> {
   }
 
   static <U> U getRef(@RefAware U u,
-      @NotNull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+                      @NotNull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
       final AtomicBoolean obtained = new AtomicBoolean(false);
@@ -142,7 +141,7 @@ public class RefStream<T> implements Stream<T> {
   }
 
   static <U> U storeRef(@RefAware U u,
-      @NotNull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+                        @NotNull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
     }
@@ -172,8 +171,8 @@ public class RefStream<T> implements Stream<T> {
 
   @Override
   public <R> R collect(@NotNull @RefAware Supplier<R> supplier,
-      @NotNull @RefAware BiConsumer<R, ? super T> accumulator,
-      @NotNull @RefAware BiConsumer<R, R> combiner) {
+                       @NotNull @RefAware BiConsumer<R, ? super T> accumulator,
+                       @NotNull @RefAware BiConsumer<R, R> combiner) {
     final R collect = getInner().collect(() -> supplier.get(),
         (R t1, T u1) -> accumulator.accept(RefUtil.addRef(t1), getRef(u1)),
         (R t, R u) -> combiner.accept(RefUtil.addRef(t), u));
@@ -383,7 +382,7 @@ public class RefStream<T> implements Stream<T> {
   @Nullable
   @Override
   public T reduce(@RefAware T identity,
-      @NotNull @RefAware BinaryOperator<T> accumulator) {
+                  @NotNull @RefAware BinaryOperator<T> accumulator) {
     track(accumulator);
     final T reduce = RefUtil
         .addRef(getInner().reduce(storeRef(identity), (T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u)))));
@@ -403,8 +402,8 @@ public class RefStream<T> implements Stream<T> {
 
   @Override
   public <U> U reduce(@RefAware U identity,
-      @NotNull @RefAware BiFunction<U, ? super T, U> accumulator,
-      @NotNull @RefAware BinaryOperator<U> combiner) {
+                      @NotNull @RefAware BiFunction<U, ? super T, U> accumulator,
+                      @NotNull @RefAware BinaryOperator<U> combiner) {
     track(accumulator);
     track(combiner);
     final U result = getRef(
@@ -501,7 +500,6 @@ public class RefStream<T> implements Stream<T> {
     return getRef(u, this.refs);
   }
 
-  @RefAware
   @RefIgnore
   public static class IdentityWrapper<T> {
     public final T inner;

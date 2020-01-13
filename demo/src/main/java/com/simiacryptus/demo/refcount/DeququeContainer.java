@@ -19,6 +19,7 @@
 
 package com.simiacryptus.demo.refcount;
 
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.jetbrains.annotations.NotNull;
 
@@ -330,14 +331,14 @@ public class DeququeContainer extends ReferenceCountingBase {
       }).sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert null != values.stream().max(Comparator.comparing(x -> {
+      assert null != RefUtil.get(values.stream().max(Comparator.comparing(x -> {
         return x.getValue();
-      })).get();
+      })));
     });
     testOperations(values -> {
-      assert null != values.stream().min(Comparator.comparing(x -> {
+      assert null != RefUtil.get(values.stream().min(Comparator.comparing(x -> {
         return x.getValue();
-      })).get();
+      })));
     });
     testOperations(values -> {
       if (values.size() > 4 && values.stream().skip(1).limit(5).count() != 4) {

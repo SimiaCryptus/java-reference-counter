@@ -21,7 +21,6 @@ package com.simiacryptus.ref.lang;
 
 import javax.annotation.Nonnull;
 
-@RefAware
 @RefIgnore
 public class LifecycleException extends RuntimeException {
   @Nonnull

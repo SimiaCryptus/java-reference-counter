@@ -30,9 +30,7 @@ public class ArrayContainer extends ReferenceCountingBase {
   public BasicType[] values;
 
   public ArrayContainer(BasicType... values) {
-    {
-      this.values = values;
-    }
+    this.values = values;
   }
 
   public @Override

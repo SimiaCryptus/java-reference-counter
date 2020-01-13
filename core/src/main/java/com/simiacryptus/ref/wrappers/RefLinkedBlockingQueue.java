@@ -27,13 +27,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements RefBlockingQueue<T> {
@@ -120,14 +117,14 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
   }
 
   @Override
+  public @NotNull RefLinkedBlockingQueue<T> addRef() {
+    return (RefLinkedBlockingQueue) super.addRef();
+  }
+
+  @Override
   protected void _free() {
     inner.forEach(RefUtil::freeRef);
     inner.clear();
     super._free();
-  }
-
-  @Override
-  public @NotNull RefLinkedBlockingQueue<T> addRef() {
-    return (RefLinkedBlockingQueue) super.addRef();
   }
 }

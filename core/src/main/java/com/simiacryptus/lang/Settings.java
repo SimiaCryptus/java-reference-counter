@@ -32,7 +32,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-@RefAware
 @RefIgnore
 public interface Settings {
   Logger logger = LoggerFactory.getLogger(Settings.class);
@@ -52,7 +51,7 @@ public interface Settings {
 
   @NotNull
   static <T extends Enum<T>> T get(@NotNull final @RefAware String key,
-      @Nonnull final @RefAware T defaultValue) {
+                                   @Nonnull final @RefAware T defaultValue) {
     T value = Enum.valueOf((Class<T>) defaultValue.getClass().getSuperclass(),
         System.getProperty(key, defaultValue.toString().toUpperCase()));
     logger.info(String.format("%s = %s", key, value));
@@ -60,7 +59,7 @@ public interface Settings {
   }
 
   static String get(@NotNull final @RefAware String key,
-      final @RefAware String defaultValue) {
+                    final @RefAware String defaultValue) {
     String value = System.getProperty(key, defaultValue);
     logger.info(String.format("%s = %s", key, value));
     return value;
@@ -91,7 +90,7 @@ public interface Settings {
 
   @Nonnull
   static CharSequence toJson(final @RefAware Object obj,
-      @NotNull final @RefAware ObjectMapper objectMapper) {
+                             @NotNull final @RefAware ObjectMapper objectMapper) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
       objectMapper.writeValue(outputStream, obj);

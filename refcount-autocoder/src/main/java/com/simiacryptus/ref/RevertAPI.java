@@ -53,7 +53,6 @@ public class RevertAPI extends RefAutoCoderMojo {
       rewrite(FixVariableDeclarations.ModifyFieldDeclaration::new);
       rewrite(FixVariableDeclarations.ModifyVariableDeclarationFragment::new);
       rewrite(FixVariableDeclarations.ModifyVariableDeclarationStatement::new);
-      rewrite(RemoveAnnotations::new);
       rewrite(RemoveRefMethods::new);
     }
   }

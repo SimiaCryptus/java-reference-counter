@@ -30,7 +30,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {

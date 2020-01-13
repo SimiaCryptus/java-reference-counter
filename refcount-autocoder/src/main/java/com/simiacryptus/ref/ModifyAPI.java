@@ -47,8 +47,6 @@ public class ModifyAPI extends RefAutoCoderMojo {
     public void rewrite() {
       new Check.Coder(projectInfo).rewrite();
       rewrite(RemoveRefMethods::new);
-      rewrite(RemoveAnnotations::new);
-      rewrite(InsertAnnotations::new);
       rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyTypeParameter(projectInfo, cu, file, false));
       rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifySimpleName(projectInfo, cu, file, false));
       rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyQualifiedName(projectInfo, cu, file, false));

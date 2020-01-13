@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements RefDeque<T> {
@@ -61,15 +60,17 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
     assertAlive();
     return RefUtil.addRef(getInner().getLast());
   }
-  @NotNull
-  public @Override RefConcurrentLinkedDeque<T> addRef() {
-    return (RefConcurrentLinkedDeque<T>) super.addRef();
-  }
 
   @NotNull
   public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@NotNull RefConcurrentLinkedDeque<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)
         .toArray((x) -> new RefConcurrentLinkedDeque[x]);
+  }
+
+  @NotNull
+  public @Override
+  RefConcurrentLinkedDeque<T> addRef() {
+    return (RefConcurrentLinkedDeque<T>) super.addRef();
   }
 
   @Override

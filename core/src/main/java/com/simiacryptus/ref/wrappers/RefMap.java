@@ -32,7 +32,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
@@ -82,7 +81,7 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Override
   default V merge(@RefAware K key, @RefAware V value,
-      @NotNull @RefAware BiFunction<? super V, ? super V, ? extends V> fn) {
+                  @NotNull @RefAware BiFunction<? super V, ? super V, ? extends V> fn) {
     V oldValue = get(RefUtil.addRef(key));
     V newValue;
     if (oldValue == null) {
@@ -124,7 +123,7 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Override
   default V getOrDefault(@com.simiacryptus.ref.lang.RefAware Object key,
-      @com.simiacryptus.ref.lang.RefAware V defaultValue) {
+                         @com.simiacryptus.ref.lang.RefAware V defaultValue) {
     return null;
   }
 
@@ -141,13 +140,13 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Override
   default boolean remove(@com.simiacryptus.ref.lang.RefAware Object key,
-      @com.simiacryptus.ref.lang.RefAware Object value) {
+                         @com.simiacryptus.ref.lang.RefAware Object value) {
     return false;
   }
 
   @Override
   default boolean replace(@com.simiacryptus.ref.lang.RefAware K key, @com.simiacryptus.ref.lang.RefAware V oldValue,
-      @com.simiacryptus.ref.lang.RefAware V newValue) {
+                          @com.simiacryptus.ref.lang.RefAware V newValue) {
     return false;
   }
 
@@ -159,13 +158,13 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Override
   default V computeIfPresent(@com.simiacryptus.ref.lang.RefAware K key,
-      @com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+                             @com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     return null;
   }
 
   @Override
   default V compute(@com.simiacryptus.ref.lang.RefAware K key,
-      @com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+                    @com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     return null;
   }
 }

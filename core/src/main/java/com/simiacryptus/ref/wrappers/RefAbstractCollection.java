@@ -29,7 +29,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 
-@RefAware
 @RefIgnore
 public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     implements RefCollection<T>, Cloneable, Serializable {
@@ -43,7 +42,8 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
   }
 
   @NotNull
-  public @Override RefAbstractCollection<T> addRef() {
+  public @Override
+  RefAbstractCollection<T> addRef() {
     return (RefAbstractCollection<T>) super.addRef();
   }
 

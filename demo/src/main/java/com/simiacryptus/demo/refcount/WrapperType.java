@@ -37,9 +37,7 @@ public class WrapperType<T extends ReferenceCounting> extends ReferenceCountingB
 
   @NotNull
   public WrapperType<T> setInner(T innerWrapperType) {
-    {
-      this.inner = innerWrapperType;
-    }
+    this.inner = innerWrapperType;
     return this;
   }
 

@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Properties;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public final class RefSystem {
@@ -36,18 +35,22 @@ public final class RefSystem {
   public static PrintStream out = System.out;
   public static InputStream in = System.in;
 
-  public static long nanoTime() {
-    return System.nanoTime();
-  }
-
-  public static void arraycopy(@com.simiacryptus.ref.lang.RefAware Object src, int srcPos,
-      @com.simiacryptus.ref.lang.RefAware Object dst, int dstPos, int length) {
-    System.arraycopy(src, srcPos, dst, dstPos, length);
+  public static Properties getProperties() {
+    return System.getProperties();
   }
 
   public static void setOut(@com.simiacryptus.ref.lang.RefAware PrintStream printStream) {
     out = printStream;
     System.setOut(printStream);
+  }
+
+  public static long nanoTime() {
+    return System.nanoTime();
+  }
+
+  public static void arraycopy(@com.simiacryptus.ref.lang.RefAware Object src, int srcPos,
+                               @com.simiacryptus.ref.lang.RefAware Object dst, int dstPos, int length) {
+    System.arraycopy(src, srcPos, dst, dstPos, length);
   }
 
   public static long currentTimeMillis() {
@@ -61,7 +64,7 @@ public final class RefSystem {
   }
 
   public static void setProperty(@com.simiacryptus.ref.lang.RefAware String key,
-      @com.simiacryptus.ref.lang.RefAware String value) {
+                                 @com.simiacryptus.ref.lang.RefAware String value) {
     System.setProperty(key, value);
   }
 
@@ -74,16 +77,12 @@ public final class RefSystem {
   }
 
   public static String getProperty(@com.simiacryptus.ref.lang.RefAware String key,
-      @com.simiacryptus.ref.lang.RefAware String defaultValue) {
+                                   @com.simiacryptus.ref.lang.RefAware String defaultValue) {
     return System.getProperty(key, defaultValue);
   }
 
   public static void gc() {
     System.gc();
-  }
-
-  public static Properties getProperties() {
-    return System.getProperties();
   }
 
   public static String getenv(@com.simiacryptus.ref.lang.RefAware String key) {

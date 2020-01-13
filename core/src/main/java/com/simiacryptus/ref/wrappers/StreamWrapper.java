@@ -30,7 +30,6 @@ import java.util.Spliterator;
 import java.util.function.*;
 import java.util.stream.*;
 
-@RefAware
 @RefIgnore
 public class StreamWrapper<T> implements Stream<T> {
   private final Stream<T> inner;
@@ -65,8 +64,8 @@ public class StreamWrapper<T> implements Stream<T> {
 
   @Override
   public <R> R collect(@RefAware Supplier<R> supplier,
-      @RefAware BiConsumer<R, ? super T> accumulator,
-      @RefAware BiConsumer<R, R> combiner) {
+                       @RefAware BiConsumer<R, ? super T> accumulator,
+                       @RefAware BiConsumer<R, R> combiner) {
     return getInner().collect(supplier, accumulator, combiner);
   }
 
@@ -202,7 +201,7 @@ public class StreamWrapper<T> implements Stream<T> {
 
   @Override
   public T reduce(@RefAware T identity,
-      @RefAware BinaryOperator<T> accumulator) {
+                  @RefAware BinaryOperator<T> accumulator) {
     return getInner().reduce(identity, accumulator);
   }
 
@@ -214,8 +213,8 @@ public class StreamWrapper<T> implements Stream<T> {
 
   @Override
   public <U> U reduce(@RefAware U identity,
-      @RefAware BiFunction<U, ? super T, U> accumulator,
-      @RefAware BinaryOperator<U> combiner) {
+                      @RefAware BiFunction<U, ? super T, U> accumulator,
+                      @RefAware BinaryOperator<U> combiner) {
     return getInner().reduce(identity, accumulator, combiner);
   }
 

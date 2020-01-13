@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefArrayList<T> extends RefAbstractList<T> {
@@ -60,7 +59,8 @@ public class RefArrayList<T> extends RefAbstractList<T> {
   }
 
   @NotNull
-  public @Override RefArrayList<T> addRef() {
+  public @Override
+  RefArrayList<T> addRef() {
     return (RefArrayList<T>) super.addRef();
   }
 

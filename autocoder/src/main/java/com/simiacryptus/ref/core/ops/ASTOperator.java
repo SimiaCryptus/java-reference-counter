@@ -232,9 +232,13 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @NotNull
-  protected final SymbolIndex getSymbolIndex(@NotNull ASTNode node) {
-    final SymbolIndex lambdaIndex = new SymbolIndex();
-    node.accept(new IndexSymbols(projectInfo, compilationUnit, file, lambdaIndex) {
+  public final SymbolIndex getSymbolIndex(@NotNull ASTNode node) {
+    return getSymbolIndex(node, new SymbolIndex());
+  }
+
+  @NotNull
+  protected final SymbolIndex getSymbolIndex(@NotNull ASTNode node, SymbolIndex symbolIndex) {
+    node.accept(new IndexSymbols(projectInfo, compilationUnit, file, symbolIndex) {
       @Override
       public void endVisit(QualifiedName node) {
         Name root = node;
@@ -247,7 +251,7 @@ public abstract class ASTOperator extends ASTEditor {
         }
       }
     }.setVerbose(true));
-    return lambdaIndex;
+    return symbolIndex;
   }
 
   @Nullable

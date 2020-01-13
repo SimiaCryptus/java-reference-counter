@@ -28,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.PrimitiveIterator;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
@@ -44,7 +43,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
     return inner;
   }
 
-  @RefAware
   @RefIgnore
   public static class OfInt extends ReferenceCountingBase implements PrimitiveIterator.OfInt {
     private final PrimitiveIterator.OfInt inner;
@@ -79,7 +77,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   }
 
-  @RefAware
   @RefIgnore
   public static class OfLong extends ReferenceCountingBase implements PrimitiveIterator.OfLong {
     private final PrimitiveIterator.OfLong inner;
@@ -114,7 +111,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
   }
 
-  @RefAware
   @RefIgnore
   public static class OfDouble extends ReferenceCountingBase implements PrimitiveIterator.OfDouble {
     private final PrimitiveIterator.OfDouble inner;

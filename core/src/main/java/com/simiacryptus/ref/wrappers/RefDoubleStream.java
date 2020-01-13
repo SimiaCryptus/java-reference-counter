@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.DoubleStream;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefDoubleStream implements DoubleStream {
@@ -47,7 +46,7 @@ public class RefDoubleStream implements DoubleStream {
   }
 
   RefDoubleStream(@RefAware DoubleStream stream, @RefAware List<ReferenceCounting> lambdas,
-      @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+                  @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     this.lambdas = lambdas;
     this.refs = refs;
     if (stream instanceof ReferenceCounting)
@@ -121,7 +120,7 @@ public class RefDoubleStream implements DoubleStream {
 
   @Override
   public <R> R collect(@NotNull @RefAware Supplier<R> supplier, @NotNull @RefAware ObjDoubleConsumer<R> accumulator,
-      @NotNull @RefAware BiConsumer<R, R> combiner) {
+                       @NotNull @RefAware BiConsumer<R, R> combiner) {
     track(supplier);
     track(accumulator);
     track(combiner);

@@ -28,11 +28,10 @@ import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.StreamSupport;
 
-@RefAware
 @RefIgnore
 public class RefStreamSupport {
   public static <T> RefStream<T> stream(@RefAware Spliterator<T> spliterator,
-      boolean parallel) {
+                                        boolean parallel) {
     if (spliterator instanceof RefSpliterator) {
       final RefSpliterator refSpliterator = (RefSpliterator) spliterator;
       final Spliterator inner = refSpliterator.getInner();
@@ -45,9 +44,9 @@ public class RefStreamSupport {
       } else {
         refStream.set(new RefStream<>(
             StreamSupport.stream(inner, parallel).peek(u -> refStream.get().storeRef(RefUtil.addRef(u))))
-                .onClose(() -> {
-                  refSpliterator.freeRef();
-                }));
+            .onClose(() -> {
+              refSpliterator.freeRef();
+            }));
       }
       return refStream.get();
     } else {

@@ -27,15 +27,11 @@ public class SimpleContainer extends ReferenceCountingBase {
   public BasicType value;
 
   public SimpleContainer() {
-    {
-      value = new BasicType();
-    }
+    value = new BasicType();
   }
 
   public SimpleContainer(BasicType value) {
-    {
-      this.value = value;
-    }
+    this.value = value;
   }
 
   public @Override

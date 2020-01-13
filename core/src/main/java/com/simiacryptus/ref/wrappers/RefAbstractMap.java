@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
@@ -40,7 +39,8 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   }
 
   @NotNull
-  public @Override RefAbstractMap<K, V> addRef() {
+  public @Override
+  RefAbstractMap<K, V> addRef() {
     return (RefAbstractMap<K, V>) super.addRef();
   }
 
@@ -149,7 +149,6 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     super._free();
   }
 
-  @RefAware
   @RefIgnore
   protected static class KeyValue<K, V> {
     public final K key;

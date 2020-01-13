@@ -21,9 +21,10 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
+import com.simiacryptus.ref.core.SymbolIndex;
+import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.ops.VerifyMethodCalls;
-import com.simiacryptus.ref.ops.VerifyTransfers;
+import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,8 +49,13 @@ public class Verify extends RefAutoCoderMojo {
     @Override
     @Nonnull
     public void rewrite() {
+      SymbolIndex index = new SymbolIndex();
+      rewrite((projectInfo, compilationUnit, file) -> new IndexSymbols(projectInfo, compilationUnit, file, index), isParallel(), true);
       rewrite(VerifyMethodCalls::new, isParallel(), true);
-      rewrite(VerifyTransfers::new, isParallel(), true);
+      rewrite((projectInfo, compilationUnit, file) -> new VerifyAssignments(projectInfo, compilationUnit, file, index), isParallel(), true);
+      rewrite(VerifyFields::new, isParallel(), true);
+      rewrite(VerifyClosures::new, isParallel(), true);
+      rewrite(VerifyMethodVariables::new, isParallel(), true);
     }
   }
 }

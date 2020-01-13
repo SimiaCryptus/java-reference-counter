@@ -22,6 +22,7 @@ package com.simiacryptus.ref.lang;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefUtil {
@@ -39,27 +39,31 @@ public class RefUtil {
     if (null != value) {
       if (value instanceof ReferenceCounting) {
         ((ReferenceCounting) value).freeRef();
+      } else if (value.getClass().isArray()) {
+        RefUtil.freeRefs(((Object[]) value));
       } else if (value instanceof Map.Entry) {
         freeRef(((Map.Entry) value).getKey());
         freeRef(((Map.Entry) value).getValue());
       } else if (value instanceof Optional) {
         final Optional optional = (Optional) value;
         if (optional.isPresent())
-          freeRef(optional.get());
+          freeRef(get(optional));
       }
     }
   }
 
   @Nullable
   public static <T> T addRef(@Nullable @RefAware T value) {
-    if (null != value && value instanceof ReferenceCounting)
-      ((ReferenceCounting) value).addRef();
+    if (null != value) {
+      if(value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
+      else if(value.getClass().isArray()) Arrays.stream(((Object[]) value)).forEach(RefUtil::addRef);
+    }
     return value;
   }
 
   @NotNull
   public static <T> T wrapInterface(@NotNull @RefAware T obj,
-      @NotNull @RefAware Object... refs) {
+                                    @NotNull @RefAware Object... refs) {
     final Class<?> objClass = obj.getClass();
     final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
       @Override
@@ -76,8 +80,8 @@ public class RefUtil {
         new InvocationHandler() {
           @Override
           public Object invoke(@RefAware Object proxy,
-              @NotNull @RefAware Method method,
-              @RefAware Object[] args) throws Throwable {
+                               @NotNull @RefAware Method method,
+                               @RefAware Object[] args) throws Throwable {
             if (method.getDeclaringClass().equals(ReferenceCounting.class)) {
               return method.invoke(refcounter, args);
             } else {
@@ -89,6 +93,12 @@ public class RefUtil {
 
   public static <T> void freeRefs(@NotNull @RefAware T[] array) {
     Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
+  }
+
+  @NotNull
+  @RefIgnore
+  public static <T> T get(@NotNull @RefAware Optional<T> optional) {
+    return optional.get();
   }
 
 }

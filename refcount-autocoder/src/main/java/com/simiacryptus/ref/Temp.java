@@ -22,15 +22,15 @@ package com.simiacryptus.ref;
 import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.ops.AnnotateAllMethodParams;
+import com.simiacryptus.ref.ops.RemoveTypeAnnotations;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "annotate")
-public class AnnotateAll extends RefAutoCoderMojo {
+@Mojo(name = "temp")
+public class Temp extends RefAutoCoderMojo {
   @NotNull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
@@ -47,7 +47,9 @@ public class AnnotateAll extends RefAutoCoderMojo {
     @Override
     @Nonnull
     public void rewrite() {
-      rewrite(AnnotateAllMethodParams::new, isParallel(), true);
+      rewrite((projectInfo, compilationUnit, file) -> new RemoveTypeAnnotations(projectInfo, compilationUnit, file,
+          "com.simiacryptus.ref.lang.RefAware"
+      ));
     }
   }
 }

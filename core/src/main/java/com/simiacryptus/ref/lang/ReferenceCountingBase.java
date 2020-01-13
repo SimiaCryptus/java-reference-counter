@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class ReferenceCountingBase implements ReferenceCounting {
@@ -132,7 +131,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0)
       throw new IllegalStateException(referenceReport(true, isFinalized()));
     addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-        : new StackTraceElement[] {});
+        : new StackTraceElement[]{});
     return this;
   }
 
@@ -180,7 +179,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
 
     synchronized (freeRefs) {
       freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-          : new StackTraceElement[] {});
+          : new StackTraceElement[]{});
     }
     if (refs == 0 && !detached) {
       if (!isFreed.getAndSet(true)) {
@@ -220,7 +219,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     synchronized (addRefs) {
 
       for (int i = 0; i < addRefs.size(); i++) {
-        StackTraceElement[] stack = i < addRefs.size() ? addRefs.get(i) : new StackTraceElement[] {};
+        StackTraceElement[] stack = i < addRefs.size() ? addRefs.get(i) : new StackTraceElement[]{};
         stack = removeSuffix(stack, prefix);
         final String string = getString(stack);
         if (!string.trim().isEmpty())
@@ -229,7 +228,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
     synchronized (freeRefs) {
       for (int i = 0; i < freeRefs.size() - (isFinalized ? 1 : 0); i++) {
-        StackTraceElement[] stack = i < freeRefs.size() ? freeRefs.get(i) : new StackTraceElement[] {};
+        StackTraceElement[] stack = i < freeRefs.size() ? freeRefs.get(i) : new StackTraceElement[]{};
         stack = removeSuffix(stack, prefix);
         final String string = getString(stack);
         if (!string.trim().isEmpty())
@@ -256,7 +255,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
       return false;
     }
     addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-        : new StackTraceElement[] {});
+        : new StackTraceElement[]{});
     return true;
   }
 
@@ -275,7 +274,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
       }
       synchronized (freeRefs) {
         freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-            : new StackTraceElement[] {});
+            : new StackTraceElement[]{});
       }
       inFinalizer.set(true);
       try {

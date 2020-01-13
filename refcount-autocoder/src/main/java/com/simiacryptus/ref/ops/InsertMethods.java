@@ -23,6 +23,7 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.ops.ASTOperator;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.eclipse.jdt.core.dom.*;
@@ -74,12 +75,10 @@ public class InsertMethods extends RefASTOperator {
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
     methodDeclaration.modifiers().add(ASTUtil.annotation_SuppressWarnings(ast, "unused"));
 
-    {
-      final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
-      arg.setType(ASTUtil.arrayType(ast, fqTypeName, 1));
-      arg.setName(ast.newSimpleName("array"));
-      methodDeclaration.parameters().add(arg);
-    }
+    final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
+    arg.setType(ASTUtil.arrayType(ast, fqTypeName, 1));
+    arg.setName(ast.newSimpleName("array"));
+    methodDeclaration.parameters().add(arg);
 
     final Block block = ast.newBlock();
     methodDeclaration.setBody(block);
@@ -97,55 +96,51 @@ public class InsertMethods extends RefASTOperator {
       block.statements().add(ifStatement);
     }
 
+    final MethodInvocation toArray_invoke = ast.newMethodInvocation();
+    final MethodInvocation addref_invoke = ast.newMethodInvocation();
     {
-      final MethodInvocation toArray_invoke = ast.newMethodInvocation();
-      {
-        final MethodInvocation addref_invoke = ast.newMethodInvocation();
-        {
-          final MethodInvocation filter_invoke = ast.newMethodInvocation();
-          final MethodInvocation stream_invoke = ast.newMethodInvocation();
-          stream_invoke.setExpression(ASTUtil.newQualifiedName(ast, "java.util.Arrays".split("\\.")));
-          stream_invoke.setName(ast.newSimpleName("stream"));
-          stream_invoke.arguments().add(ast.newSimpleName("array"));
-          filter_invoke.setExpression(stream_invoke);
-          filter_invoke.setName(ast.newSimpleName("filter"));
-          final LambdaExpression filter_lambda = ast.newLambdaExpression();
-          final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
-          variableDeclarationFragment.setName(ast.newSimpleName("x"));
-          filter_lambda.parameters().add(variableDeclarationFragment);
-          final InfixExpression infixExpression = ast.newInfixExpression();
-          infixExpression.setLeftOperand(ast.newSimpleName("x"));
-          infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
-          infixExpression.setRightOperand(ast.newNullLiteral());
-          filter_lambda.setBody(infixExpression);
-          filter_invoke.arguments().add(filter_lambda);
-          addref_invoke.setExpression(filter_invoke);
-        }
-        addref_invoke.setName(ast.newSimpleName("map"));
-        final ExpressionMethodReference body = ast.newExpressionMethodReference();
-        body.setExpression(ast.newSimpleName(fqTypeName));
-        body.setName(ast.newSimpleName("addRef"));
-        addref_invoke.arguments().add(body);
-        toArray_invoke.setExpression(addref_invoke);
-      }
-      toArray_invoke.setName(ast.newSimpleName("toArray"));
+      final MethodInvocation filter_invoke = ast.newMethodInvocation();
+      final MethodInvocation stream_invoke = ast.newMethodInvocation();
+      stream_invoke.setExpression(ASTUtil.newQualifiedName(ast, "java.util.Arrays".split("\\.")));
+      stream_invoke.setName(ast.newSimpleName("stream"));
+      stream_invoke.arguments().add(ast.newSimpleName("array"));
+      filter_invoke.setExpression(stream_invoke);
+      filter_invoke.setName(ast.newSimpleName("filter"));
       final LambdaExpression filter_lambda = ast.newLambdaExpression();
       final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
       variableDeclarationFragment.setName(ast.newSimpleName("x"));
       filter_lambda.parameters().add(variableDeclarationFragment);
-
-      {
-        final ArrayCreation arrayCreation = ast.newArrayCreation();
-        arrayCreation.setType(ASTUtil.arrayType(ast, fqTypeName, 1));
-        arrayCreation.dimensions().add(ast.newSimpleName("x"));
-        filter_lambda.setBody(arrayCreation);
-      }
-
-      toArray_invoke.arguments().add(filter_lambda);
-      final ReturnStatement returnStatement = ast.newReturnStatement();
-      returnStatement.setExpression(toArray_invoke);
-      block.statements().add(returnStatement);
+      final InfixExpression infixExpression = ast.newInfixExpression();
+      infixExpression.setLeftOperand(ast.newSimpleName("x"));
+      infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
+      infixExpression.setRightOperand(ast.newNullLiteral());
+      filter_lambda.setBody(infixExpression);
+      filter_invoke.arguments().add(filter_lambda);
+      addref_invoke.setExpression(filter_invoke);
     }
+    addref_invoke.setName(ast.newSimpleName("map"));
+    final ExpressionMethodReference body = ast.newExpressionMethodReference();
+    body.setExpression(ast.newSimpleName(fqTypeName));
+    body.setName(ast.newSimpleName("addRef"));
+    addref_invoke.arguments().add(body);
+    toArray_invoke.setExpression(addref_invoke);
+    toArray_invoke.setName(ast.newSimpleName("toArray"));
+    final LambdaExpression filter_lambda = ast.newLambdaExpression();
+    final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
+    variableDeclarationFragment.setName(ast.newSimpleName("x"));
+    filter_lambda.parameters().add(variableDeclarationFragment);
+
+    {
+      final ArrayCreation arrayCreation = ast.newArrayCreation();
+      arrayCreation.setType(ASTUtil.arrayType(ast, fqTypeName, 1));
+      arrayCreation.dimensions().add(ast.newSimpleName("x"));
+      filter_lambda.setBody(arrayCreation);
+    }
+
+    toArray_invoke.arguments().add(filter_lambda);
+    final ReturnStatement returnStatement = ast.newReturnStatement();
+    returnStatement.setExpression(toArray_invoke);
+    block.statements().add(returnStatement);
 
     return methodDeclaration;
   }
@@ -160,12 +155,10 @@ public class InsertMethods extends RefASTOperator {
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
     methodDeclaration.modifiers().add(ASTUtil.annotation_SuppressWarnings(ast, "unused"));
 
-    {
-      final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
-      arg.setType(ASTUtil.arrayType(ast, fqTypeName, 2));
-      arg.setName(ast.newSimpleName("array"));
-      methodDeclaration.parameters().add(arg);
-    }
+    final SingleVariableDeclaration arg = ast.newSingleVariableDeclaration();
+    arg.setType(ASTUtil.arrayType(ast, fqTypeName, 2));
+    arg.setName(ast.newSimpleName("array"));
+    methodDeclaration.parameters().add(arg);
 
     final Block block = ast.newBlock();
     methodDeclaration.setBody(block);
@@ -183,55 +176,49 @@ public class InsertMethods extends RefASTOperator {
       block.statements().add(ifStatement);
     }
 
+    final ReturnStatement returnStatement = ast.newReturnStatement();
+    final MethodInvocation toArray_invoke = ast.newMethodInvocation();
+    final MethodInvocation addref_invoke = ast.newMethodInvocation();
     {
-      final ReturnStatement returnStatement = ast.newReturnStatement();
-      final MethodInvocation toArray_invoke = ast.newMethodInvocation();
-      {
-        final MethodInvocation addref_invoke = ast.newMethodInvocation();
-        {
-          final MethodInvocation filter_invoke = ast.newMethodInvocation();
-          {
-            final MethodInvocation stream_invoke = ast.newMethodInvocation();
-            stream_invoke.setExpression(ASTUtil.newQualifiedName(ast, "java.util.Arrays".split("\\.")));
-            stream_invoke.setName(ast.newSimpleName("stream"));
-            stream_invoke.arguments().add(ast.newSimpleName("array"));
-            filter_invoke.setExpression(stream_invoke);
-          }
-          filter_invoke.setName(ast.newSimpleName("filter"));
-          final LambdaExpression filter_lambda = ast.newLambdaExpression();
-          final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
-          variableDeclarationFragment.setName(ast.newSimpleName("x"));
-          filter_lambda.parameters().add(variableDeclarationFragment);
-          final InfixExpression infixExpression = ast.newInfixExpression();
-          infixExpression.setLeftOperand(ast.newSimpleName("x"));
-          infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
-          infixExpression.setRightOperand(ast.newNullLiteral());
-          filter_lambda.setBody(infixExpression);
-          filter_invoke.arguments().add(filter_lambda);
-          addref_invoke.setExpression(filter_invoke);
-        }
-        addref_invoke.setName(ast.newSimpleName("map"));
-        final ExpressionMethodReference body = ast.newExpressionMethodReference();
-        body.setExpression(ast.newSimpleName(fqTypeName));
-        body.setName(ast.newSimpleName("addRefs"));
-        addref_invoke.arguments().add(body);
-        toArray_invoke.setExpression(addref_invoke);
-      }
-      toArray_invoke.setName(ast.newSimpleName("toArray"));
+      final MethodInvocation filter_invoke = ast.newMethodInvocation();
+      final MethodInvocation stream_invoke = ast.newMethodInvocation();
+      stream_invoke.setExpression(ASTUtil.newQualifiedName(ast, "java.util.Arrays".split("\\.")));
+      stream_invoke.setName(ast.newSimpleName("stream"));
+      stream_invoke.arguments().add(ast.newSimpleName("array"));
+      filter_invoke.setExpression(stream_invoke);
+      filter_invoke.setName(ast.newSimpleName("filter"));
       final LambdaExpression filter_lambda = ast.newLambdaExpression();
       final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
       variableDeclarationFragment.setName(ast.newSimpleName("x"));
       filter_lambda.parameters().add(variableDeclarationFragment);
-
-      final ArrayCreation arrayCreation = ast.newArrayCreation();
-      arrayCreation.setType(ASTUtil.arrayType(ast, fqTypeName, 2));
-      arrayCreation.dimensions().add(ast.newSimpleName("x"));
-
-      filter_lambda.setBody(arrayCreation);
-      toArray_invoke.arguments().add(filter_lambda);
-      returnStatement.setExpression(toArray_invoke);
-      block.statements().add(returnStatement);
+      final InfixExpression infixExpression = ast.newInfixExpression();
+      infixExpression.setLeftOperand(ast.newSimpleName("x"));
+      infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
+      infixExpression.setRightOperand(ast.newNullLiteral());
+      filter_lambda.setBody(infixExpression);
+      filter_invoke.arguments().add(filter_lambda);
+      addref_invoke.setExpression(filter_invoke);
     }
+    addref_invoke.setName(ast.newSimpleName("map"));
+    final ExpressionMethodReference body = ast.newExpressionMethodReference();
+    body.setExpression(ast.newSimpleName(fqTypeName));
+    body.setName(ast.newSimpleName("addRefs"));
+    addref_invoke.arguments().add(body);
+    toArray_invoke.setExpression(addref_invoke);
+    toArray_invoke.setName(ast.newSimpleName("toArray"));
+    final LambdaExpression filter_lambda = ast.newLambdaExpression();
+    final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
+    variableDeclarationFragment.setName(ast.newSimpleName("x"));
+    filter_lambda.parameters().add(variableDeclarationFragment);
+
+    final ArrayCreation arrayCreation = ast.newArrayCreation();
+    arrayCreation.setType(ASTUtil.arrayType(ast, fqTypeName, 2));
+    arrayCreation.dimensions().add(ast.newSimpleName("x"));
+
+    filter_lambda.setBody(arrayCreation);
+    toArray_invoke.arguments().add(filter_lambda);
+    returnStatement.setExpression(toArray_invoke);
+    block.statements().add(returnStatement);
 
     return methodDeclaration;
   }
@@ -296,7 +283,7 @@ public class InsertMethods extends RefASTOperator {
         if (!freeMethod.isPresent()) {
           declarations.add(method_free(ast, isInterface, isOverride));
         } else {
-          final MethodDeclaration methodDeclaration = freeMethod.get();
+          final MethodDeclaration methodDeclaration = RefUtil.get(freeMethod);
           final int modifiers = methodDeclaration.getModifiers();
           if (0 == (modifiers & Modifier.PUBLIC)) {
             methodDeclaration.modifiers().clear();
@@ -334,7 +321,7 @@ public class InsertMethods extends RefASTOperator {
         if (!freeMethod.isPresent()) {
           declarations.add(method_free(ast, false, !ASTUtil.derives(typeBinding, ReferenceCountingBase.class)));
         } else {
-          final MethodDeclaration methodDeclaration = freeMethod.get();
+          final MethodDeclaration methodDeclaration = RefUtil.get(freeMethod);
           final int modifiers = methodDeclaration.getModifiers();
           if (0 == (modifiers & Modifier.PUBLIC)) {
             methodDeclaration.modifiers().clear();

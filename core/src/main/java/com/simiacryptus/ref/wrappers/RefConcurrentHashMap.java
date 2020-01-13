@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {

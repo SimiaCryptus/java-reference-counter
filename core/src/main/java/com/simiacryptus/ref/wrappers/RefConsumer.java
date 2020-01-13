@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefAware;
 
 import java.util.function.Consumer;
 
-@RefAware
 public interface RefConsumer<T> extends Consumer<T> {
   @Override
   void accept(@RefAware T t);

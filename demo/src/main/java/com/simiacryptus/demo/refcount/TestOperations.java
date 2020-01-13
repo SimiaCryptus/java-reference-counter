@@ -74,9 +74,7 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testArray(BasicType[] values) {
-    {
-      this.arrayContainer = new ArrayContainer(values);
-    }
+    this.arrayContainer = new ArrayContainer(values);
     for (int i = 0; i < count; i++) {
       arrayContainer.test();
     }
@@ -101,69 +99,51 @@ public class TestOperations extends ReferenceCountingBase {
   }
 
   private void testDeque() {
-    {
-      this.deququeContainer = new DeququeContainer();
-    }
+    this.deququeContainer = new DeququeContainer();
     for (int i = 0; i < count; i++) {
       DeququeContainer.test();
     }
   }
 
   private void testList() {
-    {
-      this.arrayListContainer = new ArrayListContainer();
-    }
+    this.arrayListContainer = new ArrayListContainer();
     for (int i = 0; i < count; i++) {
       ArrayListContainer.test();
     }
-    {
-      this.linkedListContainer = new LinkedListContainer();
-    }
+    this.linkedListContainer = new LinkedListContainer();
     for (int i = 0; i < count; i++) {
       LinkedListContainer.test();
     }
   }
 
   private void testMap() {
-    {
-      this.hashMapValuesContainer = new HashMapValuesContainer();
-    }
+    this.hashMapValuesContainer = new HashMapValuesContainer();
     for (int i = 0; i < count; i++) {
       HashMapValuesContainer.test();
     }
-    {
-      this.linkedHashMapValuesContainer = new LinkedHashMapValuesContainer();
-    }
+    this.linkedHashMapValuesContainer = new LinkedHashMapValuesContainer();
     for (int i = 0; i < count; i++) {
       LinkedHashMapValuesContainer.test();
     }
-    {
-      this.concurrentHashMapValuesContainer = new ConcurrentHashMapValuesContainer();
-    }
+    this.concurrentHashMapValuesContainer = new ConcurrentHashMapValuesContainer();
     for (int i = 0; i < count; i++) {
       concurrentHashMapValuesContainer.test();
     }
   }
 
   private void testSet() {
-    {
-      this.hashSetContainer = new HashSetContainer();
-    }
+    this.hashSetContainer = new HashSetContainer();
     for (int i = 0; i < count; i++) {
       HashSetContainer.test();
     }
-    {
-      this.treeSetContainer = new TreeSetContainer();
-    }
+    this.treeSetContainer = new TreeSetContainer();
     for (int i = 0; i < count; i++) {
       TreeSetContainer.test();
     }
   }
 
   private void testSimpleContainer() {
-    {
-      this.simpleContainer = new SimpleContainer();
-    }
+    this.simpleContainer = new SimpleContainer();
     for (int i = 0; i < count; i++) {
       simpleContainer.test();
     }

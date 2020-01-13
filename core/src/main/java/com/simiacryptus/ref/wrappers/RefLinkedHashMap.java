@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {

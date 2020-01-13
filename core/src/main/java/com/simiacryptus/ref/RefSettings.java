@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RefAware
 @RefIgnore
 public class RefSettings implements Settings {
 

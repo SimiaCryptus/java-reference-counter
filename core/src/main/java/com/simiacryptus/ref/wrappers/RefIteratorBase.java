@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-@RefAware
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefIteratorBase<T> extends ReferenceCountingBase implements Iterator<T> {
