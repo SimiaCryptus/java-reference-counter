@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -35,7 +34,7 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class RefHashSet<T> extends RefAbstractSet<T> {
 
-  @NotNull
+  @Nonnull
   private final Map<T, T> inner;
 
   public RefHashSet() {
@@ -53,23 +52,23 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
-  public RefHashSet(@NotNull @RefAware Collection<T> values) {
+  public RefHashSet(@Nonnull @RefAware Collection<T> values) {
     this();
     addAll(values);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Map<T, T> getInnerMap() {
     return inner;
   }
 
-  @NotNull
-  public static <T> RefHashSet<T>[] addRefs(@NotNull RefHashSet<T>[] array) {
+  @Nonnull
+  public static <T> RefHashSet<T>[] addRefs(@Nonnull RefHashSet<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef).toArray((x) -> new RefHashSet[x]);
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefHashSet<T> addRef() {
     return (RefHashSet<T>) super.addRef();

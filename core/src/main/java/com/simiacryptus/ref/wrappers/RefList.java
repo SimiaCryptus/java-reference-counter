@@ -22,8 +22,8 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -34,21 +34,22 @@ import java.util.function.UnaryOperator;
 @SuppressWarnings("unused")
 public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {
 
+  @Nonnull
   List<T> getInner();
 
-  @NotNull
-  public static <T> RefList<T>[] addRefs(@NotNull RefList<T>[] array) {
+  @Nonnull
+  public static <T> RefList<T>[] addRefs(@Nonnull RefList<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef).toArray((x) -> new RefList[x]);
   }
 
-  @NotNull
+  @Nonnull
   RefList<T> addRef();
 
-  @NotNull
+  @Nonnull
   @Override
   RefListIterator<T> listIterator();
 
-  @NotNull
+  @Nonnull
   @Override
   RefListIterator<T> listIterator(int index);
 
@@ -58,57 +59,57 @@ public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T>
   @Override
   RefStream<T> stream();
 
-  @NotNull
+  @Nonnull
   @Override
   RefList<T> subList(int fromIndex, int toIndex);
 
   @Override
-  boolean contains(@com.simiacryptus.ref.lang.RefAware Object o);
+  boolean contains(@RefAware Object o);
 
-  @NotNull
+  @Nonnull
   @Override
-  <T1> T1[] toArray(@NotNull @com.simiacryptus.ref.lang.RefAware T1[] a);
-
-  @Override
-  boolean add(@com.simiacryptus.ref.lang.RefAware T t);
+  <T1> T1[] toArray(@Nonnull @RefAware T1[] a);
 
   @Override
-  boolean remove(@com.simiacryptus.ref.lang.RefAware Object o);
+  boolean add(@RefAware T t);
 
   @Override
-  boolean containsAll(@NotNull @com.simiacryptus.ref.lang.RefAware Collection<?> c);
+  boolean remove(@RefAware Object o);
 
   @Override
-  boolean addAll(@NotNull @com.simiacryptus.ref.lang.RefAware Collection<? extends T> c);
+  boolean containsAll(@Nonnull @RefAware Collection<?> c);
 
   @Override
-  boolean addAll(int index, @NotNull @com.simiacryptus.ref.lang.RefAware Collection<? extends T> c);
+  boolean addAll(@Nonnull @RefAware Collection<? extends T> c);
 
   @Override
-  boolean removeAll(@NotNull @com.simiacryptus.ref.lang.RefAware Collection<?> c);
+  boolean addAll(int index, @Nonnull @RefAware Collection<? extends T> c);
 
   @Override
-  boolean retainAll(@NotNull @com.simiacryptus.ref.lang.RefAware Collection<?> c);
+  boolean removeAll(@Nonnull @RefAware Collection<?> c);
 
   @Override
-  default void replaceAll(@com.simiacryptus.ref.lang.RefAware UnaryOperator<T> operator) {
+  boolean retainAll(@Nonnull @RefAware Collection<?> c);
+
+  @Override
+  default void replaceAll(@RefAware UnaryOperator<T> operator) {
 
   }
 
   @Override
-  default void sort(@com.simiacryptus.ref.lang.RefAware Comparator<? super T> c) {
+  default void sort(@RefAware Comparator<? super T> c) {
 
   }
 
   @Override
-  T set(int index, @com.simiacryptus.ref.lang.RefAware T element);
+  T set(int index, @RefAware T element);
 
   @Override
-  void add(int index, @com.simiacryptus.ref.lang.RefAware T element);
+  void add(int index, @RefAware T element);
 
   @Override
-  int indexOf(@com.simiacryptus.ref.lang.RefAware Object o);
+  int indexOf(@RefAware Object o);
 
   @Override
-  int lastIndexOf(@com.simiacryptus.ref.lang.RefAware Object o);
+  int lastIndexOf(@RefAware Object o);
 }

@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,31 +30,31 @@ import java.util.List;
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedList<T> extends RefAbstractList<T> {
-  @NotNull
+  @Nonnull
   private final List<T> inner;
 
   public RefLinkedList() {
     this.inner = new LinkedList<>();
   }
 
-  public RefLinkedList(@NotNull @RefAware List<T> list) {
+  public RefLinkedList(@Nonnull @RefAware List<T> list) {
     this();
     this.addAll(list);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public List<T> getInner() {
     return inner;
   }
 
-  @NotNull
-  public static <T> RefLinkedList<T>[] addRefs(@NotNull RefLinkedList<T>[] array) {
+  @Nonnull
+  public static <T> RefLinkedList<T>[] addRefs(@Nonnull RefLinkedList<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedList::addRef)
         .toArray((x) -> new RefLinkedList[x]);
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefLinkedList<T> addRef() {
     return (RefLinkedList<T>) super.addRef();

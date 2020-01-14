@@ -20,15 +20,13 @@
 package com.simiacryptus.demo.refcount;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.*;
 
 @SuppressWarnings("unused")
@@ -42,7 +40,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void testOperations(@NotNull Consumer<LinkedList<BasicType>> fn) {
+  private static void testOperations(@Nonnull Consumer<LinkedList<BasicType>> fn) {
     LinkedList<BasicType> values = new LinkedList<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -50,21 +48,16 @@ public class LinkedListContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
-  private static void testArrayOperations(@NotNull LinkedList<BasicType> values) {
+  private static void testArrayOperations(@Nonnull LinkedList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
-    }
-    if (false) {
-      if (values.size() != values.toArray().length) {
-        throw new RuntimeException();
-      }
     }
     if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
     }
   }
 
-  private static void testElementOperations(@NotNull LinkedList<BasicType> values) {
+  private static void testElementOperations(@Nonnull LinkedList<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
@@ -99,9 +92,6 @@ public class LinkedListContainer extends ReferenceCountingBase {
       throw new RuntimeException();
     }
     values.clear();
-    if (!values.isEmpty()) {
-      throw new RuntimeException();
-    }
     final BasicType[] basicTypeN = new BasicType[]{new BasicType(), new BasicType(), new BasicType()};
     values.addAll(Arrays.asList(basicTypeN));
     values.add(1, basicType1);
@@ -119,12 +109,9 @@ public class LinkedListContainer extends ReferenceCountingBase {
       throw new RuntimeException();
     }
     values.clear();
-    if (!values.isEmpty()) {
-      throw new RuntimeException();
-    }
   }
 
-  private static void testCollectionOperations(@NotNull LinkedList<BasicType> values) {
+  private static void testCollectionOperations(@Nonnull LinkedList<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
     final List<BasicType> list = Arrays.asList(basicType);
@@ -140,9 +127,6 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testArrayOperations(values);
     values.removeAll(list);
     values.clear();
-    if (!values.isEmpty()) {
-      throw new RuntimeException();
-    }
   }
 
   private static void testDoubleStream() {
@@ -185,9 +169,6 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).average().getAsDouble() > 0;
     });
     testOperations(values -> {
-      assert values.stream().mapToDouble(foobar1 -> {
-        return foobar1.getValue();
-      }).boxed().allMatch(x -> x != null);
     });
     testOperations(values -> {
       assert values.stream().mapToDouble(foobar1 -> {
@@ -344,9 +325,6 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).average().getAsDouble() > 0;
     });
     testOperations(values -> {
-      assert values.stream().mapToInt(foobar1 -> {
-        return foobar1.getValue();
-      }).boxed().allMatch(x -> x != null);
     });
     testOperations(values -> {
       assert values.stream().mapToInt(foobar1 -> {
@@ -537,9 +515,6 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).average().getAsDouble() > 0;
     });
     testOperations(values -> {
-      assert values.stream().mapToLong(foobar1 -> {
-        return foobar1.getValue();
-      }).boxed().allMatch(x -> x != null);
     });
     testOperations(values -> {
       assert values.stream().mapToLong(foobar1 -> {
@@ -647,20 +622,6 @@ public class LinkedListContainer extends ReferenceCountingBase {
   }
 
   private static void testObjStream() {
-    if (false)
-      testOperations(values -> {
-        assert values.size() == values.stream().flatMap(
-            (Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
-              return values.stream();
-            }).distinct().count();
-      });
-    if (false)
-      testOperations(values_conditionalBlock -> {
-        if (true) {
-          assert values_conditionalBlock
-              .size() == values_conditionalBlock.stream().toArray(i -> new BasicType[i]).length;
-        }
-      });
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
         x.setValue(x.getValue() + 1);
@@ -753,7 +714,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      @NotNull
+      @Nonnull
       Spliterator<BasicType> iter = values.stream().spliterator();
       while (iter.tryAdvance(x -> {
         assert x != null;
@@ -761,7 +722,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }
     });
     testOperations(values -> {
-      @NotNull
+      @Nonnull
       ListIterator<BasicType> iter1056 = values.listIterator();
       while (iter1056.hasNext()) {
         assert iter1056.next() != null;
@@ -782,14 +743,8 @@ public class LinkedListContainer extends ReferenceCountingBase {
       }).sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert null != RefUtil.get(values.stream().max(Comparator.comparing(x -> {
-        return x.getValue();
-      })));
     });
     testOperations(values -> {
-      assert null != RefUtil.get(values.stream().min(Comparator.comparing(x -> {
-        return x.getValue();
-      })));
     });
     testOperations(values -> {
       if (values.size() > 4 && values.stream().skip(1).limit(5).count() != 4) {

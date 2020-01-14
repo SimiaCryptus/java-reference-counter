@@ -20,8 +20,8 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
@@ -51,11 +51,6 @@ public class TreeSetContainer extends ReferenceCountingBase {
       values.add(new BasicType());
       if (0 == values.size()) {
         throw new RuntimeException();
-      }
-      if (false) {
-        if (values.size() != values.toArray().length) {
-          throw new RuntimeException();
-        }
       }
       if (values.size() != values.toArray(new BasicType[]{}).length) {
         throw new RuntimeException();
@@ -93,14 +88,11 @@ public class TreeSetContainer extends ReferenceCountingBase {
         throw new RuntimeException();
       }
       values.clear();
-      if (!values.isEmpty()) {
-        throw new RuntimeException();
-      }
     });
   }
 
   private static void testOperations(
-      @NotNull Consumer<TreeSet<BasicType>> setRefConsumer) {
+      @Nonnull Consumer<TreeSet<BasicType>> setRefConsumer) {
     TreeSet<BasicType> values = new TreeSet<>();
     setRefConsumer.accept(values);
   }

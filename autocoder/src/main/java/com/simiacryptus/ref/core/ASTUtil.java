@@ -28,16 +28,15 @@ import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ASTUtil {
 
-  @NotNull
+  @Nonnull
   public static ASTEditor.ASTMapping align(@Nonnull ASTNode from, @Nonnull ASTNode to) {
     final ASTEditor.ASTMapping mapping = new ASTEditor.ASTMapping();
     if (!from.getClass().equals(to.getClass())) {
@@ -103,8 +102,8 @@ public class ASTUtil {
     return mapping;
   }
 
-  @NotNull
-  public static LinkedHashMap<String, Object> children(@NotNull ASTNode node) {
+  @Nonnull
+  public static LinkedHashMap<String, Object> children(@Nonnull ASTNode node) {
     Collection<StructuralPropertyDescriptor> properties = new TreeSet<>(Comparator.comparing(x -> x.toString()));
     properties.addAll(ReflectionUtil.invokeMethod(node, "internalStructuralPropertiesForType", AST.JLS11));
     final LinkedHashMap<String, Object> map = new LinkedHashMap<>();
@@ -130,44 +129,44 @@ public class ASTUtil {
     return false;
   }
 
-  @NotNull
-  public static Name newQualifiedName(@NotNull AST ast, @NotNull Class<?> clazz) {
+  @Nonnull
+  public static Name newQualifiedName(@Nonnull AST ast, @Nonnull Class<?> clazz) {
     return newQualifiedName(ast, clazz.getName().split("\\."));
   }
 
-  @NotNull
-  public static Name newQualifiedName(@NotNull AST ast, @NotNull String... path) {
+  @Nonnull
+  public static Name newQualifiedName(@Nonnull AST ast, @Nonnull String... path) {
     final SimpleName simpleName = ast.newSimpleName(path[path.length - 1]);
     if (path.length == 1) return simpleName;
     return ast.newQualifiedName(newQualifiedName(ast, Arrays.stream(path).limit(path.length - 1).toArray(String[]::new)), simpleName);
   }
 
-  @NotNull
-  public static ArrayType arrayType(@NotNull AST ast, @NotNull String fqTypeName, int rank) {
+  @Nonnull
+  public static ArrayType arrayType(@Nonnull AST ast, @Nonnull String fqTypeName, int rank) {
     return ast.newArrayType(ast.newSimpleType(ast.newSimpleName(fqTypeName)), rank);
   }
 
-  @NotNull
-  public static MarkerAnnotation annotation_override(@NotNull AST ast) {
+  @Nonnull
+  public static MarkerAnnotation annotation_override(@Nonnull AST ast) {
     return newMarkerAnnotation(ast, "Override");
   }
 
-  @NotNull
-  public static MarkerAnnotation newMarkerAnnotation(@NotNull AST ast, String name) {
+  @Nonnull
+  public static MarkerAnnotation newMarkerAnnotation(@Nonnull AST ast, @Nonnull String name) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
     annotation.setTypeName(ast.newSimpleName(name));
     return annotation;
   }
 
-  @NotNull
-  public static MarkerAnnotation newMarkerAnnotation(@NotNull AST ast, Class<?> aClass) {
+  @Nonnull
+  public static MarkerAnnotation newMarkerAnnotation(@Nonnull AST ast, @Nonnull Class<?> aClass) {
     final MarkerAnnotation annotation = ast.newMarkerAnnotation();
     annotation.setTypeName(newQualifiedName(ast, aClass));
     return annotation;
   }
 
-  @NotNull
-  public static SingleMemberAnnotation annotation_SuppressWarnings(@NotNull AST ast, @NotNull String label) {
+  @Nonnull
+  public static SingleMemberAnnotation annotation_SuppressWarnings(@Nonnull AST ast, @Nonnull String label) {
     final SingleMemberAnnotation annotation = ast.newSingleMemberAnnotation();
     annotation.setTypeName(ast.newSimpleName("SuppressWarnings"));
     final StringLiteral stringLiteral = ast.newStringLiteral();
@@ -176,26 +175,27 @@ public class ASTUtil {
     return annotation;
   }
 
-  public static boolean hasAnnotation(@Nullable IBinding declaringClass, @NotNull Class<?> aClass) {
+  public static boolean hasAnnotation(@Nullable IBinding declaringClass, @Nonnull Class<?> aClass) {
     if (declaringClass == null) return false;
     if (declaringClass.toString().startsWith("Anonymous")) return false;
     return findAnnotation(aClass, declaringClass.getAnnotations()).isPresent();
   }
 
-  public static Optional<IAnnotationBinding> findAnnotation(@NotNull Class<?> aClass, IAnnotationBinding... annotations) {
+  @Nonnull
+  public static Optional<IAnnotationBinding> findAnnotation(@Nonnull Class<?> aClass, @Nonnull IAnnotationBinding... annotations) {
     return Arrays.stream(annotations)
         .filter(qualifiedName -> qualifiedName.getAnnotationType().getQualifiedName().equals(aClass.getCanonicalName()))
         .findAny();
   }
 
-  @NotNull
-  public static <T extends ASTNode> List<T> findExpressions(@NotNull ASTNode tree, @NotNull T searchFor) {
+  @Nonnull
+  public static <T extends ASTNode> List<T> findExpressions(@Nonnull ASTNode tree, @Nonnull T searchFor) {
     final List<T> reference = new ArrayList<>();
     final Class<T> searchForClass = (Class<T>) searchFor.getClass();
     final String searchForString = searchFor.toString();
     tree.accept(new ASTVisitor() {
       @Override
-      public void postVisit(@NotNull ASTNode node) {
+      public void postVisit(@Nonnull ASTNode node) {
         if (node.getClass().equals(searchForClass)) {
           if (node.toString().equals(searchForString)) {
             reference.add((T) node);
@@ -206,12 +206,12 @@ public class ASTUtil {
     return reference;
   }
 
-  @NotNull
-  public static <T extends ASTNode> List<T> findExpressions(@NotNull ASTNode tree, @NotNull Class<T> searchForClass) {
+  @Nonnull
+  public static <T extends ASTNode> List<T> findExpressions(@Nonnull ASTNode tree, @Nonnull Class<T> searchForClass) {
     final List<T> reference = new ArrayList<>();
     tree.accept(new ASTVisitor() {
       @Override
-      public void postVisit(@NotNull ASTNode node) {
+      public void postVisit(@Nonnull ASTNode node) {
         if (node.getClass().equals(searchForClass)) {
           reference.add((T) node);
         }
@@ -220,20 +220,20 @@ public class ASTUtil {
     return reference;
   }
 
-  @NotNull
-  public static Optional<MethodDeclaration> findMethod(@NotNull TypeDeclaration typeDeclaration, String name) {
+  @Nonnull
+  public static Optional<MethodDeclaration> findMethod(@Nonnull TypeDeclaration typeDeclaration, String name) {
     return Arrays.stream(typeDeclaration.getMethods()).filter(methodDeclaration -> methodDeclaration.getName().toString().equals(name)).findFirst();
   }
 
-  @NotNull
-  public static Optional<MethodDeclaration> findMethod(@NotNull AnonymousClassDeclaration typeDeclaration, String name) {
+  @Nonnull
+  public static Optional<MethodDeclaration> findMethod(@Nonnull AnonymousClassDeclaration typeDeclaration, String name) {
     return typeDeclaration.bodyDeclarations().stream()
         .filter(x -> x instanceof MethodDeclaration)
         .filter(methodDeclaration -> ((MethodDeclaration) methodDeclaration).getName().toString().equals(name)).findFirst();
   }
 
   @Nullable
-  public static Block getBlock(@NotNull ASTNode node) {
+  public static Block getBlock(@Nonnull ASTNode node) {
     final ASTNode parent = node.getParent();
     if (parent == null) {
       return null;
@@ -292,7 +292,7 @@ public class ASTUtil {
     }
   }
 
-  public static boolean isField(@NotNull SimpleName simpleName) {
+  public static boolean isField(@Nonnull SimpleName simpleName) {
     final IBinding iBinding = simpleName.resolveBinding();
     final boolean isVariable = iBinding instanceof IVariableBinding;
     boolean isField = false;
@@ -302,7 +302,7 @@ public class ASTUtil {
     return isField;
   }
 
-  public static String updateContent(String content, @NotNull CompilationUnit cu) {
+  public static String updateContent(String content, @Nonnull CompilationUnit cu) {
     Document document = new Document(content);
     final Hashtable<String, String> options = JavaCore.getOptions();
     try {
@@ -319,15 +319,15 @@ public class ASTUtil {
     return false;
   }
 
-  public static boolean contains(@NotNull ASTNode node, ASTNode searchFor) {
+  public static boolean contains(@Nonnull ASTNode node, @Nonnull ASTNode searchFor) {
     return !findExpressions(node, searchFor).isEmpty();
   }
 
-  public static boolean contains(@NotNull ASTNode node, Class<? extends ASTNode> searchFor) {
+  public static boolean contains(@Nonnull ASTNode node, @Nonnull Class<? extends ASTNode> searchFor) {
     return !findExpressions(node, searchFor).isEmpty();
   }
 
-  public static String format(@NotNull String finalSrc) {
+  public static String format(@Nonnull String finalSrc) {
     final Document document = new Document();
     document.set(finalSrc);
     try {
@@ -341,12 +341,12 @@ public class ASTUtil {
               "\n")
           .apply(document);
     } catch (BadLocationException e) {
-      throw new RuntimeException();
+      throw new RuntimeException(e);
     }
     return document.get();
   }
 
-  @NotNull
+  @Nonnull
   public static DefaultCodeFormatterOptions formattingSettings() {
     final DefaultCodeFormatterOptions javaConventionsSettings = DefaultCodeFormatterOptions.getJavaConventionsSettings();
     javaConventionsSettings.align_with_spaces = true;
@@ -355,12 +355,12 @@ public class ASTUtil {
     return javaConventionsSettings;
   }
 
-  public static boolean isPrimitive(ITypeBinding type) {
+  public static boolean isPrimitive(@Nonnull ITypeBinding type) {
     if (type.isArray()) return isPrimitive(type.getElementType());
     return type.isPrimitive();
   }
 
-  public static List<IMethodBinding> superMethods(IMethodBinding methodBinding) {
+  public static List<IMethodBinding> superMethods(@Nonnull IMethodBinding methodBinding) {
     final IMethodBinding methodDeclaration = methodBinding.getMethodDeclaration();
     final ITypeBinding declaringClass = methodDeclaration.getDeclaringClass();
     return superTypes(declaringClass).stream().flatMap(c -> {
@@ -368,8 +368,8 @@ public class ASTUtil {
     }).collect(Collectors.toList());
   }
 
-  @NotNull
-  public static List<ITypeBinding> superTypes(ITypeBinding declaringClass) {
+  @Nonnull
+  public static List<ITypeBinding> superTypes(@Nonnull ITypeBinding declaringClass) {
     final ArrayList<ITypeBinding> list = new ArrayList<>();
     for (ITypeBinding xface : declaringClass.getInterfaces()) {
       list.add(xface);
@@ -379,49 +379,52 @@ public class ASTUtil {
     return list;
   }
 
-  public static Tuple2<ASTNode, IMethodBinding> getMethod(ASTNode node) {
+  @Nullable
+  public static Tuple2<ASTNode, IMethodBinding> getMethod(@Nullable ASTNode node) {
     if (null == node) return null;
     if (node instanceof MethodDeclaration) return new Tuple2<>(node, ((MethodDeclaration) node).resolveBinding());
     if (node instanceof LambdaExpression) return new Tuple2<>(node, ((LambdaExpression) node).resolveMethodBinding());
     return getMethod(node.getParent());
   }
 
-  public static <T> List<T> copyPrepend(List<T> list, T... item) {
+  @Nonnull
+  public static <T> List<T> copyPrepend(@Nonnull List<T> list, @Nonnull T... item) {
     ArrayList<T> copy = new ArrayList<>();
-    Arrays.stream(item).forEach(list::add);
+    Arrays.stream(item).forEach(copy::add);
     copy.addAll(list);
     return copy;
   }
 
-  public static <T> List<T> copyAppend(List<T> list, T... item) {
+  @Nonnull
+  public static <T> List<T> copyAppend(@Nonnull List<T> list, @Nonnull T... item) {
     ArrayList<T> copy = new ArrayList<>();
     copy.addAll(list);
-    Arrays.stream(item).forEach(list::add);
+    Arrays.stream(item).forEach(copy::add);
     return copy;
   }
 
-  public static boolean withinAnonymousClass(ASTNode code, ASTNode node) {
+  public static boolean withinAnonymousClass(ASTNode code, @Nullable ASTNode node) {
     if (null == node) return false;
     if (node instanceof AnonymousClassDeclaration) return true;
     if (code == node) return false;
     return withinAnonymousClass(code, node.getParent());
   }
 
-  public static boolean withinSubMethod(ASTNode code, ASTNode node) {
+  public static boolean withinSubMethod(ASTNode code, @Nullable ASTNode node) {
     if (null == node) return false;
     if (node instanceof MethodDeclaration) return true;
     if (code == node) return false;
     return withinSubMethod(code, node.getParent());
   }
 
-  public static boolean withinLambda(ASTNode code, ASTNode node) {
+  public static boolean withinLambda(ASTNode code, @Nullable ASTNode node) {
     if (null == node) return false;
     if (node instanceof LambdaExpression) return true;
     if (code == node) return false;
     return withinLambda(code, node.getParent());
   }
 
-  public static boolean isLoopTerminal(WhileStatement whileStatement) {
+  public static boolean isLoopTerminal(@Nonnull WhileStatement whileStatement) {
     if (whileStatement.getExpression().toString().equals("true")) {
       if (!contains(whileStatement.getBody(), BreakStatement.class)) {
         return true;
@@ -430,7 +433,7 @@ public class ASTUtil {
     return false;
   }
 
-  public static boolean isLoopTerminal(DoStatement doStatement) {
+  public static boolean isLoopTerminal(@Nonnull DoStatement doStatement) {
     if (doStatement.getExpression().toString().equals("true")) {
       if (!contains(doStatement.getBody(), BreakStatement.class)) {
         return true;
@@ -439,7 +442,7 @@ public class ASTUtil {
     return false;
   }
 
-  public static boolean strEquals(ASTNode l, ASTNode r) {
+  public static boolean strEquals(@Nullable ASTNode l, @Nullable ASTNode r) {
     if (null == r && null == l) return true;
     if (null == r) return false;
     if (null == l) return false;

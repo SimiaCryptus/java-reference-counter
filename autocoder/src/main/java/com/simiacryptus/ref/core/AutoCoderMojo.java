@@ -20,14 +20,14 @@
 package com.simiacryptus.ref.core;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.PrintStream;
 
 public abstract class AutoCoderMojo extends BaseMojo {
   public static final PrintStream ERR = System.err;
 
-  @NotNull
+  @Nonnull
   protected ProjectInfo getProjectInfo() {
     return new ProjectInfo(basedir.getAbsolutePath(), getSources(), getDependencies());
   }
@@ -48,9 +48,10 @@ public abstract class AutoCoderMojo extends BaseMojo {
     }
   }
 
+  @Nonnull
   protected abstract AutoCoder getAutoCoder(ProjectInfo projectInfo);
 
-  protected boolean getBoolean(@NotNull String key, boolean defaultValue) {
+  protected boolean getBoolean(@Nonnull String key, boolean defaultValue) {
     return Boolean.parseBoolean(System.getProperty(key, Boolean.toString(defaultValue)));
   }
 

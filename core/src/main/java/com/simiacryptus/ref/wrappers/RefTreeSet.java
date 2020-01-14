@@ -20,17 +20,16 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<T> {
 
-  @NotNull
+  @Nonnull
   private final TreeMap<T, T> inner;
 
   public RefTreeSet() {
@@ -57,23 +56,23 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
     this.getInnerMap().keySet().forEach(RefUtil::addRef);
   }
 
-  public RefTreeSet(@NotNull @RefAware Collection<T> values) {
+  public RefTreeSet(@Nonnull @RefAware Collection<T> values) {
     this();
     addAll(values);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Map<T, T> getInnerMap() {
     return inner;
   }
 
-  @NotNull
-  public static <T> RefTreeSet<T>[] addRefs(@NotNull RefTreeSet<T>[] array) {
+  @Nonnull
+  public static <T> RefTreeSet<T>[] addRefs(@Nonnull RefTreeSet<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef).toArray((x) -> new RefTreeSet[x]);
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefTreeSet<T> addRef() {
     return (RefTreeSet<T>) super.addRef();
@@ -114,32 +113,32 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefNavigableSet<T> descendingSet() {
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Iterator<T> descendingIterator() {
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefNavigableSet<T> subSet(@RefAware T fromElement, boolean fromInclusive,
                                    @RefAware T toElement, boolean toInclusive) {
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefNavigableSet<T> headSet(@RefAware T toElement, boolean inclusive) {
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefNavigableSet<T> tailSet(@RefAware T fromElement, boolean inclusive) {
     throw new UnsupportedOperationException();
@@ -151,30 +150,32 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefSortedSet<T> subSet(@RefAware T fromElement,
                                 @RefAware T toElement) {
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefSortedSet<T> headSet(@RefAware T toElement) {
     throw new UnsupportedOperationException();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefSortedSet<T> tailSet(@RefAware T fromElement) {
     throw new UnsupportedOperationException();
   }
 
+  @Nonnull
   @Override
   public T first() {
     throw new UnsupportedOperationException();
   }
 
+  @Nonnull
   @Override
   public T last() {
     throw new UnsupportedOperationException();

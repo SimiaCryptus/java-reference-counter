@@ -23,17 +23,16 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
 @RefIgnore
 public class InlineRefs extends RefASTOperator {
 
-  protected InlineRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  protected InlineRefs(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
@@ -67,12 +66,12 @@ public class InlineRefs extends RefASTOperator {
 
   public static class ModifyBlock extends InlineRefs {
 
-    public ModifyBlock(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyBlock(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull Block node) {
+    public void endVisit(@Nonnull Block node) {
       if (node.statements().size() == 1 && node.getParent() instanceof Block) {
         final Block parent = (Block) node.getParent();
         parent.statements().set(parent.statements().indexOf(node),
@@ -83,12 +82,12 @@ public class InlineRefs extends RefASTOperator {
 
   public static class ModifyAssignment extends InlineRefs {
 
-    public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyAssignment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull Assignment node) {
+    public void endVisit(@Nonnull Assignment node) {
       Statement previousStatement = previousStatement(node);
       if (previousStatement != null) {
         if (previousStatement instanceof VariableDeclarationStatement) {
@@ -124,12 +123,12 @@ public class InlineRefs extends RefASTOperator {
 
   public static class ModifyReturnStatement extends InlineRefs {
 
-    public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyReturnStatement(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull ReturnStatement node) {
+    public void endVisit(@Nonnull ReturnStatement node) {
       if (node.getExpression() instanceof Name) {
         Statement previousStatement = previousStatement(node);
         if (previousStatement != null) {

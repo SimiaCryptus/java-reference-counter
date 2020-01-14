@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
@@ -89,13 +89,13 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().filter(predicate);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Optional<T> findAny() {
     return getInner().findAny();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Optional<T> findFirst() {
     return getInner().findFirst();
@@ -134,7 +134,7 @@ public class StreamWrapper<T> implements Stream<T> {
     getInner().forEachOrdered(action);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Iterator<T> iterator() {
     return getInner().iterator();
@@ -165,13 +165,13 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().mapToLong(mapper);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Optional<T> max(@RefAware Comparator<? super T> comparator) {
     return getInner().max(comparator);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Optional<T> min(@RefAware Comparator<? super T> comparator) {
     return getInner().min(comparator);
@@ -182,13 +182,13 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().noneMatch(predicate);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Stream<T> onClose(@RefAware Runnable closeHandler) {
     return getInner().onClose(closeHandler);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Stream<T> parallel() {
     return getInner().parallel();
@@ -205,7 +205,7 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().reduce(identity, accumulator);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Optional<T> reduce(@RefAware BinaryOperator<T> accumulator) {
     return getInner().reduce(accumulator);
@@ -218,7 +218,7 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().reduce(identity, accumulator, combiner);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Stream<T> sequential() {
     return getInner().sequential();
@@ -239,25 +239,25 @@ public class StreamWrapper<T> implements Stream<T> {
     return getInner().sorted(comparator);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Spliterator<T> spliterator() {
     return getInner().spliterator();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Object[] toArray() {
     return getInner().toArray();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public <A> A[] toArray(@RefAware IntFunction<A[]> generator) {
     return getInner().toArray(generator);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Stream<T> unordered() {
     return getInner().unordered();

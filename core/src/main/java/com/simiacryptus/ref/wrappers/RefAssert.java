@@ -22,8 +22,9 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 @RefIgnore
 @SuppressWarnings("unused")
@@ -72,14 +73,14 @@ public class RefAssert {
     }
   }
 
-  public static void assertArrayEquals(@NotNull int[] expected, @NotNull int[] actuals) {
+  public static void assertArrayEquals(@Nonnull int[] expected, @Nonnull int[] actuals) {
     assertEquals(expected.length, actuals.length);
     for (int i = 0; i < expected.length; i++) {
       assertEquals(expected[i], actuals[i]);
     }
   }
 
-  public static void assertArrayEquals(@RefAware String message, @NotNull int[] expected, @NotNull int[] actuals) {
+  public static void assertArrayEquals(@RefAware String message, @Nonnull int[] expected, @Nonnull int[] actuals) {
     assertEquals(message, expected.length, actuals.length);
     for (int i = 0; i < expected.length; i++) {
       assertEquals(message, expected[i], actuals[i]);
@@ -96,7 +97,7 @@ public class RefAssert {
     }
   }
 
-  private static boolean isEquals(@NotNull @RefAware Object expected, @RefAware Object actual) {
+  private static boolean isEquals(@Nonnull @RefAware Object expected, @RefAware Object actual) {
     final boolean equals = expected.equals(actual);
     RefUtil.freeRef(equals);
     return equals;
@@ -106,7 +107,7 @@ public class RefAssert {
     fail(format(message, expected, actual));
   }
 
-  @NotNull
+  @Nonnull
   private static String format(@Nullable @RefAware String message, @RefAware Object expected, @RefAware Object actual) {
     String formatted = "";
     if (message != null && !"".equals(message)) {
@@ -121,7 +122,7 @@ public class RefAssert {
         : formatted + "expected:<" + expectedString + "> but was:<" + actualString + ">";
   }
 
-  @NotNull
+  @Nonnull
   private static String formatClassAndValue(@Nullable @RefAware Object value, @RefAware String valueString) {
     String className = value == null ? "null" : value.getClass().getName();
     return className + "<" + valueString + ">";

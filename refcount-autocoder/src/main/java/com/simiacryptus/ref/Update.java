@@ -25,7 +25,6 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.AnnotateMethodCalls;
 import com.simiacryptus.ref.ops.VerifyMethodCalls;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import java.util.HashMap;
 @RefIgnore
 @Mojo(name = "update")
 public class Update extends RefAutoCoderMojo {
-  @NotNull
+  @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);

@@ -24,8 +24,9 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,40 +34,55 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VerifyRefOperator extends RefASTOperator {
-  public VerifyRefOperator(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public VerifyRefOperator(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  protected ReferenceState processStatement(Statement statement, SimpleName name, final ReferenceState state, List<Statement> finalizers, TerminalState requiredTermination) {
+  public static boolean isWriting(@Nonnull ASTNode node) {
+    ASTNode parent = node.getParent();
+    if (parent instanceof Assignment) {
+      if (((Assignment) parent).getLeftHandSide() == node) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  protected ReferenceState processStatement(Statement statement, @Nonnull SimpleName name, @Nonnull final ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination) {
     if (statement instanceof IfStatement) {
       final IfStatement ifStatement = (IfStatement) statement;
       Expression expression = ifStatement.getExpression();
       String exprStr = expression.toString();
       boolean ifNull = exprStr.equals("null == " + name) || exprStr.equals(name + " == null");
-      boolean ifNotNull = exprStr.equals("null != " + name) || exprStr.equals(name + " != null");
+      boolean ifNonnull = exprStr.equals("null != " + name) || exprStr.equals(name + " != null");
       ReferenceState expressionResult = processNode(expression, name, state, finalizers, requiredTermination);
       final ReferenceState thenResult;
       if (ifNull) {
-        thenResult = state;
+//        thenResult = state;
+        thenResult = processStatement(ifStatement.getThenStatement(), name, expressionResult, finalizers, TerminalState.Any);
       } else {
         thenResult = processStatement(ifStatement.getThenStatement(), name, expressionResult, finalizers, requiredTermination);
       }
       final Statement elseStatement = ifStatement.getElseStatement();
       final ReferenceState elseResult;
-      if (ifNotNull) {
-        elseResult = state;
-      } else if (null == elseStatement) {
+      if (null == elseStatement) {
         elseResult = expressionResult;
+      } else if (ifNonnull) {
+//        elseResult = state;
+        elseResult = processStatement(elseStatement, name, expressionResult, finalizers, TerminalState.Any);
       } else {
         elseResult = processStatement(elseStatement, name, expressionResult, finalizers, requiredTermination);
       }
-      if (ifNotNull) {
-        return thenResult;
-      } else if (ifNull) {
-        return elseResult;
-      } else if (elseResult.isTerminated()) {
+      if (elseResult.isTerminated()) {
         return thenResult;
       } else if (thenResult.isTerminated()) {
+        return elseResult;
+      } else if (ifNonnull) {
+        return thenResult;
+      } else if (ifNull) {
         return elseResult;
       } else {
         if (thenResult.isRefConsumed() != elseResult.isRefConsumed()) fatal(statement, "Mismatch ref consumed for %s", name);
@@ -101,7 +117,7 @@ public class VerifyRefOperator extends RefASTOperator {
       if (ASTUtil.isLoopTerminal(whileStatement)) {
         ReferenceState whileResult = loopResult.setTerminated(whileStatement);
         ReferenceState finalState = processStatements(name, whileResult, requiredTermination, finalizers.toArray(new Statement[]{}));
-        if(!requiredTermination.validate(finalState))  {
+        if (!requiredTermination.validate(finalState)) {
           fatal(whileStatement, "Reference for %s ends in state %s", name, state);
         }
         return finalState;
@@ -122,7 +138,7 @@ public class VerifyRefOperator extends RefASTOperator {
       if (ASTUtil.isLoopTerminal(doStatement)) {
         ReferenceState whileResult = testResult.setTerminated(doStatement);
         ReferenceState finalState = processStatements(name, whileResult, requiredTermination, finalizers.toArray(new Statement[]{}));
-        if(!requiredTermination.validate(finalState))  {
+        if (!requiredTermination.validate(finalState)) {
           fatal(doStatement, "Reference for %s ends in state %s", name, state);
         }
         return finalState;
@@ -157,6 +173,13 @@ public class VerifyRefOperator extends RefASTOperator {
         fatal(whileBody, "Possible repeated free of %s at %s", name, getLocation(loopResult.refConsumedAt));
       }
       return loopResult;
+    } else if (statement instanceof SynchronizedStatement) {
+      SynchronizedStatement synchronizedStatement = (SynchronizedStatement) statement;
+      return processStatement(synchronizedStatement.getBody(), name,
+          processNode(synchronizedStatement.getExpression(), name,
+              state,
+              finalizers, requiredTermination),
+          finalizers, requiredTermination);
     } else if (statement instanceof Block) {
       ReferenceState blockState = state;
       for (Statement stmt : (List<Statement>) ((Block) statement).statements()) {
@@ -174,7 +197,7 @@ public class VerifyRefOperator extends RefASTOperator {
     return processNode(statement, name, state, finalizers, requiredTermination);
   }
 
-  protected ReferenceState processNode(ASTNode node, SimpleName name, ReferenceState state, List<Statement> finalizers, TerminalState requiredTermination) {
+  protected ReferenceState processNode(@Nullable ASTNode node, @Nonnull SimpleName name, ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination) {
     if (null == node) return state;
     List<Name> mentions = getMentions(node, name).stream()
         .filter(mention -> !ASTUtil.withinLambda(node, mention))
@@ -199,21 +222,25 @@ public class VerifyRefOperator extends RefASTOperator {
       ).map(x -> getLocation(x)).reduce((a, b) -> a + ", " + b)));
       state = state.setTerminated(returnStatements.isEmpty() ? throwStatements.get(0) : returnStatements.get(0));
       state = processStatements(name, state, requiredTermination, finalizers.toArray(new Statement[]{}));
-      if(!requiredTermination.validate(state))  {
+      if (!requiredTermination.validate(state)) {
         fatal(node, "Reference for %s ends in state %s", name, state);
       }
     }
     return state;
   }
 
-  protected ReferenceState processStatements(SimpleName name, ReferenceState state, TerminalState requiredTermination, Statement... statements) {
+  protected ReferenceState processStatements(@Nonnull SimpleName name, ReferenceState state, @Nonnull TerminalState requiredTermination, @Nonnull Statement... statements) {
     for (Statement statement : statements) {
       state = processStatement(statement, name, state, new ArrayList<>(), requiredTermination);
     }
     return state;
   }
 
-  protected ReferenceState processReference(Name name, ASTNode node, ReferenceState state) {
+  @Nonnull
+  protected ReferenceState processReference(Name name, @Nonnull ASTNode node, @Nonnull ReferenceState state) {
+    if (!isWriting(node) && state.isRefConsumed() && getStatement(state.refConsumedAt) != getStatement(node)) {
+      fatal(node, "Reference to %s already consumed at %s", name, getLocation(state.refConsumedAt));
+    }
     final ASTNode parent = node.getParent();
     if (parent instanceof MethodInvocation) {
       MethodInvocation methodInvocation = (MethodInvocation) parent;
@@ -246,8 +273,6 @@ public class VerifyRefOperator extends RefASTOperator {
       return state.setRefConsumed(node);
     } else if (parent instanceof ArrayAccess) {
       return state;
-    } else if (parent instanceof SynchronizedStatement) {
-      return state;
     } else if (parent instanceof Assignment) {
       Assignment assignment = (Assignment) parent;
       if (assignment.getRightHandSide() == node) {
@@ -256,7 +281,7 @@ public class VerifyRefOperator extends RefASTOperator {
         if (!state.isRefConsumed()) {
           fatal(node, "Overwriting non-freed reference %s", name);
         }
-        if(assignment.getRightHandSide() instanceof NullLiteral) {
+        if (assignment.getRightHandSide() instanceof NullLiteral) {
           return state;
         }
         return state.setRefConsumed(null);
@@ -295,8 +320,8 @@ public class VerifyRefOperator extends RefASTOperator {
     }
   }
 
-  @NotNull
-  protected List<Name> getMentions(ASTNode node, Name searchFor) {
+  @Nonnull
+  protected List<Name> getMentions(@Nullable ASTNode node, @Nonnull Name searchFor) {
     final IBinding nameBinding = searchFor.resolveBinding();
     if (nameBinding == null) {
       warn(searchFor, "Unresolved binding");
@@ -319,13 +344,13 @@ public class VerifyRefOperator extends RefASTOperator {
   public enum TerminalState {
     Freed {
       @Override
-      public boolean validate(ReferenceState state) {
+      public boolean validate(@Nonnull ReferenceState state) {
         return state.isRefConsumed();
       }
     },
     Open {
       @Override
-      public boolean validate(ReferenceState state) {
+      public boolean validate(@Nonnull ReferenceState state) {
         return !state.isRefConsumed();
       }
     },
@@ -355,7 +380,8 @@ public class VerifyRefOperator extends RefASTOperator {
       return refConsumedAt != null;
     }
 
-    public ReferenceState setRefConsumed(ASTNode refConsumedAt) {
+    @Nonnull
+    public ReferenceState setRefConsumed(@Nullable ASTNode refConsumedAt) {
       if (null != refConsumedAt && isRefConsumed()) {
         fatal(refConsumedAt, "Previously freed %s at %s", name, getLocation(this.refConsumedAt));
       }
@@ -366,13 +392,15 @@ public class VerifyRefOperator extends RefASTOperator {
       return terminatedAt != null;
     }
 
-    public ReferenceState setTerminated(ASTNode terminatedAt) {
+    @Nonnull
+    public ReferenceState setTerminated(@Nonnull ASTNode terminatedAt) {
       if (isTerminated()) {
         fatal(terminatedAt, "Previous termination for %s at %s", name, getLocation(this.terminatedAt));
       }
       return new VerifyMethodVariables.ReferenceState(this.name, refConsumedAt, terminatedAt);
     }
 
+    @Nonnull
     @Override
     public String toString() {
       final StringBuilder sb = new StringBuilder("ReferenceState{");

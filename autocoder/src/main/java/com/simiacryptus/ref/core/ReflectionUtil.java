@@ -20,9 +20,9 @@
 package com.simiacryptus.ref.core;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -32,7 +32,7 @@ import java.util.Optional;
 public class ReflectionUtil {
 
   @Nullable
-  public static <T> T getField(@NotNull Object obj, String name) {
+  public static <T> T getField(@Nonnull Object obj, String name) {
     final Field value = Arrays.stream(obj.getClass().getDeclaredFields()).filter(x -> x.getName().equals(name)).findFirst().orElse(null);
     if (value != null) {
       value.setAccessible(true);
@@ -45,8 +45,8 @@ public class ReflectionUtil {
     return null;
   }
 
-  @NotNull
-  public static <T> T invokeMethod(@NotNull Object obj, String name, @NotNull Object... args) {
+  @Nonnull
+  public static <T> T invokeMethod(@Nonnull Object obj, String name, @Nonnull Object... args) {
     final Method value = Arrays.stream(obj.getClass().getDeclaredMethods())
         .filter(x -> x.getName().equals(name))
         .filter(x -> {
@@ -72,8 +72,8 @@ public class ReflectionUtil {
     throw new RuntimeException(String.format("Method %s.%s(%s) not found", obj.getClass(), name, Arrays.stream(args).map(x -> x.getClass().getSimpleName()).reduce((a, b) -> a + ", " + b).get()));
   }
 
-  @NotNull
-  public static Field getField(@NotNull Class<?> nodeClass, String name) {
+  @Nonnull
+  public static Field getField(@Nonnull Class<?> nodeClass, String name) {
     final Field[] fields = nodeClass.getDeclaredFields();
     final Optional<Field> parent = Arrays.stream(fields).filter(x -> x.getName().equals(name)).findFirst();
     if (!parent.isPresent()) {
@@ -90,8 +90,8 @@ public class ReflectionUtil {
   }
 
   @SuppressWarnings("unused")
-  @NotNull
-  public static <T> T setField(@NotNull T astNode, String name, Object value) {
+  @Nonnull
+  public static <T> T setField(@Nonnull T astNode, String name, Object value) {
     try {
       getField(astNode.getClass(), name).set(astNode, value);
       return astNode;

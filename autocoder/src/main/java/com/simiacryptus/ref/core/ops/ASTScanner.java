@@ -21,12 +21,12 @@ package com.simiacryptus.ref.core.ops;
 
 import com.simiacryptus.ref.core.ProjectInfo;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 public class ASTScanner extends ASTEditor {
-  public ASTScanner(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, boolean record) {
+  public ASTScanner(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean record) {
     super(projectInfo, compilationUnit, file, record);
   }
 

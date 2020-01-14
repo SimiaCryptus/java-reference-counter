@@ -19,10 +19,8 @@
 
 package com.simiacryptus.ref.lang;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.lang.reflect.Array;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -55,15 +53,16 @@ public class RefUtil {
   @Nullable
   public static <T> T addRef(@Nullable @RefAware T value) {
     if (null != value) {
-      if(value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
-      else if(value.getClass().isArray()) Arrays.stream(((Object[]) value)).forEach(RefUtil::addRef);
+      if (value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
+      else if (value.getClass().isArray()) Arrays.stream(((Object[]) value)).forEach(RefUtil::addRef);
     }
     return value;
   }
 
-  @NotNull
-  public static <T> T wrapInterface(@NotNull @RefAware T obj,
-                                    @NotNull @RefAware Object... refs) {
+  @Nonnull
+  public static @RefAware
+  <T> T wrapInterface(@Nonnull @RefAware T obj,
+                      @Nonnull @RefAware Object... refs) {
     final Class<?> objClass = obj.getClass();
     final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
       @Override
@@ -80,7 +79,7 @@ public class RefUtil {
         new InvocationHandler() {
           @Override
           public Object invoke(@RefAware Object proxy,
-                               @NotNull @RefAware Method method,
+                               @Nonnull @RefAware Method method,
                                @RefAware Object[] args) throws Throwable {
             if (method.getDeclaringClass().equals(ReferenceCounting.class)) {
               return method.invoke(refcounter, args);
@@ -91,13 +90,13 @@ public class RefUtil {
         });
   }
 
-  public static <T> void freeRefs(@NotNull @RefAware T[] array) {
+  public static <T> void freeRefs(@Nonnull @RefAware T[] array) {
     Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
   }
 
-  @NotNull
+  @Nonnull
   @RefIgnore
-  public static <T> T get(@NotNull @RefAware Optional<T> optional) {
+  public static <T> T get(@Nonnull @RefAware Optional<T> optional) {
     return optional.get();
   }
 

@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,7 +31,7 @@ import java.util.List;
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefArrayList<T> extends RefAbstractList<T> {
-  @NotNull
+  @Nonnull
   private final List<T> inner;
 
   public RefArrayList() {
@@ -42,23 +42,23 @@ public class RefArrayList<T> extends RefAbstractList<T> {
     this.inner = new ArrayList<>(length);
   }
 
-  public RefArrayList(@NotNull @RefAware Collection<T> list) {
+  public RefArrayList(@Nonnull @RefAware Collection<T> list) {
     this();
     addAll(list);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public List<T> getInner() {
     return inner;
   }
 
-  @NotNull
-  public static <T> RefArrayList<T>[] addRefs(@NotNull RefArrayList<T>[] array) {
+  @Nonnull
+  public static <T> RefArrayList<T>[] addRefs(@Nonnull RefArrayList<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef).toArray((x) -> new RefArrayList[x]);
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefArrayList<T> addRef() {
     return (RefArrayList<T>) super.addRef();

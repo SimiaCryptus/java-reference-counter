@@ -25,6 +25,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
@@ -32,12 +33,12 @@ import java.util.List;
 @RefIgnore
 public class AnnotateAllMethodParams extends RefASTOperator {
 
-  public AnnotateAllMethodParams(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public AnnotateAllMethodParams(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(MethodDeclaration node) {
+  public void endVisit(@Nonnull MethodDeclaration node) {
     for (SingleVariableDeclaration param : (List<SingleVariableDeclaration>) node.parameters()) {
       final IVariableBinding variableBinding = param.resolveBinding();
       if (null == variableBinding) {
@@ -68,7 +69,7 @@ public class AnnotateAllMethodParams extends RefASTOperator {
     return false;
   }
 
-  private void remove(SingleVariableDeclaration param, IVariableBinding variableBinding) {
+  private void remove(@Nonnull SingleVariableDeclaration param, IVariableBinding variableBinding) {
     if (ASTUtil.hasAnnotation(variableBinding, RefAware.class)) {
       warn(param, "Needless @RefAware: %s", param);
       for (Iterator iterator = param.modifiers().iterator(); iterator.hasNext(); ) {

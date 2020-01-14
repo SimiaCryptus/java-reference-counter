@@ -19,11 +19,11 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.core.CollectableException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +33,10 @@ import java.util.Arrays;
 
 public abstract class LoggingASTVisitor extends ASTVisitor {
   protected static final Logger logger = LoggerFactory.getLogger(ASTOperator.class);
-  @NotNull
+  @Nonnull
   protected final CompilationUnit compilationUnit;
   protected final AST ast;
-  @NotNull
+  @Nonnull
   protected final File file;
 
   public LoggingASTVisitor(@Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
@@ -45,56 +45,56 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
     this.file = file;
   }
 
-  public final void debug(@NotNull ASTNode node, String formatString, Object... args) {
+  public final void debug(@Nonnull ASTNode node, String formatString, Object... args) {
     debug(1, node, formatString, args);
   }
 
-  protected final void debug(int frames, @NotNull ASTNode node, String formatString, Object... args) {
+  public final void warn(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
+    warn(1, node, formatString, args);
+  }
+
+  public final void debug(int frames, @Nonnull ASTNode node, String formatString, Object... args) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
     logger.debug(String.format(getLogPrefix(node, caller) + formatString, args));
   }
 
-  @NotNull
-  protected final String getLocation(@Nonnull ASTNode node) {
-    return file.getName() + ":" + compilationUnit.getLineNumber(node.getStartPosition());
-  }
-
   @SuppressWarnings("unused")
-  protected final void info(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
+  public final void info(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
     info(1, node, formatString, args);
   }
 
-  protected final void info(int frames, @Nonnull ASTNode node, @Nonnull String formatString, @NotNull Object... args) {
+  public final void info(int frames, @Nonnull ASTNode node, @Nonnull String formatString, @Nonnull Object... args) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
     logger.info(String.format(getLogPrefix(node, caller) + formatString, Arrays.stream(args).map(o -> o == null ? null : o.toString().trim()).toArray()));
   }
 
-  @NotNull
-  protected final String toString(@NotNull StackTraceElement caller) {
-    return caller.getFileName() + ":" + caller.getLineNumber();
-  }
-
-  public final void warn(@NotNull ASTNode node, @NotNull String formatString, Object... args) {
-    warn(1, node, formatString, args);
-  }
-
-  protected final void warn(int frames, @NotNull ASTNode node, @NotNull String formatString, Object... args) {
+  public final void warn(int frames, @Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
     warnRaw(frames + 1, node, String.format(formatString, args));
   }
 
-  protected final void fatal(@NotNull ASTNode node, @NotNull String formatString, Object... args) {
-    throw new RuntimeException("(" + getLocation(node) + ") " + String.format(formatString, args));
+  public final void fatal(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
+    throw new CollectableException("(" + getLocation(node) + ") " + String.format(formatString, args));
   }
 
-  protected void warnRaw(int frames, @NotNull ASTNode node, String format) {
+  public void warnRaw(int frames, @Nonnull ASTNode node, String format) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
     logger.warn(getLogPrefix(node, caller) + format);
   }
 
-  @NotNull
+  @Nonnull
+  protected final String getLocation(@Nonnull ASTNode node) {
+    return file.getName() + ":" + compilationUnit.getLineNumber(node.getStartPosition());
+  }
+
+  @Nonnull
+  protected final String toString(@Nonnull StackTraceElement caller) {
+    return caller.getFileName() + ":" + caller.getLineNumber();
+  }
+
+  @Nonnull
   private String getLogPrefix(@Nonnull ASTNode node, @Nonnull StackTraceElement caller) {
     return "(" + toString(caller) + ") (" + getLocation(node) + ") - ";
   }

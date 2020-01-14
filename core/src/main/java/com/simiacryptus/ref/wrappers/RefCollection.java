@@ -23,8 +23,8 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -32,18 +32,19 @@ import java.util.function.Predicate;
 @RefIgnore
 public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
 
+  @Nonnull
   Collection<T> getInner();
 
-  @NotNull
-  public static <T> RefCollection<T>[] addRefs(@NotNull RefCollection<T>[] array) {
+  @Nonnull
+  public static <T> RefCollection<T>[] addRefs(@Nonnull RefCollection<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefCollection::addRef)
         .toArray((x) -> new RefCollection[x]);
   }
 
-  @NotNull
+  @Nonnull
   RefCollection<T> addRef();
 
-  default void forEach(@NotNull @RefAware Consumer<? super T> action) {
+  default void forEach(@Nonnull @RefAware Consumer<? super T> action) {
     final RefIterator<T> iterator = iterator();
     while (iterator.hasNext()) {
       action.accept(iterator.next());
@@ -52,7 +53,7 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
     iterator.freeRef();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   RefIterator<T> iterator();
 
@@ -75,7 +76,7 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
     return RefStreamSupport.stream(spliterator(), false);
   }
 
-  default boolean removeIf(@NotNull @RefAware Predicate<? super T> filter) {
+  default boolean removeIf(@Nonnull @RefAware Predicate<? super T> filter) {
     Objects.requireNonNull(filter);
     boolean removed = false;
     final Iterator<T> each = getInner().iterator();

@@ -23,19 +23,24 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 
+import javax.annotation.Nonnull;
+import java.io.Serializable;
+
 @RefIgnore
 @SuppressWarnings("unused")
-public class RefStringBuilder implements Appendable, CharSequence, java.io.Serializable {
+public class RefStringBuilder implements Appendable, CharSequence, Serializable {
+  @Nonnull
   private final StringBuilder inner;
 
   public RefStringBuilder() {
     inner = new StringBuilder();
   }
 
-  public RefStringBuilder(@com.simiacryptus.ref.lang.RefAware CharSequence charSequence) {
+  public RefStringBuilder(@Nonnull @RefAware CharSequence charSequence) {
     inner = new StringBuilder(charSequence);
   }
 
+  @Nonnull
   @Override
   public RefStringBuilder append(@RefAware CharSequence csq) {
     inner.append(csq);
@@ -43,6 +48,7 @@ public class RefStringBuilder implements Appendable, CharSequence, java.io.Seria
     return this;
   }
 
+  @Nonnull
   @Override
   public RefStringBuilder append(@RefAware CharSequence csq, int start, int end) {
     inner.append(csq, start, end);
@@ -50,11 +56,13 @@ public class RefStringBuilder implements Appendable, CharSequence, java.io.Seria
     return this;
   }
 
+  @Nonnull
   public RefStringBuilder append(char[] csq, int start, int end) {
     inner.append(csq, start, end);
     return this;
   }
 
+  @Nonnull
   @Override
   public RefStringBuilder append(char c) {
     inner.append(c);
@@ -80,17 +88,20 @@ public class RefStringBuilder implements Appendable, CharSequence, java.io.Seria
     return inner.substring(from, to);
   }
 
+  @Nonnull
   public RefStringBuilder append(@RefAware Object obj) {
     inner.append(obj);
     RefUtil.freeRef(obj);
     return this;
   }
 
+  @Nonnull
   public RefStringBuilder delete(int start, int end) {
     inner.delete(start, end);
     return this;
   }
 
+  @Nonnull
   public RefStringBuilder reverse() {
     inner.reverse();
     return this;

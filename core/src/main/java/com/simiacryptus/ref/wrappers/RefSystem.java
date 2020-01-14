@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Properties;
@@ -39,7 +40,7 @@ public final class RefSystem {
     return System.getProperties();
   }
 
-  public static void setOut(@com.simiacryptus.ref.lang.RefAware PrintStream printStream) {
+  public static void setOut(@RefAware PrintStream printStream) {
     out = printStream;
     System.setOut(printStream);
   }
@@ -48,8 +49,8 @@ public final class RefSystem {
     return System.nanoTime();
   }
 
-  public static void arraycopy(@com.simiacryptus.ref.lang.RefAware Object src, int srcPos,
-                               @com.simiacryptus.ref.lang.RefAware Object dst, int dstPos, int length) {
+  public static void arraycopy(@Nonnull @RefAware Object src, int srcPos,
+                               @Nonnull @RefAware Object dst, int dstPos, int length) {
     System.arraycopy(src, srcPos, dst, dstPos, length);
   }
 
@@ -63,8 +64,8 @@ public final class RefSystem {
     return hashCode;
   }
 
-  public static void setProperty(@com.simiacryptus.ref.lang.RefAware String key,
-                                 @com.simiacryptus.ref.lang.RefAware String value) {
+  public static void setProperty(@Nonnull @RefAware String key,
+                                 @Nonnull @RefAware String value) {
     System.setProperty(key, value);
   }
 
@@ -72,12 +73,12 @@ public final class RefSystem {
     System.exit(code);
   }
 
-  public static String getProperty(@com.simiacryptus.ref.lang.RefAware String key) {
+  public static String getProperty(@Nonnull @RefAware String key) {
     return System.getProperty(key);
   }
 
-  public static String getProperty(@com.simiacryptus.ref.lang.RefAware String key,
-                                   @com.simiacryptus.ref.lang.RefAware String defaultValue) {
+  public static String getProperty(@Nonnull @RefAware String key,
+                                   @RefAware String defaultValue) {
     return System.getProperty(key, defaultValue);
   }
 
@@ -85,7 +86,7 @@ public final class RefSystem {
     System.gc();
   }
 
-  public static String getenv(@com.simiacryptus.ref.lang.RefAware String key) {
+  public static String getenv(@RefAware String key) {
     return System.getenv(key);
   }
 }

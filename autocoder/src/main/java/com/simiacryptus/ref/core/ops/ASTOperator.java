@@ -23,10 +23,9 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
 import java.util.function.Consumer;
@@ -42,12 +41,17 @@ public abstract class ASTOperator extends ASTEditor {
     super(projectInfo, compilationUnit, file, true);
   }
 
-  protected final static ITypeBinding resolveBinding(@NotNull TypeDeclaration typeDeclaration) {
+  protected final static ITypeBinding resolveBinding(@Nonnull TypeDeclaration typeDeclaration) {
     return typeDeclaration.resolveBinding();
   }
 
-  @NotNull
-  protected final Stream<IMethodBinding> allMethods(@NotNull ITypeBinding targetClass) {
+  @Nonnull
+  public final SymbolIndex getSymbolIndex(@Nonnull ASTNode node) {
+    return getSymbolIndex(node, new SymbolIndex());
+  }
+
+  @Nonnull
+  protected final Stream<IMethodBinding> allMethods(@Nonnull ITypeBinding targetClass) {
     final ITypeBinding superclass = targetClass.getSuperclass();
     Stream<IMethodBinding> declaredMethods = Arrays.stream(targetClass.getDeclaredMethods());
     if (null != superclass && !superclass.getQualifiedName().equals(Object.class.getCanonicalName())) {
@@ -57,7 +61,7 @@ public abstract class ASTOperator extends ASTEditor {
     return declaredMethods.distinct();
   }
 
-  protected final void delete(@NotNull Statement statement) {
+  protected final void delete(@Nonnull Statement statement) {
     debug(1, statement, "Deleting %s", statement);
     final ASTNode parent = statement.getParent();
     if (parent instanceof Block) {
@@ -158,7 +162,7 @@ public abstract class ASTOperator extends ASTEditor {
     statement.delete();
   }
 
-  @NotNull
+  @Nonnull
   protected final List<IMethodBinding> enclosingMethods(@Nullable ASTNode node) {
     final ArrayList<IMethodBinding> list = new ArrayList<>();
     if (null != node) {
@@ -174,8 +178,8 @@ public abstract class ASTOperator extends ASTEditor {
     return list;
   }
 
-  @NotNull
-  protected final List<StatementOfInterest> exits(@NotNull Block block, int startAt, int endAt) {
+  @Nonnull
+  protected final List<StatementOfInterest> exits(@Nonnull Block block, int startAt, int endAt) {
     final ArrayList<StatementOfInterest> exits = exits_(block, startAt, endAt);
     debug(1, block, "Exits from %s to %s: \n\t%s", startAt, endAt, exits.stream().map(x ->
         String.format("%s at line %s", x.statement.toString().trim(), x.line)
@@ -183,7 +187,7 @@ public abstract class ASTOperator extends ASTEditor {
     return exits;
   }
 
-  @NotNull
+  @Nonnull
   protected final List<Statement> getEvaluableStatements(Expression expression) {
     final ArrayList<Statement> statements = new ArrayList<>();
     if (ASTUtil.isEvaluable(expression)) {
@@ -227,17 +231,12 @@ public abstract class ASTOperator extends ASTEditor {
     return statements;
   }
 
-  protected final int getLineNumber(@NotNull Block block, ASTNode node) {
+  protected final int getLineNumber(@Nonnull Block block, ASTNode node) {
     return block.statements().indexOf(ASTUtil.getStatement(node));
   }
 
-  @NotNull
-  public final SymbolIndex getSymbolIndex(@NotNull ASTNode node) {
-    return getSymbolIndex(node, new SymbolIndex());
-  }
-
-  @NotNull
-  protected final SymbolIndex getSymbolIndex(@NotNull ASTNode node, SymbolIndex symbolIndex) {
+  @Nonnull
+  protected final SymbolIndex getSymbolIndex(@Nonnull ASTNode node, @Nonnull SymbolIndex symbolIndex) {
     node.accept(new IndexSymbols(projectInfo, compilationUnit, file, symbolIndex) {
       @Override
       public void endVisit(QualifiedName node) {
@@ -256,7 +255,7 @@ public abstract class ASTOperator extends ASTEditor {
 
   @Nullable
   @SuppressWarnings("unused")
-  protected final Type getType(ASTNode node, @NotNull String name, boolean isDeclaration) {
+  protected final Type getType(@Nonnull ASTNode node, @Nonnull String name, boolean isDeclaration) {
     if (name.endsWith("[]")) {
       int rank = 0;
       while (name.endsWith("[]")) {
@@ -320,7 +319,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final Type getType(@NotNull Expression node, boolean isDeclaration) {
+  protected final Type getType(@Nonnull Expression node, boolean isDeclaration) {
     final ITypeBinding typeBinding = resolveTypeBinding(node);
     if (null == typeBinding) {
       warn(1, node, "Unresolved binding");
@@ -334,7 +333,7 @@ public abstract class ASTOperator extends ASTEditor {
     return getType(node, qualifiedName, isDeclaration);
   }
 
-  protected final boolean hasReturnValue(@NotNull LambdaExpression lambdaExpression) {
+  protected final boolean hasReturnValue(@Nonnull LambdaExpression lambdaExpression) {
     ASTNode parent = lambdaExpression.getParent();
     if (!(parent instanceof MethodInvocation)) {
       debug(lambdaExpression, "lambda %s has no return value", lambdaExpression);
@@ -344,7 +343,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final boolean hasReturnValue(@NotNull MethodInvocation methodInvocation, LambdaExpression lambdaExpression) {
+  protected final boolean hasReturnValue(@Nonnull MethodInvocation methodInvocation, LambdaExpression lambdaExpression) {
     final int argIndex = methodInvocation.arguments().indexOf(lambdaExpression);
     final ITypeBinding targetClass = resolveMethodBinding(methodInvocation).getParameterTypes()[argIndex];
     if (ASTUtil.derives(targetClass, Consumer.class)) {
@@ -378,12 +377,12 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final StatementOfInterest lastMention(@NotNull Block block, @NotNull SimpleName variable, int startAt) {
+  protected final StatementOfInterest lastMention(@Nonnull Block block, @Nonnull SimpleName variable, int startAt) {
     return lastMention(block, variable, startAt, block.statements().size(), 2);
   }
 
   @Nullable
-  protected final StatementOfInterest lastMention(@NotNull Block block, @NotNull SimpleName variable, int startAt, int endAt, int frames) {
+  protected final StatementOfInterest lastMention(@Nonnull Block block, @Nonnull SimpleName variable, int startAt, int endAt, int frames) {
     IBinding binding = resolveBinding(variable);
     if (null == binding) {
       warn(frames, variable, "Unresolved binding");
@@ -406,8 +405,8 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
-  @NotNull
-  protected final VariableDeclarationStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression, @NotNull Type type) {
+  @Nonnull
+  protected final VariableDeclarationStatement newLocalVariable(@Nonnull String identifier, @Nonnull Expression expression, @Nonnull Type type) {
     final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
     variableDeclarationFragment.setName(ast.newSimpleName(identifier));
     variableDeclarationFragment.setInitializer(copyIfAttached(expression));
@@ -417,7 +416,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final VariableDeclarationStatement newLocalVariable(@NotNull String identifier, @NotNull Expression expression) {
+  protected final VariableDeclarationStatement newLocalVariable(@Nonnull String identifier, @Nonnull Expression expression) {
     final Type type = getType(expression, true);
     if (null == type) {
       warn(expression, "Cannot resolve type of %s", expression);
@@ -426,7 +425,7 @@ public abstract class ASTOperator extends ASTEditor {
     return newLocalVariable(identifier, expression, type);
   }
 
-  protected final void removeMethods(@NotNull TypeDeclaration node, String methodName) {
+  protected final void removeMethods(@Nonnull TypeDeclaration node, String methodName) {
     for (final Iterator iterator = node.bodyDeclarations().iterator(); iterator.hasNext(); ) {
       final ASTNode bodyDecl = (ASTNode) iterator.next();
       if (bodyDecl instanceof MethodDeclaration) {
@@ -440,7 +439,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final <T extends ASTNode, R extends IBinding> R resolve(@Nullable T node, @NotNull Function<T, R> function) {
+  protected final <T extends ASTNode, R extends IBinding> R resolve(@Nullable T node, @Nonnull Function<T, R> function) {
     if (null == node) return null;
     R binding = function.apply(node);
     if (null != binding) return binding;
@@ -458,7 +457,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @SuppressWarnings("unused")
-  protected <T extends ASTNode> T findReparsed(@NotNull T node) {
+  protected <T extends ASTNode> T findReparsed(@Nonnull T node) {
     T reparsed = findReparsed1(node).orElse(null);
     if (null != reparsed) {
       return reparsed;
@@ -468,7 +467,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final IBinding resolveBinding(@NotNull Name node) {
+  protected final IBinding resolveBinding(@Nonnull Name node) {
     return resolve(node, Name::resolveBinding);
   }
 
@@ -504,17 +503,17 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final IVariableBinding resolveBinding(@NotNull VariableDeclaration node) {
+  protected final IVariableBinding resolveBinding(@Nonnull VariableDeclaration node) {
     return resolve(node, VariableDeclaration::resolveBinding);
   }
 
   @Nullable
-  protected final IMethodBinding resolveConstructorBinding(@NotNull ClassInstanceCreation node) {
+  protected final IMethodBinding resolveConstructorBinding(@Nonnull ClassInstanceCreation node) {
     return resolve(node, ClassInstanceCreation::resolveConstructorBinding);
   }
 
   @Nullable
-  protected final IMethodBinding resolveConstructorBinding(@NotNull ConstructorInvocation node) {
+  protected final IMethodBinding resolveConstructorBinding(@Nonnull ConstructorInvocation node) {
     return resolve(node, ConstructorInvocation::resolveConstructorBinding);
   }
 
@@ -534,12 +533,12 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  protected final ITypeBinding resolveTypeBinding(@NotNull Expression node) {
+  protected final ITypeBinding resolveTypeBinding(@Nonnull Expression node) {
     return resolve(node, Expression::resolveTypeBinding);
   }
 
-  @NotNull
-  protected final Block toBlock(@NotNull LambdaExpression lambdaExpression) {
+  @Nonnull
+  protected final Block toBlock(@Nonnull LambdaExpression lambdaExpression) {
     final ASTNode body = lambdaExpression.getBody();
     if (body instanceof Block) {
       return (Block) body;
@@ -558,8 +557,8 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
-  @NotNull
-  private ArrayList<StatementOfInterest> exits_(@NotNull Block block, int startAt, int endAt) {
+  @Nonnull
+  private ArrayList<StatementOfInterest> exits_(@Nonnull Block block, int startAt, int endAt) {
     final List statements = block.statements();
     final ArrayList<StatementOfInterest> exits = new ArrayList<>();
     for (int j = Math.max(0, startAt); j <= endAt; j++) {
@@ -598,8 +597,8 @@ public abstract class ASTOperator extends ASTEditor {
     return exits;
   }
 
-  @NotNull
-  private List<StatementOfInterest> exits_(@NotNull AST ast, @NotNull Supplier<Statement> supplier, @NotNull Consumer<Block> consumer) {
+  @Nonnull
+  private List<StatementOfInterest> exits_(@Nonnull AST ast, @Nonnull Supplier<Statement> supplier, @Nonnull Consumer<Block> consumer) {
     Statement body = supplier.get();
     if (!(body instanceof Block) && ASTUtil.isExit(body)) {
       final Block newBlock = ast.newBlock();
@@ -615,13 +614,13 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
-  private <T extends ASTNode> Optional<T> findReparsed1(@NotNull T node) {
+  private <T extends ASTNode> Optional<T> findReparsed1(@Nonnull T node) {
     ASTMapping reparsed = getReparsed();
     if (null == reparsed) return Optional.empty();
     return find(node, reparsed);
   }
 
-  private <T extends ASTNode> Optional<T> findReparsed2(@NotNull T node) {
+  private <T extends ASTNode> Optional<T> findReparsed2(@Nonnull T node) {
     ASTMapping reparsed = getReparsed();
     if (null != reparsed) {
       final Optional<T> optional = find(node, reparsed);
@@ -633,7 +632,7 @@ public abstract class ASTOperator extends ASTEditor {
     return optional;
   }
 
-  private <T extends ASTNode> Optional<T> find(@NotNull T node, @Nullable ASTMapping reparsed) {
+  private <T extends ASTNode> Optional<T> find(@Nonnull T node, @Nullable ASTMapping reparsed) {
     T any;
     final Optional<T> optional;
     if (null == reparsed) {
@@ -651,7 +650,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  private ArrayList<Integer> getTopTypeDelimiters(ASTNode node, @NotNull String typeString) {
+  private ArrayList<Integer> getTopTypeDelimiters(@Nonnull ASTNode node, @Nonnull String typeString) {
     int nesting = 0;
     ArrayList<Integer> delimiters = new ArrayList<>();
     for (int i = 0; i < typeString.length(); i++) {
@@ -669,7 +668,7 @@ public abstract class ASTOperator extends ASTEditor {
   }
 
   @Nullable
-  private Type getTypeParameter(ASTNode node, @NotNull String name, boolean isDeclaration) {
+  private Type getTypeParameter(@Nonnull ASTNode node, @Nonnull String name, boolean isDeclaration) {
     final String extendsPrefix = "? extends ";
     final String superPrefix = "? super ";
     if (name.startsWith(extendsPrefix)) {
@@ -689,9 +688,9 @@ public abstract class ASTOperator extends ASTEditor {
 
   public static class StatementOfInterest {
     public final int line;
-    @NotNull
+    @Nonnull
     public final Statement statement;
-    @NotNull
+    @Nonnull
     public final Block block;
 
     public StatementOfInterest(@Nonnull Statement statement, int line) {

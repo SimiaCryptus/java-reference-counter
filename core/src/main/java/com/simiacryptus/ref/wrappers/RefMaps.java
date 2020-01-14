@@ -24,12 +24,15 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import javax.annotation.Nonnull;
+
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefMaps {
 
-  public static <K, V1, V2> RefMap<K, V2> transformEntries(RefMap<K, V1> fromMap,
-                                                           @RefAware EntryTransformer<? super K, ? super V1, V2> transformer) {
+  @Nonnull
+  public static <K, V1, V2> RefMap<K, V2> transformEntries(@Nonnull RefMap<K, V1> fromMap,
+                                                           @Nonnull @RefAware EntryTransformer<? super K, ? super V1, V2> transformer) {
     final RefHashMap<K, V2> refHashMap = new RefHashMap<>();
     fromMap.forEach((k, v) -> refHashMap.put(RefUtil.addRef(k), transformer.transformEntry(k, v)));
     return refHashMap;

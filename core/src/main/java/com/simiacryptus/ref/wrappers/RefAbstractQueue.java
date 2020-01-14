@@ -21,25 +21,29 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Queue;
 
 public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> implements RefQueue<T> {
+  @Nonnull
   public abstract Queue<T> getInner();
 
-  @NotNull
+  @Nonnull
   public @Override
   RefAbstractQueue<T> addRef() {
     return (RefAbstractQueue<T>) super.addRef();
   }
 
+  @Nullable
   @Override
   public T element() {
     assertAlive();
     return RefUtil.addRef(getInner().element());
   }
 
+  @Nullable
   @Override
   public T peek() {
     assertAlive();

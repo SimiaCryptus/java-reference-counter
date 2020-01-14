@@ -21,14 +21,13 @@ package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.LogNodes;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
 @Mojo(name = "printAST")
 public class PrintAST extends AutoCoderMojo {
 
-  @NotNull
+  @Nonnull
   @Override
   public AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new AutoCoder(projectInfo) {

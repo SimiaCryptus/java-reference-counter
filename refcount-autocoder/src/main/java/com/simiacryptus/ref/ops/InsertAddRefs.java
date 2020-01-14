@@ -24,20 +24,20 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
 @RefIgnore
 public class InsertAddRefs extends RefASTOperator {
 
-  protected InsertAddRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  protected InsertAddRefs(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  public void addRefsToArguments(@NotNull ASTNode node, @NotNull List<ASTNode> arguments, IMethodBinding methodBinding) {
+  public void addRefsToArguments(@Nonnull ASTNode node, @Nonnull List<ASTNode> arguments, @Nonnull IMethodBinding methodBinding) {
     String name = methodBinding.getReturnType().getQualifiedName();
     for (int i = 0; i < arguments.size(); i++) {
       ASTNode arg = arguments.get(i);
@@ -67,7 +67,7 @@ public class InsertAddRefs extends RefASTOperator {
     return null;
   }
 
-  protected void addRef(@NotNull Expression expression) {
+  protected void addRef(@Nonnull Expression expression) {
     final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
     if (null == resolveTypeBinding) {
       warn(expression, "Unresolved binding for %s", expression);
@@ -129,12 +129,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyArrayInitializer extends InsertAddRefs {
 
-    public ModifyArrayInitializer(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyArrayInitializer(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull ArrayInitializer node) {
+    public void endVisit(@Nonnull ArrayInitializer node) {
       if (skip(node)) return;
       final ITypeBinding typeBinding = resolveTypeBinding(node);
       if (null != typeBinding) {
@@ -156,12 +156,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertAddRefs {
 
-    public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyMethodInvocation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull MethodInvocation node) {
+    public void endVisit(@Nonnull MethodInvocation node) {
       final Expression expression = node.getExpression();
       Object[] args = new Object[]{null == expression ? "?" : expression.toString(), node.getName()};
       debug(node, "Processing method %s.%s", args);
@@ -178,12 +178,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyAssignment extends InsertAddRefs {
 
-    public ModifyAssignment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyAssignment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull Assignment node) {
+    public void endVisit(@Nonnull Assignment node) {
       final Expression expression = node.getRightHandSide();
       if (shouldAddRef(expression)) addRef(expression);
     }
@@ -192,12 +192,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertAddRefs {
 
-    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull VariableDeclarationFragment node) {
+    public void endVisit(@Nonnull VariableDeclarationFragment node) {
       final Expression initializer = node.getInitializer();
       if (null != initializer && shouldAddRef(initializer)) addRef(initializer);
     }
@@ -206,12 +206,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyReturnStatement extends InsertAddRefs {
 
-    public ModifyReturnStatement(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyReturnStatement(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull ReturnStatement node) {
+    public void endVisit(@Nonnull ReturnStatement node) {
       final Expression expression = node.getExpression();
       if (isInstanceAccessor(expression)) addRef(expression);
     }
@@ -220,12 +220,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyConstructorInvocation extends InsertAddRefs {
 
-    public ModifyConstructorInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyConstructorInvocation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull ConstructorInvocation node) {
+    public void endVisit(@Nonnull ConstructorInvocation node) {
       if (skip(node)) return;
       final IMethodBinding methodBinding = resolveConstructorBinding(node);
       if (null == methodBinding) {
@@ -239,12 +239,12 @@ public class InsertAddRefs extends RefASTOperator {
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertAddRefs {
 
-    public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyClassInstanceCreation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull ClassInstanceCreation node) {
+    public void endVisit(@Nonnull ClassInstanceCreation node) {
       if (skip(node)) return;
       final IMethodBinding methodBinding = resolveConstructorBinding(node);
       if (null == methodBinding) {

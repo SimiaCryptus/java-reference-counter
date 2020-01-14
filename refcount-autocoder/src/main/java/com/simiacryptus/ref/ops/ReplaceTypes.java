@@ -28,10 +28,10 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.*;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -46,18 +46,18 @@ public class ReplaceTypes extends RefASTOperator {
 
   protected Map<String, String> replacements;
 
-  protected ReplaceTypes(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+  protected ReplaceTypes(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
     super(projectInfo, compilationUnit, file);
     this.replacements = classMapping(invert);
   }
 
-  @NotNull
+  @Nonnull
   @SuppressWarnings("unused")
   protected ArrayList<Object> getTypes() {
     final ArrayList<Object> names = new ArrayList<>();
     compilationUnit.accept(new ASTVisitor() {
       @Override
-      public void endVisit(@NotNull TypeDeclarationStatement node) {
+      public void endVisit(@Nonnull TypeDeclarationStatement node) {
         names.add(node.resolveBinding().getQualifiedName());
       }
 
@@ -72,7 +72,7 @@ public class ReplaceTypes extends RefASTOperator {
             x -> x.getValue().getCanonicalName()));
   }
 
-  @NotNull
+  @Nonnull
   public static BiMap<Class<?>, Class<?>> classMapping() {
     BiMap<Class<?>, Class<?>> replacements = HashBiMap.create();
     replacements.put(AbstractCollection.class, RefAbstractCollection.class);
@@ -128,7 +128,7 @@ public class ReplaceTypes extends RefASTOperator {
     return replacements;
   }
 
-  public void apply(@NotNull Name node) {
+  public void apply(@Nonnull Name node) {
     if (isImport(node)) {
       return;
     }
@@ -140,7 +140,7 @@ public class ReplaceTypes extends RefASTOperator {
   }
 
   @Nullable
-  protected Name replace(@NotNull Name node) {
+  protected Name replace(@Nonnull Name node) {
     final IBinding binding = resolveBinding(node);
     if (null == binding) {
       warn(node, "Unresolved binding: %s", node);
@@ -159,10 +159,9 @@ public class ReplaceTypes extends RefASTOperator {
     return null;
   }
 
-  private boolean isImport(@NotNull ASTNode node) {
+  private boolean isImport(@Nonnull ASTNode node) {
     if (node instanceof ImportDeclaration) return true;
     if (node instanceof Statement) return false;
-    if (node instanceof Block) return false;
     if (node instanceof TypeDeclaration) return false;
     final ASTNode parent = node.getParent();
     if (null == parent) return false;
@@ -170,12 +169,12 @@ public class ReplaceTypes extends RefASTOperator {
   }
 
   public static class ModifyCompilationUnit extends ReplaceTypes {
-    public ModifyCompilationUnit(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+    public ModifyCompilationUnit(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
     @Override
-    public void endVisit(@NotNull CompilationUnit node) {
+    public void endVisit(@Nonnull CompilationUnit node) {
       final Iterator<ImportDeclaration> iterator = node.imports().iterator();
       ArrayList<ImportDeclaration> newImports = new ArrayList<>();
       while (iterator.hasNext()) {
@@ -193,24 +192,24 @@ public class ReplaceTypes extends RefASTOperator {
   }
 
   public static class ModifyTypeParameter extends ReplaceTypes {
-    public ModifyTypeParameter(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+    public ModifyTypeParameter(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
     @Override
-    public void endVisit(@NotNull TypeParameter node) {
+    public void endVisit(@Nonnull TypeParameter node) {
       if (skip(node)) return;
       apply(node.getName());
     }
   }
 
   public static class ModifySimpleName extends ReplaceTypes {
-    public ModifySimpleName(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+    public ModifySimpleName(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
     @Override
-    public void endVisit(@NotNull SimpleName node) {
+    public void endVisit(@Nonnull SimpleName node) {
       if (skip(node)) return;
       if (node.getParent() instanceof QualifiedName) return;
       apply(node);
@@ -218,12 +217,12 @@ public class ReplaceTypes extends RefASTOperator {
   }
 
   public static class ModifyQualifiedName extends ReplaceTypes {
-    public ModifyQualifiedName(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, boolean invert) {
+    public ModifyQualifiedName(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
     @Override
-    public void endVisit(@NotNull QualifiedName node) {
+    public void endVisit(@Nonnull QualifiedName node) {
       if (skip(node)) return;
       apply(node);
     }

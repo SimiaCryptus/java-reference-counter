@@ -19,11 +19,10 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -31,13 +30,14 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {
 
-  @NotNull
-  public static <T> RefSet<T>[] addRefs(@NotNull RefSet<T>[] array) {
+  @Nonnull
+  public static <T> RefSet<T>[] addRefs(@Nonnull RefSet<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefSet::addRef)
         .toArray((x) -> new RefSet[x]);
   }
 
-  @NotNull RefSet<T> addRef();
+  @Nonnull
+  RefSet<T> addRef();
 
   @Override
   default RefSpliterator<T> spliterator() {

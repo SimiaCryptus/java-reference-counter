@@ -19,10 +19,13 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -48,6 +51,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
   public T next() {
     final Iterator<T> inner = getInner();
     assert !(inner instanceof ReferenceCounting);
+    assert inner != null;
     current = inner.next();
     return RefUtil.addRef(current);
   }
@@ -59,12 +63,13 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
     current = null;
   }
 
-  public @NotNull RefIteratorBase<T> track(ReferenceCounting obj) {
+  public @Nonnull
+  RefIteratorBase<T> track(ReferenceCounting obj) {
     list.add(obj);
     return this;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefIteratorBase<T> addRef() {
     return (RefIteratorBase<T>) super.addRef();

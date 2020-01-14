@@ -24,8 +24,8 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -36,19 +36,19 @@ public class RemoveTypeAnnotations extends RefASTOperator {
 
   List<String> toRemove;
 
-  public RemoveTypeAnnotations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, String... annotationsToRemove) {
+  public RemoveTypeAnnotations(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, String... annotationsToRemove) {
     super(projectInfo, compilationUnit, file);
     toRemove = Arrays.asList(annotationsToRemove);
   }
 
   @Override
-  public void endVisit(@NotNull TypeDeclaration node) {
+  public void endVisit(@Nonnull TypeDeclaration node) {
     final Iterator iterator = node.modifiers().iterator();
     while (iterator.hasNext()) {
       final Object next = iterator.next();
       if (next instanceof MarkerAnnotation) {
         String fullyQualifiedName = ((MarkerAnnotation) next).getTypeName().getFullyQualifiedName();
-        if (toRemove.stream().anyMatch(x->x.endsWith(fullyQualifiedName))) {
+        if (toRemove.stream().anyMatch(x -> x.endsWith(fullyQualifiedName))) {
           debug(node, "Removed @RefAware from %s", node.getName());
           iterator.remove();
         }

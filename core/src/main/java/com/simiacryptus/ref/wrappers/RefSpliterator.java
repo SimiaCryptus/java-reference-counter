@@ -20,9 +20,9 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Spliterator;
@@ -59,13 +59,13 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     return inner;
   }
 
-  @NotNull
-  public static <T> RefSpliterator<T>[] addRefs(@NotNull RefSpliterator<T>[] array) {
+  @Nonnull
+  public static <T> RefSpliterator<T>[] addRefs(@Nonnull RefSpliterator<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
         .toArray((x) -> new RefSpliterator[x]);
   }
 
-  @NotNull
+  @Nonnull
   public RefSpliterator<T> addRef() {
     return (RefSpliterator<T>) super.addRef();
   }
@@ -80,14 +80,14 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
     return size;
   }
 
-  @NotNull
+  @Nonnull
   public RefSpliterator<T> track(ReferenceCounting obj) {
     list.add(obj);
     return this;
   }
 
   @Override
-  public boolean tryAdvance(@NotNull @RefAware Consumer<? super T> action) {
+  public boolean tryAdvance(@Nonnull @RefAware Consumer<? super T> action) {
     return getInner().tryAdvance(t -> action.accept(getRef(t)));
   }
 
@@ -132,7 +132,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.estimateSize();
     }
 
-    @NotNull
+    @Nonnull
     public RefSpliterator.OfDouble track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -143,7 +143,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.tryAdvance(action);
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public RefSpliterator.OfDouble trySplit() {
       return new RefSpliterator.OfDouble(this.inner.trySplit());
@@ -178,7 +178,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.estimateSize();
     }
 
-    @NotNull
+    @Nonnull
     public RefSpliterator.OfLong track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -191,7 +191,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.tryAdvance(action);
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public RefSpliterator.OfLong trySplit() {
       return new RefSpliterator.OfLong(this.inner.trySplit());
@@ -226,7 +226,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.estimateSize();
     }
 
-    @NotNull
+    @Nonnull
     public RefSpliterator.OfInt track(ReferenceCounting obj) {
       list.add(obj);
       return this;
@@ -237,7 +237,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       return this.inner.tryAdvance(action);
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public RefSpliterator.OfInt trySplit() {
       return new RefSpliterator.OfInt(this.inner.trySplit());

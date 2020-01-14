@@ -23,49 +23,51 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.util.Formatter;
 
 @RefIgnore
 @SuppressWarnings("unused")
 public final class RefString extends ReferenceCountingBase
-    implements java.io.Serializable, Comparable<CharSequence>, CharSequence {
+    implements Serializable, Comparable<CharSequence>, CharSequence {
 
+  @Nonnull
   private final CharSequence inner;
 
   public RefString() {
     inner = new String();
   }
 
-  public RefString(@com.simiacryptus.ref.lang.RefAware String original) {
+  public RefString(@Nonnull @RefAware String original) {
     inner = new String(original);
   }
 
-  public RefString(char value[]) {
+  public RefString(@Nonnull char value[]) {
     inner = new String(value);
   }
 
-  public RefString(char value[], int offset, int count) {
+  public RefString(@Nonnull char value[], int offset, int count) {
     inner = new String(value, offset, count);
   }
 
-  public RefString(int[] codePoints, int offset, int count) {
+  public RefString(@Nonnull int[] codePoints, int offset, int count) {
     inner = new String(codePoints, offset, count);
   }
 
   @Deprecated
-  public RefString(byte ascii[], int hibyte, int offset, int count) {
+  public RefString(@Nonnull byte ascii[], int hibyte, int offset, int count) {
     inner = new String(ascii, hibyte, offset, count);
   }
 
   @Deprecated
-  public RefString(byte ascii[], int hibyte) {
+  public RefString(@Nonnull byte ascii[], int hibyte) {
     inner = new String(ascii, hibyte);
   }
 
-  public static String format(@com.simiacryptus.ref.lang.RefAware String format, @RefAware @Nonnull Object... args) {
+  @Nonnull
+  public static String format(@Nonnull @RefAware String format, @RefAware @Nonnull Object... args) {
     final String string = new Formatter().format(format, args).toString();
     RefUtil.freeRefs(args);
     return string;
@@ -87,7 +89,7 @@ public final class RefString extends ReferenceCountingBase
   }
 
   @Override
-  public int compareTo(@NotNull @com.simiacryptus.ref.lang.RefAware CharSequence other) {
+  public int compareTo(@Nonnull @RefAware CharSequence other) {
     int len1 = inner.length();
     int len2 = other.length();
     int lim = Math.min(len1, len2);

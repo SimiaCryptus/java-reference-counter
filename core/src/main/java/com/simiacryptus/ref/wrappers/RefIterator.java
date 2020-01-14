@@ -22,13 +22,15 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Iterator;
 
 @RefIgnore
 public class RefIterator<T> extends RefIteratorBase<T> {
 
+  @Nullable
   private final Iterator<T> inner;
 
   public RefIterator(@RefAware Iterator<T> inner) {
@@ -44,12 +46,13 @@ public class RefIterator<T> extends RefIteratorBase<T> {
     return inner;
   }
 
-  public @NotNull RefIterator<T> track(ReferenceCounting obj) {
+  public @Nonnull
+  RefIterator<T> track(ReferenceCounting obj) {
     super.track(obj);
     return this;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefIterator<T> addRef() {
     return (RefIterator<T>) super.addRef();

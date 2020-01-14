@@ -19,10 +19,9 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 
@@ -30,11 +29,12 @@ import java.util.concurrent.BlockingQueue;
 @SuppressWarnings("unused")
 public interface RefBlockingQueue<T> extends RefQueue<T>, BlockingQueue<T> {
 
-  @NotNull
-  public static <T> RefBlockingQueue<T>[] addRefs(@NotNull RefBlockingQueue<T>[] array) {
+  @Nonnull
+  public static <T> RefBlockingQueue<T>[] addRefs(@Nonnull RefBlockingQueue<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefBlockingQueue::addRef)
         .toArray((x) -> new RefBlockingQueue[x]);
   }
 
-  @NotNull RefBlockingQueue<T> addRef();
+  @Nonnull
+  RefBlockingQueue<T> addRef();
 }

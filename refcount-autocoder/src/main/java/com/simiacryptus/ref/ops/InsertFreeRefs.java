@@ -25,10 +25,9 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -37,11 +36,11 @@ import java.util.Optional;
 @RefIgnore
 public class InsertFreeRefs extends RefASTOperator {
 
-  protected InsertFreeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  protected InsertFreeRefs(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  private static int firstLine(@NotNull Block body, int declaredAt) {
+  private static int firstLine(@Nonnull Block body, int declaredAt) {
     final List<Statement> statements = body.statements();
     for (int i = Math.max(declaredAt, 0); i < statements.size(); i++) {
       final Statement statement = statements.get(i);
@@ -59,10 +58,6 @@ public class InsertFreeRefs extends RefASTOperator {
 
   public void addFreeRef(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding) {
     if (skip(declaration)) return;
-    if (null == typeBinding) {
-      warn(declaration, "Unresolved binding");
-      return;
-    }
     debug(1, declaration, "addFreeRef: %s", declaration);
     if (isRefCounted(declaration, typeBinding)) {
       final SimpleName name = declaration.getName();
@@ -113,7 +108,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  public void add_freeRef_entry(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding, @NotNull SimpleName name, @NotNull ASTNode parent) {
+  public void add_freeRef_entry(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding, @Nonnull SimpleName name, @Nonnull ASTNode parent) {
     final ASTNode fieldParent = parent.getParent();
     if (fieldParent instanceof TypeDeclaration) {
       final TypeDeclaration typeDeclaration = (TypeDeclaration) fieldParent;
@@ -134,7 +129,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  public void insertFreeRef(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block body, int line, boolean isNonNull) {
+  public void insertFreeRef(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block body, int line, boolean isNonNull) {
     final Statement statement = isNonNull ? newFreeRef(node, typeBinding) : freeRefStatement(node, typeBinding);
     if (line < 0) {
       body.statements().add(0, statement);
@@ -144,12 +139,8 @@ public class InsertFreeRefs extends RefASTOperator {
     debug(1, body, "Added freeRef for value %s (%s) at line %s", node, typeBinding.getQualifiedName(), line);
   }
 
-  public void insertFreeRefs(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block body, int declaredAt, boolean isNonNull) {
+  public void insertFreeRefs(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block body, int declaredAt, boolean isNonNull) {
     debug(1, node, "Insert freeRef for %s", node);
-    if (null == body) {
-      warn(node, "No body for %s", node);
-      return;
-    }
     declaredAt = firstLine(body, declaredAt);
     final StatementOfInterest lastMention = lastMention(body, node, declaredAt);
     if (null == lastMention) {
@@ -228,7 +219,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  protected void freeExpressionResult(@NotNull Expression node, @NotNull ITypeBinding typeBinding) {
+  protected void freeExpressionResult(@Nonnull Expression node, @Nonnull ITypeBinding typeBinding) {
     if (isRefCounted(node, typeBinding)) {
       debug(node, "Ref-returning method: %s", node);
       final ASTNode parent = node.getParent();
@@ -297,13 +288,13 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  protected boolean canFlowPast(@NotNull Block body, int line) {
+  protected boolean canFlowPast(@Nonnull Block body, int line) {
     final List statements = body.statements();
     if (statements.size() - 1 > line) return true;
     return !isTerminal((Statement) statements.get(line));
   }
 
-  protected void freeRefs(@NotNull Expression node, @NotNull ITypeBinding typeBinding, boolean isNonNull) {
+  protected void freeRefs(@Nonnull Expression node, @Nonnull ITypeBinding typeBinding, boolean isNonNull) {
     final LambdaExpression lambda = ASTUtil.getLambda(node);
     if (null != lambda) {
       toBlock(lambda);
@@ -334,6 +325,7 @@ public class InsertFreeRefs extends RefASTOperator {
         return;
       }
       final Type type = getType(expression, returnTypeBinding, true);
+      assert type != null;
       final VariableDeclarationStatement localVariable = newLocalVariable(identifier, expression, type);
       replace(expression, ast.newSimpleName(identifier));
       final List statements = block.statements();
@@ -360,7 +352,7 @@ public class InsertFreeRefs extends RefASTOperator {
   }
 
   @Nullable
-  protected Type getType(@NotNull Expression node, @NotNull ITypeBinding typeBinding, boolean isDeclaration) {
+  protected Type getType(@Nonnull Expression node, @Nonnull ITypeBinding typeBinding, boolean isDeclaration) {
     final Type type = getType(node, typeBinding.getQualifiedName(), isDeclaration);
     if (null == type) {
       final ITypeBinding superclass = typeBinding.getSuperclass();
@@ -417,7 +409,7 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  protected void insertFreeRef_ComplexReturn(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block block, int line, boolean isNonNull) {
+  protected void insertFreeRef_ComplexReturn(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block block, int line, boolean isNonNull) {
     debug(1, node, "Adding freeRef for %s at %s", node, line);
     ReturnStatement returnStatement = (ReturnStatement) block.statements().get(line);
     final String identifier = getTempIdentifier(node);
@@ -441,7 +433,7 @@ public class InsertFreeRefs extends RefASTOperator {
   }
 
   @SuppressWarnings("unused")
-  protected void insertFreeRef_ComplexThrow(@NotNull ITypeBinding typeBinding, @NotNull SimpleName node, @NotNull Block block, int line, boolean isNonNull) {
+  protected void insertFreeRef_ComplexThrow(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block block, int line, boolean isNonNull) {
     ThrowStatement throwStatement = (ThrowStatement) block.statements().get(line);
     final String identifier = getTempIdentifier(block);
     final List statements = block.statements();
@@ -505,8 +497,8 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
-  @NotNull
-  private Assignment setToNull(@NotNull SimpleName name) {
+  @Nonnull
+  private Assignment setToNull(@Nonnull SimpleName name) {
     final Assignment assignment = ast.newAssignment();
     assignment.setLeftHandSide(copyIfAttached(name));
     assignment.setOperator(Assignment.Operator.ASSIGN);
@@ -516,12 +508,12 @@ public class InsertFreeRefs extends RefASTOperator {
 
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertFreeRefs {
-    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull VariableDeclarationFragment declaration) {
+    public void endVisit(@Nonnull VariableDeclarationFragment declaration) {
       if (skip(declaration)) return;
       debug(declaration, "VariableDeclarationFragment: %s", declaration);
       final ASTNode parent = declaration.getParent();
@@ -568,12 +560,12 @@ public class InsertFreeRefs extends RefASTOperator {
 
   @RefIgnore
   public static class ModifySingleVariableDeclaration extends InsertFreeRefs {
-    public ModifySingleVariableDeclaration(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifySingleVariableDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull SingleVariableDeclaration declaration) {
+    public void endVisit(@Nonnull SingleVariableDeclaration declaration) {
       if (skip(declaration)) return;
       debug(declaration, "SingleVariableDeclaration: %s", declaration);
       final IVariableBinding variableBinding = resolveBinding(declaration);
@@ -587,12 +579,12 @@ public class InsertFreeRefs extends RefASTOperator {
 
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertFreeRefs {
-    public ModifyClassInstanceCreation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyClassInstanceCreation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull ClassInstanceCreation node) {
+    public void endVisit(@Nonnull ClassInstanceCreation node) {
       debug(node, "Processing constructor: %s", node);
       if (skip(node)) {
         debug(node, "Skip");
@@ -609,12 +601,12 @@ public class InsertFreeRefs extends RefASTOperator {
 
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertFreeRefs {
-    public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyMethodInvocation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull MethodInvocation node) {
+    public void endVisit(@Nonnull MethodInvocation node) {
       if (skip(node)) return;
       //astRewrite.track(node);
       if (Arrays.asList("addRef", "addRefs").contains(node.getName().toString())) return;

@@ -23,7 +23,6 @@ import com.simiacryptus.ref.core.ops.ASTEditor;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,7 @@ public abstract class AutoCoder {
   }
 
   @SuppressWarnings("unused")
-  @NotNull
+  @Nonnull
   protected SymbolIndex getSymbolIndex() {
     final SymbolIndex index = new SymbolIndex();
     scan((projectInfo, cu, file) -> new IndexSymbols(projectInfo, cu, file, index));
@@ -59,14 +58,14 @@ public abstract class AutoCoder {
     return parallel;
   }
 
-  @NotNull
+  @Nonnull
   @SuppressWarnings("unused")
   public AutoCoder setParallel(boolean parallel) {
     this.parallel = parallel;
     return this;
   }
 
-  public static String read(@NotNull File file) {
+  public static String read(@Nonnull File file) {
     try {
       return FileUtils.readFileToString(file, "UTF-8");
     } catch (IOException e) {
@@ -77,11 +76,11 @@ public abstract class AutoCoder {
   @Nonnull
   public abstract void rewrite();
 
-  protected int rewrite(@NotNull VisitorFactory visitorFactory) {
+  protected int rewrite(@Nonnull VisitorFactory visitorFactory) {
     return rewrite(visitorFactory, isParallel(), false);
   }
 
-  protected int rewrite(@NotNull VisitorFactory visitorFactory, boolean parallel, boolean failAtEnd) {
+  protected int rewrite(@Nonnull VisitorFactory visitorFactory, boolean parallel, boolean failAtEnd) {
     Stream<Map.Entry<File, CompilationUnit>> stream = getProjectInfo().parse().entrySet().stream();
     if (parallel) stream = stream.parallel();
     final ArrayList<String> errors = new ArrayList<>();
@@ -116,7 +115,7 @@ public abstract class AutoCoder {
     return sum;
   }
 
-  protected void scan(@NotNull VisitorFactory visitor) {
+  protected void scan(@Nonnull VisitorFactory visitor) {
     getProjectInfo().parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
@@ -130,6 +129,7 @@ public abstract class AutoCoder {
   }
 
   public interface VisitorFactory {
-    @NotNull ASTEditor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
+    @Nonnull
+    ASTEditor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
   }
 }

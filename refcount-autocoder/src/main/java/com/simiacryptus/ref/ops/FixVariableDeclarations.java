@@ -25,9 +25,9 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,12 +37,12 @@ import java.util.stream.Collectors;
 @RefIgnore
 public class FixVariableDeclarations extends RefASTOperator {
 
-  protected FixVariableDeclarations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  protected FixVariableDeclarations(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Nullable
-  protected Type apply(@NotNull Type type, @Nullable Expression initializer) {
+  protected Type apply(@Nonnull Type type, @Nullable Expression initializer) {
     final ITypeBinding typeBinding = resolveBinding(type);
     if (null == typeBinding) {
       warn(type, "Unresolved binding for %s", type);
@@ -86,7 +86,7 @@ public class FixVariableDeclarations extends RefASTOperator {
   }
 
   @Nullable
-  protected Type commonInterface(Type node, @NotNull ITypeBinding typeBinding, @NotNull ITypeBinding initializerType) {
+  protected Type commonInterface(@Nonnull Type node, @Nonnull ITypeBinding typeBinding, @Nonnull ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
       return getType(node, typeBinding.getQualifiedName(), true);
     }
@@ -97,7 +97,7 @@ public class FixVariableDeclarations extends RefASTOperator {
     return null;
   }
 
-  protected List<ITypeBinding> typePath(@NotNull ITypeBinding typeBinding) {
+  protected List<ITypeBinding> typePath(@Nonnull ITypeBinding typeBinding) {
     final ArrayList<ITypeBinding> list = new ArrayList<>();
     list.add(typeBinding);
     final ITypeBinding superclass = typeBinding.getSuperclass();
@@ -112,7 +112,7 @@ public class FixVariableDeclarations extends RefASTOperator {
 
   @Nullable
   @SuppressWarnings("unused")
-  protected Type commonSuperclass(Type node, @NotNull ITypeBinding typeBinding, @NotNull ITypeBinding initializerType) {
+  protected Type commonSuperclass(@Nonnull Type node, @Nonnull ITypeBinding typeBinding, @Nonnull ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
       return getType(node, typeBinding.getQualifiedName(), true);
     }
@@ -121,17 +121,18 @@ public class FixVariableDeclarations extends RefASTOperator {
       final Type commonSuperclass = commonSuperclass(node, superclass, initializerType);
       if (null != commonSuperclass) return commonSuperclass;
     }
+    assert superclass != null;
     return commonInterface(node, superclass, initializerType);
   }
 
   @RefIgnore
   public static class ModifyVariableDeclarationStatement extends FixVariableDeclarations {
-    public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+    public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull VariableDeclarationStatement node) {
+    public void endVisit(@Nonnull VariableDeclarationStatement node) {
       final Type type = node.getType();
       final List fragments = node.fragments();
       if (1 != fragments.size()) {
@@ -145,12 +146,12 @@ public class FixVariableDeclarations extends RefASTOperator {
 
   @RefIgnore
   public static class ModifyFieldDeclaration extends FixVariableDeclarations {
-    public ModifyFieldDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+    public ModifyFieldDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull FieldDeclaration node) {
+    public void endVisit(@Nonnull FieldDeclaration node) {
       final Type type = node.getType();
       final List<VariableDeclarationFragment> fragments = node.fragments();
       if (1 != fragments.size()) {
@@ -164,7 +165,7 @@ public class FixVariableDeclarations extends RefASTOperator {
 
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends FixVariableDeclarations {
-    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+    public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 

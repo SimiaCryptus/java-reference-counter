@@ -24,14 +24,14 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RefIgnore
 public class RefLists {
-  @NotNull
+  @Nonnull
   public static <T> RefList<RefList<T>> partition(@RefAware List<T> list, int size) {
     final List<T> inner;
     if (list instanceof RefList) {

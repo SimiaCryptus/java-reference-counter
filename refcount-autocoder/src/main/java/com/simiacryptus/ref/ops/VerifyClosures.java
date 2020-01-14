@@ -20,15 +20,18 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ASTUtil;
+import com.simiacryptus.ref.core.CollectableException;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,15 +39,16 @@ import java.util.stream.Collectors;
 @RefIgnore
 public class VerifyClosures extends VerifyClassMembers {
 
-  public VerifyClosures(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public VerifyClosures(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull AnonymousClassDeclaration node) {
+  public void endVisit(@Nonnull AnonymousClassDeclaration node) {
     final List<SimpleName> closures = getClosures(node);
     if (closures.size() > 0) {
       final ITypeBinding typeBinding = resolveBinding(node);
+      assert typeBinding != null;
       final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
       if (isRefCounted(node, typeBinding)) {
         debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
@@ -78,29 +82,8 @@ public class VerifyClosures extends VerifyClassMembers {
     }
   }
 
-  protected void verifyClassDeclarations(Collection<SimpleName> closures, List<ASTNode> bodyDeclarations) {
-    for (MethodDeclaration methodDeclaration : VerifyClassMembers.methods(bodyDeclarations)) {
-      verifyClassMethod(methodDeclaration.getName().toString(), methodDeclaration.getBody().statements(), closures);
-    }
-  }
-
-  protected SimpleName getName(SymbolIndex.BindingID bindingID) {
-    ASTNode definition = index.definitions.get(bindingID);
-    if (definition instanceof VariableDeclarationFragment) {
-      return ((VariableDeclarationFragment) definition).getName();
-    } else if (definition instanceof SingleVariableDeclaration) {
-      return ((SingleVariableDeclaration) definition).getName();
-    } else if (definition instanceof FieldDeclaration) {
-      List fragments = ((FieldDeclaration) definition).fragments();
-      if (fragments.size() > 1) fatal(definition, "Multi-definition not supported: %s", bindingID);
-      return ((VariableDeclarationFragment) fragments.get(0)).getName();
-    } else {
-      fatal(definition, "Unhandled type %s for %s", definition.getClass().getSimpleName(), bindingID);
-      return null;
-    }
-  }
   @Override
-  public void endVisit(@NotNull LambdaExpression node) {
+  public void endVisit(@Nonnull LambdaExpression node) {
     final IMethodBinding methodBinding = resolveMethodBinding(node);
     if (null == methodBinding) return;
     final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(methodBinding);
@@ -121,7 +104,38 @@ public class VerifyClosures extends VerifyClassMembers {
     }
   }
 
-  protected List<SimpleName> getClosures(@NotNull ASTNode node) {
+  protected void verifyClassDeclarations(@Nonnull Collection<SimpleName> closures, @Nonnull List<ASTNode> bodyDeclarations) {
+    ArrayList<CollectableException> exceptions = new ArrayList<>();
+    for (MethodDeclaration methodDeclaration : VerifyClassMembers.methods(bodyDeclarations)) {
+      try {
+        verifyClassMethod(methodDeclaration.getName().toString(), methodDeclaration.getBody().statements(), closures);
+      } catch (CollectableException e) {
+        exceptions.add(e);
+      }
+    }
+    if (!exceptions.isEmpty()) {
+      throw CollectableException.combine(exceptions);
+    }
+  }
+
+  @Nullable
+  protected SimpleName getName(SymbolIndex.BindingID bindingID) {
+    ASTNode definition = index.definitions.get(bindingID);
+    if (definition instanceof VariableDeclarationFragment) {
+      return ((VariableDeclarationFragment) definition).getName();
+    } else if (definition instanceof SingleVariableDeclaration) {
+      return ((SingleVariableDeclaration) definition).getName();
+    } else if (definition instanceof FieldDeclaration) {
+      List fragments = ((FieldDeclaration) definition).fragments();
+      if (fragments.size() > 1) fatal(definition, "Multi-definition not supported: %s", bindingID);
+      return ((VariableDeclarationFragment) fragments.get(0)).getName();
+    } else {
+      fatal(definition, "Unhandled type %s for %s", definition.getClass().getSimpleName(), bindingID);
+      return null;
+    }
+  }
+
+  protected List<SimpleName> getClosures(@Nonnull ASTNode node) {
     return VisitClosures.getClosures(this, index, node).stream().filter(bindingID -> {
       ASTNode definition = index.definitions.get(bindingID);
       if (definition instanceof VariableDeclarationFragment) {

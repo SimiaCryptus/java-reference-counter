@@ -22,9 +22,9 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 @SuppressWarnings("unused")
 public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements RefDeque<T> {
 
-  @NotNull
+  @Nonnull
   private final ConcurrentLinkedDeque<T> inner;
 
   public RefConcurrentLinkedDeque() {
@@ -48,7 +48,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
     return RefUtil.addRef(getInner().getFirst());
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Deque<T> getInner() {
     return inner;
@@ -61,13 +61,13 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
     return RefUtil.addRef(getInner().getLast());
   }
 
-  @NotNull
-  public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@NotNull RefConcurrentLinkedDeque<T>[] array) {
+  @Nonnull
+  public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@Nonnull RefConcurrentLinkedDeque<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)
         .toArray((x) -> new RefConcurrentLinkedDeque[x]);
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefConcurrentLinkedDeque<T> addRef() {
     return (RefConcurrentLinkedDeque<T>) super.addRef();
@@ -80,7 +80,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
   }
 
   @Override
-  public boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
+  public boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final Deque<T> inner = getInner();
     final boolean b = c.stream().allMatch(inner::add);
@@ -100,7 +100,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
     getInner().addLast(t);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefIterator<T> descendingIterator() {
     assertAlive();

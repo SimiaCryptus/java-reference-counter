@@ -24,10 +24,9 @@ import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +39,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
   @Nullable
   private ASTMapping reparsed = null;
 
-  public ASTEditor(@NotNull CompilationUnit compilationUnit, ProjectInfo projectInfo, @Nonnull File file) {
+  public ASTEditor(@Nonnull CompilationUnit compilationUnit, ProjectInfo projectInfo, @Nonnull File file) {
     super(compilationUnit, file);
     this.projectInfo = projectInfo;
     this.initialContent = AutoCoder.read(this.file);
@@ -79,8 +78,37 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return !AutoCoder.read(this.file).equals(initialContent);
   }
 
-  @NotNull
-  protected <T extends ASTNode> T copyIfAttached(@NotNull T node) {
+  @Nonnull
+  public ASTEditor.Span getSpan(@Nonnull ASTNode node) {
+    final int startPosition = node.getStartPosition();
+    final int length = node.getLength();
+
+    return new Span(
+        file,
+        compilationUnit.getLineNumber(startPosition),
+        compilationUnit.getColumnNumber(startPosition),
+        compilationUnit.getLineNumber(startPosition + length),
+        compilationUnit.getColumnNumber(startPosition + length)
+    );
+  }
+
+  @Override
+  public void preVisit(ASTNode node) {
+    super.preVisit(node);
+  }
+
+  @Override
+  public boolean preVisit2(ASTNode node) {
+    return super.preVisit2(node);
+  }
+
+  @Override
+  public void postVisit(ASTNode node) {
+    super.postVisit(node);
+  }
+
+  @Nonnull
+  protected <T extends ASTNode> T copyIfAttached(@Nonnull T node) {
     if (node.getParent() == null) {
       return node;
     } else {
@@ -89,7 +117,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  protected final void replace(@NotNull ASTNode child, ASTNode newChild) {
+  protected final void replace(@Nonnull ASTNode child, ASTNode newChild) {
     final ASTNode parent = child.getParent();
     if (parent instanceof QualifiedName) {
       final QualifiedName qualifiedName = (QualifiedName) parent;
@@ -120,7 +148,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  @NotNull
+  @Nonnull
   protected <T extends ASTNode> ASTMapping update(boolean write, boolean format) {
     if (write) {
       try {
@@ -150,27 +178,13 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
-  @NotNull
-  public ASTEditor.Span getSpan(@NotNull ASTNode node) {
-    final int startPosition = node.getStartPosition();
-    final int length = node.getLength();
-
-    return new Span(
-        file,
-        compilationUnit.getLineNumber(startPosition),
-        compilationUnit.getColumnNumber(startPosition),
-        compilationUnit.getLineNumber(startPosition + length),
-        compilationUnit.getColumnNumber(startPosition + length)
-    );
-  }
-
-  @NotNull
-  private ASTMapping repairAndUpdate(boolean format, @NotNull CompilationUnit compilationUnit0, @NotNull ASTMapping align0) {
+  @Nonnull
+  private ASTMapping repairAndUpdate(boolean format, @Nonnull CompilationUnit compilationUnit0, @Nonnull ASTMapping align0) {
     return repairAndUpdate(format, compilationUnit0, align0, 3);
   }
 
-  @NotNull
-  private ASTMapping repairAndUpdate(boolean format, @NotNull CompilationUnit compilationUnit0, @NotNull ASTMapping align0, int retries) {
+  @Nonnull
+  private ASTMapping repairAndUpdate(boolean format, @Nonnull CompilationUnit compilationUnit0, @Nonnull ASTMapping align0, int retries) {
     compilationUnit0.recordModifications();
     align0.mismatches.forEach((from, to) -> {
       replace(to, ASTNode.copySubtree(to.getAST(), from));
@@ -208,8 +222,8 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     public final HashMap<ASTNode, ASTNode> mismatches = new HashMap<>();
     public final List<String> errors = new ArrayList<>();
 
-    @NotNull
-    public ASTMapping putAll(@NotNull ASTMapping other) {
+    @Nonnull
+    public ASTMapping putAll(@Nonnull ASTMapping other) {
       matches.putAll(other.matches);
       mismatches.putAll(other.mismatches);
       errors.addAll(other.errors);

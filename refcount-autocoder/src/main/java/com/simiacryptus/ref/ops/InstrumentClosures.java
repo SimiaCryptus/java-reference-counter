@@ -25,7 +25,6 @@ import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -33,22 +32,22 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RefIgnore
 public class InstrumentClosures extends VisitClosures {
 
-  protected InstrumentClosures(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  protected InstrumentClosures(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  public void addRefcounting(@Nonnull AnonymousClassDeclaration node, @NotNull Collection<SymbolIndex.BindingID> closures) {
+  public void addRefcounting(@Nonnull AnonymousClassDeclaration node, @Nonnull Collection<SymbolIndex.BindingID> closures) {
     final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(node, "_free");
     if (freeMethodOpt.isPresent()) {
       closures.stream().map(index.definitions::get).filter(x -> x != null).forEach(closureNode -> {
         if (closureNode instanceof SingleVariableDeclaration) {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
+          assert type != null;
           if (isRefCounted(node, type)) {
             final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
             final Block freeMethodBody = RefUtil.get(freeMethodOpt).getBody();
@@ -79,7 +78,7 @@ public class InstrumentClosures extends VisitClosures {
     node.bodyDeclarations().add(initializer);
   }
 
-  public void wrapInterface(@NotNull Expression node, @NotNull Collection<SymbolIndex.BindingID> closures) {
+  public void wrapInterface(@Nonnull Expression node, @Nonnull Collection<SymbolIndex.BindingID> closures) {
     final List<ASTNode> refClosures = closures.stream().filter(bindingID -> {
       final ASTNode definition = index.definitions.get(bindingID);
       if (definition == null) {
@@ -88,6 +87,7 @@ public class InstrumentClosures extends VisitClosures {
       } else if (definition instanceof SingleVariableDeclaration) {
         final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) definition;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
+        assert type != null;
         if (isRefCounted(node, type)) {
           return true;
         } else {
@@ -96,6 +96,7 @@ public class InstrumentClosures extends VisitClosures {
       } else if (definition instanceof VariableDeclarationFragment) {
         final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) definition;
         final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
+        assert type != null;
         if (isRefCounted(node, type)) {
           return true;
         } else {
@@ -126,11 +127,13 @@ public class InstrumentClosures extends VisitClosures {
           final SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) closureNode;
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
+          assert type != null;
           methodInvocation.arguments().add(wrapAddRef(name, type));
         } else if (closureNode instanceof VariableDeclarationFragment) {
           final VariableDeclarationFragment singleVariableDeclaration = (VariableDeclarationFragment) closureNode;
           final ITypeBinding type = getTypeBinding(singleVariableDeclaration);
           final SimpleName name = ast.newSimpleName(singleVariableDeclaration.getName().getIdentifier());
+          assert type != null;
           methodInvocation.arguments().add(wrapAddRef(name, type));
         }
       });
@@ -139,15 +142,16 @@ public class InstrumentClosures extends VisitClosures {
 
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InstrumentClosures {
-    public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+    public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull AnonymousClassDeclaration node) {
+    public void endVisit(@Nonnull AnonymousClassDeclaration node) {
       final Collection<SymbolIndex.BindingID> closures = getClosures(node);
       if (closures.size() > 0) {
         final ITypeBinding typeBinding = resolveBinding(node);
+        assert typeBinding != null;
         final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
         if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object") && typeBinding.getInterfaces().length > 0) {
           debug(node, String.format("Closures in anonymous interface %s at %s: %s",
@@ -173,12 +177,12 @@ public class InstrumentClosures extends VisitClosures {
 
   @RefIgnore
   public static class ModifyLambdaExpression extends InstrumentClosures {
-    public ModifyLambdaExpression(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+    public ModifyLambdaExpression(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull LambdaExpression node) {
+    public void endVisit(@Nonnull LambdaExpression node) {
       final IMethodBinding methodBinding = resolveMethodBinding(node);
       if (null == methodBinding) return;
       final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(methodBinding);

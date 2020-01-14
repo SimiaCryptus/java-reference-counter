@@ -24,8 +24,8 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -33,11 +33,11 @@ import java.util.List;
 @RefIgnore
 public class RemoveRefs extends RefASTOperator {
 
-  protected RemoveRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  protected RemoveRefs(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  protected boolean isRefUtil(@NotNull MethodInvocation node) {
+  protected boolean isRefUtil(@Nonnull MethodInvocation node) {
     final Expression expression = node.getExpression();
     if (expression instanceof SimpleName) {
       return ((SimpleName) expression).getFullyQualifiedName().equals("RefUtil");
@@ -66,12 +66,12 @@ public class RemoveRefs extends RefASTOperator {
   }
 
   public static class ModifyMethodInvocation extends RemoveRefs {
-    public ModifyMethodInvocation(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyMethodInvocation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull final MethodInvocation node) {
+    public void endVisit(@Nonnull final MethodInvocation node) {
       final String methodName = node.getName().toString();
       if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
         Expression subject;
@@ -152,12 +152,12 @@ public class RemoveRefs extends RefASTOperator {
   }
 
   public static class ModifyBlock extends RemoveRefs {
-    public ModifyBlock(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+    public ModifyBlock(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
     @Override
-    public void endVisit(@NotNull Block node) {
+    public void endVisit(@Nonnull Block node) {
       if (node.statements().isEmpty()) {
         final ASTNode parent = node.getParent();
         if (parent instanceof Initializer) {

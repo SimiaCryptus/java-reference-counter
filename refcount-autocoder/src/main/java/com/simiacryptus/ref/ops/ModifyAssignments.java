@@ -23,19 +23,19 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 @RefIgnore
 public class ModifyAssignments extends RefASTOperator {
 
-  public ModifyAssignments(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public ModifyAssignments(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull Assignment assignment) {
+  public void endVisit(@Nonnull Assignment assignment) {
     final Expression leftHandSide = assignment.getLeftHandSide();
     final boolean isFieldSet = (leftHandSide instanceof FieldAccess) ||
         ((leftHandSide instanceof SimpleName) && ASTUtil.isField((SimpleName) leftHandSide));
@@ -63,7 +63,7 @@ public class ModifyAssignments extends RefASTOperator {
     if (isFieldSet || isArraySet) {
       final ITypeBinding typeBinding = resolveTypeBinding(leftHandSide);
       if (null == typeBinding) {
-        warn(assignment, "Unresolved binding: %s", typeBinding);
+        warn(assignment, "Unresolved binding: %s", null);
         return;
       }
       if (!isRefCounted(leftHandSide, typeBinding)) return;

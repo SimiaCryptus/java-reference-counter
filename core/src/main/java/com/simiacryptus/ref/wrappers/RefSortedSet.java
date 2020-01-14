@@ -20,21 +20,21 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.SortedSet;
 
 public interface RefSortedSet<T> extends SortedSet<T>, RefSet<T> {
-  @NotNull
+  @Nonnull
   @Override
   RefSortedSet<T> subSet(@RefAware T fromElement,
                          @RefAware T toElement);
 
-  @NotNull
+  @Nonnull
   @Override
   RefSortedSet<T> headSet(@RefAware T toElement);
 
-  @NotNull
+  @Nonnull
   @Override
   RefSortedSet<T> tailSet(@RefAware T fromElement);
 

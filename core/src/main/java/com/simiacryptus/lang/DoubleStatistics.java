@@ -21,7 +21,6 @@ package com.simiacryptus.lang;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -80,7 +79,7 @@ public class DoubleStatistics extends DoubleSummaryStatistics {
     return this;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public String toString() {
     return toString(1).toString();

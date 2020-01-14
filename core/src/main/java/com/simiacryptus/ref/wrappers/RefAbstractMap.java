@@ -20,9 +20,9 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -31,6 +31,7 @@ import java.util.Map;
 public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     implements RefMap<K, V>, Cloneable, Serializable {
 
+  @Nonnull
   protected abstract Map<K, KeyValue<K, V>> getInner();
 
   @Override
@@ -38,7 +39,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     return getInner().isEmpty();
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefAbstractMap<K, V> addRef() {
     return (RefAbstractMap<K, V>) super.addRef();
@@ -67,7 +68,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     return containsValue;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefHashSet<Entry<K, V>> entrySet() {
     final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
@@ -91,7 +92,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     return RefUtil.addRef(null == keyValue ? null : keyValue.value);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefSet<K> keySet() {
     return new RefHashSet<>(getInner().keySet());
@@ -107,7 +108,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   }
 
   @Override
-  public void putAll(@NotNull @RefAware Map<? extends K, ? extends V> m) {
+  public void putAll(@Nonnull @RefAware Map<? extends K, ? extends V> m) {
     final Map<? extends K, ? extends V> m_inner;
     if (m instanceof RefAbstractMap) {
       m_inner = ((RefAbstractMap) m).getInner();
@@ -127,6 +128,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
       RefUtil.freeRef(removed.key);
     }
     RefUtil.freeRef(key);
+    assert removed != null;
     return removed.value;
   }
 
@@ -135,7 +137,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     return getInner().size();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefHashSet<V> values() {
     final RefHashSet<V> hashSet = new RefHashSet<>();

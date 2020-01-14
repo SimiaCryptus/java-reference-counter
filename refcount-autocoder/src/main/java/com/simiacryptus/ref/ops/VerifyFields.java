@@ -20,27 +20,29 @@
 package com.simiacryptus.ref.ops;
 
 import com.simiacryptus.ref.core.ASTUtil;
+import com.simiacryptus.ref.core.CollectableException;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RefIgnore
 public class VerifyFields extends VerifyClassMembers {
 
-  public VerifyFields(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public VerifyFields(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
-  @NotNull
-  public List<SimpleName> fields(List<ASTNode> bodyDeclarations) {
+  @Nonnull
+  public List<SimpleName> fields(@Nonnull List<ASTNode> bodyDeclarations) {
     return bodyDeclarations.stream().filter(x -> x instanceof FieldDeclaration).map(x -> (FieldDeclaration) x)
         .filter(x -> !Modifier.isStatic(x.getModifiers()))
         .flatMap(x -> ((List<VariableDeclarationFragment>) x.fragments()).stream()
@@ -57,7 +59,7 @@ public class VerifyFields extends VerifyClassMembers {
   }
 
   @Override
-  public void endVisit(TypeDeclaration node) {
+  public void endVisit(@Nonnull TypeDeclaration node) {
     final List<SimpleName> fields = fields(node.bodyDeclarations());
     if (fields.size() > 0) {
       final ITypeBinding typeBinding = resolveBinding(node);
@@ -76,10 +78,11 @@ public class VerifyFields extends VerifyClassMembers {
   }
 
   @Override
-  public void endVisit(@NotNull AnonymousClassDeclaration node) {
+  public void endVisit(@Nonnull AnonymousClassDeclaration node) {
     final List<SimpleName> fields = fields(node.bodyDeclarations());
     if (fields.size() > 0) {
       final ITypeBinding typeBinding = resolveBinding(node);
+      assert typeBinding != null;
       final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
       if (isRefCounted(node, typeBinding)) {
         debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
@@ -113,12 +116,20 @@ public class VerifyFields extends VerifyClassMembers {
     }
   }
 
-  protected void verifyClassDeclarations(List<ASTNode> bodyDeclarations) {
+  protected void verifyClassDeclarations(@Nonnull List<ASTNode> bodyDeclarations) {
+    ArrayList<CollectableException> exceptions = new ArrayList<>();
     for (MethodDeclaration methodDeclaration : VerifyClassMembers.methods(bodyDeclarations)) {
-      if(methodDeclaration.isConstructor()) continue;
-      Block body = methodDeclaration.getBody();
-      if(null==body) continue;
-      verifyClassMethod(methodDeclaration.getName().toString(), body.statements(), fields(bodyDeclarations));
+      try {
+        if (methodDeclaration.isConstructor()) continue;
+        Block body = methodDeclaration.getBody();
+        if (null == body) continue;
+        verifyClassMethod(methodDeclaration.getName().toString(), body.statements(), fields(bodyDeclarations));
+      } catch (CollectableException e) {
+        exceptions.add(e);
+      }
+    }
+    if (!exceptions.isEmpty()) {
+      throw CollectableException.combine(exceptions);
     }
   }
 

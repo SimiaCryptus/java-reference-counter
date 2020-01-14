@@ -21,8 +21,9 @@ package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("unused")
 public class BasicType extends ReferenceCountingBase implements Comparable<BasicType> {
@@ -38,7 +39,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     this.label = label;
   }
 
-  @NotNull
+  @Nonnull
   public BasicType getSelf() {
     return this;
   }
@@ -59,7 +60,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
   }
 
   @Override
-  public int compareTo(@NotNull BasicType o) {
+  public int compareTo(@Nonnull BasicType o) {
     return this.label.compareTo(o.label);
   }
 
@@ -83,7 +84,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     return label.hashCode();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public String toString() {
     return "BasicType{" + "values=" + getValue() + '}';
@@ -93,7 +94,7 @@ public class BasicType extends ReferenceCountingBase implements Comparable<Basic
     this.setValue(this.getValue() + 1);
   }
 
-  @NotNull
+  @Nonnull
   public WrapperType<BasicType> wrap() {
     return new WrapperType<>(this);
   }

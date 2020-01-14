@@ -27,8 +27,8 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,7 +45,7 @@ public class ProjectInfo {
     this.classpathEntries = classpathEntries;
   }
 
-  @NotNull
+  @Nonnull
   public ASTParser newAstParser() {
     HashMap<String, String> compilerOptions = new HashMap<>();
     compilerOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8));
@@ -59,12 +59,13 @@ public class ProjectInfo {
     return astParser;
   }
 
-  @NotNull
+  @Nonnull
   public HashMap<File, CompilationUnit> parse() {
     return read(sourceFiles());
   }
 
-  public @NotNull HashMap<File, CompilationUnit> read(@NotNull File... files) {
+  public @Nonnull
+  HashMap<File, CompilationUnit> read(@Nonnull File... files) {
     final Map<String, File> fileMap = new HashMap<>();
     for (File file : files) {
       fileMap.put(file.getAbsolutePath(), file);
@@ -87,13 +88,13 @@ public class ProjectInfo {
     return results;
   }
 
-  @NotNull
+  @Nonnull
   public File[] sourceFiles() {
     return FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true)
         .stream().map(File::getAbsoluteFile).distinct().toArray(i -> new File[i]);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("ProjectInfo{");

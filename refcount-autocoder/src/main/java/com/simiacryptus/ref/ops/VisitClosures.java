@@ -25,8 +25,8 @@ import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -34,25 +34,21 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VisitClosures extends RefASTOperator {
-  @NotNull
+  @Nonnull
   protected final SymbolIndex index;
 
-  public VisitClosures(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public VisitClosures(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
     this.index = getSymbolIndex(compilationUnit);
   }
 
-  protected Collection<SymbolIndex.BindingID> getClosures(@NotNull ASTNode node) {
-    return getClosures(this, index, node);
-  }
-
-  public static Collection<SymbolIndex.BindingID> getClosures(RefASTOperator visitClosures, @NotNull SymbolIndex index, @NotNull ASTNode node) {
+  public static Collection<SymbolIndex.BindingID> getClosures(@Nonnull RefASTOperator visitClosures, @Nonnull SymbolIndex index, @Nonnull ASTNode node) {
     return visitClosures.getSymbolIndex(node).references.entrySet().stream().flatMap(e -> {
       final SymbolIndex.BindingID bindingID = e.getKey();
       if (!bindingID.type.equals("Type")) {
         final ASTNode definition = index.definitions.get(bindingID);
         if (definition == null) {
-          visitClosures.warn(node, "Unresolved definition for %s in %s", bindingID, visitClosures.getSpan(node));
+          visitClosures.info(node, "Unresolved definition for %s in %s", bindingID, visitClosures.getSpan(node));
         } else {
           final List<ASTNode> references = e.getValue();
           final String locationReport = RefUtil.get(references.stream()
@@ -68,5 +64,9 @@ public class VisitClosures extends RefASTOperator {
       }
       return Stream.empty();
     }).collect(Collectors.toList());
+  }
+
+  protected Collection<SymbolIndex.BindingID> getClosures(@Nonnull ASTNode node) {
+    return getClosures(this, index, node);
   }
 }

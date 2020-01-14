@@ -22,8 +22,8 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -33,12 +33,12 @@ import java.util.function.Consumer;
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> implements RefSet<T>, Cloneable, Serializable {
-  @NotNull
+  @Nonnull
   public Collection<T> getInner() {
     return getInnerMap().keySet();
   }
 
-  @NotNull
+  @Nonnull
   public abstract Map<T, T> getInnerMap();
 
   @Override
@@ -54,7 +54,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public final boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
+  public final boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final Collection<? extends T> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -68,7 +68,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
     return returnValue;
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefAbstractSet<T> addRef() {
     return (RefAbstractSet<T>) super.addRef();
@@ -81,7 +81,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public void forEach(@NotNull @RefAware Consumer<? super T> action) {
+  public void forEach(@Nonnull @RefAware Consumer<? super T> action) {
     assertAlive();
     for (T t : getInnerMap().keySet()) {
       action.accept(RefUtil.addRef(t));
@@ -103,7 +103,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public synchronized final boolean removeAll(@NotNull @RefAware Collection<?> c) {
+  public synchronized final boolean removeAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -126,7 +126,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Override
-  public synchronized final boolean retainAll(@NotNull @RefAware Collection<?> c) {
+  public synchronized final boolean retainAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {

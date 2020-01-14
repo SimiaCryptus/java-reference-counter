@@ -26,14 +26,13 @@ import com.simiacryptus.ref.ops.InlineRefs;
 import com.simiacryptus.ref.ops.InlineTempVars;
 import com.simiacryptus.ref.ops.RemoveRefs;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
 @Mojo(name = "remove")
 public class Remove extends RefAutoCoderMojo {
-  @NotNull
+  @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo, getBoolean("modifyAPI", false));

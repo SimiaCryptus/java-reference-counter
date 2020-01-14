@@ -23,21 +23,21 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 
 @RefIgnore
 public class OptimizeRefs extends RefASTOperator {
 
-  public OptimizeRefs(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public OptimizeRefs(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull MethodInvocation freeRefNode) {
+  public void endVisit(@Nonnull MethodInvocation freeRefNode) {
     if (freeRefNode.getName().toString().equals("freeRef")) {
       final IMethodBinding methodBinding = resolveMethodBinding(freeRefNode);
       if (null == methodBinding) {
@@ -74,6 +74,7 @@ public class OptimizeRefs extends RefASTOperator {
         return;
       }
       final StatementOfInterest lastMention = lastMention(parentBlock, variable, 0, freeRefLineNumber, 1);
+      assert lastMention != null;
       if (lastMention.line > addRefLineNumber) {
         debug(freeRefNode, "Value used at line %s, after prior addRef at line %s", lastMention.line, addRefLineNumber);
         return;
@@ -85,13 +86,13 @@ public class OptimizeRefs extends RefASTOperator {
   }
 
   @Nullable
-  private MethodInvocation findAddRef(@NotNull Block block, int line, @NotNull final Expression subject) {
+  private MethodInvocation findAddRef(@Nonnull Block block, int line, @Nonnull final Expression subject) {
     final ArrayList<MethodInvocation> addRefInvocations = new ArrayList<>();
     for (int i = line - 1; i >= 0; i--) {
       final Statement statement = (Statement) block.statements().get(i);
       statement.accept(new ASTVisitor() {
         @Override
-        public void endVisit(@NotNull MethodInvocation addRefNode) {
+        public void endVisit(@Nonnull MethodInvocation addRefNode) {
           if (addRefNode.getName().toString().equals("addRef")) {
             if (addRefNode.getExpression().toString().equals(subject.toString())) {
               addRefInvocations.add(addRefNode);

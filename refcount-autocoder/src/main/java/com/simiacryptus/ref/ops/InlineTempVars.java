@@ -23,19 +23,19 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 @RefIgnore
 public class InlineTempVars extends RefASTOperator {
 
-  public InlineTempVars(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public InlineTempVars(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull VariableDeclarationStatement node) {
+  public void endVisit(@Nonnull VariableDeclarationStatement node) {
     if (node.fragments().size() > 1) return;
     final Object head = node.fragments().get(0);
     if (head instanceof VariableDeclarationFragment) {
@@ -45,6 +45,7 @@ public class InlineTempVars extends RefASTOperator {
         final Expression expression = variableDeclarationFragment.getInitializer();
         final Block block = ASTUtil.getBlock(node);
         delete(node);
+        assert block != null;
         for (SimpleName match : ASTUtil.findExpressions(block, name)) {
           replace(match, copyIfAttached(expression));
         }

@@ -43,7 +43,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -51,14 +50,14 @@ import java.io.IOException;
 import java.util.Map;
 
 public class MavenUtil {
-  public static MavenProject getMavenProject(File pom, @NotNull final DefaultPlexusContainer container, final DefaultRepositorySystemSession session) throws ProjectBuildingException, ComponentLookupException {
+  public static MavenProject getMavenProject(File pom, @Nonnull final DefaultPlexusContainer container, final DefaultRepositorySystemSession session) throws ProjectBuildingException, ComponentLookupException {
     DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();
     request.setRepositorySession(session);
     return container.lookup(ProjectBuilder.class).build(pom, request).getProject();
   }
 
   @Nonnull
-  public static DefaultPlexusContainer getPlexusContainer(@NotNull final File repositoryLocation) throws IOException, PlexusContainerException {
+  public static DefaultPlexusContainer getPlexusContainer(@Nonnull final File repositoryLocation) throws IOException, PlexusContainerException {
     DefaultRepositoryLayout defaultRepositoryLayout = new DefaultRepositoryLayout();
     ArtifactRepositoryPolicy repositoryPolicy = new ArtifactRepositoryPolicy(true, ArtifactRepositoryPolicy.UPDATE_POLICY_NEVER, ArtifactRepositoryPolicy.CHECKSUM_POLICY_WARN);
     String url = "file://" + repositoryLocation.getCanonicalPath();
@@ -71,7 +70,7 @@ public class MavenUtil {
   }
 
   @Nonnull
-  public static DefaultRepositorySystemSession getSession(final File repositoryLocation, final boolean isOffline, final Map<Object, Object> configProps, @NotNull final DefaultPlexusContainer container) throws ComponentLookupException {
+  public static DefaultRepositorySystemSession getSession(final File repositoryLocation, final boolean isOffline, final Map<Object, Object> configProps, @Nonnull final DefaultPlexusContainer container) throws ComponentLookupException {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     session.setConfigProperties(configProps);
     session.setCache(new DefaultRepositoryCache());

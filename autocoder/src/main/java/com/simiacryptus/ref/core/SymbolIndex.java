@@ -21,12 +21,11 @@ package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.ASTEditor;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class SymbolIndex {
@@ -36,18 +35,17 @@ public class SymbolIndex {
 
   @Nullable
   public static BindingID getBindingID(@Nonnull IBinding binding) {
-    if (null == binding) return null;
     final String path = getPath(binding);
     if (null == path) return null;
     else return new BindingID(path, getType(binding));
   }
 
-  public static boolean equals(IBinding nameBinding, IBinding mentionBinding) {
+  public static boolean equals(@Nonnull IBinding nameBinding, @Nonnull IBinding mentionBinding) {
     return getBindingID(mentionBinding).equals(getBindingID(nameBinding));
   }
 
-  @NotNull
-  private static IMethodBinding getImplementation(@NotNull IMethodBinding methodBinding) {
+  @Nonnull
+  private static IMethodBinding getImplementation(@Nonnull IMethodBinding methodBinding) {
     while (true) {
       IMethodBinding impl = ReflectionUtil.getField(methodBinding, "implementation");
       if (null != impl && methodBinding != impl) {
@@ -79,7 +77,7 @@ public class SymbolIndex {
       }
     } else if (binding instanceof IMethodBinding) {
       IMethodBinding methodBinding = getImplementation((IMethodBinding) binding);
-      final ITypeBinding declaringClass = methodBinding == null ? null : methodBinding.getDeclaringClass();
+      final ITypeBinding declaringClass = methodBinding.getDeclaringClass();
       return String.format("%s::%s",
           null == declaringClass ? "null" : getPath(declaringClass),
           methodName(methodBinding));
@@ -134,8 +132,8 @@ public class SymbolIndex {
     }
   }
 
-  @NotNull
-  public LinkedHashMap<BindingID, ASTNode> context(@NotNull ASTNode node) {
+  @Nonnull
+  public LinkedHashMap<BindingID, ASTNode> context(@Nonnull ASTNode node) {
     final LinkedHashMap<BindingID, ASTNode> list = new LinkedHashMap<>();
     final ASTNode parent = node.getParent();
     if (parent != null) list.putAll(this.context(parent));
@@ -166,9 +164,10 @@ public class SymbolIndex {
 
   public static class ContextLocation {
     public final ASTEditor.Span location;
-    public final @NotNull LinkedHashMap<BindingID, ASTNode> context;
+    public final @Nonnull
+    LinkedHashMap<BindingID, ASTNode> context;
 
-    public ContextLocation(ASTEditor.Span location, @NotNull LinkedHashMap<BindingID, ASTNode> context) {
+    public ContextLocation(ASTEditor.Span location, @Nonnull LinkedHashMap<BindingID, ASTNode> context) {
       this.location = location;
       this.context = context;
     }
@@ -183,7 +182,7 @@ public class SymbolIndex {
       this.type = type;
     }
 
-    @NotNull
+    @Nonnull
     @SuppressWarnings("unused")
     public BindingID setType(String type) {
       return new BindingID(path, type);

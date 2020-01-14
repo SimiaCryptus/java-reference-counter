@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,13 +32,14 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public class RefCollections {
 
-  public static <T> Stream<T> getInnerStream(@NotNull @RefAware Collection<T> c) {
+  public static <T> Stream<T> getInnerStream(@Nonnull @RefAware Collection<T> c) {
     final Stream<T> stream = getInnerCollection(c).stream();
     assert !(stream instanceof RefStream);
     return stream;
   }
 
-  public static <T> Collection<T> getInnerCollection(@NotNull @RefAware Collection<T> c) {
+  @Nonnull
+  public static <T> Collection<T> getInnerCollection(@Nonnull @RefAware Collection<T> c) {
     if (c instanceof RefCollection) {
       return ((RefCollection<T>) c).getInner();
     } else {
@@ -46,12 +47,12 @@ public class RefCollections {
     }
   }
 
-  @NotNull
-  public static <K, V> RefMap<K, V> unmodifiableMap(RefMap<K, V> map) {
+  @Nonnull
+  public static <K, V> RefMap<K, V> unmodifiableMap(@Nonnull RefMap<K, V> map) {
     return map; // TODO: Implement Me
   }
 
-  public static <T> void shuffle(@NotNull @RefAware List<T> list) {
+  public static <T> void shuffle(@Nonnull @RefAware List<T> list) {
     Collections.shuffle(list);
   }
 

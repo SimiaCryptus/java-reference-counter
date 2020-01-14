@@ -27,8 +27,8 @@ import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
@@ -37,12 +37,12 @@ import java.util.stream.Stream;
 @RefIgnore
 public class InsertMethods extends RefASTOperator {
 
-  protected InsertMethods(ProjectInfo projectInfo, CompilationUnit cu, File file) {
+  protected InsertMethods(ProjectInfo projectInfo, @Nonnull CompilationUnit cu, @Nonnull File file) {
     super(projectInfo, cu, file);
   }
 
-  @NotNull
-  public MethodDeclaration method_addRef(@NotNull ASTNode node, @NotNull SimpleName name, boolean isInterface, TypeParameter... typeParameters) {
+  @Nonnull
+  public MethodDeclaration method_addRef(@Nonnull ASTNode node, @Nonnull SimpleName name, boolean isInterface, TypeParameter... typeParameters) {
     final String fqTypeName = name.getFullyQualifiedName();
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRef"));
@@ -65,8 +65,8 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  @NotNull
-  public MethodDeclaration method_addRefs(@NotNull AST ast, @NotNull SimpleName name) {
+  @Nonnull
+  public MethodDeclaration method_addRefs(@Nonnull AST ast, @Nonnull SimpleName name) {
     final String fqTypeName = name.getFullyQualifiedName();
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRefs"));
@@ -145,8 +145,8 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  @NotNull
-  public MethodDeclaration method_addRefs2(@NotNull AST ast, @NotNull SimpleName name) {
+  @Nonnull
+  public MethodDeclaration method_addRefs2(@Nonnull AST ast, @Nonnull SimpleName name) {
     final String fqTypeName = name.getFullyQualifiedName();
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("addRefs"));
@@ -223,8 +223,8 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  @NotNull
-  public MethodDeclaration method_free(@NotNull AST ast, boolean isAbstract, boolean isOverride) {
+  @Nonnull
+  public MethodDeclaration method_free(@Nonnull AST ast, boolean isAbstract, boolean isOverride) {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
     methodDeclaration.setName(ast.newSimpleName("_free"));
     methodDeclaration.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
@@ -242,8 +242,8 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
-  @NotNull
-  private Type getType(@NotNull ASTNode node, @NotNull String fqTypeName, @NotNull TypeParameter... typeParameters) {
+  @Nonnull
+  private Type getType(@Nonnull ASTNode node, @Nonnull String fqTypeName, @Nonnull TypeParameter... typeParameters) {
     final Type baseType = getType(node, fqTypeName, false);
     if (typeParameters.length > 0) {
       final ParameterizedType parameterizedType = ast.newParameterizedType(baseType);
@@ -258,18 +258,19 @@ public class InsertMethods extends RefASTOperator {
       }
       return parameterizedType;
     } else {
+      assert baseType != null;
       return baseType;
     }
   }
 
   @RefIgnore
   public static class ModifyTypeDeclaration extends InsertMethods {
-    public ModifyTypeDeclaration(ProjectInfo projectInfo, CompilationUnit cu, File file) {
+    public ModifyTypeDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit cu, @Nonnull File file) {
       super(projectInfo, cu, file);
     }
 
     @Override
-    public void endVisit(@NotNull TypeDeclaration node) {
+    public void endVisit(@Nonnull TypeDeclaration node) {
       final ITypeBinding typeBinding = ASTOperator.resolveBinding(node);
       if (null == typeBinding) {
         warn(node, "Unresolved binding");
@@ -304,12 +305,12 @@ public class InsertMethods extends RefASTOperator {
 
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InsertMethods {
-    public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, CompilationUnit cu, File file) {
+    public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit cu, @Nonnull File file) {
       super(projectInfo, cu, file);
     }
 
     @Override
-    public void endVisit(@NotNull AnonymousClassDeclaration node) {
+    public void endVisit(@Nonnull AnonymousClassDeclaration node) {
       final ITypeBinding typeBinding = resolveBinding(node);
       if (null == typeBinding) {
         warn(node, "Unresolved binding");

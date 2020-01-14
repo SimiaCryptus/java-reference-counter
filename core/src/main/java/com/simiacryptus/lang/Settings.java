@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,14 +42,14 @@ public interface Settings {
     return enable;
   }
 
-  static boolean get(@NotNull final @RefAware String key, final boolean defaultValue) {
+  static boolean get(@Nonnull final @RefAware String key, final boolean defaultValue) {
     boolean value = Boolean.parseBoolean(System.getProperty(key, Boolean.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  @NotNull
-  static <T extends Enum<T>> T get(@NotNull final @RefAware String key,
+  @Nonnull
+  static <T extends Enum<T>> T get(@Nonnull final @RefAware String key,
                                    @Nonnull final @RefAware T defaultValue) {
     T value = Enum.valueOf((Class<T>) defaultValue.getClass().getSuperclass(),
         System.getProperty(key, defaultValue.toString().toUpperCase()));
@@ -58,39 +57,39 @@ public interface Settings {
     return value;
   }
 
-  static String get(@NotNull final @RefAware String key,
+  static String get(@Nonnull final @RefAware String key,
                     final @RefAware String defaultValue) {
     String value = System.getProperty(key, defaultValue);
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static int get(@NotNull final @RefAware String key, final int defaultValue) {
+  static int get(@Nonnull final @RefAware String key, final int defaultValue) {
     int value = Integer.parseInt(System.getProperty(key, Integer.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static double get(@NotNull final @RefAware String key, final double defaultValue) {
+  static double get(@Nonnull final @RefAware String key, final double defaultValue) {
     double value = Double.parseDouble(System.getProperty(key, Double.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  static long get(@NotNull final @RefAware String key, final long defaultValue) {
+  static long get(@Nonnull final @RefAware String key, final long defaultValue) {
     long value = Long.parseLong(System.getProperty(key, Long.toString(defaultValue)));
     logger.info(String.format("%s = %s", key, value));
     return value;
   }
 
-  @NotNull
+  @Nonnull
   static CharSequence toJson(final @RefAware Object obj) {
     return toJson(obj, getMapper());
   }
 
   @Nonnull
   static CharSequence toJson(final @RefAware Object obj,
-                             @NotNull final @RefAware ObjectMapper objectMapper) {
+                             @Nonnull final @RefAware ObjectMapper objectMapper) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
       objectMapper.writeValue(outputStream, obj);

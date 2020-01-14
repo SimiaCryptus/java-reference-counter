@@ -20,8 +20,8 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -32,11 +32,10 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
   }
 
   public static void testBasicOperations(
-      @NotNull ConcurrentHashMap<Integer, BasicType> valuesMap) {
+      @Nonnull ConcurrentHashMap<Integer, BasicType> valuesMap) {
     final ConcurrentHashMap<Integer, BasicType> copyMap = new ConcurrentHashMap<>();
     copyMap.putAll(valuesMap);
     valuesMap.clear();
-    assert valuesMap.isEmpty();
     valuesMap.put(12, new BasicType());
     valuesMap.put(12, new BasicType());
     valuesMap.put(32, new BasicType());
@@ -58,14 +57,14 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  public static void testStreamOperations(@NotNull ConcurrentHashMap<Integer, BasicType> values) {
+  public static void testStreamOperations(@Nonnull ConcurrentHashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
   private static void test(
-      @NotNull Consumer<ConcurrentHashMap<Integer, BasicType>> fn) {
+      @Nonnull Consumer<ConcurrentHashMap<Integer, BasicType>> fn) {
     final ConcurrentHashMap<Integer, BasicType> hashMap = new ConcurrentHashMap<>();
     fn.accept(hashMap);
   }
@@ -122,7 +121,7 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       final ConcurrentHashMap<Integer, BasicType> closureMap = new ConcurrentHashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
-        public void accept(@NotNull Map.Entry<Integer, BasicType> anonymousParameter) {
+        public void accept(@Nonnull Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
             if (null == anonymousParameter.getValue()) {
               throw new AssertionError();

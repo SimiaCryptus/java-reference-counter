@@ -26,35 +26,36 @@ import com.simiacryptus.ref.core.Tuple2;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 
 @RefIgnore
 public class VerifyAssignments extends RefASTOperator {
 
-  private @NotNull SymbolIndex symbolIndex;
+  private @Nonnull
+  SymbolIndex symbolIndex;
 
-  public VerifyAssignments(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public VerifyAssignments(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     this(projectInfo, compilationUnit, file, new SymbolIndex());
     getSymbolIndex(compilationUnit, symbolIndex);
   }
 
-  public VerifyAssignments(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, @NotNull SymbolIndex symbolIndex) {
+  public VerifyAssignments(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, @Nonnull SymbolIndex symbolIndex) {
     super(projectInfo, compilationUnit, file);
     this.symbolIndex = symbolIndex;
   }
 
   @Override
-  public void endVisit(Assignment node) {
+  public void endVisit(@Nonnull Assignment node) {
     if (isRefAware(node.getRightHandSide()) && !isRefAware(node.getLeftHandSide())) {
       fatal(node, "Assignment loses reference awareness");
     }
   }
 
   @Override
-  public void endVisit(ReturnStatement node) {
+  public void endVisit(@Nonnull ReturnStatement node) {
     final Expression expression = node.getExpression();
     if (null == expression) return;
     if (isRefAware(expression)) {
@@ -75,7 +76,7 @@ public class VerifyAssignments extends RefASTOperator {
     }
   }
 
-  private boolean isRefAware(Expression expression) {
+  private boolean isRefAware(@Nonnull Expression expression) {
     ITypeBinding typeBinding = expression.resolveTypeBinding();
     if (null == typeBinding) {
       warn(expression, "Unresolved binding");
@@ -99,7 +100,7 @@ public class VerifyAssignments extends RefASTOperator {
     if (null != bindingID) {
       ASTNode definition = symbolIndex.definitions.get(bindingID);
       if (null == definition) {
-        warn(expression, "Definition not found: %s", bindingID);
+        info(expression, "Definition not found: %s", bindingID);
         return false;
       }
       if (definition instanceof VariableDeclarationFragment) {

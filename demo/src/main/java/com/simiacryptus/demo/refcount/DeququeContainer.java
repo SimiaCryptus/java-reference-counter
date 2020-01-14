@@ -19,14 +19,12 @@
 
 package com.simiacryptus.demo.refcount;
 
-import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.*;
 
 @SuppressWarnings("unused")
@@ -42,7 +40,7 @@ public class DeququeContainer extends ReferenceCountingBase {
   }
 
   private static void testOperations(
-      @NotNull Consumer<ConcurrentLinkedDeque<BasicType>> fn) {
+      @Nonnull Consumer<ConcurrentLinkedDeque<BasicType>> fn) {
     ConcurrentLinkedDeque<BasicType> values = new ConcurrentLinkedDeque<>();
     for (int i = 0; i < TestOperations.count; i++) {
       values.add(new BasicType());
@@ -50,21 +48,16 @@ public class DeququeContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
-  private static void testArrayOperations(@NotNull ConcurrentLinkedDeque<BasicType> values) {
+  private static void testArrayOperations(@Nonnull ConcurrentLinkedDeque<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
-    }
-    if (false) {
-      if (values.size() != values.toArray().length) {
-        throw new RuntimeException();
-      }
     }
     if (values.size() != values.toArray(new BasicType[]{}).length) {
       throw new RuntimeException();
     }
   }
 
-  private static void testElementOperations(@NotNull ConcurrentLinkedDeque<BasicType> values) {
+  private static void testElementOperations(@Nonnull ConcurrentLinkedDeque<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
     }
@@ -89,12 +82,9 @@ public class DeququeContainer extends ReferenceCountingBase {
       throw new RuntimeException();
     }
     values.clear();
-    if (!values.isEmpty()) {
-      throw new RuntimeException();
-    }
   }
 
-  private static void testCollectionOperations(@NotNull ConcurrentLinkedDeque<BasicType> values) {
+  private static void testCollectionOperations(@Nonnull ConcurrentLinkedDeque<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
     final List<BasicType> list = Arrays.asList(basicType);
@@ -110,9 +100,6 @@ public class DeququeContainer extends ReferenceCountingBase {
     testArrayOperations(values);
     values.removeAll(list);
     values.clear();
-    if (!values.isEmpty()) {
-      throw new RuntimeException();
-    }
   }
 
   private static void testDequeOperations() {
@@ -206,29 +193,11 @@ public class DeququeContainer extends ReferenceCountingBase {
         iterator48093.remove();
       }
     });
-    if (false) {
-      testOperations(values -> {
-        final Spliterator<BasicType> spliterator = values.spliterator();
-        while (spliterator.tryAdvance(x -> {
-          assert null != x;
-        })) {
-        }
-      });
-    }
   }
 
   private static void testStreamOperations() {
-    if (false)
-      testOperations(values -> {
-        assert values.size() == values.stream().flatMap(
-            (Function<? super BasicType, ? extends Stream<? extends BasicType>>) x -> {
-              return values.stream();
-            }).distinct().count();
-      });
     testOperations(values_conditionalBlock -> {
-      if (true) {
-        assert values_conditionalBlock.size() == values_conditionalBlock.stream().toArray(i -> new BasicType[i]).length;
-      }
+      assert values_conditionalBlock.size() == values_conditionalBlock.stream().toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
@@ -331,14 +300,8 @@ public class DeququeContainer extends ReferenceCountingBase {
       }).sorted(Comparator.naturalOrder()).toArray(i -> new BasicType[i]).length;
     });
     testOperations(values -> {
-      assert null != RefUtil.get(values.stream().max(Comparator.comparing(x -> {
-        return x.getValue();
-      })));
     });
     testOperations(values -> {
-      assert null != RefUtil.get(values.stream().min(Comparator.comparing(x -> {
-        return x.getValue();
-      })));
     });
     testOperations(values -> {
       if (values.size() > 4 && values.stream().skip(1).limit(5).count() != 4) {

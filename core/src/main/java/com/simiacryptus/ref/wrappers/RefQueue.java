@@ -19,11 +19,10 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Queue;
 
@@ -31,11 +30,12 @@ import java.util.Queue;
 @SuppressWarnings("unused")
 public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
-  @NotNull
-  public static <T> RefQueue<T>[] addRefs(@NotNull RefQueue<T>[] array) {
+  @Nonnull
+  public static <T> RefQueue<T>[] addRefs(@Nonnull RefQueue<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefQueue::addRef)
         .toArray((x) -> new RefQueue[x]);
   }
 
-  @NotNull RefQueue<T> addRef();
+  @Nonnull
+  RefQueue<T> addRef();
 }

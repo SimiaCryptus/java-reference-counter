@@ -22,18 +22,18 @@ package com.simiacryptus.ref.core.ops;
 import com.simiacryptus.ref.core.ProjectInfo;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 public class LogNodes extends ASTOperator {
 
-  public LogNodes(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public LogNodes(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void preVisit(@NotNull ASTNode node) {
+  public void preVisit(@Nonnull ASTNode node) {
     debug(node, "Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));
   }
 }

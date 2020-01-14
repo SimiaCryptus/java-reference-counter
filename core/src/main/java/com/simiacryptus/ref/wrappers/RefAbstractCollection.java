@@ -23,8 +23,8 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -33,6 +33,7 @@ import java.util.Iterator;
 public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     implements RefCollection<T>, Cloneable, Serializable {
 
+  @Nonnull
   public abstract Collection<T> getInner();
 
   @Override
@@ -41,7 +42,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return getInner().isEmpty();
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefAbstractCollection<T> addRef() {
     return (RefAbstractCollection<T>) super.addRef();
@@ -62,7 +63,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
   }
 
   @Override
-  public final boolean containsAll(@NotNull @RefAware Collection<?> c) {
+  public final boolean containsAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -76,7 +77,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return b;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public final RefIterator<T> iterator() {
     assertAlive();
@@ -84,7 +85,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
   }
 
   @Override
-  public synchronized boolean removeAll(@NotNull @RefAware Collection<?> c) {
+  public synchronized boolean removeAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -107,7 +108,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
   }
 
   @Override
-  public boolean retainAll(@NotNull @RefAware Collection<?> c) {
+  public boolean retainAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
     final Collection<?> c_inner;
     if (c instanceof RefAbstractCollection) {
@@ -145,22 +146,22 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return RefCollection.super.stream();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public final Object[] toArray() {
     assertAlive();
-    final @NotNull Object[] returnValue = getInner().toArray();
+    final @Nonnull Object[] returnValue = getInner().toArray();
     for (Object x : returnValue) {
       RefUtil.addRef(x);
     }
     return returnValue;
   }
 
-  @NotNull
+  @Nonnull
   @Override
-  public final <T1> T1[] toArray(@NotNull @RefAware T1[] a) {
+  public final <T1> T1[] toArray(@Nonnull @RefAware T1[] a) {
     assertAlive();
-    final @NotNull T1[] returnValue = getInner().toArray(a);
+    final @Nonnull T1[] returnValue = getInner().toArray(a);
     for (T1 x : returnValue) {
       RefUtil.addRef(x);
     }

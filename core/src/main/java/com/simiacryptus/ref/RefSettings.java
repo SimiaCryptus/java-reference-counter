@@ -21,14 +21,13 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.lang.Settings;
 import com.simiacryptus.ref.lang.PersistanceMode;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,7 +40,7 @@ public class RefSettings implements Settings {
   private static transient RefSettings INSTANCE = null;
 
   private final boolean lifecycleDebug;
-  @NotNull
+  @Nonnull
   private final PersistanceMode doubleCacheMode;
   private final Set<Class<?>> watchedClasses;
   private final Set<Class<?>> ignoredClasses;
@@ -92,7 +91,7 @@ public class RefSettings implements Settings {
     }).filter(x -> x != null).collect(Collectors.toSet());
   }
 
-  @NotNull
+  @Nonnull
   public PersistanceMode getDoubleCacheMode() {
     return doubleCacheMode;
   }
@@ -110,7 +109,7 @@ public class RefSettings implements Settings {
     return INSTANCE;
   }
 
-  public boolean isLifecycleDebug(@NotNull ReferenceCountingBase obj) {
+  public boolean isLifecycleDebug(@Nonnull ReferenceCountingBase obj) {
     return watchedClasses.contains(obj.getClass()) || (lifecycleDebug && !ignoredClasses.contains(obj.getClass()));
   }
 

@@ -20,10 +20,13 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("unused")
 public class SimpleContainer extends ReferenceCountingBase {
+  @Nullable
   public BasicType value;
 
   public SimpleContainer() {
@@ -41,10 +44,11 @@ public class SimpleContainer extends ReferenceCountingBase {
   }
 
   public void test() {
+    assert this.value != null;
     this.value.setValue(this.value.getValue() + 1);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public String toString() {
     return "SimpleContainer{" + "values=" + value + '}';

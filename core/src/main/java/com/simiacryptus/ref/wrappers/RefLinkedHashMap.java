@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,26 +30,26 @@ import java.util.Map;
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
-  @NotNull
+  @Nonnull
   private final Map<K, KeyValue<K, V>> inner;
 
   public RefLinkedHashMap() {
     this.inner = new LinkedHashMap<>();
   }
 
-  public RefLinkedHashMap(@NotNull @RefAware Map<? extends K, ? extends V> values) {
+  public RefLinkedHashMap(@Nonnull @RefAware Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {
     return inner;
   }
 
-  @NotNull
-  public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@NotNull RefLinkedHashMap<K, V>[] array) {
+  @Nonnull
+  public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@Nonnull RefLinkedHashMap<K, V>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
         .toArray((x) -> new RefLinkedHashMap[x]);
   }

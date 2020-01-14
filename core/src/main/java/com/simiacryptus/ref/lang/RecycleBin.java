@@ -22,7 +22,6 @@ package com.simiacryptus.ref.lang;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.simiacryptus.lang.StackCounter;
 import com.simiacryptus.ref.RefSettings;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ import static com.simiacryptus.ref.lang.PersistanceMode.WEAK;
 public abstract class RecycleBin<T> {
 
   public static final RecycleBin<double[]> DOUBLES = new RecycleBin<double[]>() {
-    @NotNull
+    @Nonnull
     @Override
     public double[] create(final long length) {
       return new double[(int) length];
@@ -59,7 +58,7 @@ public abstract class RecycleBin<T> {
     }
   }.setPersistanceMode(RefSettings.INSTANCE().getDoubleCacheMode());
   public static final RecycleBin<float[]> FLOATS = new RecycleBin<float[]>() {
-    @NotNull
+    @Nonnull
     @Override
     public float[] create(final long length) {
       return new float[(int) length];
@@ -167,7 +166,7 @@ public abstract class RecycleBin<T> {
     return purgeFreq;
   }
 
-  @NotNull
+  @Nonnull
   public RecycleBin<T> setPurgeFreq(int purgeFreq) {
     this.purgeFreq = purgeFreq;
     return this;
@@ -193,8 +192,6 @@ public abstract class RecycleBin<T> {
 
   public long clear() {
     Map<Long, ConcurrentLinkedDeque<ObjectWrapper>> buckets = this.buckets;
-    if (null == buckets)
-      return 0;
     return buckets.keySet().stream().mapToLong(length -> {
       ConcurrentLinkedDeque<ObjectWrapper> remove = buckets.remove(length);
       if (null == remove || remove.isEmpty())
@@ -294,22 +291,14 @@ public abstract class RecycleBin<T> {
   }
 
   public void printDetailedProfiling(@Nonnull final @RefAware PrintStream out) {
-    if (null != allocations) {
-      out.println("Memory Allocation Profiling:\n\t" + allocations.toString().replaceAll("\n", "\n\t"));
-    }
-    if (null != frees) {
-      out.println("Freed Memory Profiling:\n\t" + frees.toString().replaceAll("\n", "\n\t"));
-    }
-    if (null != recycle_put) {
-      out.println("Recycle Bin (Put) Profiling:\n\t" + recycle_put.toString().replaceAll("\n", "\n\t"));
-    }
-    if (null != recycle_get) {
-      out.println("Recycle Bin (Get) Profiling:\n\t" + recycle_get.toString().replaceAll("\n", "\n\t"));
-    }
+    out.println("Memory Allocation Profiling:\n\t" + allocations.toString().replaceAll("\n", "\n\t"));
+    out.println("Freed Memory Profiling:\n\t" + frees.toString().replaceAll("\n", "\n\t"));
+    out.println("Recycle Bin (Put) Profiling:\n\t" + recycle_put.toString().replaceAll("\n", "\n\t"));
+    out.println("Recycle Bin (Get) Profiling:\n\t" + recycle_get.toString().replaceAll("\n", "\n\t"));
   }
 
   public void printNetProfiling(@Nullable final @RefAware PrintStream out) {
-    if (null != out && null != recycle_put && null != recycle_get) {
+    if (null != out) {
       out.println("Recycle Bin (Net) Profiling:\n\t" + StackCounter
           .toString(recycle_put, recycle_get, (a, b) -> a.getSum() - b.getSum()).replaceAll("\n", "\n\t"));
     }
@@ -356,7 +345,7 @@ public abstract class RecycleBin<T> {
 
   protected abstract void free(@RefAware T obj);
 
-  protected long freeItem(@org.jetbrains.annotations.Nullable @RefAware T obj, long size) {
+  protected long freeItem(@Nullable @RefAware T obj, long size) {
     @Nullable
     StackCounter stackCounter = getFrees(size);
     if (null != stackCounter) {

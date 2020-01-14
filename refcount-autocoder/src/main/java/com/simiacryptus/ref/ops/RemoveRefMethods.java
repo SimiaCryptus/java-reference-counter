@@ -27,19 +27,19 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 @RefIgnore
 public class RemoveRefMethods extends RefASTOperator {
 
-  public RemoveRefMethods(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public RemoveRefMethods(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull TypeDeclaration node) {
+  public void endVisit(@Nonnull TypeDeclaration node) {
     final ITypeBinding typeBinding = ASTOperator.resolveBinding(node);
     if (ASTUtil.derives(typeBinding, ReferenceCounting.class)) {
       removeMethods(node, "addRef");

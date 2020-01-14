@@ -30,8 +30,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.artifact.ProjectArtifact;
 import org.apache.maven.repository.RepositorySystem;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -46,7 +46,7 @@ public abstract class BaseMojo extends AbstractMojo {
   @Component
   protected RepositorySystem repositorySystem;
 
-  @NotNull
+  @Nonnull
   public String[] getDependencies() {
     return project.getDependencies().stream()
         .map(x -> toArtifact(x))
@@ -57,7 +57,7 @@ public abstract class BaseMojo extends AbstractMojo {
         .toArray(i -> new String[i]);
   }
 
-  @NotNull
+  @Nonnull
   public String[] getSources() {
     return Stream.concat(
         project.getTestCompileSourceRoots().stream(),
@@ -78,15 +78,15 @@ public abstract class BaseMojo extends AbstractMojo {
     }
   }
 
-  @NotNull
+  @Nonnull
   protected Optional<Dependency> findDependency(String groupId, String artifactId) {
     return project.getDependencies().stream().filter(artifact ->
         artifact.getGroupId().equals(groupId) &&
             artifact.getArtifactId().equals(artifactId)).findAny();
   }
 
-  @NotNull
-  private Artifact toArtifact(@NotNull Dependency dependency) {
+  @Nonnull
+  private Artifact toArtifact(@Nonnull Dependency dependency) {
     final ProjectArtifact artifact = new ProjectArtifact(project);
     artifact.setGroupId(dependency.getGroupId());
     artifact.setArtifactId(dependency.getArtifactId());

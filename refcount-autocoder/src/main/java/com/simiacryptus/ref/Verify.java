@@ -26,14 +26,13 @@ import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
 @Mojo(name = "verify")
 public class Verify extends RefAutoCoderMojo {
-  @NotNull
+  @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);

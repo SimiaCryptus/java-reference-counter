@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -39,13 +40,13 @@ public class AnnotateMethodCalls extends RefASTOperator {
 
   final HashMap<SymbolIndex.BindingID, Set<Integer>> missingAttributes;
 
-  public AnnotateMethodCalls(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file, HashMap<SymbolIndex.BindingID, Set<Integer>> missingAttributes) {
+  public AnnotateMethodCalls(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, HashMap<SymbolIndex.BindingID, Set<Integer>> missingAttributes) {
     super(projectInfo, compilationUnit, file);
     this.missingAttributes = missingAttributes;
   }
 
   @Override
-  public void endVisit(MethodDeclaration node) {
+  public void endVisit(@Nonnull MethodDeclaration node) {
     final IMethodBinding methodBinding = node.resolveBinding();
     if (null == methodBinding) {
       warn(node, "Unresolved binding");

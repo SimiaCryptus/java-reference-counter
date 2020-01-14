@@ -23,9 +23,9 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -36,16 +36,17 @@ import java.util.function.Function;
 @SuppressWarnings("unused")
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
-  @NotNull
-  public static <K, V> RefMap<K, V>[] addRefs(@NotNull RefMap<K, V>[] array) {
+  @Nonnull
+  public static <K, V> RefMap<K, V>[] addRefs(@Nonnull RefMap<K, V>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef).toArray((x) -> new RefMap[x]);
   }
 
-  @NotNull
+  @Nonnull
   RefMap<K, V> addRef();
 
+  @Nullable
   @Override
-  default V computeIfAbsent(@RefAware K key, @NotNull @RefAware Function<? super K, ? extends V> mappingFunction) {
+  default V computeIfAbsent(@RefAware K key, @Nonnull @RefAware Function<? super K, ? extends V> mappingFunction) {
     V value = get(RefUtil.addRef(key));
     if (value == null) {
       value = mappingFunction.apply(RefUtil.addRef(key));
@@ -60,11 +61,11 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
     return value;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   RefSet<Entry<K, V>> entrySet();
 
-  default void forEach(@NotNull @RefAware BiConsumer<? super K, ? super V> action) {
+  default void forEach(@Nonnull @RefAware BiConsumer<? super K, ? super V> action) {
     final RefSet<Entry<K, V>> entries = entrySet();
     entries.forEach(entry -> {
       final K key = entry.getKey();
@@ -75,13 +76,13 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
     entries.freeRef();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   RefSet<K> keySet();
 
   @Override
   default V merge(@RefAware K key, @RefAware V value,
-                  @NotNull @RefAware BiFunction<? super V, ? super V, ? extends V> fn) {
+                  @Nonnull @RefAware BiFunction<? super V, ? super V, ? extends V> fn) {
     V oldValue = get(RefUtil.addRef(key));
     V newValue;
     if (oldValue == null) {
@@ -98,73 +99,77 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
     return newValue;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   RefCollection<V> values();
 
   @Override
-  void putAll(@RefAware @NotNull Map<? extends K, ? extends V> m);
+  void putAll(@RefAware @Nonnull Map<? extends K, ? extends V> m);
 
   @Override
-  boolean containsKey(@com.simiacryptus.ref.lang.RefAware Object key);
+  boolean containsKey(@RefAware Object key);
 
   @Override
-  boolean containsValue(@com.simiacryptus.ref.lang.RefAware Object value);
-
-  @Override
-  V get(@com.simiacryptus.ref.lang.RefAware Object key);
+  boolean containsValue(@RefAware Object value);
 
   @Nullable
   @Override
-  V put(@com.simiacryptus.ref.lang.RefAware K key, @com.simiacryptus.ref.lang.RefAware V value);
+  V get(@RefAware Object key);
+
+  @Nullable
+  @Override
+  V put(@RefAware K key, @RefAware V value);
 
   @Override
-  V remove(@com.simiacryptus.ref.lang.RefAware Object key);
+  V remove(@RefAware Object key);
 
+  @Nullable
   @Override
-  default V getOrDefault(@com.simiacryptus.ref.lang.RefAware Object key,
-                         @com.simiacryptus.ref.lang.RefAware V defaultValue) {
+  default V getOrDefault(@RefAware Object key,
+                         @RefAware V defaultValue) {
     return null;
   }
 
   @Override
-  default void replaceAll(@com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> function) {
+  default void replaceAll(@RefAware BiFunction<? super K, ? super V, ? extends V> function) {
 
   }
 
   @Nullable
   @Override
-  default V putIfAbsent(@com.simiacryptus.ref.lang.RefAware K key, @com.simiacryptus.ref.lang.RefAware V value) {
+  default V putIfAbsent(@RefAware K key, @RefAware V value) {
     return null;
   }
 
   @Override
-  default boolean remove(@com.simiacryptus.ref.lang.RefAware Object key,
-                         @com.simiacryptus.ref.lang.RefAware Object value) {
+  default boolean remove(@RefAware Object key,
+                         @RefAware Object value) {
     return false;
   }
 
   @Override
-  default boolean replace(@com.simiacryptus.ref.lang.RefAware K key, @com.simiacryptus.ref.lang.RefAware V oldValue,
-                          @com.simiacryptus.ref.lang.RefAware V newValue) {
+  default boolean replace(@RefAware K key, @RefAware V oldValue,
+                          @RefAware V newValue) {
     return false;
   }
 
   @Nullable
   @Override
-  default V replace(@com.simiacryptus.ref.lang.RefAware K key, @com.simiacryptus.ref.lang.RefAware V value) {
+  default V replace(@RefAware K key, @RefAware V value) {
     return null;
   }
 
+  @Nullable
   @Override
-  default V computeIfPresent(@com.simiacryptus.ref.lang.RefAware K key,
-                             @com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+  default V computeIfPresent(@RefAware K key,
+                             @RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     return null;
   }
 
+  @Nullable
   @Override
-  default V compute(@com.simiacryptus.ref.lang.RefAware K key,
-                    @com.simiacryptus.ref.lang.RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+  default V compute(@RefAware K key,
+                    @RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     return null;
   }
 }

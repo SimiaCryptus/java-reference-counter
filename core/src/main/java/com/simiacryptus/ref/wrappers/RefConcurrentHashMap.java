@@ -21,8 +21,8 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,26 +30,26 @@ import java.util.concurrent.ConcurrentHashMap;
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
-  @NotNull
+  @Nonnull
   private final Map<K, KeyValue<K, V>> inner;
 
   public RefConcurrentHashMap() {
     this.inner = new ConcurrentHashMap<>();
   }
 
-  public RefConcurrentHashMap(@NotNull @RefAware Map<? extends K, ? extends V> values) {
+  public RefConcurrentHashMap(@Nonnull @RefAware Map<? extends K, ? extends V> values) {
     this();
     putAll(values);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {
     return inner;
   }
 
-  @NotNull
-  public static <K, V> RefConcurrentHashMap<K, V>[] addRefs(@NotNull RefConcurrentHashMap<K, V>[] array) {
+  @Nonnull
+  public static <K, V> RefConcurrentHashMap<K, V>[] addRefs(@Nonnull RefConcurrentHashMap<K, V>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentHashMap::addRef)
         .toArray((x) -> new RefConcurrentHashMap[x]);
   }

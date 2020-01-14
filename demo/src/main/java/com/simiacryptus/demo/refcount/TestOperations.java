@@ -20,23 +20,34 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Random;
 
 @SuppressWarnings("unused")
 public class TestOperations extends ReferenceCountingBase {
   public static final int count = 1;
   public static final Random random = new Random(143892);
+  @Nullable
   private SimpleContainer simpleContainer;
+  @Nullable
   private ArrayContainer arrayContainer;
+  @Nullable
   private ArrayListContainer arrayListContainer;
+  @Nullable
   private LinkedListContainer linkedListContainer;
+  @Nullable
   private DeququeContainer deququeContainer;
+  @Nullable
   private HashMapValuesContainer hashMapValuesContainer;
+  @Nullable
   private LinkedHashMapValuesContainer linkedHashMapValuesContainer;
+  @Nullable
   private ConcurrentHashMapValuesContainer concurrentHashMapValuesContainer;
+  @Nullable
   private HashSetContainer hashSetContainer;
+  @Nullable
   private TreeSetContainer treeSetContainer;
 
   public static void main(String... args) {
@@ -83,15 +94,15 @@ public class TestOperations extends ReferenceCountingBase {
     arrayContainer.useClosures3(testBasicType());
   }
 
-  @NotNull
+  @Nonnull
   private BasicType testBasicType() {
     BasicType datum1 = new BasicType();
     testBasicType(datum1);
     return datum1;
   }
 
-  @NotNull
-  private BasicType testBasicType(@NotNull BasicType datum1) {
+  @Nonnull
+  private BasicType testBasicType(@Nonnull BasicType datum1) {
     for (int i = 0; i < count; i++) {
       datum1.use();
     }

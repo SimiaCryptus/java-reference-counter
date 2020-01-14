@@ -22,8 +22,8 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
@@ -32,22 +32,22 @@ import java.util.function.IntUnaryOperator;
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefArrays {
-  @NotNull
-  public static <T> RefStream<T> stream(@NotNull @RefAware T[] array) {
+  @Nonnull
+  public static <T> RefStream<T> stream(@Nonnull @RefAware T[] array) {
     return new RefStream<>(Arrays.stream(array).onClose(() -> {
       Arrays.stream(array).forEach(RefUtil::freeRef);
     }));
   }
 
-  @NotNull
-  public static <T> String toString(@NotNull @RefAware T[] values) {
+  @Nonnull
+  public static <T> String toString(@Nonnull @RefAware T[] values) {
     final String result = Arrays.toString(values);
     Arrays.stream(values).forEach(RefUtil::freeRef);
     return result;
   }
 
-  @NotNull
-  public static <T> RefList<T> asList(@NotNull @RefAware T... items) {
+  @Nonnull
+  public static <T> RefList<T> asList(@Nonnull @RefAware T... items) {
     final RefArrayList<T> ts = new RefArrayList<>(Arrays.asList(items));
     for (T item : items) {
       RefUtil.freeRef(item);
@@ -55,28 +55,28 @@ public class RefArrays {
     return ts;
   }
 
-  @NotNull
-  public static <T> T[] copyOf(@NotNull @RefAware T[] data, int length) {
+  @Nonnull
+  public static <T> T[] copyOf(@Nonnull @RefAware T[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
-  @NotNull
-  public static int[] copyOf(@NotNull int[] data, int length) {
+  @Nonnull
+  public static int[] copyOf(@Nonnull int[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
-  @NotNull
-  public static byte[] copyOf(@NotNull byte[] data, int length) {
+  @Nonnull
+  public static byte[] copyOf(@Nonnull byte[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
-  @NotNull
-  public static char[] copyOf(@NotNull char[] data, int length) {
+  @Nonnull
+  public static char[] copyOf(@Nonnull char[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
-  @NotNull
-  public static double[] copyOf(@NotNull double[] data, int length) {
+  @Nonnull
+  public static double[] copyOf(@Nonnull double[] data, int length) {
     return Arrays.copyOf(data, length);
   }
 
@@ -104,66 +104,66 @@ public class RefArrays {
     return Arrays.equals(l, r);
   }
 
-  @NotNull
+  @Nonnull
   public static String toString(int[] ints) {
     return Arrays.toString(ints);
   }
 
-  @NotNull
+  @Nonnull
   public static String toString(byte[] ints) {
     return Arrays.toString(ints);
   }
 
-  @NotNull
+  @Nonnull
   public static String toString(double[] ints) {
     return Arrays.toString(ints);
   }
 
-  public static void parallelSetAll(@NotNull double[] data, @NotNull @RefAware IntToDoubleFunction fn) {
+  public static void parallelSetAll(@Nonnull double[] data, @Nonnull @RefAware IntToDoubleFunction fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
-  public static void parallelSetAll(@NotNull int[] data, @NotNull @RefAware IntUnaryOperator fn) {
+  public static void parallelSetAll(@Nonnull int[] data, @Nonnull @RefAware IntUnaryOperator fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
-  public static <T> void parallelSetAll(@NotNull @RefAware T[] data, @NotNull @RefAware IntFunction<T> fn) {
+  public static <T> void parallelSetAll(@Nonnull @RefAware T[] data, @Nonnull @RefAware IntFunction<T> fn) {
     Arrays.parallelSetAll(data, fn);
   }
 
-  public static void setAll(@NotNull double[] data, @NotNull @RefAware IntToDoubleFunction fn) {
+  public static void setAll(@Nonnull double[] data, @Nonnull @RefAware IntToDoubleFunction fn) {
     Arrays.setAll(data, fn);
   }
 
-  public static void setAll(@NotNull int[] data, @NotNull @RefAware IntUnaryOperator fn) {
+  public static void setAll(@Nonnull int[] data, @Nonnull @RefAware IntUnaryOperator fn) {
     Arrays.setAll(data, fn);
   }
 
-  public static <T> void setAll(@NotNull @RefAware T[] data, @NotNull @RefAware IntFunction<T> fn) {
+  public static <T> void setAll(@Nonnull @RefAware T[] data, @Nonnull @RefAware IntFunction<T> fn) {
     Arrays.setAll(data, fn);
   }
 
-  @NotNull
-  public static RefDoubleStream stream(@NotNull double[] data) {
+  @Nonnull
+  public static RefDoubleStream stream(@Nonnull double[] data) {
     return new RefDoubleStream(Arrays.stream(data));
   }
 
-  @NotNull
-  public static RefIntStream stream(@NotNull int[] data) {
+  @Nonnull
+  public static RefIntStream stream(@Nonnull int[] data) {
     return new RefIntStream(Arrays.stream(data));
   }
 
-  @NotNull
-  public static RefLongStream stream(@NotNull long[] data) {
+  @Nonnull
+  public static RefLongStream stream(@Nonnull long[] data) {
     return new RefLongStream(Arrays.stream(data));
   }
 
   @SuppressWarnings("unused")
-  public static int binarySearch(@NotNull double[] array, double value) {
+  public static int binarySearch(@Nonnull double[] array, double value) {
     return Arrays.binarySearch(array, value);
   }
 
-  public static int binarySearch(@NotNull int[] array, int value) {
+  public static int binarySearch(@Nonnull int[] array, int value) {
     return Arrays.binarySearch(array, value);
   }
 
@@ -191,7 +191,7 @@ public class RefArrays {
     return Arrays.hashCode(data);
   }
 
-  @NotNull
+  @Nonnull
   public static CharSequence deepToString(@RefAware Object[] a) {
     return Arrays.deepToString(a);
   }
@@ -204,91 +204,91 @@ public class RefArrays {
     return Arrays.deepHashCode(a);
   }
 
-  @NotNull
-  public static <T> T[] copyOfRange(@NotNull @RefAware T[] original, int from, int to) {
+  @Nonnull
+  public static <T> T[] copyOfRange(@Nonnull @RefAware T[] original, int from, int to) {
     return Arrays.copyOfRange(original, from, to);
   }
 
-  @NotNull
+  @Nonnull
   public static String toString(float[] obj) {
     return Arrays.toString(obj);
   }
 
-  @NotNull
+  @Nonnull
   public static String toString(long[] obj) {
     return Arrays.toString(obj);
   }
 
-  public static void fill(@NotNull @RefAware Object[] array, @RefAware Object value) {
+  public static void fill(@Nonnull @RefAware Object[] array, @RefAware Object value) {
     Arrays.fill(array, value);
   }
 
-  public static void fill(@NotNull double[] array, double value) {
+  public static void fill(@Nonnull double[] array, double value) {
     Arrays.fill(array, value);
   }
 
-  public static void fill(@NotNull float[] array, float value) {
+  public static void fill(@Nonnull float[] array, float value) {
     Arrays.fill(array, value);
   }
 
-  public static void fill(@NotNull int[] array, int value) {
+  public static void fill(@Nonnull int[] array, int value) {
     Arrays.fill(array, value);
   }
 
-  public static void fill(@NotNull long[] array, long value) {
+  public static void fill(@Nonnull long[] array, long value) {
     Arrays.fill(array, value);
   }
 
-  public static void fill(@NotNull char[] array, char value) {
+  public static void fill(@Nonnull char[] array, char value) {
     Arrays.fill(array, value);
   }
 
-  public static void fill(@NotNull int[] array, int fromIndex, int toIndex, int value) {
+  public static void fill(@Nonnull int[] array, int fromIndex, int toIndex, int value) {
     Arrays.fill(array, fromIndex, toIndex, value);
   }
 
-  public static void fill(@NotNull long[] array, int fromIndex, int toIndex, long value) {
+  public static void fill(@Nonnull long[] array, int fromIndex, int toIndex, long value) {
     Arrays.fill(array, fromIndex, toIndex, value);
   }
 
-  public static void fill(@NotNull double[] array, int fromIndex, int toIndex, double value) {
+  public static void fill(@Nonnull double[] array, int fromIndex, int toIndex, double value) {
     Arrays.fill(array, fromIndex, toIndex, value);
   }
 
-  public static void fill(@NotNull float[] array, int fromIndex, int toIndex, float value) {
+  public static void fill(@Nonnull float[] array, int fromIndex, int toIndex, float value) {
     Arrays.fill(array, fromIndex, toIndex, value);
   }
 
-  public static void fill(@NotNull byte[] array, int fromIndex, int toIndex, byte value) {
+  public static void fill(@Nonnull byte[] array, int fromIndex, int toIndex, byte value) {
     Arrays.fill(array, fromIndex, toIndex, value);
   }
 
-  public static void fill(@NotNull char[] array, int fromIndex, int toIndex, char value) {
+  public static void fill(@Nonnull char[] array, int fromIndex, int toIndex, char value) {
     Arrays.fill(array, fromIndex, toIndex, value);
   }
 
-  @NotNull
-  public static float[] copyOf(@NotNull float[] floats, int length) {
+  @Nonnull
+  public static float[] copyOf(@Nonnull float[] floats, int length) {
     return Arrays.copyOf(floats, length);
   }
 
-  @NotNull
-  public static float[] copyOfRange(@NotNull float[] floats, int from, int to) {
+  @Nonnull
+  public static float[] copyOfRange(@Nonnull float[] floats, int from, int to) {
     return Arrays.copyOfRange(floats, from, to);
   }
 
-  @NotNull
-  public static int[] copyOfRange(@NotNull int[] floats, int from, int to) {
+  @Nonnull
+  public static int[] copyOfRange(@Nonnull int[] floats, int from, int to) {
     return Arrays.copyOfRange(floats, from, to);
   }
 
-  @NotNull
-  public static char[] copyOfRange(@NotNull char[] floats, int from, int to) {
+  @Nonnull
+  public static char[] copyOfRange(@Nonnull char[] floats, int from, int to) {
     return Arrays.copyOfRange(floats, from, to);
   }
 
-  @NotNull
-  public static byte[] copyOfRange(@NotNull byte[] floats, int from, int to) {
+  @Nonnull
+  public static byte[] copyOfRange(@Nonnull byte[] floats, int from, int to) {
     return Arrays.copyOfRange(floats, from, to);
   }
 }

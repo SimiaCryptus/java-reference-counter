@@ -21,7 +21,6 @@ package com.simiacryptus.ref.lang;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.simiacryptus.ref.RefSettings;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +49,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private static final ExecutorService gcPool = newFixedThreadPool(1,
       new ThreadFactoryBuilder().setDaemon(true).build());
   private static final ThreadLocal<Boolean> inFinalizer = new ThreadLocal<Boolean>() {
-    @NotNull
+    @Nonnull
     @Override
     protected Boolean initialValue() {
       return false;
@@ -86,16 +85,16 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return obj.referenceReport(includeCaller, obj.isFinalized());
   }
 
-  @NotNull
+  @Nonnull
   public static StackTraceElement[] removeSuffix(
-      @NotNull final @RefAware StackTraceElement[] stack,
-      @NotNull final @RefAware Collection<StackTraceElement> prefix) {
+      @Nonnull final @RefAware StackTraceElement[] stack,
+      @Nonnull final @RefAware Collection<StackTraceElement> prefix) {
     return Arrays.stream(stack).limit(stack.length - prefix.size()).toArray(i -> new StackTraceElement[i]);
   }
 
-  @org.jetbrains.annotations.Nullable
+  @Nullable
   public static List<StackTraceElement> findCommonPrefix(
-      @NotNull final @RefAware List<List<StackTraceElement>> reversedStacks) {
+      @Nonnull final @RefAware List<List<StackTraceElement>> reversedStacks) {
     if (0 == reversedStacks.size())
       return null;
     List<StackTraceElement> protoprefix = reversedStacks.get(0);
@@ -109,14 +108,14 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   }
 
   public static <T> List<T> reverseCopy(
-      @org.jetbrains.annotations.Nullable final @RefAware List<T> x) {
+      @Nullable final @RefAware List<T> x) {
     if (null == x)
       return Arrays.asList();
     return IntStream.range(0, x.size()).map(i -> (x.size() - 1) - i).mapToObj(i -> x.get(i))
         .collect(Collectors.toList());
   }
 
-  public static <T> List<T> reverseCopy(@NotNull final @RefAware T[] x) {
+  public static <T> List<T> reverseCopy(@Nonnull final @RefAware T[] x) {
     return IntStream.range(0, x.length).map(i -> (x.length - 1) - i).mapToObj(i -> x[i]).collect(Collectors.toList());
   }
 
@@ -152,7 +151,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return references.get();
   }
 
-  @NotNull
+  @Nonnull
   public ReferenceCountingBase detach() {
     this.detached = true;
     return this;
@@ -219,7 +218,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     synchronized (addRefs) {
 
       for (int i = 0; i < addRefs.size(); i++) {
-        StackTraceElement[] stack = i < addRefs.size() ? addRefs.get(i) : new StackTraceElement[]{};
+        StackTraceElement[] stack = addRefs.get(i);
         stack = removeSuffix(stack, prefix);
         final String string = getString(stack);
         if (!string.trim().isEmpty())
@@ -228,7 +227,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
     synchronized (freeRefs) {
       for (int i = 0; i < freeRefs.size() - (isFinalized ? 1 : 0); i++) {
-        StackTraceElement[] stack = i < freeRefs.size() ? freeRefs.get(i) : new StackTraceElement[]{};
+        StackTraceElement[] stack = freeRefs.get(i);
         stack = removeSuffix(stack, prefix);
         final String string = getString(stack);
         if (!string.trim().isEmpty())
@@ -285,7 +284,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
   }
 
-  @NotNull
+  @Nonnull
   protected final Object readResolve() throws ObjectStreamException {
     return detach();
   }

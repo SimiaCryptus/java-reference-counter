@@ -20,13 +20,15 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ArrayContainer extends ReferenceCountingBase {
+  @Nullable
   public BasicType[] values;
 
   public ArrayContainer(BasicType... values) {
@@ -40,28 +42,31 @@ public class ArrayContainer extends ReferenceCountingBase {
   }
 
   public void test() {
+    assert this.values != null;
     Arrays.stream(this.values).forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public String toString() {
     return "ArrayContainer{" + "values=" + Arrays.toString(values) + '}';
   }
 
-  public void useClosures1(@NotNull BasicType right) {
+  public void useClosures1(@Nonnull BasicType right) {
+    assert this.values != null;
     Arrays.stream(this.values)
         .forEach((Consumer<? super BasicType>) x -> {
           x.setValue(x.getValue() + right.getValue());
         });
   }
 
-  public void useClosures2(@NotNull BasicType right) {
+  public void useClosures2(@Nonnull BasicType right) {
+    assert this.values != null;
     Arrays.stream(this.values).forEach(new Consumer<BasicType>() {
       @Override
-      public void accept(@NotNull BasicType x) {
+      public void accept(@Nonnull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
       }
 
@@ -71,10 +76,11 @@ public class ArrayContainer extends ReferenceCountingBase {
     });
   }
 
-  public void useClosures3(@NotNull BasicType right) {
+  public void useClosures3(@Nonnull BasicType right) {
+    assert this.values != null;
     Arrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
       @Override
-      public void accept(@NotNull BasicType x) {
+      public void accept(@Nonnull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
       }
 

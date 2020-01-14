@@ -22,9 +22,9 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
@@ -35,33 +35,33 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unused")
 public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements RefBlockingQueue<T> {
 
-  @NotNull
+  @Nonnull
   private final LinkedBlockingQueue<T> inner;
 
   public RefLinkedBlockingQueue() {
     inner = new LinkedBlockingQueue<>();
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public BlockingQueue<T> getInner() {
     return inner;
   }
 
-  @NotNull
-  public static <T> RefLinkedBlockingQueue<T>[] addRefs(@NotNull RefLinkedBlockingQueue<T>[] array) {
+  @Nonnull
+  public static <T> RefLinkedBlockingQueue<T>[] addRefs(@Nonnull RefLinkedBlockingQueue<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedBlockingQueue::addRef)
         .toArray((x) -> new RefLinkedBlockingQueue[x]);
   }
 
   @Override
-  public boolean add(@RefAware T t) {
+  public boolean add(@Nonnull @RefAware T t) {
     assertAlive();
     return getInner().add(t);
   }
 
   @Override
-  public boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
+  public boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final BlockingQueue<T> inner = getInner();
     final boolean b = c.stream().allMatch(inner::add);
@@ -70,7 +70,7 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
   }
 
   @Override
-  public boolean offer(@RefAware T t) {
+  public boolean offer(@Nonnull @RefAware T t) {
     assertAlive();
     final boolean b = getInner().offer(t);
     if (!b)
@@ -79,17 +79,17 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
   }
 
   @Override
-  public void put(@RefAware @NotNull T t) throws InterruptedException {
+  public void put(@RefAware @Nonnull T t) throws InterruptedException {
     getInner().put(t);
   }
 
   @Override
-  public boolean offer(@RefAware T t, long timeout, @NotNull @com.simiacryptus.ref.lang.RefAware TimeUnit unit)
+  public boolean offer(@RefAware T t, long timeout, @Nonnull @RefAware TimeUnit unit)
       throws InterruptedException {
     return getInner().offer(t, timeout, unit);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public T take() throws InterruptedException {
     return getInner().take();
@@ -97,7 +97,7 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
 
   @Nullable
   @Override
-  public T poll(long timeout, @NotNull @com.simiacryptus.ref.lang.RefAware TimeUnit unit) throws InterruptedException {
+  public T poll(long timeout, @Nonnull @RefAware TimeUnit unit) throws InterruptedException {
     return getInner().poll(timeout, unit);
   }
 
@@ -107,17 +107,18 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
   }
 
   @Override
-  public int drainTo(@RefAware @NotNull Collection<? super T> c) {
+  public int drainTo(@RefAware @Nonnull Collection<? super T> c) {
     return getInner().drainTo(c);
   }
 
   @Override
-  public int drainTo(@RefAware @NotNull Collection<? super T> c, int maxElements) {
+  public int drainTo(@RefAware @Nonnull Collection<? super T> c, int maxElements) {
     return getInner().drainTo(c, maxElements);
   }
 
   @Override
-  public @NotNull RefLinkedBlockingQueue<T> addRef() {
+  public @Nonnull
+  RefLinkedBlockingQueue<T> addRef() {
     return (RefLinkedBlockingQueue) super.addRef();
   }
 

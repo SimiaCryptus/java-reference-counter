@@ -28,10 +28,10 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -41,9 +41,9 @@ import java.util.stream.Stream;
 public class SimpleMavenProject {
   private static final File repositoryLocation = new File(System.getProperty("user.home"), ".m2/repository");
   private static final Logger logger = LoggerFactory.getLogger(SimpleMavenProject.class);
-  @NotNull
+  @Nonnull
   public final DefaultPlexusContainer plexusContainer;
-  @NotNull
+  @Nonnull
   public final DefaultRepositorySystemSession session;
   public final MavenProject project;
   public final String projectRoot;
@@ -59,7 +59,7 @@ public class SimpleMavenProject {
     this.project = MavenUtil.getMavenProject(new File(projectRoot, "pom.xml"), plexusContainer, session);
   }
 
-  @NotNull
+  @Nonnull
   public String[] getDependencies() {
     return resolve().getDependencies().stream()
         .map(Dependency::getArtifact)
@@ -68,12 +68,12 @@ public class SimpleMavenProject {
         .toArray(i -> new String[i]);
   }
 
-  @NotNull
+  @Nonnull
   public ProjectInfo getProjectInfo() {
     return new ProjectInfo(this.projectRoot, getSources(), getDependencies());
   }
 
-  @NotNull
+  @Nonnull
   public String[] getSources() {
     return Stream.concat(
         project.getTestCompileSourceRoots().stream(),
@@ -81,7 +81,7 @@ public class SimpleMavenProject {
     ).toArray(i -> new String[i]);
   }
 
-  @NotNull
+  @Nonnull
   public static SimpleMavenProject load(String root) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     SimpleMavenProject mavenProject = new SimpleMavenProject(root);
     mavenProject.resolve().getDependencies().forEach((Dependency dependency) -> {

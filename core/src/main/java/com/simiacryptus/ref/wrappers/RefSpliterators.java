@@ -23,15 +23,15 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Spliterators;
 
 @RefIgnore
 public class RefSpliterators {
-  @NotNull
+  @Nonnull
   public static <T> RefSpliterator<T> spliterator(@RefAware Iterator<T> iterator, int size,
                                                   int characteristics) {
     if (iterator instanceof RefIterator) {
@@ -57,6 +57,7 @@ public class RefSpliterators {
     }
   }
 
+  @Nonnull
   public static <T> RefSpliterator<T> spliteratorUnknownSize(@RefAware Iterator<T> iterator,
                                                              int characteristics) {
     if (iterator instanceof RefIterator) {

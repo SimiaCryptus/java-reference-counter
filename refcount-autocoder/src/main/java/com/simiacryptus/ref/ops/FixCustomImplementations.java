@@ -25,19 +25,19 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.RefIterator;
 import com.simiacryptus.ref.wrappers.RefIteratorBase;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 @RefIgnore
 public class FixCustomImplementations extends RefASTOperator {
 
-  public FixCustomImplementations(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public FixCustomImplementations(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull AnonymousClassDeclaration node) {
+  public void endVisit(@Nonnull AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
     if (null == typeBinding) {
       warn(node, "Unresolved binding");
@@ -46,7 +46,7 @@ public class FixCustomImplementations extends RefASTOperator {
     if (replace(node, typeBinding, RefIterator.class, RefIteratorBase.class)) return;
   }
 
-  protected boolean replace(@NotNull AnonymousClassDeclaration node, @NotNull ITypeBinding typeBinding, @NotNull Class<?> match, @NotNull Class<?> replace) {
+  protected boolean replace(@Nonnull AnonymousClassDeclaration node, @Nonnull ITypeBinding typeBinding, @Nonnull Class<?> match, @Nonnull Class<?> replace) {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
       debug(node, "RefIterator anonymous class");
       final ClassInstanceCreation parent = (ClassInstanceCreation) node.getParent();

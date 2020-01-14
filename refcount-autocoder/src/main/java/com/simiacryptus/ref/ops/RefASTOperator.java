@@ -27,10 +27,9 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,19 +40,19 @@ import java.util.regex.Pattern;
 
 @RefIgnore
 abstract class RefASTOperator extends ASTOperator {
-  @NotNull
+  @Nonnull
   private static Map<File, Integer> fileCounters = new HashMap<>();
-  @NotNull
+  @Nonnull
   private static Map<File, AtomicInteger> identifierCounters = new HashMap<>();
-  @NotNull
+  @Nonnull
   private String tempVarPrefix = "temp";
 
-  public RefASTOperator(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public RefASTOperator(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Nullable
-  public static IMethodBinding getAddRefMethod(@NotNull ITypeBinding type) {
+  public static IMethodBinding getAddRefMethod(@Nonnull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
         method.getName().equals("addRef")
             && (0 != (method.getModifiers() & Modifier.PUBLIC))
@@ -62,7 +61,7 @@ abstract class RefASTOperator extends ASTOperator {
   }
 
   @Nullable
-  public static IMethodBinding getAddRefsMethod(@NotNull ITypeBinding type) {
+  public static IMethodBinding getAddRefsMethod(@Nonnull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
         method.getName().equals("addRefs")
             && (0 != (method.getModifiers() & Modifier.PUBLIC))
@@ -93,7 +92,7 @@ abstract class RefASTOperator extends ASTOperator {
 
   @Nullable
   @SuppressWarnings("unused")
-  public MethodDeclaration getMethodDeclaration(ASTNode node) {
+  public MethodDeclaration getMethodDeclaration(@Nullable ASTNode node) {
     if (null == node) return null;
     if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
     if (node instanceof Statement) return null;
@@ -103,7 +102,7 @@ abstract class RefASTOperator extends ASTOperator {
 
   @Nullable
   @SuppressWarnings("unused")
-  public Statement getStatement(ASTNode node) {
+  public Statement getStatement(@Nullable ASTNode node) {
     if (null == node) return null;
     if (node instanceof Statement) return (Statement) node;
     if (node instanceof MethodDeclaration) return null;
@@ -111,7 +110,7 @@ abstract class RefASTOperator extends ASTOperator {
     return getStatement(node.getParent());
   }
 
-  protected boolean skip(ASTNode node, IBinding binding) {
+  protected boolean skip(@Nonnull ASTNode node, IBinding binding) {
     if (ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
       debug(node, "Marked with RefIgnore");
       return true;
@@ -133,8 +132,8 @@ abstract class RefASTOperator extends ASTOperator {
     return ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(index)).isPresent();
   }
 
-  @NotNull
-  protected final Statement freeRefStatement(@NotNull ASTNode node, @Nullable ITypeBinding typeBinding) {
+  @Nonnull
+  protected final Statement freeRefStatement(@Nonnull ASTNode node, @Nullable ITypeBinding typeBinding) {
     if (null == typeBinding) {
       warn(1, node, "Cannot add freeRef (binding not resolved)");
       return null;
@@ -150,12 +149,12 @@ abstract class RefASTOperator extends ASTOperator {
     return ifStatement;
   }
 
-  @NotNull
-  protected final Statement freeRefUtilStatement(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
+  @Nonnull
+  protected final Statement freeRefUtilStatement(@Nonnull ASTNode node, @Nonnull ITypeBinding typeBinding) {
     return ast.newExpressionStatement(newFreeRefUtil(node, typeBinding));
   }
 
-  protected final String getTempIdentifier(@NotNull ASTNode node) {
+  protected final String getTempIdentifier(@Nonnull ASTNode node) {
     final String id = String.format(tempVarPrefix + "_%02d_%04d",
         (long) fileCounters.computeIfAbsent(file, x -> fileCounters.size()),
         (long) identifierCounters.computeIfAbsent(file, x -> new AtomicInteger(0)).incrementAndGet());
@@ -164,7 +163,7 @@ abstract class RefASTOperator extends ASTOperator {
   }
 
   @Nullable
-  protected final ITypeBinding getTypeBinding(@NotNull VariableDeclaration declaration) {
+  protected final ITypeBinding getTypeBinding(@Nonnull VariableDeclaration declaration) {
     final IVariableBinding iVariableBinding = resolveBinding(declaration);
     if (iVariableBinding == null) {
       warn(1, declaration, "Cannot resolve method of %s", declaration);
@@ -173,7 +172,7 @@ abstract class RefASTOperator extends ASTOperator {
     return iVariableBinding.getType();
   }
 
-  protected final boolean isRefCounted(ASTNode node, @NotNull ITypeBinding type) {
+  protected final boolean isRefCounted(@Nonnull ASTNode node, @Nonnull ITypeBinding type) {
     if (type.isPrimitive()) return false;
     if (type.isArray()) {
       return isRefCounted(node, type.getElementType());
@@ -199,7 +198,7 @@ abstract class RefASTOperator extends ASTOperator {
     return false;
   }
 
-  protected final boolean isTempIdentifier(@NotNull SimpleName name) {
+  protected final boolean isTempIdentifier(@Nonnull SimpleName name) {
     return Pattern.matches(tempVarPrefix + "[\\d_]+", name.toString());
   }
 
@@ -214,8 +213,8 @@ abstract class RefASTOperator extends ASTOperator {
     return false;
   }
 
-  @NotNull
-  protected final MethodInvocation newAddRef(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
+  @Nonnull
+  protected final MethodInvocation newAddRef(@Nonnull ASTNode name, @Nonnull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
       final String qualifiedName = typeBinding.getElementType().getQualifiedName();
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
@@ -231,8 +230,8 @@ abstract class RefASTOperator extends ASTOperator {
     }
   }
 
-  @NotNull
-  protected final Statement newFreeRef(@NotNull ASTNode node, @NotNull ITypeBinding typeBinding) {
+  @Nonnull
+  protected final Statement newFreeRef(@Nonnull ASTNode node, @Nonnull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
       if (ASTUtil.derives(typeBinding.getElementType(), ReferenceCounting.class)) {
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
@@ -261,8 +260,8 @@ abstract class RefASTOperator extends ASTOperator {
     }
   }
 
-  @NotNull
-  protected final MethodInvocation newFreeRefUtil(@NotNull ASTNode name, @NotNull ITypeBinding typeBinding) {
+  @Nonnull
+  protected final MethodInvocation newFreeRefUtil(@Nonnull ASTNode name, @Nonnull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRefs"));
@@ -278,7 +277,7 @@ abstract class RefASTOperator extends ASTOperator {
     }
   }
 
-  protected final boolean skip(@NotNull ASTNode node) {
+  protected final boolean skip(@Nonnull ASTNode node) {
     return enclosingMethods(node).stream().anyMatch(enclosingMethod -> {
       if (ASTUtil.hasAnnotation(enclosingMethod, RefIgnore.class)) return true;
       final String methodName = enclosingMethod.getName();
@@ -286,18 +285,15 @@ abstract class RefASTOperator extends ASTOperator {
     });
   }
 
-  @NotNull
-  protected final Expression wrapAddRef(@NotNull Expression expression, @NotNull ITypeBinding type) {
+  @Nonnull
+  protected final Expression wrapAddRef(@Nonnull Expression expression, @Nonnull ITypeBinding type) {
     if (expression instanceof CastExpression) {
       final ParenthesizedExpression parenthesizedExpression = ast.newParenthesizedExpression();
       replace(expression, parenthesizedExpression);
       parenthesizedExpression.setExpression(expression);
       return wrapAddRef(parenthesizedExpression, type);
     }
-    if (null == type) {
-      warn(1, expression, "No type for %s; cannot addRef", expression);
-      return copyIfAttached(expression);
-    } else if (type.isArray()) {
+    if (type.isArray()) {
       if (null == getAddRefsMethod(type.getElementType())) {
         warn(1, expression, "No AddRefs method defined for %s", expression);
         return copyIfAttached(expression);

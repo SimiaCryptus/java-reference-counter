@@ -48,14 +48,13 @@ public enum PersistanceMode {
     }
   },
   NULL {
-    @Nullable
+    @Nonnull
     @Override
     public <T> Supplier<T> wrap(@RefAware T obj) {
       return () -> null;
     }
   };
 
-  @org.jetbrains.annotations.Nullable
   @Nullable
   public abstract <T> Supplier<T> wrap(@RefAware T obj);
 }

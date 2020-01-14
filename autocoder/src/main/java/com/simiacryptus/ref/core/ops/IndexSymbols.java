@@ -22,9 +22,9 @@ package com.simiacryptus.ref.core.ops;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +35,11 @@ public class IndexSymbols extends ASTScanner {
   private boolean verbose = true;
   private boolean failOnDuplicate;
 
-  public IndexSymbols(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, SymbolIndex index) {
+  public IndexSymbols(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, SymbolIndex index) {
     this(projectInfo, compilationUnit, file, index, true);
   }
 
-  public IndexSymbols(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file, SymbolIndex index, boolean failOnDuplicate) {
+  public IndexSymbols(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, SymbolIndex index, boolean failOnDuplicate) {
     super(projectInfo, compilationUnit, file, false);
     this.index = index;
     this.failOnDuplicate = failOnDuplicate;
@@ -49,41 +49,41 @@ public class IndexSymbols extends ASTScanner {
     return verbose;
   }
 
-  @NotNull
+  @Nonnull
   public IndexSymbols setVerbose(boolean verbose) {
     this.verbose = verbose;
     return this;
   }
 
   @Override
-  public void endVisit(@NotNull LambdaExpression node) {
+  public void endVisit(@Nonnull LambdaExpression node) {
     indexDef(node, node.resolveMethodBinding());
   }
 
   @Override
-  public void endVisit(@NotNull MethodDeclaration node) {
+  public void endVisit(@Nonnull MethodDeclaration node) {
     indexDef(node, node.resolveBinding());
   }
 
   @Override
-  public void endVisit(@NotNull TypeDeclaration node) {
+  public void endVisit(@Nonnull TypeDeclaration node) {
     indexDef(node, node.resolveBinding());
   }
 
   @Override
-  public void endVisit(@NotNull SingleVariableDeclaration node) {
+  public void endVisit(@Nonnull SingleVariableDeclaration node) {
     indexDef(node, node.resolveBinding());
   }
 
   @Override
-  public void endVisit(@NotNull VariableDeclarationFragment node) {
+  public void endVisit(@Nonnull VariableDeclarationFragment node) {
     if (!(node.getParent() instanceof FieldDeclaration)) {
       indexDef(node, node.resolveBinding());
     }
   }
 
   @Override
-  public void endVisit(@NotNull FieldDeclaration node) {
+  public void endVisit(@Nonnull FieldDeclaration node) {
     final List fragments = node.fragments();
     for (Object fragment : fragments) {
       if (fragment instanceof VariableDeclarationFragment) {
@@ -96,7 +96,7 @@ public class IndexSymbols extends ASTScanner {
   }
 
   @Override
-  public void endVisit(@NotNull QualifiedName node) {
+  public void endVisit(@Nonnull QualifiedName node) {
     final ITypeBinding qualifierType = node.getQualifier().resolveTypeBinding();
     if (null != qualifierType && qualifierType.isArray()) return;
     final IBinding binding = node.resolveBinding();
@@ -107,7 +107,7 @@ public class IndexSymbols extends ASTScanner {
   }
 
   @Override
-  public void endVisit(@NotNull SimpleName node) {
+  public void endVisit(@Nonnull SimpleName node) {
     if (!(node.getParent() instanceof QualifiedName)) {
       final IBinding binding = node.resolveBinding();
       if (null != binding) {
@@ -117,9 +117,12 @@ public class IndexSymbols extends ASTScanner {
     super.endVisit(node);
   }
 
-  public void indexReference(@NotNull Name node, @Nullable IBinding binding) {
+  public void indexReference(@Nonnull Name node, @Nullable IBinding binding) {
     if (null == binding) {
-      if (isVerbose()) debug(node, "Unresolved element for %s", binding.getName());
+      if (isVerbose()) {
+        assert false;
+        debug(node, "Unresolved element for %s", binding.getName());
+      }
       return;
     }
     SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(binding);
@@ -130,12 +133,12 @@ public class IndexSymbols extends ASTScanner {
     index.references.computeIfAbsent(bindingID, x -> new ArrayList<>()).add(node);
   }
 
-  @NotNull
-  private SymbolIndex.ContextLocation getContextLocation(@NotNull ASTNode node) {
+  @Nonnull
+  private SymbolIndex.ContextLocation getContextLocation(@Nonnull ASTNode node) {
     return new SymbolIndex.ContextLocation(getSpan(node), index.context(node));
   }
 
-  private void indexDef(@NotNull ASTNode node, @Nullable IBinding binding) {
+  private void indexDef(@Nonnull ASTNode node, @Nullable IBinding binding) {
     if (null == binding) return;
     final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(binding);
     if (null == bindingID) return;

@@ -22,8 +22,8 @@ package com.simiacryptus.ref.ops;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,12 +31,12 @@ import java.util.Iterator;
 @RefIgnore
 public class DistinctImports extends RefASTOperator {
 
-  public DistinctImports(ProjectInfo projectInfo, @NotNull CompilationUnit compilationUnit, @NotNull File file) {
+  public DistinctImports(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(@NotNull CompilationUnit node) {
+  public void endVisit(@Nonnull CompilationUnit node) {
     final Iterator iterator = node.imports().iterator();
     final HashSet<String> set = new HashSet<>();
     while (iterator.hasNext()) {

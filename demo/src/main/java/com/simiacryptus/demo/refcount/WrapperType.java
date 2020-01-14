@@ -21,21 +21,25 @@ package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("unused")
 public class WrapperType<T extends ReferenceCounting> extends ReferenceCountingBase {
+  @Nullable
   private T inner;
 
   public WrapperType(T inner) {
     this.setInner(inner);
   }
 
+  @Nullable
   public T getInner() {
     return inner;
   }
 
-  @NotNull
+  @Nonnull
   public WrapperType<T> setInner(T innerWrapperType) {
     this.inner = innerWrapperType;
     return this;

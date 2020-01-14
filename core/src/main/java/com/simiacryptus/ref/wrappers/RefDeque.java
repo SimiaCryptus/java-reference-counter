@@ -19,10 +19,9 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Deque;
 
@@ -30,11 +29,12 @@ import java.util.Deque;
 @SuppressWarnings("unused")
 public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
-  @NotNull
-  public static <T> RefDeque<T>[] addRefs(@NotNull RefDeque<T>[] array) {
+  @Nonnull
+  public static <T> RefDeque<T>[] addRefs(@Nonnull RefDeque<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
         .toArray((x) -> new RefDeque[x]);
   }
 
-  @NotNull RefDeque<T> addRef();
+  @Nonnull
+  RefDeque<T> addRef();
 }

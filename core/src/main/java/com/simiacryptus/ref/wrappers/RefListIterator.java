@@ -23,9 +23,9 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ListIterator;
 
 @RefIgnore
@@ -43,39 +43,46 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
 
   @Override
   public void add(@RefAware T t) {
+    assert getInner() != null;
     getInner().add(t);
   }
 
   @Override
   public boolean hasPrevious() {
+    assert getInner() != null;
     return getInner().hasPrevious();
   }
 
   @Override
   public int nextIndex() {
+    assert getInner() != null;
     return getInner().nextIndex();
   }
 
   @Nullable
   @Override
   public T previous() {
+    assert getInner() != null;
     current = getInner().previous();
     return RefUtil.addRef(current);
   }
 
   @Override
   public int previousIndex() {
+    assert getInner() != null;
     return getInner().previousIndex();
   }
 
   @Override
   public void set(@RefAware T t) {
+    assert getInner() != null;
     getInner().set(t);
     RefUtil.freeRef(current);
     current = null;
   }
 
-  public @NotNull RefListIterator<T> track(ReferenceCounting obj) {
+  public @Nonnull
+  RefListIterator<T> track(ReferenceCounting obj) {
     super.track(obj);
     return this;
   }

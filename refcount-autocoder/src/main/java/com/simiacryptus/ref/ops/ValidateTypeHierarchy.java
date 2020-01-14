@@ -22,19 +22,20 @@ package com.simiacryptus.ref.ops;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 
 @RefIgnore
 public class ValidateTypeHierarchy extends RefASTOperator {
 
-  public ValidateTypeHierarchy(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file) {
+  public ValidateTypeHierarchy(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
   @Override
-  public void endVisit(TypeDeclaration node) {
+  public void endVisit(@Nonnull TypeDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
     if (null == typeBinding) {
       warn(node, "Cannot resolve type of %s", node.getName());
@@ -46,7 +47,7 @@ public class ValidateTypeHierarchy extends RefASTOperator {
   }
 
   @Override
-  public void endVisit(@NotNull VariableDeclarationFragment declaration) {
+  public void endVisit(@Nonnull VariableDeclarationFragment declaration) {
     if (skip(declaration)) return;
     debug(declaration, "VariableDeclarationFragment: %s", declaration);
     final ITypeBinding declarationType = getTypeBinding(declaration);
@@ -55,10 +56,6 @@ public class ValidateTypeHierarchy extends RefASTOperator {
       return;
     }
     if (skip(declaration)) return;
-    if (null == declarationType) {
-      warn(declaration, "Unresolved binding");
-      return;
-    }
     debug(1, declaration, "addFreeRef: %s", declaration);
     if (isRefCounted(declaration, declarationType)) {
       ASTNode parent = declaration.getParent();
@@ -79,7 +76,7 @@ public class ValidateTypeHierarchy extends RefASTOperator {
     }
   }
 
-  private void validateField(@NotNull VariableDeclarationFragment declaration, ITypeBinding typeBinding) {
+  private void validateField(@Nonnull VariableDeclarationFragment declaration, @Nullable ITypeBinding typeBinding) {
     if (null == typeBinding) {
       warn(declaration, "Unresolved binding");
     } else {

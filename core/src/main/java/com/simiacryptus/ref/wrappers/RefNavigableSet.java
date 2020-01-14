@@ -20,38 +20,38 @@
 package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.NavigableSet;
 
 public interface RefNavigableSet<T> extends NavigableSet<T>, RefSet<T> {
-  @NotNull
+  @Nonnull
   @Override
   RefNavigableSet<T> descendingSet();
 
-  @NotNull
+  @Nonnull
   @Override
   RefNavigableSet<T> subSet(@RefAware T fromElement, boolean fromInclusive,
                             @RefAware T toElement, boolean toInclusive);
 
-  @NotNull
+  @Nonnull
   @Override
   RefNavigableSet<T> headSet(@RefAware T toElement, boolean inclusive);
 
-  @NotNull
+  @Nonnull
   @Override
   RefNavigableSet<T> tailSet(@RefAware T fromElement, boolean inclusive);
 
-  @NotNull
+  @Nonnull
   @Override
   RefSortedSet<T> subSet(@RefAware T fromElement,
                          @RefAware T toElement);
 
-  @NotNull
+  @Nonnull
   @Override
   RefSortedSet<T> headSet(@RefAware T toElement);
 
-  @NotNull
+  @Nonnull
   @Override
   RefSortedSet<T> tailSet(@RefAware T fromElement);
 

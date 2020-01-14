@@ -25,14 +25,14 @@ import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 
 @RefIgnore
 public class TestRefAutoCoder {
-  @NotNull
+  @Nonnull
   public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }

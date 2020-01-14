@@ -23,9 +23,9 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
@@ -33,7 +33,7 @@ import java.util.stream.Collector;
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefCollectors {
-  @NotNull
+  @Nonnull
   public static <T> RefCollector<T, ?, RefList<T>> toList() {
     return new RefCollector<>(RefArrayList::new, (RefArrayList<T> list, T element) -> {
       list.add(element);
@@ -44,7 +44,7 @@ public class RefCollectors {
     }, Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
   }
 
-  @NotNull
+  @Nonnull
   public static <T> RefCollector<T, ?, RefSet<T>> toSet() {
     return new RefCollector<>(RefHashSet::new, (RefHashSet<T> list, T element) -> {
       list.add(element);
@@ -56,19 +56,19 @@ public class RefCollectors {
     }, Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
   }
 
-  @NotNull
+  @Nonnull
   public static <T, K, U> RefCollector<T, ?, RefMap<K, U>> toMap(
-      @NotNull @RefAware Function<? super T, ? extends K> keyMapper,
-      @NotNull @RefAware Function<? super T, ? extends U> valueMapper) {
+      @Nonnull @RefAware Function<? super T, ? extends K> keyMapper,
+      @Nonnull @RefAware Function<? super T, ? extends U> valueMapper) {
     return toMap(keyMapper, valueMapper, (u, v) -> {
       throw new IllegalStateException(String.format("Duplicate key %s", u));
     }, RefHashMap::new);
   }
 
-  @NotNull
+  @Nonnull
   public static <T, K, U, M extends RefMap<K, U>> RefCollector<T, ?, M> toMap(
-      @NotNull @RefAware Function<? super T, ? extends K> keyMapper,
-      @NotNull @RefAware Function<? super T, ? extends U> valueMapper,
+      @Nonnull @RefAware Function<? super T, ? extends K> keyMapper,
+      @Nonnull @RefAware Function<? super T, ? extends U> valueMapper,
       @RefAware BinaryOperator<U> mergeFunction,
       @RefAware Supplier<M> mapSupplier) {
     return new RefCollector<>(mapSupplier, RefUtil.wrapInterface((map, element) -> {
@@ -85,24 +85,24 @@ public class RefCollectors {
         Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
   }
 
-  @NotNull
+  @Nonnull
   public static <T, K> RefCollector<T, ?, RefMap<K, RefList<T>>> groupingBy(
-      @NotNull @RefAware Function<? super T, ? extends K> classifier) {
+      @Nonnull @RefAware Function<? super T, ? extends K> classifier) {
     return groupingBy(classifier, toList());
   }
 
-  @NotNull
+  @Nonnull
   public static <T, K, A, D> RefCollector<T, ?, RefMap<K, D>> groupingBy(
-      @NotNull @RefAware Function<? super T, ? extends K> classifier,
-      @NotNull @RefAware Collector<? super T, A, D> downstream) {
+      @Nonnull @RefAware Function<? super T, ? extends K> classifier,
+      @Nonnull @RefAware Collector<? super T, A, D> downstream) {
     return groupingBy(classifier, RefHashMap::new, downstream);
   }
 
-  @NotNull
+  @Nonnull
   public static <T, K, D, A, M extends RefMap<K, D>> RefCollector<T, ?, M> groupingBy(
-      @NotNull @RefAware Function<? super T, ? extends K> classifier,
+      @Nonnull @RefAware Function<? super T, ? extends K> classifier,
       @RefAware Supplier<M> mapFactory,
-      @NotNull @RefAware Collector<? super T, A, D> downstream) {
+      @Nonnull @RefAware Collector<? super T, A, D> downstream) {
     final Supplier<A> downstream_supplier = downstream.supplier();
     final BiConsumer<A, ? super T> downstream_accumulator = downstream.accumulator();
     final Set<Collector.Characteristics> downstream_characteristics = downstream.characteristics();
@@ -131,10 +131,10 @@ public class RefCollectors {
     return collector;
   }
 
-  @NotNull
+  @Nonnull
   public static <T, U, A, R> RefCollector<T, ?, R> mapping(
-      @NotNull @RefAware Function<? super T, ? extends U> mapper,
-      @NotNull @RefAware Collector<? super U, A, R> downstream) {
+      @Nonnull @RefAware Function<? super T, ? extends U> mapper,
+      @Nonnull @RefAware Collector<? super U, A, R> downstream) {
     BiConsumer<A, ? super U> downstreamAccumulator = downstream.accumulator();
     final RefCollector<T, A, R> collector = new RefCollector<>(downstream.supplier(), RefUtil
         .wrapInterface((r, t) -> downstreamAccumulator.accept(r, mapper.apply(t)), downstreamAccumulator, mapper),
@@ -143,10 +143,10 @@ public class RefCollectors {
     return collector;
   }
 
-  @NotNull
+  @Nonnull
   public static <T, A, R, RR> RefCollector<T, A, RR> collectingAndThen(
-      @NotNull @RefAware Collector<T, A, R> downstream,
-      @NotNull @RefAware Function<R, RR> finisher) {
+      @Nonnull @RefAware Collector<T, A, R> downstream,
+      @Nonnull @RefAware Function<R, RR> finisher) {
     Set<Collector.Characteristics> characteristics = downstream.characteristics();
     if (characteristics.contains(Collector.Characteristics.IDENTITY_FINISH)) {
       if (characteristics.size() == 1)
@@ -165,9 +165,9 @@ public class RefCollectors {
     return collector;
   }
 
-  @NotNull
+  @Nonnull
   public static <T> RefCollector<T, ?, Optional<T>> reducing(
-      @NotNull @RefAware BinaryOperator<T> op) {
+      @Nonnull @RefAware BinaryOperator<T> op) {
     @RefIgnore
     class OptionalBox extends ReferenceCountingBase implements Consumer<T> {
       @Nullable
@@ -206,7 +206,7 @@ public class RefCollectors {
     }, Collections.emptySet());
   }
 
-  @NotNull
+  @Nonnull
   public static <T> RefCollector<T, ?, Long> counting() {
     return reducing(0L, e -> {
       RefUtil.freeRef(e);
@@ -214,10 +214,10 @@ public class RefCollectors {
     }, Long::sum);
   }
 
-  @NotNull
+  @Nonnull
   public static <T, U> RefCollector<T, ?, U> reducing(@RefAware U identity,
-                                                      @NotNull @RefAware Function<? super T, ? extends U> mapper,
-                                                      @NotNull @RefAware BinaryOperator<U> op) {
+                                                      @Nonnull @RefAware Function<? super T, ? extends U> mapper,
+                                                      @Nonnull @RefAware BinaryOperator<U> op) {
     return new RefCollector<>(boxSupplier(identity), RefUtil.wrapInterface((a, t) -> {
       a[0] = op.apply(a[0], mapper.apply(t));
     }, mapper, RefUtil.addRef(op)), RefUtil.wrapInterface((a, b) -> {
@@ -226,21 +226,23 @@ public class RefCollectors {
     }, op), a -> a[0], Collections.emptySet());
   }
 
-  public static RefCollector<CharSequence, ?, String> joining(@RefAware CharSequence s) {
+  @Nonnull
+  public static RefCollector<CharSequence, ?, String> joining(@Nonnull @RefAware CharSequence s) {
     return joining(s, "", "");
   }
 
+  @Nonnull
   public static RefCollector<CharSequence, ?, String> joining(
-      @RefAware CharSequence delimiter,
-      @RefAware CharSequence prefix,
-      @RefAware CharSequence suffix) {
+      @Nonnull @RefAware CharSequence delimiter,
+      @Nonnull @RefAware CharSequence prefix,
+      @Nonnull @RefAware CharSequence suffix) {
     return new RefCollector<>(() -> new StringJoiner(delimiter, prefix, suffix), StringJoiner::add, StringJoiner::merge,
         StringJoiner::toString, Collections.emptySet());
   }
 
-  @NotNull
+  @Nonnull
   private static <K, V, M extends RefMap<K, V>> BinaryOperator<M> mapMerger(
-      @NotNull @RefAware BinaryOperator<V> mergeFunction) {
+      @Nonnull @RefAware BinaryOperator<V> mergeFunction) {
     return RefUtil.wrapInterface((a, b) -> {
       for (Map.Entry<K, V> e : b.entrySet()) {
         RefUtil.freeRef(a.merge(e.getKey(), e.getValue(), mergeFunction));
@@ -251,7 +253,7 @@ public class RefCollectors {
     }, mergeFunction);
   }
 
-  @NotNull
+  @Nonnull
   @SuppressWarnings("unchecked")
   private static <T> Supplier<T[]> boxSupplier(@RefAware T identity) {
     return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);

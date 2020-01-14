@@ -22,18 +22,11 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 
 import javax.annotation.Nonnull;
-import java.util.SortedMap;
+import java.util.function.Supplier;
 
-public interface RefSortedMap<K, V> extends SortedMap<K, V>, RefMap<K, V> {
+public interface RefSupplier<T> extends Supplier<T> {
   @Nonnull
+  @RefAware
   @Override
-  RefSortedMap<K, V> subMap(@RefAware K fromKey, @RefAware K toKey);
-
-  @Nonnull
-  @Override
-  RefSortedMap<K, V> headMap(@RefAware K toKey);
-
-  @Nonnull
-  @Override
-  RefSortedMap<K, V> tailMap(@RefAware K fromKey);
+  T get();
 }

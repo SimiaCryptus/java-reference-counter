@@ -20,19 +20,18 @@
 package com.simiacryptus.demo.refcount;
 
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class HashMapValuesContainer extends ReferenceCountingBase {
-  public static void testBasicOperations(@NotNull HashMap<Integer, BasicType> valuesMap) {
+  public static void testBasicOperations(@Nonnull HashMap<Integer, BasicType> valuesMap) {
     final HashMap<Integer, BasicType> copyMap = new HashMap<>();
     copyMap.putAll(valuesMap);
     valuesMap.clear();
-    assert valuesMap.isEmpty();
     valuesMap.put(12, new BasicType());
     valuesMap.put(12, new BasicType());
     valuesMap.put(32, new BasicType());
@@ -54,7 +53,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  public static void testStreamOperations(@NotNull HashMap<Integer, BasicType> values) {
+  public static void testStreamOperations(@Nonnull HashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
@@ -68,7 +67,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
-  private static void test(@NotNull Consumer<HashMap<Integer, BasicType>> fn) {
+  private static void test(@Nonnull Consumer<HashMap<Integer, BasicType>> fn) {
     final HashMap<Integer, BasicType> hashMap = new HashMap<>();
     fn.accept(hashMap);
   }
@@ -125,7 +124,7 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       final HashMap<Integer, BasicType> closureMap = new HashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
-        public void accept(@NotNull Map.Entry<Integer, BasicType> anonymousParameter) {
+        public void accept(@Nonnull Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
             if (null == anonymousParameter.getValue()) {
               throw new AssertionError();

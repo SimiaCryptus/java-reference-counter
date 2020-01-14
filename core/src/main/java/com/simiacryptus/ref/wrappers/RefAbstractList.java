@@ -23,9 +23,9 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implements RefList<T> {
-  @NotNull
+  @Nonnull
   public abstract List<T> getInner();
 
   @Override
@@ -50,7 +50,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public boolean addAll(int index, @NotNull @RefAware Collection<? extends T> c) {
+  public boolean addAll(int index, @Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final boolean changed = getInner().addAll(index, c);
     RefUtil.freeRef(c);
@@ -58,7 +58,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public final boolean addAll(@NotNull @RefAware Collection<? extends T> c) {
+  public final boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final Boolean returnValue = RefCollections.getInnerStream(c).map(o -> add(RefUtil.addRef(o)))
         .reduce((a, b) -> a || b).orElse(false);
@@ -67,7 +67,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   }
 
-  @NotNull
+  @Nonnull
   public @Override
   RefAbstractList<T> addRef() {
     assertAlive();
@@ -97,14 +97,14 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
     return index;
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefListIterator<T> listIterator() {
     assertAlive();
     return new RefListIterator<>(getInner().listIterator()).track(this.addRef());
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefListIterator<T> listIterator(int index) {
     assertAlive();
@@ -134,7 +134,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public synchronized final boolean retainAll(@NotNull @RefAware Collection<?> c) {
+  public synchronized final boolean retainAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
     final int[] indicesToRemove;
     if (c instanceof ReferenceCounting) {
@@ -157,7 +157,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
     return getInner().set(index, element);
   }
 
-  @NotNull
+  @Nonnull
   @Override
   public RefArrayList<T> subList(int fromIndex, int toIndex) {
     assertAlive();
