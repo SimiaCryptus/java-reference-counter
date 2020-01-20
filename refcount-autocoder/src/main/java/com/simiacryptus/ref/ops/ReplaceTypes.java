@@ -60,7 +60,6 @@ public class ReplaceTypes extends RefASTOperator {
       public void endVisit(@Nonnull TypeDeclarationStatement node) {
         names.add(node.resolveBinding().getQualifiedName());
       }
-
     });
     return names;
   }
@@ -188,6 +187,7 @@ public class ReplaceTypes extends RefASTOperator {
         }
       }
       node.imports().addAll(newImports);
+      super.endVisit(node);
     }
   }
 

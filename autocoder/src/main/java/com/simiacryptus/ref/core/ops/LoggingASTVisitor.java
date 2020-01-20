@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public abstract class LoggingASTVisitor extends ASTVisitor {
@@ -38,11 +39,21 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
   protected final AST ast;
   @Nonnull
   protected final File file;
+  private final ArrayList<CollectableException> exceptions = new ArrayList<>();
+  private boolean failAtEnd = false;
 
   public LoggingASTVisitor(@Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     this.compilationUnit = compilationUnit;
     this.ast = compilationUnit.getAST();
     this.file = file;
+  }
+
+  public boolean isFailAtEnd() {
+    return failAtEnd;
+  }
+
+  public void setFailAtEnd(boolean failAtEnd) {
+    this.failAtEnd = failAtEnd;
   }
 
   public final void debug(@Nonnull ASTNode node, String formatString, Object... args) {
@@ -75,13 +86,28 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
   }
 
   public final void fatal(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
-    throw new CollectableException("(" + getLocation(node) + ") " + String.format(formatString, args));
+    CollectableException collectableException = new CollectableException("(" + getLocation(node) + ") " + String.format(formatString, args));
+    if (isFailAtEnd()) {
+      warn(1, node, formatString, args);
+      exceptions.add(collectableException);
+    } else {
+      throw collectableException;
+    }
+  }
+
+  @Override
+  public void endVisit(CompilationUnit node) {
+    throwQueuedExceptions();
   }
 
   public void warnRaw(int frames, @Nonnull ASTNode node, String format) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     final StackTraceElement caller = stackTrace[2 + frames];
     logger.warn(getLogPrefix(node, caller) + format);
+  }
+
+  protected final void throwQueuedExceptions() {
+    if (!exceptions.isEmpty()) throw CollectableException.combine(exceptions);
   }
 
   @Nonnull

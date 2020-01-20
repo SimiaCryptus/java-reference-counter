@@ -72,7 +72,6 @@ public class ArrayContainer extends ReferenceCountingBase {
 
       public void _free() {
       }
-
     });
   }
 

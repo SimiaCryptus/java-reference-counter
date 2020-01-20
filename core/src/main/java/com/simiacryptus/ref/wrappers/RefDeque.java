@@ -30,7 +30,7 @@ import java.util.Deque;
 public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
   @Nonnull
-  public static <T> RefDeque<T>[] addRefs(@Nonnull RefDeque<T>[] array) {
+  static <T> RefDeque<T>[] addRefs(@Nonnull RefDeque<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefDeque::addRef)
         .toArray((x) -> new RefDeque[x]);
   }

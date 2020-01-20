@@ -48,6 +48,14 @@ public class VerifyAssignments extends RefASTOperator {
   }
 
   @Override
+  public void endVisit(VariableDeclarationFragment node) {
+    Expression initializer = node.getInitializer();
+    if (null != initializer && isRefAware(initializer) && !isRefAware(node)) {
+      fatal(node, "Assignment loses reference awareness");
+    }
+  }
+
+  @Override
   public void endVisit(@Nonnull Assignment node) {
     if (isRefAware(node.getRightHandSide()) && !isRefAware(node.getLeftHandSide())) {
       fatal(node, "Assignment loses reference awareness");
@@ -76,7 +84,31 @@ public class VerifyAssignments extends RefASTOperator {
     }
   }
 
+  private boolean isRefAware(@Nonnull VariableDeclarationFragment fragment) {
+    IVariableBinding typeBinding = fragment.resolveBinding();
+    if (null == typeBinding) {
+      warn(fragment, "Unresolved binding");
+      return false;
+    }
+    if (typeBinding.getType().isPrimitive()) {
+      debug(fragment, "Primitive type");
+      return false;
+    }
+    IVariableBinding fragmentBinding = fragment.resolveBinding();
+    if (null == fragmentBinding) {
+      warn(fragment, "Unresolved binding");
+      return false;
+    }
+    return isRefCounted(fragment, fragmentBinding.getType()) || ASTUtil.hasAnnotation(fragmentBinding, RefAware.class);
+  }
+
   private boolean isRefAware(@Nonnull Expression expression) {
+    if(expression instanceof FieldAccess) {
+      IVariableBinding fieldBinding = ((FieldAccess) expression).resolveFieldBinding();
+      if(null != fieldBinding) {
+        if(ASTUtil.hasAnnotation(fieldBinding, RefAware.class)) return true;
+      }
+    }
     ITypeBinding typeBinding = expression.resolveTypeBinding();
     if (null == typeBinding) {
       warn(expression, "Unresolved binding");

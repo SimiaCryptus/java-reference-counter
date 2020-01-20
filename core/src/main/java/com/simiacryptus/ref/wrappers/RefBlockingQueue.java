@@ -30,7 +30,7 @@ import java.util.concurrent.BlockingQueue;
 public interface RefBlockingQueue<T> extends RefQueue<T>, BlockingQueue<T> {
 
   @Nonnull
-  public static <T> RefBlockingQueue<T>[] addRefs(@Nonnull RefBlockingQueue<T>[] array) {
+  static <T> RefBlockingQueue<T>[] addRefs(@Nonnull RefBlockingQueue<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefBlockingQueue::addRef)
         .toArray((x) -> new RefBlockingQueue[x]);
   }

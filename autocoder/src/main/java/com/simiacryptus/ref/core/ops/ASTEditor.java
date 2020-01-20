@@ -168,6 +168,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
   }
 
   protected void write(String data) {
+    throwQueuedExceptions();
     try {
       synchronized (ProjectInfo.class) {
         logger.info(String.format("Writing %s", file));

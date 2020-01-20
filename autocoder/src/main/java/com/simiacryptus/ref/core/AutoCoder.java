@@ -83,7 +83,7 @@ public abstract class AutoCoder {
   protected int rewrite(@Nonnull VisitorFactory visitorFactory, boolean parallel, boolean failAtEnd) {
     Stream<Map.Entry<File, CompilationUnit>> stream = getProjectInfo().parse().entrySet().stream();
     if (parallel) stream = stream.parallel();
-    final ArrayList<String> errors = new ArrayList<>();
+    final ArrayList<CollectableException> errors = new ArrayList<>();
     final int sum = stream.mapToInt(entry -> {
       File file = entry.getKey();
       CompilationUnit compilationUnit = entry.getValue();
@@ -98,19 +98,26 @@ public abstract class AutoCoder {
           logger.info(String.format("Not Touched by %s: %s", astVisitor.getClass().getName(), file));
           return 0;
         }
+      } catch (CollectableException e) {
+        if (!failAtEnd) {
+          throw e;
+        } else {
+          errors.add(e);
+          return 0;
+        }
       } catch (Throwable e) {
         if (!failAtEnd) {
           throw new RuntimeException(String.format("Error processing %s with %s", file, astVisitor.getClass().getName()), e);
         } else {
           final String msg = String.format("Error processing %s with %s - %s", file, astVisitor.getClass().getName(), e.getMessage());
           logger.warn(msg, e);
-          errors.add(msg);
+          errors.add(new CollectableException(msg));
           return 0;
         }
       }
     }).sum();
     if (!errors.isEmpty()) {
-      throw new RuntimeException(errors.stream().reduce((a, b) -> a + "\n" + b).get());
+      throw CollectableException.combine(errors);
     }
     return sum;
   }

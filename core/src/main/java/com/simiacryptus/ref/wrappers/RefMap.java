@@ -37,7 +37,7 @@ import java.util.function.Function;
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Nonnull
-  public static <K, V> RefMap<K, V>[] addRefs(@Nonnull RefMap<K, V>[] array) {
+  static <K, V> RefMap<K, V>[] addRefs(@Nonnull RefMap<K, V>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef).toArray((x) -> new RefMap[x]);
   }
 
@@ -132,7 +132,6 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Override
   default void replaceAll(@RefAware BiFunction<? super K, ? super V, ? extends V> function) {
-
   }
 
   @Nullable

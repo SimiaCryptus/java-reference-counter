@@ -126,7 +126,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   }
 
   @Override
-  public ReferenceCounting addRef() {
+  public synchronized ReferenceCounting addRef() {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0)
       throw new IllegalStateException(referenceReport(true, isFinalized()));
     addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
@@ -158,7 +158,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   }
 
   @Override
-  public int freeRef() {
+  public synchronized int freeRef() {
     if (isFinalized()) {
       //logger.debug("Object has been finalized");
       return 0;
@@ -192,11 +192,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
       }
     }
     return refs;
-  }
-
-  @Override
-  public void freeRefAsync() {
-    gcPool.submit((Runnable) this::freeRef);
   }
 
   public String referenceReport(boolean includeCaller, boolean isFinalized) {
@@ -282,11 +277,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
         inFinalizer.set(false);
       }
     }
-  }
-
-  @Nonnull
-  protected final Object readResolve() throws ObjectStreamException {
-    return detach();
   }
 
 }

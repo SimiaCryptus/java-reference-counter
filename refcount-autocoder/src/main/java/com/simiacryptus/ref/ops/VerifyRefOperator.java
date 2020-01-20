@@ -22,6 +22,8 @@ package com.simiacryptus.ref.ops;
 import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import org.eclipse.jdt.core.dom.*;
 
@@ -154,8 +156,7 @@ public class VerifyRefOperator extends RefASTOperator {
       for (Expression initializer : initializers) {
         testResult = processNode(initializer, name, testResult, finalizers, requiredTermination);
       }
-      ReferenceState loopResult;
-      loopResult = processNode(forTest, name, testResult, finalizers, requiredTermination);
+      ReferenceState loopResult = processNode(forTest, name, testResult, finalizers, requiredTermination);
       for (Expression updater : updaters) {
         loopResult = processNode(updater, name, loopResult, finalizers, requiredTermination);
       }
@@ -244,13 +245,29 @@ public class VerifyRefOperator extends RefASTOperator {
     final ASTNode parent = node.getParent();
     if (parent instanceof MethodInvocation) {
       MethodInvocation methodInvocation = (MethodInvocation) parent;
-      if (ASTUtil.strEquals(node, methodInvocation.getExpression())) {
-        assert node == methodInvocation.getExpression();
+      if (node == methodInvocation.getExpression()) {
         if (methodInvocation.getName().toString().equals("freeRef")) return state.setRefConsumed(node);
         return state;
       } else {
         if (methodInvocation.getName().toString().equals("addRef")) return state;
         if (methodInvocation.getName().toString().equals("addRefs")) return state;
+        if (methodInvocation.getName().toString().equals("equals")) return state;
+        int argIndex = methodInvocation.arguments().indexOf(node);
+        IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
+        if (null == methodBinding) {
+          warn(node, "Unresolved binding");
+        } else {
+          if (argIndex >= methodBinding.getParameterTypes().length) argIndex = methodBinding.getParameterTypes().length - 1;
+          ITypeBinding parameterType = methodBinding.getParameterTypes()[argIndex];
+          IAnnotationBinding[] parameterAnnotations = methodBinding.getParameterAnnotations(argIndex);
+          boolean isRefCounted = isRefCounted(node, parameterType);
+          boolean hasRefAware = ASTUtil.findAnnotation(RefAware.class, parameterAnnotations).isPresent();
+          boolean hasRefIgnore = ASTUtil.findAnnotation(RefIgnore.class, parameterAnnotations).isPresent();
+          if(hasRefIgnore) return state;
+          if (!isRefCounted && !hasRefAware) {
+            fatal(node, "Reference passed as blind parameter %s of %s", argIndex, methodBinding.getName());
+          }
+        }
         return state.setRefConsumed(node);
       }
     } else if (parent instanceof InfixExpression) {
@@ -295,8 +312,22 @@ public class VerifyRefOperator extends RefASTOperator {
       return processReference(name, parent, state);
     } else if (parent instanceof ConditionalExpression) {
       return processReference(name, parent, state);
-    } else if (parent instanceof VariableDeclarationFragment) {
+    } else if (parent instanceof ArrayInitializer) {
       return processReference(name, parent, state);
+    } else if (parent instanceof ArrayCreation) {
+      return processReference(name, parent, state);
+    } else if (parent instanceof VariableDeclarationFragment) {
+      VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) parent;
+      IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
+      if (null == variableBinding) {
+        warn(node, "Unresolved binding");
+      } else {
+        ITypeBinding parameterType = variableBinding.getType();
+        if (!isRefCounted(node, parameterType) && !ASTUtil.hasAnnotation(variableBinding, RefAware.class)) {
+          fatal(node, "Reference passed as blind initializer for %s", variableBinding.getName());
+        }
+      }
+      return state.setRefConsumed(node);
     } else if (parent instanceof FieldAccess) {
       return state;
     } else if (parent instanceof VariableDeclarationStatement) {

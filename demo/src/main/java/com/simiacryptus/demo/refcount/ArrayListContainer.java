@@ -401,7 +401,6 @@ public class ArrayListContainer extends ReferenceCountingBase {
         }
       }
       return;
-
     });
     testOperations(values -> {
       final int initialSize = values.size();

@@ -20,6 +20,7 @@
 package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.AutoCoder;
+import com.simiacryptus.ref.core.CollectableException;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
@@ -28,6 +29,8 @@ import com.simiacryptus.ref.ops.*;
 import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @RefIgnore
 @Mojo(name = "verify")
@@ -49,12 +52,24 @@ public class Verify extends RefAutoCoderMojo {
     @Nonnull
     public void rewrite() {
       SymbolIndex index = new SymbolIndex();
-      rewrite((projectInfo, compilationUnit, file) -> new IndexSymbols(projectInfo, compilationUnit, file, index), isParallel(), true);
-      rewrite(VerifyMethodCalls::new, isParallel(), true);
-      rewrite((projectInfo, compilationUnit, file) -> new VerifyAssignments(projectInfo, compilationUnit, file, index), isParallel(), true);
-      rewrite(VerifyFields::new, isParallel(), true);
-      rewrite(VerifyClosures::new, isParallel(), true);
-      rewrite(VerifyMethodVariables::new, isParallel(), true);
+      ArrayList<CollectableException> exceptions = new ArrayList<>();
+      for (VisitorFactory visitorFactory : Arrays.<VisitorFactory>asList(
+          ((projectInfo, compilationUnit, file) -> new IndexSymbols(projectInfo, compilationUnit, file, index)),
+          (VerifyMethodCalls::new),
+          ((projectInfo, compilationUnit, file) -> new VerifyAssignments(projectInfo, compilationUnit, file, index)),
+          (VerifyFields::new),
+          (VerifyClosures::new),
+          (VerifyMethodVariables::new)
+      )) {
+        try {
+          rewrite(visitorFactory, isParallel(), true);
+        } catch (CollectableException e) {
+          exceptions.add(e);
+        }
+      }
+      if (!exceptions.isEmpty()) {
+        throw CollectableException.combine(exceptions);
+      }
     }
   }
 }

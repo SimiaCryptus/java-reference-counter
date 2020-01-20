@@ -49,6 +49,7 @@ abstract class RefASTOperator extends ASTOperator {
 
   public RefASTOperator(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
+    setFailAtEnd(true);
   }
 
   @Nullable

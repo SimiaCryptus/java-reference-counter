@@ -41,7 +41,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   public RefSpliterator(@RefAware Spliterator<T> inner) {
     this(inner, Long.MAX_VALUE);
-
   }
 
   public RefSpliterator(@RefAware Spliterator<T> inner, long size) {
@@ -155,7 +154,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       list.clear();
       super._free();
     }
-
   }
 
   @RefIgnore
@@ -203,7 +201,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       list.clear();
       super._free();
     }
-
   }
 
   @RefIgnore
@@ -249,6 +246,5 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
       list.clear();
       super._free();
     }
-
   }
 }

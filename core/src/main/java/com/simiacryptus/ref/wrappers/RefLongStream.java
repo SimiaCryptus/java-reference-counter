@@ -201,7 +201,6 @@ public class RefLongStream implements LongStream {
         RefLongStream.this.close();
       }
     });
-
   }
 
   @Nonnull

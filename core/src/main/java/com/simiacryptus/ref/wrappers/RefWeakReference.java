@@ -30,11 +30,11 @@ import java.lang.ref.WeakReference;
 public class RefWeakReference<T> {
   private final WeakReference<T> inner;
 
-  public RefWeakReference(@RefAware T inner) {
+  public RefWeakReference(@RefIgnore T inner) {
     this(new WeakReference<>(inner));
   }
 
-  protected RefWeakReference(@RefAware WeakReference<T> inner) {
+  protected RefWeakReference(WeakReference<T> inner) {
     this.inner = inner;
   }
 
@@ -49,9 +49,10 @@ public class RefWeakReference<T> {
     final T t = inner.get();
     if (t instanceof ReferenceCounting) {
       final ReferenceCounting referenceCounting = (ReferenceCounting) t;
-      if (!referenceCounting.isFinalized())
-        return null;
-      return (T) referenceCounting.addRef();
+      synchronized (referenceCounting) {
+        if (referenceCounting.isFinalized()) return null;
+        return (T) referenceCounting.addRef();
+      }
     }
     return t;
   }

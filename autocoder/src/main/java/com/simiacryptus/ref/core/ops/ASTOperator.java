@@ -463,7 +463,6 @@ public abstract class ASTOperator extends ASTEditor {
       return reparsed;
     }
     return findReparsed2(node).orElse(null);
-
   }
 
   @Nullable
@@ -713,6 +712,5 @@ public abstract class ASTOperator extends ASTEditor {
       if (!isReturn()) return false;
       return (((ReturnStatement) statement).getExpression() != null);
     }
-
   }
 }

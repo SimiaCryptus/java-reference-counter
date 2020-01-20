@@ -74,7 +74,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       list.clear();
       super._free();
     }
-
   }
 
   @RefIgnore
@@ -108,7 +107,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       list.clear();
       super._free();
     }
-
   }
 
   @RefIgnore
@@ -142,7 +140,6 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
       list.clear();
       super._free();
     }
-
   }
 
 }

@@ -31,7 +31,7 @@ import java.util.Set;
 public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {
 
   @Nonnull
-  public static <T> RefSet<T>[] addRefs(@Nonnull RefSet<T>[] array) {
+  static <T> RefSet<T>[] addRefs(@Nonnull RefSet<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefSet::addRef)
         .toArray((x) -> new RefSet[x]);
   }

@@ -25,6 +25,7 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -55,11 +56,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
           Block body = node.getBody();
           SimpleName name = parameters.get(i).getName();
           if (null == body) continue;
-          TerminalState requiredTermination = TerminalState.Freed;
-          ReferenceState finalState = processStatement(body, name, new ReferenceState(name, null, null), new ArrayList<>(), requiredTermination);
-          if (!requiredTermination.validate(finalState)) {
-            fatal(body, "Reference for %s ends in state %s", name, finalState);
-          }
+          processScope(body, name, TerminalState.Freed);
         }
       } catch (CollectableException e) {
         exceptions.add(e);
@@ -70,37 +67,19 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
+  public void processScope(Block body, SimpleName name, TerminalState requiredTermination) {
+    ReferenceState finalState = processStatement(body, name, new ReferenceState(name, null, null), new ArrayList<>(), requiredTermination);
+    if (!requiredTermination.validate(finalState)) {
+      fatal(body, "Reference for %s ends in state %s", name, finalState);
+    }
+  }
+
   @Override
   public void endVisit(@Nonnull VariableDeclarationStatement node) {
-    MethodDeclaration methodDeclaration = getMethodDeclaration(node);
-    if (null == methodDeclaration) {
-      debug(node, "No method");
-      return;
-    }
-    Block block = ASTUtil.getBlock(node);
-    assert block != null;
-    List<Statement> statements = block.statements();
-    int definedAt = statements.indexOf(node);
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     for (VariableDeclarationFragment fragment : (List<VariableDeclarationFragment>) node.fragments()) {
       try {
-        ArrayList<Statement> finalizers = new ArrayList<>();
-        IVariableBinding binding = fragment.resolveBinding();
-        if (null == binding) {
-          warn(node, "Unresolved type");
-          return;
-        }
-        if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
-          SimpleName name = fragment.getName();
-          ReferenceState state = new ReferenceState(name, null, null);
-          TerminalState requiredTermination = TerminalState.Freed;
-          for (int i = definedAt; i < statements.size(); i++) {
-            state = processStatement(statements.get(i), name, state, finalizers, requiredTermination);
-          }
-          if (!requiredTermination.validate(state)) {
-            fatal(block, "Reference for %s ends in state %s", name, state);
-          }
-        }
+        processVariable(fragment);
       } catch (CollectableException e) {
         exceptions.add(e);
       }
@@ -109,6 +88,39 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       throw CollectableException.combine(exceptions);
     }
     super.endVisit(node);
+  }
+
+  public void processVariable(VariableDeclarationFragment node) {
+    IVariableBinding binding = node.resolveBinding();
+    if (null == binding) {
+      warn(node, "Unresolved type");
+      return;
+    }
+    if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
+      processScope(getStatements(node), node.getName(), TerminalState.Freed);
+    }
+  }
+
+  @NotNull
+  public List<Statement> getStatements(VariableDeclarationFragment node) {
+    Block block = ASTUtil.getBlock(node);
+    if (block == null) fatal(node, "Block not found");
+    List<Statement> statements = block.statements();
+    int definedAt = statements.indexOf(getStatement(node));
+    if (definedAt < 0) fatal(node, "Statement not found");
+    statements = statements.subList(definedAt + 1, statements.size());
+    return statements;
+  }
+
+  public void processScope(List<Statement> statements, SimpleName name, TerminalState requiredTermination) {
+    ArrayList<Statement> finalizers = new ArrayList<>();
+    ReferenceState state = new ReferenceState(name, null, null);
+    for (Statement statement : statements) {
+      state = processStatement(statement, name, state, finalizers, requiredTermination);
+    }
+    if (!requiredTermination.validate(state)) {
+      fatal(statements.get(statements.size() - 1), "Reference for %s ends in state %s", name, state);
+    }
   }
 
 }

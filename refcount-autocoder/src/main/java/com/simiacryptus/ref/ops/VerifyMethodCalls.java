@@ -76,6 +76,49 @@ public class VerifyMethodCalls extends RefASTOperator {
   }
 
   @Override
+  public void endVisit(ArrayAccess node) {
+    ITypeBinding typeBinding = node.resolveTypeBinding();
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    if (_isRefCounted(node, typeBinding)) {
+      assertResultNotConsumed(node, false);
+    }
+  }
+
+  @Override
+  public void endVisit(FieldAccess node) {
+    if (node.getExpression() instanceof ThisExpression) return;
+    ITypeBinding typeBinding = node.resolveTypeBinding();
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    if (_isRefCounted(node, typeBinding)) {
+      assertResultNotConsumed(node, false);
+    }
+  }
+
+  @Override
+  public void endVisit(ThisExpression node) {
+    ITypeBinding typeBinding = node.resolveTypeBinding();
+    if (null == typeBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    if (_isRefCounted(node, typeBinding)) {
+      assertResultConsumed(node, true);
+    }
+    super.endVisit(node);
+  }
+
+  public boolean _isRefCounted(ASTNode node, ITypeBinding typeBinding) {
+    if(typeBinding.isPrimitive()) return false;
+    return isRefCounted(node, typeBinding) || ASTUtil.hasAnnotation(typeBinding, RefAware.class);
+  }
+
+  @Override
   public void endVisit(@Nonnull MethodInvocation node) {
     if (node.getName().toString().equals("equals")) return;
     final IMethodBinding methodBinding = node.resolveMethodBinding();
@@ -83,8 +126,8 @@ public class VerifyMethodCalls extends RefASTOperator {
       warn(node, "Unresolved binding");
       return;
     }
-    if (isRefCounted(node, methodBinding.getReturnType()) || ASTUtil.hasAnnotation(methodBinding, RefAware.class)) {
-      assertResultConfumed(node);
+    if (isRefCounted(node, methodBinding)) {
+      assertResultConsumed(node, false);
     }
     final List<Expression> arguments = node.arguments();
     ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
@@ -122,14 +165,67 @@ public class VerifyMethodCalls extends RefASTOperator {
     }
   }
 
-  private void assertResultConfumed(@Nonnull ASTNode node) {
+  public boolean isRefCounted(@Nonnull MethodInvocation node, IMethodBinding methodBinding) {
+    if(methodBinding.getReturnType().isPrimitive()) return false;
+    return isRefCounted(node, methodBinding.getReturnType()) || ASTUtil.hasAnnotation(methodBinding, RefAware.class);
+  }
+
+  private void assertResultConsumed(@Nonnull ASTNode node, boolean allowTerminalAccess) {
+    Boolean resultConsumed = isResultConsumed(node, allowTerminalAccess);
+    if (null != resultConsumed && !resultConsumed) {
+      fatal(node, "Reference to %s is not consumed", node);
+    }
+  }
+
+  private void assertResultNotConsumed(@Nonnull ASTNode node, boolean allowTerminalAccess) {
+    Boolean resultConsumed = isResultConsumed(node, allowTerminalAccess);
+    if (null != resultConsumed && resultConsumed) {
+      fatal(node, "Reference to %s is consumed", node);
+    }
+  }
+
+  private Boolean isResultConsumed(@Nonnull ASTNode node, boolean allowTerminalAccess) {
     ASTNode parent = node.getParent();
     if (parent instanceof MethodInvocation) {
       MethodInvocation methodInvocation = (MethodInvocation) parent;
       if (methodInvocation.getExpression() == node) {
-        if (methodInvocation.getName().toString().equals("freeRef")) return;
-        fatal(parent, "Reference tracked type used in chained method call");
+        if (methodInvocation.getName().toString().equals("freeRef")) return true;
+        if (allowTerminalAccess) return null;
+        if (node instanceof MethodInvocation) {
+          Expression expression = ((MethodInvocation) node).getExpression();
+          if (null != expression) {
+            ITypeBinding typeBinding = expression.resolveTypeBinding();
+            if (null != typeBinding) {
+              if (typeBinding.getQualifiedName().startsWith(Map.Entry.class.getCanonicalName()) ||
+                  typeBinding.getQualifiedName().startsWith(Optional.class.getCanonicalName())) {
+                return true;
+              }
+            }
+          }
+        }
+        //fatal(parent, "Reference tracked type used in chained method call");
+        return false;
+      } else {
+        if (methodInvocation.getName().toString().equals("addRefs")) return false;
+        int index = methodInvocation.arguments().indexOf(node);
+        IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
+        if (null == methodBinding) {
+          warn(methodInvocation, "Unresolved binding");
+          return true;
+        }
+        if (index >= methodBinding.getParameterTypes().length) index = methodBinding.getParameterTypes().length - 1;
+        boolean isRefCounted = isRefCounted(node, methodBinding.getParameterTypes()[index]);
+        boolean hasRefAware = ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(index)).isPresent();
+        boolean hasRefIgnore = ASTUtil.findAnnotation(RefIgnore.class, methodBinding.getParameterAnnotations(index)).isPresent();
+        if ((!isRefCounted && !hasRefAware) || hasRefIgnore) {
+          //fatal(node, "Reference tracked type passed to non-RefAware method parameter");
+          return false;
+        }
       }
+    } else if (parent instanceof ExpressionMethodReference) {
+      if (allowTerminalAccess) return null;
+      //fatal(parent, "Reference tracked type used as ExpressionMethodReference");
+      return false;
     } else if (parent instanceof Assignment) {
       // OK
     } else if (parent instanceof VariableDeclarationFragment) {
@@ -149,38 +245,54 @@ public class VerifyMethodCalls extends RefASTOperator {
       if (parent1 instanceof Block) {
         ASTNode parent2 = parent1.getParent();
         if (parent2 instanceof Initializer)
-          return;
+          return true;
       }
-      fatal(parent, "Reference tracked type discarded without freeRef");
+      //fatal(parent, "Reference tracked type discarded without freeRef");
+      return false;
     } else if (parent instanceof ArrayAccess) {
-      fatal(parent, "Reference tracked array access directly upon creation");
+      //fatal(parent, "Reference tracked array access directly upon creation");
+      return false;
     } else if (parent instanceof InfixExpression) {
-      fatal(parent, "Reference tracked type used as conditional expression");
+      if (allowTerminalAccess) return null;
+      //fatal(parent, "Reference tracked type used as conditional expression");
+      return false;
     } else if (parent instanceof ClassInstanceCreation) {
       // OK
     } else if (parent instanceof SuperMethodInvocation) {
       // OK
     } else if (parent instanceof CastExpression) {
-      assertResultConfumed(parent);
+      return isResultConsumed(parent, allowTerminalAccess);
     } else if (parent instanceof ParenthesizedExpression) {
-      assertResultConfumed(parent);
+      return isResultConsumed(parent, allowTerminalAccess);
+    } else if (parent instanceof SynchronizedStatement) {
+      if (allowTerminalAccess) return null;
+      //fatal(parent, "Reference tracked type used for syncronization");
+      return false;
     } else if (parent instanceof ArrayInitializer) {
-      assertResultConfumed(parent);
+      return isResultConsumed(parent, allowTerminalAccess);
     } else if (parent instanceof ArrayCreation) {
-      assertResultConfumed(parent);
+      return isResultConsumed(parent, allowTerminalAccess);
+    } else if (parent instanceof FieldAccess) {
+      if (allowTerminalAccess) return null;
+      //fatal(parent, "Reference tracked type used only for field access");
+      return false;
     } else if (parent instanceof InstanceofExpression) {
-      fatal(parent, "Reference tracked type used by InstanceofExpression");
+      //fatal(parent, "Reference tracked type used by InstanceofExpression");
+      return false;
     } else if (parent instanceof EnhancedForStatement) {
-      fatal(parent, "Reference tracked type used by EnhancedForStatement");
+      //fatal(parent, "Reference tracked type used by EnhancedForStatement");
+      return false;
     } else if (parent instanceof ConditionalExpression) {
       if (((ConditionalExpression) parent).getExpression() == node) {
-        fatal(parent, "Reference tracked type used as conditional expression");
+        //fatal(parent, "Reference tracked type used as conditional expression");
+        return false;
       } else {
-        assertResultConfumed(parent);
+        return isResultConsumed(parent, allowTerminalAccess);
       }
     } else {
       fatal(node, "Unhandled MethodInvocation parent %s", parent.getClass().getSimpleName());
     }
+    return true;
   }
 
   private void fail(@Nonnull ASTNode node, @Nonnull IMethodBinding methodBinding, int i) {

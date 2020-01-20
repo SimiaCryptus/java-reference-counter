@@ -30,15 +30,21 @@ public interface ReferenceCounting {
   }
 
   static <T extends ReferenceCounting> void freeRefs(@Nonnull T[] array) {
-    Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
+    synchronized (array) {
+      Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRef);
+    }
   }
 
   static <T extends ReferenceCounting> void freeRefs(@Nonnull T[][] array) {
-    Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+    synchronized (array) {
+      Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+    }
   }
 
   static <T extends ReferenceCounting> void freeRefs(@Nonnull T[][][] array) {
-    Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+    synchronized (array) {
+      Arrays.stream(array).filter((x) -> x != null).forEach(ReferenceCounting::freeRefs);
+    }
   }
 
   default ReferenceCounting addRef() {
@@ -60,9 +66,6 @@ public interface ReferenceCounting {
 
   default int freeRef() {
     return 0;
-  }
-
-  default void freeRefAsync() {
   }
 
   default boolean tryAddRef() {

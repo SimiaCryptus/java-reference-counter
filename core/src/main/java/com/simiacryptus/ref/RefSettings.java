@@ -50,7 +50,7 @@ public class RefSettings implements Settings {
     this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", true);
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
     this.ignoredClasses = Stream.<String>of(
-        "com.simiacryptus.mindseye.lang.Tensor"
+//        "com.simiacryptus.mindseye.lang.Tensor"
     ).map(name -> {
       try {
         return Class.forName(name);

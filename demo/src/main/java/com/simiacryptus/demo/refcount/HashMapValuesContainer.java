@@ -139,7 +139,6 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
 
         public void _free() {
         }
-
       };
       values.entrySet().forEach(entryConsumer);
       assert closureMap.size() == values.size();

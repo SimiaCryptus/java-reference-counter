@@ -19,9 +19,11 @@
 
 package com.simiacryptus.ref.ops;
 
+import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.CollectableException;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
+import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
 
 import javax.annotation.Nonnull;
@@ -42,7 +44,18 @@ public class VerifyClassMembers extends VerifyRefOperator {
 
   @Nonnull
   public static List<MethodDeclaration> methods(@Nonnull List<ASTNode> bodyDeclarations) {
-    return bodyDeclarations.stream().filter(x -> x instanceof MethodDeclaration).map(x -> (MethodDeclaration) x).collect(Collectors.toList());
+    return bodyDeclarations.stream()
+        .filter(x -> x instanceof MethodDeclaration)
+        .map(x -> (MethodDeclaration) x)
+        .filter(m -> {
+          IMethodBinding methodBinding = m.resolveBinding();
+          if (methodBinding == null) {
+            logger.warn("Unresolved binding: " + m.getName());
+            return false;
+          }
+          return !ASTUtil.hasAnnotation(methodBinding, RefIgnore.class);
+        })
+        .collect(Collectors.toList());
   }
 
   protected void verifyClassMethod(@Nonnull String methodName, @Nonnull List<Statement> body, @Nonnull Collection<SimpleName> names) {

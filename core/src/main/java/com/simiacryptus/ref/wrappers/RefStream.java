@@ -133,6 +133,19 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
+  static <U> void freeRef(@RefAware U u,
+                      @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    if (u instanceof ReferenceCounting) {
+      refs.computeIfAbsent(new IdentityWrapper(u), x1 -> new AtomicInteger(0)).updateAndGet(x -> {
+        if (x <= 0)
+          return 0;
+        else {
+          return x - 1;
+        }
+      });
+    }
+  }
+
   static <U> U getRef(@RefAware U u,
                       @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
@@ -186,14 +199,17 @@ public class RefStream<T> implements Stream<T> {
   public <R> R collect(@Nonnull @RefAware Supplier<R> supplier,
                        @Nonnull @RefAware BiConsumer<R, ? super T> accumulator,
                        @Nonnull @RefAware BiConsumer<R, R> combiner) {
-    final R collect = getInner().collect(() -> supplier.get(),
-        (R t1, T u1) -> accumulator.accept(RefUtil.addRef(t1), getRef(u1)),
-        (R t, R u) -> combiner.accept(RefUtil.addRef(t), u));
-    close();
-    RefUtil.freeRef(supplier);
-    RefUtil.freeRef(accumulator);
-    RefUtil.freeRef(combiner);
-    return collect;
+    try {
+      return getInner().collect(
+          () -> supplier.get(),
+          (R t1, T u1) -> accumulator.accept(RefUtil.addRef(t1), getRef(u1)),
+          (R t, R u) -> combiner.accept(RefUtil.addRef(t), u));
+    } finally {
+      close();
+      RefUtil.freeRef(supplier);
+      RefUtil.freeRef(accumulator);
+      RefUtil.freeRef(combiner);
+    }
   }
 
   @Override
@@ -229,7 +245,7 @@ public class RefStream<T> implements Stream<T> {
   @Nonnull
   public RefStream<T> filter(@Nonnull @RefAware Predicate<? super T> predicate) {
     track(predicate);
-    return new RefStream(getInner().filter((T t) -> predicate.test(getRef(t))), lambdas, refs);
+    return new RefStream(getInner().filter((T t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
   }
 
   @Nonnull
@@ -397,20 +413,24 @@ public class RefStream<T> implements Stream<T> {
   public T reduce(@RefAware T identity,
                   @Nonnull @RefAware BinaryOperator<T> accumulator) {
     track(accumulator);
-    final T reduce = RefUtil
-        .addRef(getInner().reduce(storeRef(identity), (T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u)))));
-    close();
-    return reduce;
+    try {
+      return RefUtil
+          .addRef(getInner().reduce(storeRef(identity), (T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u)))));
+    } finally {
+      close();
+    }
   }
 
   @Nonnull
   @Override
   public Optional<T> reduce(@Nonnull @RefAware BinaryOperator<T> accumulator) {
     track(accumulator);
-    final Optional<T> optional = getInner().reduce((T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u))))
-        .map(this::getRef);
-    close();
-    return optional;
+    try {
+      return getInner().reduce((T t, T u) -> storeRef(accumulator.apply(getRef(t), getRef(u))))
+          .map(this::getRef);
+    } finally {
+      close();
+    }
   }
 
   @Override
@@ -485,7 +505,7 @@ public class RefStream<T> implements Stream<T> {
   @Override
   public <A> A[] toArray(@Nonnull @RefAware IntFunction<A[]> generator) {
     track(generator);
-    final A[] array = getInner().map(this::getRef).toArray((int value) -> generator.apply(value));
+    final A[] array = getInner().map(this::getRef).toArray(generator::apply);
     close();
     return array;
   }
@@ -505,13 +525,17 @@ public class RefStream<T> implements Stream<T> {
     return this;
   }
 
-  @Nonnull
+  @Nonnull @RefAware
   private <A> BiConsumer<A, A> getBiConsumer(@Nonnull @RefAware BinaryOperator<A> combiner) {
     return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
   }
 
   private <U> U getRef(@RefAware U u) {
     return getRef(u, this.refs);
+  }
+
+  private <U> void freeRef(@RefAware U u) {
+    freeRef(u, this.refs);
   }
 
   @RefIgnore

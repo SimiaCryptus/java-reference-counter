@@ -38,7 +38,7 @@ public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T>
   List<T> getInner();
 
   @Nonnull
-  public static <T> RefList<T>[] addRefs(@Nonnull RefList<T>[] array) {
+  static <T> RefList<T>[] addRefs(@Nonnull RefList<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefList::addRef).toArray((x) -> new RefList[x]);
   }
 
@@ -93,12 +93,10 @@ public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T>
 
   @Override
   default void replaceAll(@RefAware UnaryOperator<T> operator) {
-
   }
 
   @Override
   default void sort(@RefAware Comparator<? super T> c) {
-
   }
 
   @Override

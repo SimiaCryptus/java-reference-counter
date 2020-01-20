@@ -21,12 +21,15 @@ package com.simiacryptus.ref.lang;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @RefIgnore
@@ -38,7 +41,13 @@ public class RefUtil {
       if (value instanceof ReferenceCounting) {
         ((ReferenceCounting) value).freeRef();
       } else if (value.getClass().isArray()) {
-        RefUtil.freeRefs(((Object[]) value));
+        synchronized (value) {
+          int length = Array.getLength(value);
+          for (int i = 0; i < length; i++) {
+            Object arrayElement = Array.get(value, i);
+            freeRef(arrayElement);
+          }
+        }
       } else if (value instanceof Map.Entry) {
         freeRef(((Map.Entry) value).getKey());
         freeRef(((Map.Entry) value).getValue());
@@ -51,10 +60,18 @@ public class RefUtil {
   }
 
   @Nullable
+  @RefAware
   public static <T> T addRef(@Nullable @RefAware T value) {
     if (null != value) {
       if (value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
-      else if (value.getClass().isArray()) Arrays.stream(((Object[]) value)).forEach(RefUtil::addRef);
+      else if (value.getClass().isArray()) {
+        synchronized (value) {
+          int length = Array.getLength(value);
+          for (int i = 0; i < length; i++) {
+            addRef(Array.get(value, i));
+          }
+        }
+      }
     }
     return value;
   }
@@ -63,35 +80,19 @@ public class RefUtil {
   public static @RefAware
   <T> T wrapInterface(@Nonnull @RefAware T obj,
                       @Nonnull @RefAware Object... refs) {
-    final Class<?> objClass = obj.getClass();
-    final ReferenceCountingBase refcounter = new ReferenceCountingBase() {
-      @Override
-      protected void _free() {
-        Arrays.stream(refs).forEach(RefUtil::freeRef);
-        if (obj instanceof ReferenceCounting)
-          ((ReferenceCounting) obj).freeRef();
-        super._free();
-      }
-    };
-    return (T) Proxy.newProxyInstance(ReferenceCounting.class.getClassLoader(),
-        Stream.concat(Arrays.stream(objClass.getInterfaces()), Stream.of(ReferenceCounting.class)).distinct()
-            .toArray(i -> new Class[i]),
-        new InvocationHandler() {
-          @Override
-          public Object invoke(@RefAware Object proxy,
-                               @Nonnull @RefAware Method method,
-                               @RefAware Object[] args) throws Throwable {
-            if (method.getDeclaringClass().equals(ReferenceCounting.class)) {
-              return method.invoke(refcounter, args);
-            } else {
-              return method.invoke(obj, args);
-            }
-          }
-        });
+    return (T) Proxy.newProxyInstance(
+        ReferenceCounting.class.getClassLoader(),
+        Stream.concat(
+            Arrays.stream(obj.getClass().getInterfaces()),
+            Stream.of(ReferenceCounting.class)
+        ).distinct().toArray(i -> new Class[i]),
+        new RefWrapperHandler(obj, new RefProxy(obj, refs)));
   }
 
   public static <T> void freeRefs(@Nonnull @RefAware T[] array) {
-    Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
+    synchronized (array) {
+      Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
+    }
   }
 
   @Nonnull
@@ -100,4 +101,118 @@ public class RefUtil {
     return optional.get();
   }
 
+  @Nonnull
+  @RefIgnore
+  public static <T> T orElseGet(@Nonnull @RefAware Optional<T> optional, @RefAware Supplier<T> orElse) {
+    if (optional.isPresent()) {
+      return optional.get();
+    } else {
+      return orElse.get();
+    }
+  }
+
+  @Nonnull
+  @RefIgnore
+  public static <T> T orElse(@Nonnull @RefAware Optional<T> optional, @RefAware T orElse) {
+    if (optional.isPresent()) {
+      return optional.get();
+    } else {
+      return orElse;
+    }
+  }
+
+  @RefIgnore
+  public static <T, R> Optional<R> map(@RefAware Optional<T> optional, @RefAware Function<T, R> fn) {
+    try {
+      return optional.map(fn);
+    } finally {
+      RefUtil.freeRef(fn);
+      RefUtil.freeRef(optional);
+    }
+  }
+
+  @RefIgnore
+  public static <T> void set(@RefIgnore T[] array, int index, T value) {
+    T prev;
+    synchronized (array) {
+      prev = array[index];
+      array[index] = value;
+    }
+    RefUtil.freeRef(prev);
+  }
+
+  public static <T> T[] addRefs(T[] array) {
+    synchronized (array) {
+      for (int i = 0; i < array.length; i++) {
+        RefUtil.addRef(array[i]);
+      }
+      return array;
+    }
+  }
+
+  public static <T> T[][] addRefs(T[][] array) {
+    synchronized (array) {
+      for (int i = 0; i < array.length; i++) {
+        RefUtil.addRefs(array[i]);
+      }
+      return array;
+    }
+  }
+
+  public static <T> T[][][] addRefs(T[][][] array) {
+    synchronized (array) {
+      for (int i = 0; i < array.length; i++) {
+        RefUtil.addRefs(array[i]);
+      }
+      return array;
+    }
+  }
+
+  public static <T> T[][][][] addRefs(T[][][][] array) {
+    synchronized (array) {
+      for (int i = 0; i < array.length; i++) {
+        RefUtil.addRefs(array[i]);
+      }
+      return array;
+    }
+  }
+
+  private static class RefWrapperHandler<T> implements InvocationHandler {
+    private final ReferenceCountingBase refcounter;
+    private final T obj;
+
+    public RefWrapperHandler(T obj, ReferenceCountingBase refcounter) {
+      this.refcounter = refcounter;
+      this.obj = obj;
+    }
+
+    @Override
+    public Object invoke(@RefAware Object proxy,
+                         @Nonnull @RefAware Method method,
+                         @RefAware Object[] args) throws Throwable {
+      if (method.getDeclaringClass().equals(ReferenceCounting.class)) {
+        return method.invoke(refcounter, args);
+      } else {
+        return method.invoke(obj, args);
+      }
+    }
+  }
+
+  private static class RefProxy<T> extends ReferenceCountingBase {
+    private final T obj;
+    private final Object[] refs;
+
+    public RefProxy(T obj, Object... refs) {
+      this.obj = obj;
+      this.refs = refs;
+    }
+
+    @Override
+    protected void _free() {
+      RefUtil.freeRefs(refs);
+      if (obj instanceof ReferenceCounting)
+        ((ReferenceCounting) obj).freeRef();
+      super._free();
+    }
+  }
 }

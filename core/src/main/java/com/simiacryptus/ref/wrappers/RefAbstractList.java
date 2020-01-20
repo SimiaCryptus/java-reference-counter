@@ -64,7 +64,6 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
         .reduce((a, b) -> a || b).orElse(false);
     RefUtil.freeRef(c);
     return returnValue;
-
   }
 
   @Nonnull

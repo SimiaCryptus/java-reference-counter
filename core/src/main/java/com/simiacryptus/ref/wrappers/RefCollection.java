@@ -36,7 +36,7 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
   Collection<T> getInner();
 
   @Nonnull
-  public static <T> RefCollection<T>[] addRefs(@Nonnull RefCollection<T>[] array) {
+  static <T> RefCollection<T>[] addRefs(@Nonnull RefCollection<T>[] array) {
     return Arrays.stream(array).filter((x) -> x != null).map(RefCollection::addRef)
         .toArray((x) -> new RefCollection[x]);
   }

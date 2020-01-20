@@ -108,7 +108,9 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
 
   @Override
   public int drainTo(@RefAware @Nonnull Collection<? super T> c) {
-    return getInner().drainTo(c);
+    int drain = getInner().drainTo(c);
+    RefUtil.freeRef(c);
+    return drain;
   }
 
   @Override

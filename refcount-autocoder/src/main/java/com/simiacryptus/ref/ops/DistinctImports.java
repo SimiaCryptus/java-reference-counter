@@ -44,6 +44,7 @@ public class DistinctImports extends RefASTOperator {
         iterator.remove();
       }
     }
+    super.endVisit(node);
   }
 
 

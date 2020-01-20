@@ -170,7 +170,7 @@ public class RefIntStream implements IntStream {
   @Nonnull
   public RefIntStream filter(@Nonnull @RefAware IntPredicate predicate) {
     track(predicate);
-    return new RefIntStream(inner.filter((int t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
+    return new RefIntStream(inner.filter(predicate), lambdas, refs);
   }
 
   @Override
@@ -191,20 +191,20 @@ public class RefIntStream implements IntStream {
   @Override
   public RefIntStream flatMap(@Nonnull @RefAware IntFunction<? extends IntStream> mapper) {
     track(mapper);
-    return new RefIntStream(inner.flatMap((int t) -> mapper.apply(getRef(t)).map(this::storeRef)), lambdas, refs);
+    return new RefIntStream(inner.flatMap(mapper).map(this::storeRef), lambdas, refs);
   }
 
   @Override
   public void forEach(@Nonnull @RefAware IntConsumer action) {
     track(action);
-    inner.forEach((int t) -> action.accept(getRef(t)));
+    inner.forEach(action);
     close();
   }
 
   @Override
   public void forEachOrdered(@Nonnull @RefAware IntConsumer action) {
     track(action);
-    inner.forEachOrdered((int t) -> action.accept(getRef(t)));
+    inner.forEachOrdered(action);
     close();
   }
 
@@ -217,7 +217,6 @@ public class RefIntStream implements IntStream {
         RefIntStream.this.close();
       }
     });
-
   }
 
   @Nonnull
@@ -229,30 +228,25 @@ public class RefIntStream implements IntStream {
   @Nonnull
   @Override
   public RefIntStream map(@Nonnull @RefAware IntUnaryOperator mapper) {
-    track(mapper);
-    return new RefIntStream(inner.map(t -> storeRef(mapper.applyAsInt(t))), lambdas, refs).track(mapper);
+    return new RefIntStream(inner.map(mapper), lambdas, refs).track(mapper);
   }
 
   @Nonnull
   @Override
   public RefDoubleStream mapToDouble(@Nonnull @RefAware IntToDoubleFunction mapper) {
-    track(mapper);
-    return new RefDoubleStream(inner.mapToDouble((int value) -> mapper.applyAsDouble(getRef(value))), lambdas, refs)
-        .track(mapper);
+    return new RefDoubleStream(inner.mapToDouble(mapper), lambdas, refs).track(mapper);
   }
 
   @Nonnull
   @Override
   public RefLongStream mapToLong(@Nonnull @RefAware IntToLongFunction mapper) {
-    track(mapper);
-    return new RefLongStream(inner.mapToLong((int value) -> mapper.applyAsLong(getRef(value))), lambdas, refs)
-        .track(mapper);
+    return new RefLongStream(inner.mapToLong(mapper), lambdas, refs).track(mapper);
   }
 
   @Nonnull
   @Override
   public <U> RefStream<U> mapToObj(@RefAware IntFunction<? extends U> mapper) {
-    return new RefStream<U>(inner.mapToObj(mapper), lambdas, refs).track(mapper);
+    return new RefStream<U>(inner.mapToObj(mapper).map(this::storeRef), lambdas, refs).track(mapper);
   }
 
   @Override
@@ -341,7 +335,6 @@ public class RefIntStream implements IntStream {
         RefIntStream.this.close();
       }
     });
-
   }
 
   @Override

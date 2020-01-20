@@ -32,6 +32,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RefIgnore
@@ -61,69 +62,80 @@ public class VerifyFields extends VerifyClassMembers {
   @Override
   public void endVisit(@Nonnull TypeDeclaration node) {
     final List<SimpleName> fields = fields(node.bodyDeclarations());
-    if (fields.size() > 0) {
-      final ITypeBinding typeBinding = resolveBinding(node);
-      final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
-      if (isRefCounted(node, typeBinding)) {
-        debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
-            bindingID,
-            getSpan(node),
-            RefUtil.get(fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
-        verifyClassDeclarations(node.bodyDeclarations());
-      } else {
-        fatal(node, "Non-refcounted type defined refcounted fields %s",
-            RefUtil.get(fields.stream().map(x -> x.getFullyQualifiedName()).reduce((a, b) -> a + ", " + b)));
-      }
+    final ITypeBinding typeBinding = resolveBinding(node);
+    final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
+    if (isRefCounted(node, typeBinding)) {
+      debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
+          bindingID,
+          getSpan(node),
+          fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
+      assertHasFree(node, node.bodyDeclarations());
+      verifyClassDeclarations(node.bodyDeclarations());
+    } else if(!fields.isEmpty()) {
+      fatal(node, "Non-refcounted type defined refcounted fields %s",
+          fields.stream().map(x -> x.getFullyQualifiedName()).reduce((a, b) -> a + ", " + b).orElse(""));
     }
   }
 
   @Override
   public void endVisit(@Nonnull AnonymousClassDeclaration node) {
+    final ITypeBinding typeBinding = resolveBinding(node);
+    assert typeBinding != null;
     final List<SimpleName> fields = fields(node.bodyDeclarations());
-    if (fields.size() > 0) {
-      final ITypeBinding typeBinding = resolveBinding(node);
-      assert typeBinding != null;
-      final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
-      if (isRefCounted(node, typeBinding)) {
-        debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
-            bindingID,
-            getSpan(node),
-            RefUtil.get(fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
-        verifyClassDeclarations(node.bodyDeclarations());
-      } else {
-        if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object")) {
-          if (typeBinding.getInterfaces().length > 0) {
-            debug(node, String.format("Closures in anonymous interface %s at %s: %s",
-                bindingID,
-                getSpan(node),
-                RefUtil.get(fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
-            verifyClassDeclarations(node.bodyDeclarations());
-          } else {
-            warn(node, String.format("Closures in Non-RefCountable %s at %s: %s",
-                bindingID,
-                getSpan(node),
-                RefUtil.get(fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
-            verifyClassDeclarations(node.bodyDeclarations());
-          }
-        } else {
-          debug(node, String.format("Closures in Non-RefCountable %s at %s: %s",
+    final SymbolIndex.BindingID bindingID = SymbolIndex.getBindingID(typeBinding);
+    if (isRefCounted(node, typeBinding)) {
+      debug(node, String.format("Closures in anonymous RefCountable in %s at %s: %s",
+          bindingID,
+          getSpan(node),
+          fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
+      verifyClassDeclarations(node.bodyDeclarations());
+      assertHasFree(node, node.bodyDeclarations());
+    } else {
+      if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object")) {
+        if (typeBinding.getInterfaces().length > 0) {
+          debug(node, String.format("Closures in anonymous interface %s at %s: %s",
               bindingID,
               getSpan(node),
-              RefUtil.get(fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b))));
+              fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
+          verifyClassDeclarations(node.bodyDeclarations());
+        } else {
+          warn(node, String.format("Closures in Non-RefCountable %s at %s: %s",
+              bindingID,
+              getSpan(node),
+              fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
           verifyClassDeclarations(node.bodyDeclarations());
         }
+      } else {
+        debug(node, String.format("Closures in Non-RefCountable %s at %s: %s",
+            bindingID,
+            getSpan(node),
+            fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
+        verifyClassDeclarations(node.bodyDeclarations());
       }
+    }
+  }
+
+  protected void assertHasFree(ASTNode node, @Nonnull List<ASTNode> bodyDeclarations) {
+    Optional<String> freeMethod = bodyDeclarations.stream()
+        .filter(x -> x instanceof MethodDeclaration)
+        .map(x -> (MethodDeclaration) x)
+        .map(x -> x.getName().toString())
+        .filter(x -> x.equals("_free"))
+        .findAny();
+    if (!freeMethod.isPresent()) {
+      fatal(node, "No _free defined");
     }
   }
 
   protected void verifyClassDeclarations(@Nonnull List<ASTNode> bodyDeclarations) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
+    List<SimpleName> fields = fields(bodyDeclarations);
     for (MethodDeclaration methodDeclaration : VerifyClassMembers.methods(bodyDeclarations)) {
       try {
         if (methodDeclaration.isConstructor()) continue;
         Block body = methodDeclaration.getBody();
         if (null == body) continue;
-        verifyClassMethod(methodDeclaration.getName().toString(), body.statements(), fields(bodyDeclarations));
+        verifyClassMethod(methodDeclaration.getName().toString(), body.statements(), fields);
       } catch (CollectableException e) {
         exceptions.add(e);
       }

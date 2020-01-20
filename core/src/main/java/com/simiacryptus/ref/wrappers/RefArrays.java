@@ -57,6 +57,7 @@ public class RefArrays {
 
   @Nonnull
   public static <T> T[] copyOf(@Nonnull @RefAware T[] data, int length) {
+    assert data.length == length;
     return Arrays.copyOf(data, length);
   }
 
