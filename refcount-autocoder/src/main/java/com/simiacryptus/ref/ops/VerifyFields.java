@@ -69,7 +69,7 @@ public class VerifyFields extends VerifyClassMembers {
           bindingID,
           getSpan(node),
           fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
-      assertHasFree(node, node.bodyDeclarations());
+      if(!typeBinding.isInterface()) assertHasFree(node, node.bodyDeclarations());
       verifyClassDeclarations(node.bodyDeclarations());
     } else if(!fields.isEmpty()) {
       fatal(node, "Non-refcounted type defined refcounted fields %s",

@@ -19,38 +19,9 @@
 
 package com.simiacryptus.ref.lang;
 
-import javax.annotation.Nonnull;
-import java.util.Arrays;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-@RefIgnore
-public interface ReferenceCounting {
-
-  default boolean isFinalized() {
-    return false;
-  }
-
-  default ReferenceCounting addRef() {
-    return this;
-  }
-
-  default boolean assertAlive() {
-    return true;
-  }
-
-  default int currentRefCount() {
-    return 1;
-  }
-
-  @Nonnull
-  default ReferenceCounting detach() {
-    return this;
-  }
-
-  default int freeRef() {
-    return 0;
-  }
-
-  default boolean tryAddRef() {
-    return true;
-  }
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MustCall {
 }

@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,6 +91,27 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     super.endVisit(node);
   }
 
+  @Override
+  public void endVisit(@Nonnull SingleVariableDeclaration node) {
+    ArrayList<CollectableException> exceptions = new ArrayList<>();
+    try {
+      IVariableBinding binding = node.resolveBinding();
+      if (null == binding) {
+        warn(node, "Unresolved type");
+      } else {
+        if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
+          processStatements(node);
+        }
+      }
+    } catch (CollectableException e) {
+      exceptions.add(e);
+    }
+    if (!exceptions.isEmpty()) {
+      throw CollectableException.combine(exceptions);
+    }
+    super.endVisit(node);
+  }
+
   public void processVariable(VariableDeclarationFragment node) {
     IVariableBinding binding = node.resolveBinding();
     if (null == binding) {
@@ -104,13 +126,51 @@ public class VerifyMethodVariables extends VerifyRefOperator {
   @NotNull
   public List<Statement> getStatements(VariableDeclarationFragment node) {
     Block block = ASTUtil.getBlock(node);
-    if (block == null) fatal(node, "Block not found");
+    if (block == null) fatal(node, "Block not found for %s", node);
     List<Statement> statements = block.statements();
     int definedAt = statements.indexOf(getStatement(node));
     if (definedAt < 0) fatal(node, "Statement not found");
     statements = statements.subList(definedAt + 1, statements.size());
     return statements;
   }
+
+  @NotNull
+  public void processStatements(SingleVariableDeclaration node) {
+    ASTNode astNode = getMethodTuplet(node);
+    if (astNode == null) fatal(node, "Lambda nor Method not found for %s", node);
+    if(astNode instanceof LambdaExpression) {
+      processBlock(node, ((LambdaExpression) astNode).getBody(), TerminalState.Freed);
+    } else if(astNode instanceof EnhancedForStatement) {
+      processBlock(node, ((EnhancedForStatement) astNode).getBody(), TerminalState.Any);
+    } else {
+      Block body = ((MethodDeclaration) astNode).getBody();
+      if(null != body) processBlock(node, body, TerminalState.Freed);
+    }
+  }
+
+  public void processBlock(SingleVariableDeclaration node, ASTNode block, TerminalState requiredTermination) {
+    if (block == null) fatal(node, "Block not found");
+    if (block instanceof Block) {
+      List<Statement> statements = ((Block) block).statements();
+      if (null != statements) processScope(statements, node.getName(), requiredTermination);
+    } else {
+      ReferenceState startState = new ReferenceState(node.getName(), null, null);
+      ReferenceState endState = processNode(block, node.getName(), startState, new ArrayList<>(), requiredTermination);
+      if (!requiredTermination.validate(endState)) {
+        fatal(block, "Invalid state for %s: %s", node, endState);
+      }
+    }
+  }
+
+  @Nullable
+  public static ASTNode getMethodTuplet(@Nullable ASTNode node) {
+    if (null == node) return null;
+    if (node instanceof MethodDeclaration) return node;
+    if (node instanceof EnhancedForStatement) return node;
+    if (node instanceof LambdaExpression) return node;
+    return getMethodTuplet(node.getParent());
+  }
+
 
   public void processScope(List<Statement> statements, SimpleName name, TerminalState requiredTermination) {
     ArrayList<Statement> finalizers = new ArrayList<>();
@@ -119,7 +179,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       state = processStatement(statement, name, state, finalizers, requiredTermination);
     }
     if (!requiredTermination.validate(state)) {
-      fatal(statements.get(statements.size() - 1), "Reference for %s ends in state %s", name, state);
+      fatal(statements.isEmpty() ? name : statements.get(statements.size() - 1), "Reference for %s ends in state %s", name, state);
     }
   }
 

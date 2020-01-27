@@ -40,7 +40,13 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   @Override
   public void add(int index, @RefAware T element) {
     assertAlive();
-    getInner().add(index, element);
+    List<T> inner = getInner();
+    synchronized (inner) {
+      if(index < inner.size()) {
+        RefUtil.freeRef(inner.get(index));
+      }
+      inner.add(index, element);
+    }
   }
 
   @Override
@@ -75,6 +81,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Nullable
   @Override
+  @RefIgnore
   public T get(int index) {
     assertAlive();
     return RefUtil.addRef(getInner().get(index));
@@ -111,6 +118,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
+  @RefIgnore
   public T remove(int index) {
     assertAlive();
     return getInner().remove(index);
@@ -151,6 +159,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
+  @RefIgnore
   public T set(int index, @RefAware T element) {
     assertAlive();
     return getInner().set(index, element);

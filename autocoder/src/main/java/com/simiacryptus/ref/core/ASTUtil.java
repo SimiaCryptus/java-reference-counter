@@ -362,10 +362,13 @@ public class ASTUtil {
 
   public static List<IMethodBinding> superMethods(@Nonnull IMethodBinding methodBinding) {
     final IMethodBinding methodDeclaration = methodBinding.getMethodDeclaration();
-    final ITypeBinding declaringClass = methodDeclaration.getDeclaringClass();
-    return superTypes(declaringClass).stream().flatMap(c -> {
-      return Arrays.stream(c.getDeclaredMethods()).filter(x -> methodDeclaration.overrides(x));
-    }).collect(Collectors.toList());
+    return superTypes(methodDeclaration.getDeclaringClass())
+        .stream()
+        .map(ITypeBinding::getDeclaredMethods)
+        .flatMap(Arrays::stream)
+        .filter(methodDeclaration::overrides)
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   @Nonnull
@@ -375,15 +378,25 @@ public class ASTUtil {
       list.add(xface);
     }
     final ITypeBinding superclass = declaringClass.getSuperclass();
-    if (null != superclass) list.add(superclass);
+    if (null != superclass) {
+      list.add(superclass);
+      list.addAll(superTypes(superclass));
+    }
     return list;
   }
 
   @Nullable
-  public static Tuple2<ASTNode, IMethodBinding> getMethod(@Nullable ASTNode node) {
+  public static Tuple2<ASTNode, IMethodBinding> getMethodTuplet(@Nullable ASTNode node) {
     if (null == node) return null;
     if (node instanceof MethodDeclaration) return new Tuple2<>(node, ((MethodDeclaration) node).resolveBinding());
     if (node instanceof LambdaExpression) return new Tuple2<>(node, ((LambdaExpression) node).resolveMethodBinding());
+    return getMethodTuplet(node.getParent());
+  }
+
+  @Nullable
+  public static MethodDeclaration getMethod(@Nullable ASTNode node) {
+    if (null == node) return null;
+    if (node instanceof MethodDeclaration) return (MethodDeclaration) node;
     return getMethod(node.getParent());
   }
 

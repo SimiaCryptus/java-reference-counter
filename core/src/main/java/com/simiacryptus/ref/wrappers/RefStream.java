@@ -23,6 +23,7 @@ import com.simiacryptus.ref.lang.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,17 +65,6 @@ public class RefStream<T> implements Stream<T> {
       Iterator<T> iterator() {
         final Iterator<T> iterator = super.iterator();
         if (iterator instanceof RefIterator) {
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
-          assert ((RefIterator) iterator).getInner() != null;
           return ((RefIterator) iterator).getInner();
         }
         return iterator;
@@ -133,25 +123,12 @@ public class RefStream<T> implements Stream<T> {
     });
   }
 
-  static <U> void freeRef(@RefAware U u,
-                      @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
-    if (u instanceof ReferenceCounting) {
-      refs.computeIfAbsent(new IdentityWrapper(u), x1 -> new AtomicInteger(0)).updateAndGet(x -> {
-        if (x <= 0)
-          return 0;
-        else {
-          return x - 1;
-        }
-      });
-    }
-  }
-
   static <U> U getRef(@RefAware U u,
                       @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
       final AtomicBoolean obtained = new AtomicBoolean(false);
-      refCnt.updateAndGet(x -> {
+      int newStoredRefs = refCnt.updateAndGet(x -> {
         if (x <= 0)
           return 0;
         else {
@@ -162,6 +139,11 @@ public class RefStream<T> implements Stream<T> {
       if (!obtained.get()) {
         RefUtil.addRef(u);
       }
+    } else if (null != u && u.getClass().isArray()) {
+      int length = Array.getLength(u);
+      for (int i = 0; i < length; i++) {
+        getRef(Array.get(u, i), refs);
+      }
     }
     return u;
   }
@@ -170,6 +152,11 @@ public class RefStream<T> implements Stream<T> {
                         @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
       refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
+    } else if (null != u && u.getClass().isArray()) {
+      int length = Array.getLength(u);
+      for (int i = 0; i < length; i++) {
+        storeRef(Array.get(u, i), refs);
+      }
     }
     return u;
   }
@@ -245,7 +232,7 @@ public class RefStream<T> implements Stream<T> {
   @Nonnull
   public RefStream<T> filter(@Nonnull @RefAware Predicate<? super T> predicate) {
     track(predicate);
-    return new RefStream(getInner().filter((T t) -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
+    return new RefStream(getInner().filter(t -> predicate.test(RefUtil.addRef(t))), lambdas, refs);
   }
 
   @Nonnull
@@ -525,17 +512,14 @@ public class RefStream<T> implements Stream<T> {
     return this;
   }
 
-  @Nonnull @RefAware
+  @Nonnull
+  @RefAware
   private <A> BiConsumer<A, A> getBiConsumer(@Nonnull @RefAware BinaryOperator<A> combiner) {
-    return RefUtil.wrapInterface((t, u) -> RefUtil.freeRef(combiner.apply(t, u)), combiner);
+    return RefUtil.wrapInterface((t, u) -> storeRef(combiner.apply(t, u)), combiner);
   }
 
   private <U> U getRef(@RefAware U u) {
     return getRef(u, this.refs);
-  }
-
-  private <U> void freeRef(@RefAware U u) {
-    freeRef(u, this.refs);
   }
 
   @RefIgnore

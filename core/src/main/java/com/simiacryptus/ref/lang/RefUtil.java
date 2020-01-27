@@ -61,7 +61,7 @@ public class RefUtil {
 
   @Nullable
   @RefAware
-  public static <T> T addRef(@Nullable @RefAware T value) {
+  public static <T> T addRef(@Nullable @RefIgnore T value) {
     if (null != value) {
       if (value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
       else if (value.getClass().isArray()) {
@@ -141,7 +141,7 @@ public class RefUtil {
     RefUtil.freeRef(prev);
   }
 
-  public static <T> T[] addRefs(T[] array) {
+  public static <T> T[] addRefs(@RefIgnore T[] array) {
     synchronized (array) {
       for (int i = 0; i < array.length; i++) {
         RefUtil.addRef(array[i]);
@@ -150,7 +150,7 @@ public class RefUtil {
     }
   }
 
-  public static <T> T[][] addRefs(T[][] array) {
+  public static <T> T[][] addRefs(@RefIgnore T[][] array) {
     synchronized (array) {
       for (int i = 0; i < array.length; i++) {
         RefUtil.addRefs(array[i]);
@@ -159,7 +159,7 @@ public class RefUtil {
     }
   }
 
-  public static <T> T[][][] addRefs(T[][][] array) {
+  public static <T> T[][][] addRefs(@RefIgnore T[][][] array) {
     synchronized (array) {
       for (int i = 0; i < array.length; i++) {
         RefUtil.addRefs(array[i]);
@@ -168,7 +168,7 @@ public class RefUtil {
     }
   }
 
-  public static <T> T[][][][] addRefs(T[][][][] array) {
+  public static <T> T[][][][] addRefs(@RefIgnore T[][][][] array) {
     synchronized (array) {
       for (int i = 0; i < array.length; i++) {
         RefUtil.addRefs(array[i]);

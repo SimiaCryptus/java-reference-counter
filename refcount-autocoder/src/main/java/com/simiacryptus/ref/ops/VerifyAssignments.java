@@ -67,7 +67,7 @@ public class VerifyAssignments extends RefASTOperator {
     final Expression expression = node.getExpression();
     if (null == expression) return;
     if (isRefAware(expression)) {
-      final Tuple2<ASTNode, IMethodBinding> method = ASTUtil.getMethod(node);
+      final Tuple2<ASTNode, IMethodBinding> method = ASTUtil.getMethodTuplet(node);
       if (method == null) {
         fatal(node, "No containing method");
         return;

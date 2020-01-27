@@ -253,6 +253,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return true;
   }
 
+  @MustCall
   protected void _free() {
   }
 

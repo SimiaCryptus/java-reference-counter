@@ -36,6 +36,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 
   @Override
   public boolean isEmpty() {
+    assertAlive();
     return getInner().isEmpty();
   }
 
@@ -56,6 +57,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 
   @Override
   public boolean containsKey(@RefAware Object key) {
+    assertAlive();
     final boolean containsKey = getInner().containsKey(key);
     RefUtil.freeRef(key);
     return containsKey;
@@ -63,6 +65,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 
   @Override
   public boolean containsValue(@RefAware Object value) {
+    assertAlive();
     final boolean containsValue = getInner().values().stream().anyMatch(x -> x.value.equals(value));
     RefUtil.freeRef(value);
     return containsValue;
@@ -71,22 +74,18 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   @Nonnull
   @Override
   public RefHashSet<Entry<K, V>> entrySet() {
+    assertAlive();
     final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
     final Map<K, KeyValue<K, V>> inner = getInner();
     assert !(inner instanceof ReferenceCounting);
-    inner.values().stream().map(x -> new RefEntry<K, V>(RefUtil.addRef(x.key), RefUtil.addRef(x.value)) {
-      @Nullable
-      @Override
-      public V setValue(@RefAware V value) {
-        return put(RefUtil.addRef(x.key), value);
-      }
-    }).forEach(refSet::add);
+    inner.values().stream().map(x -> new MapEntry(x)).forEach(refSet::add);
     return refSet;
   }
 
   @Nullable
   @Override
   public V get(@RefAware Object key) {
+    assertAlive();
     final KeyValue<K, V> keyValue = getInner().get(key);
     RefUtil.freeRef(key);
     return RefUtil.addRef(null == keyValue ? null : keyValue.value);
@@ -95,11 +94,13 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   @Nonnull
   @Override
   public RefSet<K> keySet() {
+    assertAlive();
     return new RefHashSet<>(getInner().keySet());
   }
 
   @Override
   public V put(@RefAware K key, @RefAware V value) {
+    assertAlive();
     final KeyValue<K, V> put = getInner().put(key, new KeyValue<>(key, value));
     if (null == put)
       return null;
@@ -109,20 +110,23 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 
   @Override
   public void putAll(@Nonnull @RefAware Map<? extends K, ? extends V> m) {
-    final Map<? extends K, ? extends V> m_inner;
-    if (m instanceof RefAbstractMap) {
-      m_inner = ((RefAbstractMap) m).getInner();
-    } else {
-      m_inner = m;
-    }
-    m_inner.forEach((k, v) -> {
-      RefUtil.freeRef(put(RefUtil.addRef(k), RefUtil.addRef(v)));
+    assertAlive();
+//    if (m instanceof RefAbstractMap) {
+//      final Map<K, KeyValue<K, V>> m_inner = ((RefAbstractMap<K,V>) m).getInner();
+//      m_inner.forEach((k, v) -> {
+//        RefUtil.freeRef(put(RefUtil.addRef(k), RefUtil.addRef(v.value)));
+//      });
+//    } else {
+//    }
+    m.forEach((k, v) -> {
+      RefUtil.freeRef(put(k, v));
     });
     RefUtil.freeRef(m);
   }
 
   @Override
   public V remove(@RefAware Object key) {
+    assertAlive();
     final KeyValue<K, V> removed = getInner().remove(key);
     if (null != removed) {
       RefUtil.freeRef(removed.key);
@@ -134,14 +138,19 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 
   @Override
   public int size() {
+    assertAlive();
     return getInner().size();
   }
 
   @Nonnull
   @Override
   public RefHashSet<V> values() {
+    assertAlive();
     final RefHashSet<V> hashSet = new RefHashSet<>();
-    getInner().values().forEach(x -> hashSet.add(x.value));
+    getInner().values().forEach(x -> {
+      V value = x.value;
+      hashSet.add(RefUtil.addRef(value));
+    });
     return hashSet;
   }
 
@@ -162,4 +171,18 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     }
   }
 
+  private class MapEntry extends RefEntry<K, V> {
+    private final KeyValue<K, V> x;
+
+    public MapEntry(KeyValue<K, V> x) {
+      super(RefUtil.addRef(x.key), RefUtil.addRef(x.value));
+      this.x = x;
+    }
+
+    @Nullable
+    @Override
+    public V setValue(@RefAware V value) {
+      return put(RefUtil.addRef(x.key), value);
+    }
+  }
 }

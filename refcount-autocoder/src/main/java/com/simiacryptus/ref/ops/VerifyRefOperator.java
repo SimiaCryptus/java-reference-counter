@@ -90,6 +90,43 @@ public class VerifyRefOperator extends RefASTOperator {
         if (thenResult.isRefConsumed() != elseResult.isRefConsumed()) fatal(statement, "Mismatch ref consumed for %s", name);
         return thenResult;
       }
+    } else if (statement instanceof SwitchStatement) {
+      final SwitchStatement switchStatement = (SwitchStatement) statement;
+      Expression expression = switchStatement.getExpression();
+      ReferenceState expressionResult = processNode(expression, name, state, finalizers, requiredTermination);
+      List<Statement> statements = switchStatement.statements();
+      ArrayList<ReferenceState> referenceStates = new ArrayList<>();
+      int fromIndex = 0;
+      for (int i = 0; i < statements.size(); i++) {
+        Statement statement1 = statements.get(i);
+        if(statement1 instanceof BreakStatement || statement1 instanceof ReturnStatement || statement1 instanceof ThrowStatement) {
+          List<Statement> block = statements.subList(fromIndex, i+1);
+          ReferenceState blockState = expressionResult;
+          for (Statement stmt : block) {
+            blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
+          }
+          referenceStates.add(blockState);
+          fromIndex = i+1;
+        }
+      }
+      {
+        List<Statement> block = statements.subList(fromIndex, statements.size());
+        if(!block.isEmpty()) {
+          ReferenceState blockState = expressionResult;
+          for (Statement stmt : block) {
+            blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
+          }
+          referenceStates.add(blockState);
+        }
+      }
+      List<Boolean> refConsumed = referenceStates.stream().filter(x -> !x.isTerminated()).map(x -> x.isRefConsumed()).distinct().collect(Collectors.toList());
+      if(refConsumed.size() == 0) {
+        return referenceStates.get(0);
+      }
+      if(refConsumed.size() > 1) {
+        fatal(statement, "Inconsistent reference consumer for %s", name);
+      }
+      return referenceStates.stream().filter(x->!x.isTerminated()).findAny().get();
     } else if (statement instanceof TryStatement) {
       final TryStatement tryStatement = (TryStatement) statement;
       final Statement finallyStatement = tryStatement.getFinally();
@@ -224,7 +261,7 @@ public class VerifyRefOperator extends RefASTOperator {
       state = state.setTerminated(returnStatements.isEmpty() ? throwStatements.get(0) : returnStatements.get(0));
       state = processStatements(name, state, requiredTermination, finalizers.toArray(new Statement[]{}));
       if (!requiredTermination.validate(state)) {
-        fatal(node, "Reference for %s ends in state %s", name, state);
+        fatal(node, "Reference for %s (%s) ends in state %s", name, getLocation(name), state);
       }
     }
     return state;
@@ -245,13 +282,17 @@ public class VerifyRefOperator extends RefASTOperator {
     final ASTNode parent = node.getParent();
     if (parent instanceof MethodInvocation) {
       MethodInvocation methodInvocation = (MethodInvocation) parent;
-      if (node == methodInvocation.getExpression()) {
-        if (methodInvocation.getName().toString().equals("freeRef")) return state.setRefConsumed(node);
+      String methodName = methodInvocation.getName().toString();
+      Expression expression = methodInvocation.getExpression();
+      if (null != expression && node.toString().equals(expression.toString())) {
+        if (methodName.equals("freeRef")) return state.setRefConsumed(node);
         return state;
       } else {
-        if (methodInvocation.getName().toString().equals("addRef")) return state;
-        if (methodInvocation.getName().toString().equals("addRefs")) return state;
-        if (methodInvocation.getName().toString().equals("equals")) return state;
+        //if (methodName.equals("addRef")) return state;
+        //if (methodName.equals("addRefs")) return state;
+        //if (methodName.equals("freeRef")) return state.setRefConsumed(node);
+        //if (methodName.equals("freeRefs")) return state.setRefConsumed(node);
+        if (methodName.equals("equals")) return state;
         int argIndex = methodInvocation.arguments().indexOf(node);
         IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
         if (null == methodBinding) {
@@ -295,6 +336,14 @@ public class VerifyRefOperator extends RefASTOperator {
       if (assignment.getRightHandSide() == node) {
         return state.setRefConsumed(node);
       } else if (assignment.getLeftHandSide() == node) {
+        if(node instanceof SimpleName) {
+          IBinding binding = ((SimpleName) node).resolveBinding();
+          if(binding instanceof IVariableBinding) {
+            if(((IVariableBinding) binding).isEffectivelyFinal()) {
+              return state;
+            }
+          }
+        }
         if (!state.isRefConsumed()) {
           fatal(node, "Overwriting non-freed reference %s", name);
         }

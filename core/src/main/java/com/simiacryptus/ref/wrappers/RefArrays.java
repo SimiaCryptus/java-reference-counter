@@ -129,7 +129,9 @@ public class RefArrays {
   }
 
   public static <T> void parallelSetAll(@Nonnull @RefAware T[] data, @Nonnull @RefAware IntFunction<T> fn) {
+    RefUtil.freeRefs(data);
     Arrays.parallelSetAll(data, fn);
+    RefUtil.freeRef(fn);
   }
 
   public static void setAll(@Nonnull double[] data, @Nonnull @RefAware IntToDoubleFunction fn) {

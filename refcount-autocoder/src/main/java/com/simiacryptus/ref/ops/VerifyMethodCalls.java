@@ -23,6 +23,7 @@ import com.simiacryptus.ref.core.ASTUtil;
 import com.simiacryptus.ref.core.CollectableException;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
+import com.simiacryptus.ref.lang.MustCall;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.eclipse.jdt.core.dom.*;
@@ -30,6 +31,7 @@ import org.eclipse.jdt.core.dom.*;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.*;
+import java.util.function.Predicate;
 
 @RefIgnore
 public class VerifyMethodCalls extends RefASTOperator {
@@ -52,12 +54,28 @@ public class VerifyMethodCalls extends RefASTOperator {
       warn(node, "Unresolved binding");
       return;
     }
-    final List<IMethodBinding> superMethods = ASTUtil.superMethods(methodBinding);
+    if (contains(ASTUtil.superMethods(methodBinding), binding -> ASTUtil.hasAnnotation(binding, MustCall.class))) {
+      Block body = node.getBody();
+      if(null != body) {
+        if (!contains((List<Statement>) body.statements(), statement -> {
+          if (statement instanceof ExpressionStatement) {
+            Expression expression = ((ExpressionStatement) statement).getExpression();
+            if (expression instanceof SuperMethodInvocation) {
+              return true;
+            }
+          }
+          return false;
+        })) {
+          fatal(node, "Method does not call @MustCall super");
+        }
+      }
+    }
+
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     for (int i = 0; i < methodBinding.getParameterTypes().length; i++) {
       try {
         if (!ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(i)).isPresent()) {
-          for (IMethodBinding superMethod : superMethods) {
+          for (IMethodBinding superMethod : ASTUtil.superMethods(methodBinding)) {
             if (ASTUtil.findAnnotation(RefAware.class, superMethod.getParameterAnnotations(i)).isPresent()) {
               ITypeBinding parameterType = methodBinding.getParameterTypes()[i];
               if (!isRefCounted(node, parameterType) && Modifier.isFinal(parameterType.getModifiers())) continue;
@@ -73,6 +91,10 @@ public class VerifyMethodCalls extends RefASTOperator {
     if (!exceptions.isEmpty()) {
       throw CollectableException.combine(exceptions);
     }
+  }
+
+  public static <T> boolean contains(List<T> superMethods, Predicate<T> predicate) {
+    return superMethods.stream().filter(predicate).findAny().isPresent();
   }
 
   @Override
@@ -114,7 +136,7 @@ public class VerifyMethodCalls extends RefASTOperator {
   }
 
   public boolean _isRefCounted(ASTNode node, ITypeBinding typeBinding) {
-    if(typeBinding.isPrimitive()) return false;
+    if (typeBinding.isPrimitive()) return false;
     return isRefCounted(node, typeBinding) || ASTUtil.hasAnnotation(typeBinding, RefAware.class);
   }
 
@@ -166,7 +188,7 @@ public class VerifyMethodCalls extends RefASTOperator {
   }
 
   public boolean isRefCounted(@Nonnull MethodInvocation node, IMethodBinding methodBinding) {
-    if(methodBinding.getReturnType().isPrimitive()) return false;
+    if (methodBinding.getReturnType().isPrimitive()) return false;
     return isRefCounted(node, methodBinding.getReturnType()) || ASTUtil.hasAnnotation(methodBinding, RefAware.class);
   }
 
