@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
-import java.io.ObjectStreamException;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -65,13 +64,23 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private transient final AtomicInteger references = new AtomicInteger(1);
   private transient final AtomicBoolean isFreed = new AtomicBoolean(false);
   @Nullable
-  private transient final StackTraceElement[] refCreatedBy = RefSettings.INSTANCE().isLifecycleDebug(this)
-      ? Thread.currentThread().getStackTrace()
-      : null;
-  private transient final LinkedList<StackTraceElement[]> addRefs = new LinkedList<>();
-  private transient final LinkedList<StackTraceElement[]> freeRefs = new LinkedList<>();
+  private transient final StackTraceElement[] refCreatedBy;
+  private transient final LinkedList<StackTraceElement[]> addRefs;
+  private transient final LinkedList<StackTraceElement[]> freeRefs;
   private transient volatile boolean isFinalized = false;
   private transient boolean detached = false;
+
+  protected ReferenceCountingBase() {
+    if (RefSettings.INSTANCE().isLifecycleDebug(getClass())) {
+      refCreatedBy = Thread.currentThread().getStackTrace();
+      addRefs = new LinkedList<>();
+      freeRefs = new LinkedList<>();
+    } else {
+      refCreatedBy = null;
+      addRefs = null;
+      freeRefs = null;
+    }
+  }
 
   public boolean isDetached() {
     return detached;
@@ -111,12 +120,12 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
       @Nullable final @RefAware List<T> x) {
     if (null == x)
       return Arrays.asList();
-    return IntStream.range(0, x.size()).map(i -> (x.size() - 1) - i).mapToObj(i -> x.get(i))
+    return IntStream.range(0, x.size()).map(i -> x.size() - 1 - i).mapToObj(i -> x.get(i))
         .collect(Collectors.toList());
   }
 
   public static <T> List<T> reverseCopy(@Nonnull final @RefAware T[] x) {
-    return IntStream.range(0, x.length).map(i -> (x.length - 1) - i).mapToObj(i -> x[i]).collect(Collectors.toList());
+    return IntStream.range(0, x.length).map(i -> x.length - 1 - i).mapToObj(i -> x[i]).collect(Collectors.toList());
   }
 
   @Nonnull
@@ -129,8 +138,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   public synchronized ReferenceCounting addRef() {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0)
       throw new IllegalStateException(referenceReport(true, isFinalized()));
-    addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-        : new StackTraceElement[]{});
+    if(null != addRefs) addRefs.add(Thread.currentThread().getStackTrace());
     return this;
   }
 
@@ -176,9 +184,10 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
       }
     }
 
-    synchronized (freeRefs) {
-      freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-          : new StackTraceElement[]{});
+    if(null != freeRefs) {
+      synchronized (freeRefs) {
+        freeRefs.add(Thread.currentThread().getStackTrace());
+      }
     }
     if (refs == 0 && !detached) {
       if (!isFreed.getAndSet(true)) {
@@ -199,6 +208,8 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     @Nonnull
     PrintStream out = new PrintStream(buffer);
+    LinkedList<StackTraceElement[]> addRefs = this.addRefs == null ? new LinkedList<>() : this.addRefs;
+    LinkedList<StackTraceElement[]> freeRefs = this.freeRefs == null ? new LinkedList<>() : this.freeRefs;
     out.print(
         String.format("Object %s (%d refs, %d frees) ", getClass().getName(), 1 + addRefs.size(), freeRefs.size()));
     List<StackTraceElement> prefix = reverseCopy(findCommonPrefix(
@@ -248,8 +259,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0) {
       return false;
     }
-    addRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-        : new StackTraceElement[]{});
+    if(null != addRefs) addRefs.add(Thread.currentThread().getStackTrace());
     return true;
   }
 
@@ -267,9 +277,10 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
               referenceReport(false, false)));
         }
       }
-      synchronized (freeRefs) {
-        freeRefs.add(RefSettings.INSTANCE().isLifecycleDebug(this) ? Thread.currentThread().getStackTrace()
-            : new StackTraceElement[]{});
+      if(null != freeRefs) {
+        synchronized (freeRefs) {
+          freeRefs.add(Thread.currentThread().getStackTrace());
+        }
       }
       inFinalizer.set(true);
       try {

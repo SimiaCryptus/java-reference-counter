@@ -19,14 +19,11 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.*;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 
-@RefIgnore
 public class RefWeakReference<T> {
   private final WeakReference<T> inner;
 
@@ -41,6 +38,12 @@ public class RefWeakReference<T> {
   @SuppressWarnings("unused")
   public boolean isEnqueued() {
     return inner.isEnqueued();
+  }
+
+  public static <T extends ReferenceCountingBase> RefWeakReference<T> wrap(T obj) {
+    RefWeakReference<T> reference = new RefWeakReference<>(obj);
+    obj.freeRef();
+    return reference;
   }
 
   @Nullable

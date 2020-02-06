@@ -77,7 +77,7 @@ public abstract class RefIteratorBase<T> extends ReferenceCountingBase implement
 
   @Override
   protected void _free() {
-    list.forEach(ReferenceCounting::freeRef);
+    list.forEach(referenceCounting -> referenceCounting.freeRef());
     list.clear();
     super._free();
   }

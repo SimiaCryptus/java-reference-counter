@@ -88,7 +88,7 @@ public class SymbolIndex {
         final ITypeBinding declaringClass = typeBinding.getDeclaringClass();
         return String.format("%s.%s",
             null == declaringClass ? "null" : getPath(declaringClass),
-            (split.length < 2) ? typeBinding.getKey() : split[1]);
+            split.length < 2 ? typeBinding.getKey() : split[1]);
       } else {
         return typeBinding.getTypeDeclaration().getQualifiedName();
       }

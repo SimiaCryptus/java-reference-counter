@@ -138,7 +138,7 @@ public class ASTUtil {
   public static Name newQualifiedName(@Nonnull AST ast, @Nonnull String... path) {
     final SimpleName simpleName = ast.newSimpleName(path[path.length - 1]);
     if (path.length == 1) return simpleName;
-    return ast.newQualifiedName(newQualifiedName(ast, Arrays.stream(path).limit(path.length - 1).toArray(String[]::new)), simpleName);
+    return ast.newQualifiedName(newQualifiedName(ast, Arrays.stream(path).limit(path.length - 1).toArray(value -> new String[value])), simpleName);
   }
 
   @Nonnull
@@ -364,9 +364,9 @@ public class ASTUtil {
     final IMethodBinding methodDeclaration = methodBinding.getMethodDeclaration();
     return superTypes(methodDeclaration.getDeclaringClass())
         .stream()
-        .map(ITypeBinding::getDeclaredMethods)
-        .flatMap(Arrays::stream)
-        .filter(methodDeclaration::overrides)
+        .map(iTypeBinding -> iTypeBinding.getDeclaredMethods())
+        .flatMap(array -> Arrays.stream(array))
+        .filter(method -> methodDeclaration.overrides(method))
         .distinct()
         .collect(Collectors.toList());
   }
@@ -403,7 +403,7 @@ public class ASTUtil {
   @Nonnull
   public static <T> List<T> copyPrepend(@Nonnull List<T> list, @Nonnull T... item) {
     ArrayList<T> copy = new ArrayList<>();
-    Arrays.stream(item).forEach(copy::add);
+    Arrays.stream(item).forEach(e -> copy.add(e));
     copy.addAll(list);
     return copy;
   }
@@ -412,7 +412,7 @@ public class ASTUtil {
   public static <T> List<T> copyAppend(@Nonnull List<T> list, @Nonnull T... item) {
     ArrayList<T> copy = new ArrayList<>();
     copy.addAll(list);
-    Arrays.stream(item).forEach(copy::add);
+    Arrays.stream(item).forEach(e -> copy.add(e));
     return copy;
   }
 

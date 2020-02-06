@@ -39,7 +39,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   }
 
   @Nonnull
-  public abstract Map<T, T> getInnerMap();
+  protected abstract Map<T, T> getInnerMap();
 
   @Override
   public final boolean add(@RefAware T o) {
@@ -76,7 +76,7 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
 
   @Override
   public synchronized final void clear() {
-    getInnerMap().keySet().forEach(RefUtil::freeRef);
+    getInnerMap().keySet().forEach(value -> RefUtil.freeRef(value));
     getInnerMap().clear();
   }
 

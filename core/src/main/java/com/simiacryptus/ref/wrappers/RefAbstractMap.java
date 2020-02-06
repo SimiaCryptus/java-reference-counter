@@ -24,7 +24,11 @@ import com.simiacryptus.ref.lang.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.ConcurrentModificationException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 @RefIgnore
 @SuppressWarnings("unused")
@@ -45,6 +49,25 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   RefAbstractMap<K, V> addRef() {
     return (RefAbstractMap<K, V>) super.addRef();
   }
+
+  @Override
+  public void replaceAll(@RefAware BiFunction<? super K, ? super V, ? extends V> function) {
+    RefHashSet<Entry<K, V>> entries = entrySet();
+    try {
+      entries.forEach(entry -> {
+        try {
+          entry.setValue(function.apply(entry.getKey(), entry.getValue()));
+          RefUtil.freeRef(entry);
+        } catch(IllegalStateException ise) {
+          // this usually means the entry is no longer in the map.
+          throw new ConcurrentModificationException(ise);
+        }
+      });
+    } finally {
+      entries.freeRef();
+    }
+  }
+
 
   @Override
   public synchronized void clear() {
@@ -76,14 +99,23 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   public RefHashSet<Entry<K, V>> entrySet() {
     assertAlive();
     final RefHashSet<Entry<K, V>> refSet = new RefHashSet<>();
-    final Map<K, KeyValue<K, V>> inner = getInner();
-    assert !(inner instanceof ReferenceCounting);
-    inner.values().stream().map(x -> new MapEntry(x)).forEach(refSet::add);
+    getInner().values().stream().map(x -> new MapEntry(x)).forEach(o -> refSet.add(o));
     return refSet;
+  }
+
+  public void forEach(@Nonnull @RefAware BiConsumer<? super K, ? super V> action) {
+    try {
+      getInner().values().stream().forEach(entry -> {
+        action.accept(RefUtil.addRef(entry.key), RefUtil.addRef(entry.value));
+      });
+    } finally {
+      RefUtil.freeRef(action);
+    }
   }
 
   @Nullable
   @Override
+  @RefAware
   public V get(@RefAware Object key) {
     assertAlive();
     final KeyValue<K, V> keyValue = getInner().get(key);
@@ -99,6 +131,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   }
 
   @Override
+  @RefAware
   public V put(@RefAware K key, @RefAware V value) {
     assertAlive();
     final KeyValue<K, V> put = getInner().put(key, new KeyValue<>(key, value));
@@ -125,6 +158,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   }
 
   @Override
+  @RefAware
   public V remove(@RefAware Object key) {
     assertAlive();
     final KeyValue<K, V> removed = getInner().remove(key);
@@ -148,10 +182,21 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     assertAlive();
     final RefHashSet<V> hashSet = new RefHashSet<>();
     getInner().values().forEach(x -> {
-      V value = x.value;
-      hashSet.add(RefUtil.addRef(value));
+      hashSet.add(RefUtil.addRef(x.value));
     });
     return hashSet;
+  }
+
+  @Nullable
+  @Override
+  @RefAware
+  public V getOrDefault(@RefAware Object key,
+                         @RefAware V defaultValue) {
+    Map<K, KeyValue<K, V>> inner = getInner();
+    KeyValue<K, V> value = inner.get(key);
+    if(null == value) return defaultValue;
+    else RefUtil.freeRef(defaultValue);
+    return RefUtil.addRef(value.value);
   }
 
   @Override
@@ -172,17 +217,14 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   }
 
   private class MapEntry extends RefEntry<K, V> {
-    private final KeyValue<K, V> x;
-
     public MapEntry(KeyValue<K, V> x) {
       super(RefUtil.addRef(x.key), RefUtil.addRef(x.value));
-      this.x = x;
     }
 
     @Nullable
     @Override
     public V setValue(@RefAware V value) {
-      return put(RefUtil.addRef(x.key), value);
+      return put(getKey(), value);
     }
   }
 }

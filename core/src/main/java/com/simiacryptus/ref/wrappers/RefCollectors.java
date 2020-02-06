@@ -35,7 +35,7 @@ import java.util.stream.Collector;
 public class RefCollectors {
   @Nonnull
   public static <T> RefCollector<T, ?, RefList<T>> toList() {
-    return new RefCollector<>(RefArrayList::new, (RefArrayList<T> list, T element) -> {
+    return new RefCollector<>(() -> new RefArrayList<T>(), (RefArrayList<T> list, T element) -> {
       list.add(element);
       list.freeRef();
     }, (RefArrayList<T> left, RefArrayList<T> right) -> {
@@ -46,7 +46,7 @@ public class RefCollectors {
 
   @Nonnull
   public static <T> RefCollector<T, ?, RefSet<T>> toSet() {
-    return new RefCollector<>(RefHashSet::new, (RefHashSet<T> list, T element) -> {
+    return new RefCollector<>(() -> new RefHashSet<T>(), (RefHashSet<T> list, T element) -> {
       list.add(element);
       list.freeRef();
     }, (RefHashSet<T> left, RefHashSet<T> right) -> {
@@ -62,7 +62,7 @@ public class RefCollectors {
       @Nonnull @RefAware Function<? super T, ? extends U> valueMapper) {
     return toMap(keyMapper, valueMapper, (u, v) -> {
       throw new IllegalStateException(String.format("Duplicate key %s", u));
-    }, RefHashMap::new);
+    }, () -> new RefHashMap<K, U>());
   }
 
   @Nonnull
@@ -71,18 +71,24 @@ public class RefCollectors {
       @Nonnull @RefAware Function<? super T, ? extends U> valueMapper,
       @RefAware BinaryOperator<U> mergeFunction,
       @RefAware Supplier<M> mapSupplier) {
-    return new RefCollector<>(mapSupplier, RefUtil.wrapInterface((map, element) -> {
-      RefUtil.freeRef(map.merge(keyMapper.apply(RefUtil.addRef(element)), valueMapper.apply(element),
-          RefUtil.addRef(mergeFunction)));
-      map.freeRef();
-    }, keyMapper, valueMapper, mergeFunction), RefUtil.wrapInterface((a, b) -> {
-      b.forEach((k, v) -> {
-        RefUtil.freeRef(a.merge(k, v, RefUtil.addRef(mergeFunction)));
-      });
-      RefUtil.freeRef(b);
-      return a;
-    }, RefUtil.addRef(mergeFunction)),
-        Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
+    return new RefCollector<>(mapSupplier,
+        RefUtil.wrapInterface((map, element) -> {
+          RefUtil.freeRef(map.merge(
+              keyMapper.apply(RefUtil.addRef(element)),
+              valueMapper.apply(element),
+              RefUtil.addRef(mergeFunction)
+          ));
+          map.freeRef();
+        }, keyMapper, valueMapper, mergeFunction),
+        RefUtil.wrapInterface((a, b) -> {
+          b.forEach((k, v) -> {
+            RefUtil.freeRef(a.merge(k, v, RefUtil.addRef(mergeFunction)));
+          });
+          RefUtil.freeRef(b);
+          return a;
+        }, RefUtil.addRef(mergeFunction)),
+        Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH))
+    );
   }
 
   @Nonnull
@@ -95,11 +101,11 @@ public class RefCollectors {
   public static <T, K, A, D> RefCollector<T, ?, RefMap<K, D>> groupingBy(
       @Nonnull @RefAware Function<? super T, ? extends K> classifier,
       @Nonnull @RefAware Collector<? super T, A, D> downstream) {
-    return groupingBy(classifier, RefHashMap::new, downstream);
+    return groupingBy(classifier, () -> new RefHashMap<K, D>(), downstream);
   }
 
   @Nonnull
-  public static <T, K, D, A, M extends RefMap<K, D>> RefCollector<T, ?, M> groupingBy(
+  public static <T, K, D, A, M extends RefMap<K, D>> RefCollector<T, RefMap<K, A>, M> groupingBy(
       @Nonnull @RefAware Function<? super T, ? extends K> classifier,
       @RefAware Supplier<M> mapFactory,
       @Nonnull @RefAware Collector<? super T, A, D> downstream) {
@@ -122,10 +128,15 @@ public class RefCollectors {
           Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
     } else {
       final Function<A, D> downstream_finisher = downstream.finisher();
-      collector = new RefCollector<>(supplier, consumer, combiner, RefUtil.wrapInterface(intermediate -> {
-        intermediate.replaceAll((k, v) -> ((Function<A, A>) downstream_finisher).apply(v));
-        return (M) intermediate;
-      }, downstream_finisher), Collections.emptySet());
+      collector = new RefCollector<>(
+          supplier,
+          consumer,
+          combiner,
+          RefUtil.wrapInterface(intermediate -> {
+            intermediate.replaceAll((K k, A v) -> ((Function<A, A>) downstream_finisher).apply(v));
+            return (M) intermediate;
+          }, downstream_finisher),
+          Collections.emptySet());
     }
     RefUtil.freeRef(downstream);
     return collector;
@@ -191,7 +202,7 @@ public class RefCollectors {
       }
     }
 
-    return new RefCollector<T, OptionalBox, Optional<T>>(OptionalBox::new, (optionalBox, t) -> {
+    return new RefCollector<T, OptionalBox, Optional<T>>(() -> new OptionalBox(), (optionalBox, t) -> {
       optionalBox.accept(t);
       RefUtil.freeRef(optionalBox);
     }, (a, b) -> {
@@ -207,23 +218,28 @@ public class RefCollectors {
   }
 
   @Nonnull
-  public static <T> RefCollector<T, ?, Long> counting() {
-    return reducing(0L, e -> {
+  public static <T> RefCollector<T, Long[], Long> counting() {
+    return reducing(0L, (T e) -> {
       RefUtil.freeRef(e);
       return 1L;
-    }, Long::sum);
+    }, (a, b) -> Long.sum(a, b));
   }
 
   @Nonnull
-  public static <T, U> RefCollector<T, ?, U> reducing(@RefAware U identity,
-                                                      @Nonnull @RefAware Function<? super T, ? extends U> mapper,
-                                                      @Nonnull @RefAware BinaryOperator<U> op) {
-    return new RefCollector<>(boxSupplier(identity), RefUtil.wrapInterface((a, t) -> {
-      a[0] = op.apply(a[0], mapper.apply(t));
-    }, mapper, RefUtil.addRef(op)), RefUtil.wrapInterface((a, b) -> {
-      a[0] = op.apply(a[0], b[0]);
-      return a;
-    }, op), a -> a[0], Collections.emptySet());
+  public static <T, U> RefCollector<T, U[], U> reducing(@RefAware U identity,
+                                                        @Nonnull @RefAware Function<? super T, ? extends U> mapper,
+                                                        @Nonnull @RefAware BinaryOperator<U> op) {
+    return new RefCollector<>(
+        boxSupplier(identity),
+        RefUtil.wrapInterface((U[] a, T t) -> {
+          a[0] = op.apply(a[0], mapper.apply(t));
+        }, mapper, RefUtil.addRef(op)),
+        RefUtil.wrapInterface((a, b) -> {
+          a[0] = op.apply(a[0], b[0]);
+          return a;
+        }, op),
+        a -> a[0],
+        Collections.emptySet());
   }
 
   @Nonnull
@@ -236,8 +252,8 @@ public class RefCollectors {
       @Nonnull @RefAware CharSequence delimiter,
       @Nonnull @RefAware CharSequence prefix,
       @Nonnull @RefAware CharSequence suffix) {
-    return new RefCollector<>(() -> new StringJoiner(delimiter, prefix, suffix), StringJoiner::add, StringJoiner::merge,
-        StringJoiner::toString, Collections.emptySet());
+    return new RefCollector<>(() -> new StringJoiner(delimiter, prefix, suffix), (stringJoiner2, newElement) -> stringJoiner2.add(newElement), (stringJoiner1, other) -> stringJoiner1.merge(other),
+        stringJoiner -> stringJoiner.toString(), Collections.emptySet());
   }
 
   @Nonnull
@@ -256,7 +272,7 @@ public class RefCollectors {
   @Nonnull
   @SuppressWarnings("unchecked")
   private static <T> Supplier<T[]> boxSupplier(@RefAware T identity) {
-    return RefUtil.wrapInterface(() -> (T[]) new Object[]{RefUtil.addRef(identity)}, identity);
+    return RefUtil.wrapInterface(() -> RefUtil.addRefs(identity), identity);
   }
 
   @RefIgnore

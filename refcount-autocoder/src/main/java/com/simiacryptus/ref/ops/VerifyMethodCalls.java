@@ -151,7 +151,24 @@ public class VerifyMethodCalls extends RefASTOperator {
     if (isRefCounted(node, methodBinding)) {
       assertResultConsumed(node, false);
     }
-    final List<Expression> arguments = node.arguments();
+    verifyArguments(methodBinding, node.arguments());
+  }
+
+  @Override
+  public void endVisit(@Nonnull SuperMethodInvocation node) {
+    if (node.getName().toString().equals("equals")) return;
+    final IMethodBinding methodBinding = node.resolveMethodBinding();
+    if (null == methodBinding) {
+      warn(node, "Unresolved binding");
+      return;
+    }
+    if (isRefCounted(node, methodBinding)) {
+      assertResultConsumed(node, false);
+    }
+    verifyArguments(methodBinding, node.arguments());
+  }
+
+  public void verifyArguments(IMethodBinding methodBinding, List<Expression> arguments) {
     ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
     final int numberOfDeclaredArguments = parameterTypes.length;
     final int numberOfArguments = arguments.size();
@@ -187,7 +204,7 @@ public class VerifyMethodCalls extends RefASTOperator {
     }
   }
 
-  public boolean isRefCounted(@Nonnull MethodInvocation node, IMethodBinding methodBinding) {
+  public boolean isRefCounted(@Nonnull ASTNode node, IMethodBinding methodBinding) {
     if (methodBinding.getReturnType().isPrimitive()) return false;
     return isRefCounted(node, methodBinding.getReturnType()) || ASTUtil.hasAnnotation(methodBinding, RefAware.class);
   }
@@ -239,7 +256,7 @@ public class VerifyMethodCalls extends RefASTOperator {
         boolean isRefCounted = isRefCounted(node, methodBinding.getParameterTypes()[index]);
         boolean hasRefAware = ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(index)).isPresent();
         boolean hasRefIgnore = ASTUtil.findAnnotation(RefIgnore.class, methodBinding.getParameterAnnotations(index)).isPresent();
-        if ((!isRefCounted && !hasRefAware) || hasRefIgnore) {
+        if (!isRefCounted && !hasRefAware || hasRefIgnore) {
           //fatal(node, "Reference tracked type passed to non-RefAware method parameter");
           return false;
         }
@@ -257,7 +274,13 @@ public class VerifyMethodCalls extends RefASTOperator {
     } else if (parent instanceof ReturnStatement) {
       // OK
     } else if (parent instanceof LambdaExpression) {
-      // OK
+      IMethodBinding methodBinding = ((LambdaExpression) parent).resolveMethodBinding();
+      ITypeBinding returnType = methodBinding.getReturnType();
+      if(returnType.isPrimitive()) {
+        return false;
+      } else {
+        return true;
+      }
     } else if (parent instanceof SuperConstructorInvocation) {
       // OK
     } else if (parent instanceof ConstructorInvocation) {

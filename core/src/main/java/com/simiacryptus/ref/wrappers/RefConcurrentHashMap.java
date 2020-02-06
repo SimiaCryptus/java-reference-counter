@@ -48,10 +48,4 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
     return inner;
   }
 
-  @Nonnull
-  public static <K, V> RefConcurrentHashMap<K, V>[] addRefs(@Nonnull RefConcurrentHashMap<K, V>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentHashMap::addRef)
-        .toArray((x) -> new RefConcurrentHashMap[x]);
-  }
-
 }

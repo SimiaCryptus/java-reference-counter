@@ -21,6 +21,7 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -54,6 +55,7 @@ public class RefCollections {
 
   public static <T> void shuffle(@Nonnull @RefAware List<T> list) {
     Collections.shuffle(list);
+    RefUtil.freeRef(list);
   }
 
   public static <T> RefList<T> unmodifiableList(RefList<T> list) {

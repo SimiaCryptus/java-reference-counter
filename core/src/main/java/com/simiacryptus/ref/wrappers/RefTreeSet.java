@@ -31,6 +31,7 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @Nonnull
   private final TreeMap<T, T> inner;
+  private final Comparator<? super T> comparator;
 
   public RefTreeSet() {
     this((a, b) -> {
@@ -42,7 +43,6 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
       }
       return result;
     });
-    new TreeSet<>();
   }
 
   public RefTreeSet(@RefAware Comparator<? super T> comparator) {
@@ -53,7 +53,8 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
     if (inner instanceof ReferenceCounting)
       throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
-    this.getInnerMap().keySet().forEach(RefUtil::addRef);
+    this.getInnerMap().keySet().forEach(value -> RefUtil.addRef(value));
+    comparator = inner.comparator();
   }
 
   public RefTreeSet(@Nonnull @RefAware Collection<T> values) {
@@ -63,13 +64,8 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @Nonnull
   @Override
-  public Map<T, T> getInnerMap() {
+  protected Map<T, T> getInnerMap() {
     return inner;
-  }
-
-  @Nonnull
-  public static <T> RefTreeSet<T>[] addRefs(@Nonnull RefTreeSet<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeSet::addRef).toArray((x) -> new RefTreeSet[x]);
   }
 
   @Nonnull
@@ -104,7 +100,8 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
 
   @Nullable
   public T pollFirst() {
-    return RefUtil.addRef(inner.pollFirstEntry().getKey());
+    Map.Entry<T, T> entry = inner.pollFirstEntry();
+    return entry.getKey();
   }
 
   @Nullable
@@ -179,5 +176,11 @@ public class RefTreeSet<T> extends RefAbstractSet<T> implements RefNavigableSet<
   @Override
   public T last() {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  protected void _free() {
+    RefUtil.freeRef(comparator);
+    super._free();
   }
 }

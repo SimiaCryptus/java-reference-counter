@@ -45,12 +45,14 @@ public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> imple
 
   @Nullable
   @Override
+  @RefAware
   public T peek() {
     assertAlive();
     return RefUtil.addRef(getInner().peek());
   }
 
   @Override
+  @RefAware
   public T poll() {
     assertAlive();
     return getInner().poll();
@@ -67,6 +69,7 @@ public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> imple
   }
 
   @Override
+  @RefAware
   public T remove() {
     assertAlive();
     return getInner().remove();

@@ -51,11 +51,6 @@ public class RefTreeMap<K, V> extends RefAbstractMap<K, V> implements RefNavigab
   }
 
   @Nonnull
-  public static <K, V> RefTreeMap<K, V>[] addRefs(@Nonnull RefTreeMap<K, V>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefTreeMap::addRef).toArray((x) -> new RefTreeMap[x]);
-  }
-
-  @Nonnull
   @Override
   public Entry<K, V> lowerEntry(@RefAware K key) {
     throw new UnsupportedOperationException();

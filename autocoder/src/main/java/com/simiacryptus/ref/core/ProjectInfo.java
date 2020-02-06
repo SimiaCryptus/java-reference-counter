@@ -91,7 +91,7 @@ public class ProjectInfo {
   @Nonnull
   public File[] sourceFiles() {
     return FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true)
-        .stream().map(File::getAbsoluteFile).distinct().toArray(i -> new File[i]);
+        .stream().map(file -> file.getAbsoluteFile()).distinct().toArray(i -> new File[i]);
   }
 
   @Nonnull

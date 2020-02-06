@@ -56,7 +56,7 @@ abstract class RefASTOperator extends ASTOperator {
   public static IMethodBinding getAddRefMethod(@Nonnull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
         method.getName().equals("addRef")
-            && (0 != (method.getModifiers() & Modifier.PUBLIC))
+            && 0 != (method.getModifiers() & Modifier.PUBLIC)
             && method.getParameterTypes().length == 0
     ).findAny().orElse(null);
   }
@@ -65,8 +65,8 @@ abstract class RefASTOperator extends ASTOperator {
   public static IMethodBinding getAddRefsMethod(@Nonnull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
         method.getName().equals("addRefs")
-            && (0 != (method.getModifiers() & Modifier.PUBLIC))
-            && (0 != (method.getModifiers() & Modifier.STATIC))
+            && 0 != (method.getModifiers() & Modifier.PUBLIC)
+            && 0 != (method.getModifiers() & Modifier.STATIC)
             && method.getParameterTypes().length == 1
     ).findAny().orElse(null);
   }

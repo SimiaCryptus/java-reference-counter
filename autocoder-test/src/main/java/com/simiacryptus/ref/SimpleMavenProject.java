@@ -62,9 +62,9 @@ public class SimpleMavenProject {
   @Nonnull
   public String[] getDependencies() {
     return resolve().getDependencies().stream()
-        .map(Dependency::getArtifact)
-        .map(Artifact::getFile)
-        .map(File::getAbsolutePath)
+        .map(dependency -> dependency.getArtifact())
+        .map(artifact -> artifact.getFile())
+        .map(file -> file.getAbsolutePath())
         .toArray(i -> new String[i]);
   }
 

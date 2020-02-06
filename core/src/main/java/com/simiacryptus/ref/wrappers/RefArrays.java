@@ -35,22 +35,22 @@ public class RefArrays {
   @Nonnull
   public static <T> RefStream<T> stream(@Nonnull @RefAware T[] array) {
     return new RefStream<>(Arrays.stream(array).onClose(() -> {
-      Arrays.stream(array).forEach(RefUtil::freeRef);
+      Arrays.stream(array).forEach(value -> RefUtil.freeRef(value));
     }));
   }
 
   @Nonnull
   public static <T> String toString(@Nonnull @RefAware T[] values) {
     final String result = Arrays.toString(values);
-    Arrays.stream(values).forEach(RefUtil::freeRef);
+    Arrays.stream(values).forEach(value -> RefUtil.freeRef(value));
     return result;
   }
 
   @Nonnull
   public static <T> RefList<T> asList(@Nonnull @RefAware T... items) {
-    final RefArrayList<T> ts = new RefArrayList<>(Arrays.asList(items));
+    final RefArrayList<T> ts = new RefArrayList<>(items.length);
     for (T item : items) {
-      RefUtil.freeRef(item);
+      ts.add(item);
     }
     return ts;
   }
@@ -129,7 +129,7 @@ public class RefArrays {
   }
 
   public static <T> void parallelSetAll(@Nonnull @RefAware T[] data, @Nonnull @RefAware IntFunction<T> fn) {
-    RefUtil.freeRefs(data);
+    RefUtil.freeRef(data);
     Arrays.parallelSetAll(data, fn);
     RefUtil.freeRef(fn);
   }

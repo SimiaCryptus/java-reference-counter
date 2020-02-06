@@ -31,13 +31,15 @@ public enum PersistanceMode {
   SOFT {
     @Override
     public <T> Supplier<T> wrap(@RefAware T obj) {
-      return new SoftReference<>(obj)::get;
+      SoftReference<T> softReference = new SoftReference<>(obj);
+      return () -> softReference.get();
     }
   },
   WEAK {
     @Override
     public <T> Supplier<T> wrap(@RefAware T obj) {
-      return new WeakReference<>(obj)::get;
+      WeakReference<T> weakReference = new WeakReference<>(obj);
+      return () -> weakReference.get();
     }
   },
   STRONG {

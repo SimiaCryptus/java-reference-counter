@@ -41,7 +41,7 @@ public class ArrayListContainer extends ReferenceCountingBase {
 
   @Nonnull
   private static Predicate<BasicType> getTest() {
-    return ArrayListContainer::test1;
+    return x -> test1(x);
   }
 
   public static void test() {
@@ -211,7 +211,7 @@ public class ArrayListContainer extends ReferenceCountingBase {
       }
     }, -1, 0), false).filter(x272 -> {
       return test1(x272);
-    }).filter(ArrayListContainer::test2).filter((Predicate<? super BasicType>) x275 -> {
+    }).filter(x -> test2(x)).filter((Predicate<? super BasicType>) x275 -> {
       return x275.getValue() >= 0;
     }).filter((Predicate<? super BasicType>) x277 -> {
       return true;
@@ -236,7 +236,7 @@ public class ArrayListContainer extends ReferenceCountingBase {
       }
     }, -1, 0), false).filter((Predicate<? super BasicType>) x -> {
       return test1(x);
-    }).filter(ArrayListContainer::test2).filter((Predicate<? super BasicType>) x -> {
+    }).filter(x1 -> test2(x1)).filter((Predicate<? super BasicType>) x -> {
       return x.getValue() >= 0;
     }).filter((Predicate<? super BasicType>) x -> {
       return true;

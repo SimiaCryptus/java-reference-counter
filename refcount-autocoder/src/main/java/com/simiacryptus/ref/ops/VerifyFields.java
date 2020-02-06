@@ -53,6 +53,7 @@ public class VerifyFields extends VerifyClassMembers {
                 warn(variableDeclarationFragment, "Unresolved binding");
                 return false;
               }
+              if(ASTUtil.hasAnnotation(resolveBinding, RefIgnore.class)) return false;
               return isRefCounted(variableDeclarationFragment, resolveBinding.getType()) || ASTUtil.hasAnnotation(resolveBinding, RefAware.class);
             })
             .map(VariableDeclaration::getName))

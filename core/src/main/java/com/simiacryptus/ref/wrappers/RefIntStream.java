@@ -37,11 +37,6 @@ public class RefIntStream implements IntStream {
 
   RefIntStream(@RefAware IntStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
-    onClose(() -> {
-      this.lambdas.forEach(ReferenceCounting::freeRef);
-      RefStream.freeAll(this.refs);
-      this.lambdas.clear();
-    });
   }
 
   RefIntStream(@RefAware IntStream stream, @RefAware List<ReferenceCounting> lambdas,
@@ -50,7 +45,13 @@ public class RefIntStream implements IntStream {
     this.refs = refs;
     if (stream instanceof ReferenceCounting)
       throw new IllegalArgumentException("inner class cannot be ref-aware");
-    this.inner = stream;
+    this.inner = stream.onClose(() -> {
+      RefStream.freeAll(refs);
+      synchronized (lambdas) {
+        lambdas.forEach(referenceCounting -> referenceCounting.freeRef());
+        lambdas.clear();
+      }
+    });
   }
 
   @Override
@@ -81,7 +82,7 @@ public class RefIntStream implements IntStream {
   @Nonnull
   public static RefIntStream of(@Nonnull int... array) {
     return new RefIntStream(IntStream.of(array).onClose(() -> {
-      Arrays.stream(array).forEach(RefUtil::freeRef);
+      Arrays.stream(array).forEach(value -> RefUtil.freeRef(value));
     }));
   }
 
@@ -191,7 +192,7 @@ public class RefIntStream implements IntStream {
   @Override
   public RefIntStream flatMap(@Nonnull @RefAware IntFunction<? extends IntStream> mapper) {
     track(mapper);
-    return new RefIntStream(inner.flatMap(mapper).map(this::storeRef), lambdas, refs);
+    return new RefIntStream(inner.flatMap(mapper).map(u -> storeRef(u)), lambdas, refs);
   }
 
   @Override
@@ -246,7 +247,7 @@ public class RefIntStream implements IntStream {
   @Nonnull
   @Override
   public <U> RefStream<U> mapToObj(@RefAware IntFunction<? extends U> mapper) {
-    return new RefStream<U>(inner.mapToObj(mapper).map(this::storeRef), lambdas, refs).track(mapper);
+    return new RefStream<U>(inner.mapToObj(mapper).map(u -> storeRef(u)), lambdas, refs).track(mapper);
   }
 
   @Override

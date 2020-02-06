@@ -42,7 +42,7 @@ public class StackCounter {
     Comparator<StackFrame> comparing = Comparator.comparing(key -> {
       return -fn.apply(left.stats.get(key), right.stats.get(key)).doubleValue();
     });
-    comparing = comparing.thenComparing(Comparator.comparing(key -> key.toString()));
+    comparing = comparing.thenComparing(key -> key.toString());
     return Stream.concat(left.stats.keySet().stream(), right.stats.keySet().stream()).distinct()
         .filter(k -> left.stats.containsKey(k) && right.stats.containsKey(k)).sorted(comparing)
         .map(key -> String.format("%s - %s", key.toString(), fn.apply(left.stats.get(key), right.stats.get(key))))
@@ -58,7 +58,7 @@ public class StackCounter {
 
   @Override
   public String toString() {
-    return toString(this::summaryStat);
+    return toString(value -> summaryStat(value));
   }
 
   public String toString(@Nonnull final @RefAware Function<DoubleStatistics, Number> fn) {

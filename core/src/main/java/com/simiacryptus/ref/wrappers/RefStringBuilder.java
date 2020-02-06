@@ -106,4 +106,9 @@ public class RefStringBuilder implements Appendable, CharSequence, Serializable 
     inner.reverse();
     return this;
   }
+
+  @Override
+  public String toString() {
+    return inner.toString();
+  }
 }

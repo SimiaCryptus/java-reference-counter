@@ -37,11 +37,6 @@ public class RefLongStream implements LongStream {
 
   RefLongStream(@RefAware LongStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
-    onClose(() -> {
-      this.lambdas.forEach(ReferenceCounting::freeRef);
-      RefStream.freeAll(this.refs);
-      this.lambdas.clear();
-    });
   }
 
   RefLongStream(@RefAware LongStream stream, @RefAware List<ReferenceCounting> lambdas,
@@ -50,7 +45,13 @@ public class RefLongStream implements LongStream {
     this.refs = refs;
     if (stream instanceof ReferenceCounting)
       throw new IllegalArgumentException("inner class cannot be ref-aware");
-    this.inner = stream;
+    this.inner = stream.onClose(() -> {
+      RefStream.freeAll(refs);
+      synchronized (lambdas) {
+        lambdas.forEach(referenceCounting -> referenceCounting.freeRef());
+        lambdas.clear();
+      }
+    });
   }
 
   @Override
@@ -71,7 +72,7 @@ public class RefLongStream implements LongStream {
   @Nonnull
   public static RefLongStream of(@Nonnull long... array) {
     return new RefLongStream(LongStream.of(array).onClose(() -> {
-      Arrays.stream(array).forEach(RefUtil::freeRef);
+      Arrays.stream(array).forEach(value -> RefUtil.freeRef(value));
     }));
   }
 
@@ -175,7 +176,7 @@ public class RefLongStream implements LongStream {
   @Override
   public RefLongStream flatMap(@Nonnull @RefAware LongFunction<? extends LongStream> mapper) {
     track(mapper);
-    return new RefLongStream(inner.flatMap((long t) -> mapper.apply(getRef(t)).map(this::storeRef)), lambdas, refs);
+    return new RefLongStream(inner.flatMap((long t) -> mapper.apply(getRef(t)).map(u -> storeRef(u))), lambdas, refs);
   }
 
   @Override
@@ -233,7 +234,7 @@ public class RefLongStream implements LongStream {
   @Nonnull
   @Override
   public <U> RefStream<U> mapToObj(@RefAware LongFunction<? extends U> mapper) {
-    return new RefStream<>(inner.mapToObj(mapper), lambdas, refs);
+    return new RefStream<U>(inner.mapToObj(mapper).map(u -> storeRef(u)), lambdas, refs).track(mapper);
   }
 
   @Override

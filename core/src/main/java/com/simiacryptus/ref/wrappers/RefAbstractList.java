@@ -28,6 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -64,12 +65,25 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   }
 
   @Override
-  public final boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
+  public final boolean addAll(@Nonnull @RefAware Collection<? extends T> collection) {
     assertAlive();
-    final Boolean returnValue = RefCollections.getInnerStream(c).map(o -> add(RefUtil.addRef(o)))
-        .reduce((a, b) -> a || b).orElse(false);
-    RefUtil.freeRef(c);
-    return returnValue;
+    try {
+      if(collection.isEmpty()) return false;
+      Iterator<? extends T> iterator = collection.iterator();
+      if(iterator instanceof ReferenceCounting) {
+        while (iterator.hasNext()) {
+          add(iterator.next());
+        }
+        ((ReferenceCounting) iterator).freeRef();
+      } else {
+        while (iterator.hasNext()) {
+          add(RefUtil.addRef(iterator.next()));
+        }
+      }
+      return true;
+    } finally {
+      RefUtil.freeRef(collection);
+    }
   }
 
   @Nonnull
@@ -82,6 +96,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   @Nullable
   @Override
   @RefIgnore
+  @RefAware
   public T get(int index) {
     assertAlive();
     return RefUtil.addRef(getInner().get(index));
@@ -119,6 +134,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   @RefIgnore
+  @RefAware
   public T remove(int index) {
     assertAlive();
     return getInner().remove(index);
@@ -160,6 +176,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
 
   @Override
   @RefIgnore
+  @RefAware
   public T set(int index, @RefAware T element) {
     assertAlive();
     return getInner().set(index, element);

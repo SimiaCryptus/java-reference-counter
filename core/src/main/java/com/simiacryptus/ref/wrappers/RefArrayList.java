@@ -32,7 +32,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class RefArrayList<T> extends RefAbstractList<T> {
   @Nonnull
-  private final List<T> inner;
+  private final ArrayList<T> inner;
 
   public RefArrayList() {
     this.inner = new ArrayList<>();
@@ -43,19 +43,14 @@ public class RefArrayList<T> extends RefAbstractList<T> {
   }
 
   public RefArrayList(@Nonnull @RefAware Collection<T> list) {
-    this();
+    this(list.size());
     addAll(list);
   }
 
   @Nonnull
   @Override
-  public List<T> getInner() {
+  public ArrayList<T> getInner() {
     return inner;
-  }
-
-  @Nonnull
-  public static <T> RefArrayList<T>[] addRefs(@Nonnull RefArrayList<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefArrayList::addRef).toArray((x) -> new RefArrayList[x]);
   }
 
   @Nonnull

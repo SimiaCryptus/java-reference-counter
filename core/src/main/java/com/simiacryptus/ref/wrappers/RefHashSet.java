@@ -49,7 +49,7 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     if (inner instanceof ReferenceCounting)
       throw new IllegalArgumentException("inner class cannot be ref-aware");
     this.inner = inner;
-    this.getInnerMap().keySet().forEach(RefUtil::addRef);
+    this.getInnerMap().keySet().forEach(value -> RefUtil.addRef(value));
   }
 
   public RefHashSet(@Nonnull @RefAware Collection<T> values) {
@@ -59,13 +59,8 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
 
   @Nonnull
   @Override
-  public Map<T, T> getInnerMap() {
+  protected Map<T, T> getInnerMap() {
     return inner;
-  }
-
-  @Nonnull
-  public static <T> RefHashSet<T>[] addRefs(@Nonnull RefHashSet<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefHashSet::addRef).toArray((x) -> new RefHashSet[x]);
   }
 
   @Nonnull

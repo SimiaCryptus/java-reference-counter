@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-import static com.simiacryptus.ref.lang.PersistanceMode.WEAK;
-
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RecycleBin<T> {
@@ -83,7 +81,7 @@ public abstract class RecycleBin<T> {
   private final StackCounter recycle_get = new StackCounter();
   private int purgeFreq;
   private int profilingThreshold = Integer.MAX_VALUE;
-  private PersistanceMode persistanceMode = WEAK;
+  private PersistanceMode persistanceMode = PersistanceMode.WEAK;
   private int minLengthPerBuffer = 16;
   private double maxLengthPerBuffer = 1e9;
   private int maxItemsPerBuffer = 100;

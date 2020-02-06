@@ -69,7 +69,7 @@ public final class RefString extends ReferenceCountingBase
   @Nonnull
   public static String format(@Nonnull @RefAware String format, @RefAware @Nonnull Object... args) {
     final String string = new Formatter().format(format, args).toString();
-    RefUtil.freeRefs(args);
+    RefUtil.freeRef(args);
     return string;
   }
 

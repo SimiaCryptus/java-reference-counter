@@ -70,7 +70,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
     @Override
     protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
+      list.forEach(referenceCounting -> referenceCounting.freeRef());
       list.clear();
       super._free();
     }
@@ -103,7 +103,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
     @Override
     protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
+      list.forEach(referenceCounting -> referenceCounting.freeRef());
       list.clear();
       super._free();
     }
@@ -136,7 +136,7 @@ public class RefPrimitiveIterator<T, T_CONS> extends RefIteratorBase<T> {
 
     @Override
     protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
+      list.forEach(referenceCounting -> referenceCounting.freeRef());
       list.clear();
       super._free();
     }

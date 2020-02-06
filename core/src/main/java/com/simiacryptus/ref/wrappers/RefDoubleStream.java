@@ -38,11 +38,6 @@ public class RefDoubleStream implements DoubleStream {
 
   RefDoubleStream(@RefAware DoubleStream stream) {
     this(stream, new ArrayList<>(), new ConcurrentHashMap<>());
-    onClose(() -> {
-      this.lambdas.forEach(ReferenceCounting::freeRef);
-      RefStream.freeAll(this.refs);
-      this.lambdas.clear();
-    });
   }
 
   RefDoubleStream(@RefAware DoubleStream stream, @RefAware List<ReferenceCounting> lambdas,
@@ -51,7 +46,13 @@ public class RefDoubleStream implements DoubleStream {
     this.refs = refs;
     if (stream instanceof ReferenceCounting)
       throw new IllegalArgumentException("inner class cannot be ref-aware");
-    this.inner = stream;
+    this.inner = stream.onClose(() -> {
+      RefStream.freeAll(refs);
+      synchronized (lambdas) {
+        lambdas.forEach(referenceCounting -> referenceCounting.freeRef());
+        lambdas.clear();
+      }
+    });
   }
 
   @Override
@@ -87,7 +88,7 @@ public class RefDoubleStream implements DoubleStream {
   @Override
   public boolean allMatch(@Nonnull @RefAware DoublePredicate predicate) {
     track(predicate);
-    final boolean match = inner.allMatch(predicate::test);
+    final boolean match = inner.allMatch(value -> predicate.test(value));
     close();
     return match;
   }
@@ -95,7 +96,7 @@ public class RefDoubleStream implements DoubleStream {
   @Override
   public boolean anyMatch(@Nonnull @RefAware DoublePredicate predicate) {
     track(predicate);
-    final boolean match = inner.anyMatch(predicate::test);
+    final boolean match = inner.anyMatch(value -> predicate.test(value));
     close();
     return match;
   }
@@ -168,19 +169,19 @@ public class RefDoubleStream implements DoubleStream {
   @Override
   public RefDoubleStream flatMap(@Nonnull @RefAware DoubleFunction<? extends DoubleStream> mapper) {
     track(mapper);
-    return new RefDoubleStream(inner.flatMap((double t) -> mapper.apply(t).map(this::storeRef)), lambdas, refs);
+    return new RefDoubleStream(inner.flatMap((double t) -> mapper.apply(t).map(u -> storeRef(u))), lambdas, refs);
   }
 
   public void forEach(@Nonnull @RefAware DoubleConsumer action) {
     track(action);
-    inner.forEach(action::accept);
+    inner.forEach(value -> action.accept(value));
     close();
   }
 
   @Override
   public void forEachOrdered(@Nonnull @RefAware DoubleConsumer action) {
     track(action);
-    inner.forEachOrdered(action::accept);
+    inner.forEachOrdered(value -> action.accept(value));
     close();
   }
 
@@ -225,7 +226,7 @@ public class RefDoubleStream implements DoubleStream {
   @Nonnull
   @Override
   public <U> RefStream<U> mapToObj(@Nonnull @RefAware DoubleFunction<? extends U> mapper) {
-    return new RefStream<>(inner.mapToObj(value -> mapper.apply(value)), lambdas, refs);
+    return new RefStream<U>(inner.mapToObj(mapper).map(u -> storeRef(u)), lambdas, refs).track(mapper);
   }
 
   @Override
@@ -333,7 +334,7 @@ public class RefDoubleStream implements DoubleStream {
 
   @Override
   public double[] toArray() {
-    final double[] array = inner.map(this::getRef).toArray();
+    final double[] array = inner.map(u -> getRef(u)).toArray();
     close();
     return array;
   }

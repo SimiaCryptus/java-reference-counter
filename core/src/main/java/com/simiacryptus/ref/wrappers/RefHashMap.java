@@ -52,9 +52,4 @@ public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
     return inner;
   }
 
-  @Nonnull
-  public static <K, V> RefHashMap<K, V>[] addRefs(@Nonnull RefHashMap<K, V>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefHashMap::addRef).toArray((x) -> new RefHashMap[x]);
-  }
-
 }

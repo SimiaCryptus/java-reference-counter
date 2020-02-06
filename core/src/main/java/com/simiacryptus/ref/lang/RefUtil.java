@@ -76,6 +76,15 @@ public class RefUtil {
     return value;
   }
 
+  public static <T> T[] addRefs(@RefIgnore T... array) {
+    synchronized (array) {
+      for (int i = 0; i < array.length; i++) {
+        RefUtil.addRef(array[i]);
+      }
+      return array;
+    }
+  }
+
   @Nonnull
   public static @RefAware
   <T> T wrapInterface(@Nonnull @RefAware T obj,
@@ -87,12 +96,6 @@ public class RefUtil {
             Stream.of(ReferenceCounting.class)
         ).distinct().toArray(i -> new Class[i]),
         new RefWrapperHandler(obj, new RefProxy(obj, refs)));
-  }
-
-  public static <T> void freeRefs(@Nonnull @RefAware T[] array) {
-    synchronized (array) {
-      Arrays.stream(array).filter((x) -> x != null).forEach(RefUtil::freeRef);
-    }
   }
 
   @Nonnull
@@ -141,40 +144,11 @@ public class RefUtil {
     RefUtil.freeRef(prev);
   }
 
-  public static <T> T[] addRefs(@RefIgnore T[] array) {
-    synchronized (array) {
-      for (int i = 0; i < array.length; i++) {
-        RefUtil.addRef(array[i]);
-      }
-      return array;
+  public static <T extends ReferenceCounting> boolean assertAlive(@RefIgnore @Nonnull T[] inputNodes) {
+    for (T x : inputNodes) {
+      x.assertAlive();
     }
-  }
-
-  public static <T> T[][] addRefs(@RefIgnore T[][] array) {
-    synchronized (array) {
-      for (int i = 0; i < array.length; i++) {
-        RefUtil.addRefs(array[i]);
-      }
-      return array;
-    }
-  }
-
-  public static <T> T[][][] addRefs(@RefIgnore T[][][] array) {
-    synchronized (array) {
-      for (int i = 0; i < array.length; i++) {
-        RefUtil.addRefs(array[i]);
-      }
-      return array;
-    }
-  }
-
-  public static <T> T[][][][] addRefs(@RefIgnore T[][][][] array) {
-    synchronized (array) {
-      for (int i = 0; i < array.length; i++) {
-        RefUtil.addRefs(array[i]);
-      }
-      return array;
-    }
+    return true;
   }
 
   private static class RefWrapperHandler<T> implements InvocationHandler {
@@ -209,7 +183,7 @@ public class RefUtil {
 
     @Override
     protected void _free() {
-      RefUtil.freeRefs(refs);
+      RefUtil.freeRef(refs);
       if (obj instanceof ReferenceCounting)
         ((ReferenceCounting) obj).freeRef();
       super._free();

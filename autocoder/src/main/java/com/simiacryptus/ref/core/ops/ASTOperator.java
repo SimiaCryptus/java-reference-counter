@@ -57,7 +57,7 @@ public abstract class ASTOperator extends ASTEditor {
     if (null != superclass && !superclass.getQualifiedName().equals(Object.class.getCanonicalName())) {
       declaredMethods = Stream.concat(declaredMethods, allMethods(superclass));
     }
-    declaredMethods = Stream.concat(declaredMethods, Arrays.stream(targetClass.getInterfaces()).flatMap(this::allMethods));
+    declaredMethods = Stream.concat(declaredMethods, Arrays.stream(targetClass.getInterfaces()).flatMap(targetClass1 -> allMethods(targetClass1)));
     return declaredMethods.distinct();
   }
 
@@ -301,7 +301,7 @@ public abstract class ASTOperator extends ASTEditor {
           final ArrayList<Type> innerTypes = new ArrayList<>();
           for (int i = 0; i < delimiters.size(); i++) {
             final int to = delimiters.get(i);
-            final int from = i == 0 ? 0 : (delimiters.get(i - 1) + 1);
+            final int from = i == 0 ? 0 : delimiters.get(i - 1) + 1;
             final String substring = innerType.substring(from, to);
             if (substring.isEmpty()) {
               innerTypes.add(ast.newWildcardType());
@@ -467,73 +467,73 @@ public abstract class ASTOperator extends ASTEditor {
 
   @Nullable
   protected final IBinding resolveBinding(@Nonnull Name node) {
-    return resolve(node, Name::resolveBinding);
+    return resolve(node, name -> name.resolveBinding());
   }
 
   @Nullable
   protected final IMethodBinding resolveBinding(MethodDeclaration node) {
-    return resolve(node, MethodDeclaration::resolveBinding);
+    return resolve(node, methodDeclaration -> methodDeclaration.resolveBinding());
   }
 
   @Nullable
   @SuppressWarnings("unused")
   protected final IVariableBinding resolveBinding(VariableDeclarationFragment node) {
-    return resolve(node, VariableDeclaration::resolveBinding);
+    return resolve(node, variableDeclarationFragment -> variableDeclarationFragment.resolveBinding());
   }
 
   @Nullable
   protected final IVariableBinding resolveBinding(SingleVariableDeclaration node) {
-    return resolve(node, VariableDeclaration::resolveBinding);
+    return resolve(node, singleVariableDeclaration -> singleVariableDeclaration.resolveBinding());
   }
 
   @Nullable
   protected final ITypeBinding resolveBinding(TypeParameter node) {
-    return resolve(node, TypeParameter::resolveBinding);
+    return resolve(node, typeParameter -> typeParameter.resolveBinding());
   }
 
   @Nullable
   protected final ITypeBinding resolveBinding(Type node) {
-    return resolve(node, Type::resolveBinding);
+    return resolve(node, type -> type.resolveBinding());
   }
 
   @Nullable
   protected final ITypeBinding resolveBinding(AnonymousClassDeclaration node) {
-    return resolve(node, AnonymousClassDeclaration::resolveBinding);
+    return resolve(node, anonymousClassDeclaration -> anonymousClassDeclaration.resolveBinding());
   }
 
   @Nullable
   protected final IVariableBinding resolveBinding(@Nonnull VariableDeclaration node) {
-    return resolve(node, VariableDeclaration::resolveBinding);
+    return resolve(node, variableDeclaration -> variableDeclaration.resolveBinding());
   }
 
   @Nullable
   protected final IMethodBinding resolveConstructorBinding(@Nonnull ClassInstanceCreation node) {
-    return resolve(node, ClassInstanceCreation::resolveConstructorBinding);
+    return resolve(node, classInstanceCreation -> classInstanceCreation.resolveConstructorBinding());
   }
 
   @Nullable
   protected final IMethodBinding resolveConstructorBinding(@Nonnull ConstructorInvocation node) {
-    return resolve(node, ConstructorInvocation::resolveConstructorBinding);
+    return resolve(node, constructorInvocation -> constructorInvocation.resolveConstructorBinding());
   }
 
   @Nullable
   protected final IVariableBinding resolveFieldBinding(FieldAccess node) {
-    return resolve(node, FieldAccess::resolveFieldBinding);
+    return resolve(node, fieldAccess -> fieldAccess.resolveFieldBinding());
   }
 
   @Nullable
   protected final IMethodBinding resolveMethodBinding(LambdaExpression node) {
-    return resolve(node, LambdaExpression::resolveMethodBinding);
+    return resolve(node, lambdaExpression -> lambdaExpression.resolveMethodBinding());
   }
 
   @Nullable
   protected final IMethodBinding resolveMethodBinding(MethodInvocation node) {
-    return resolve(node, MethodInvocation::resolveMethodBinding);
+    return resolve(node, methodInvocation -> methodInvocation.resolveMethodBinding());
   }
 
   @Nullable
   protected final ITypeBinding resolveTypeBinding(@Nonnull Expression node) {
-    return resolve(node, Expression::resolveTypeBinding);
+    return resolve(node, expression -> expression.resolveTypeBinding());
   }
 
   @Nonnull
@@ -564,26 +564,26 @@ public abstract class ASTOperator extends ASTEditor {
       final Statement statement = (Statement) statements.get(j);
       if (statement instanceof IfStatement) {
         final IfStatement ifStatement = (IfStatement) statement;
-        exits.addAll(exits_(ast, ifStatement::getThenStatement, ifStatement::setThenStatement));
-        exits.addAll(exits_(ast, ifStatement::getElseStatement, ifStatement::setElseStatement));
+        exits.addAll(exits_(ast, () -> ifStatement.getThenStatement(), statement2 -> ifStatement.setThenStatement(statement2)));
+        exits.addAll(exits_(ast, () -> ifStatement.getElseStatement(), statement1 -> ifStatement.setElseStatement(statement1)));
       } else if (statement instanceof WhileStatement) {
         final WhileStatement whileStatement = (WhileStatement) statement;
-        exits.addAll(exits_(ast, whileStatement::getBody, whileStatement::setBody));
+        exits.addAll(exits_(ast, () -> whileStatement.getBody(), statement1 -> whileStatement.setBody(statement1)));
       } else if (statement instanceof DoStatement) {
         final DoStatement doStatement = (DoStatement) statement;
-        exits.addAll(exits_(ast, doStatement::getBody, doStatement::setBody));
+        exits.addAll(exits_(ast, () -> doStatement.getBody(), statement1 -> doStatement.setBody(statement1)));
       } else if (statement instanceof ForStatement) {
         final ForStatement forStatement = (ForStatement) statement;
-        exits.addAll(exits_(ast, forStatement::getBody, forStatement::setBody));
+        exits.addAll(exits_(ast, () -> forStatement.getBody(), statement1 -> forStatement.setBody(statement1)));
       } else if (statement instanceof EnhancedForStatement) {
         final EnhancedForStatement forStatement = (EnhancedForStatement) statement;
-        exits.addAll(exits_(ast, forStatement::getBody, forStatement::setBody));
+        exits.addAll(exits_(ast, () -> forStatement.getBody(), statement1 -> forStatement.setBody(statement1)));
       } else if (statement instanceof TryStatement) {
         final TryStatement tryStatement = (TryStatement) statement;
-        exits.addAll(exits_(ast, tryStatement::getBody, tryStatement::setBody));
+        exits.addAll(exits_(ast, () -> tryStatement.getBody(), body -> tryStatement.setBody(body)));
       } else if (statement instanceof SynchronizedStatement) {
         final SynchronizedStatement synchronizedStatement = (SynchronizedStatement) statement;
-        exits.addAll(exits_(ast, synchronizedStatement::getBody, synchronizedStatement::setBody));
+        exits.addAll(exits_(ast, () -> synchronizedStatement.getBody(), block1 -> synchronizedStatement.setBody(block1)));
       } else if (statement instanceof Block) {
         final Block synchronizedStatement = (Block) statement;
         exits.addAll(exits_(ast, () -> synchronizedStatement, x -> {
@@ -607,7 +607,7 @@ public abstract class ASTOperator extends ASTEditor {
     }
     if (body instanceof Block) {
       final Block thenBlock = (Block) body;
-      return exits_(thenBlock, 0, (thenBlock).statements().size() - 1);
+      return exits_(thenBlock, 0, thenBlock.statements().size() - 1);
     } else {
       return new ArrayList<>();
     }
@@ -710,7 +710,7 @@ public abstract class ASTOperator extends ASTEditor {
     @SuppressWarnings("unused")
     public boolean isReturnValue() {
       if (!isReturn()) return false;
-      return (((ReturnStatement) statement).getExpression() != null);
+      return ((ReturnStatement) statement).getExpression() != null;
     }
   }
 }

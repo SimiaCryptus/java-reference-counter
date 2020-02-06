@@ -46,18 +46,21 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
 
   @Nullable
   @Override
+  @RefAware
   public K getKey() {
     return RefUtil.addRef(key);
   }
 
   @Nullable
   @Override
+  @RefAware
   public V getValue() {
     return RefUtil.addRef(value);
   }
 
   @Nullable
   @Override
+  @RefAware
   public abstract V setValue(@RefAware V value);
 
   @Override

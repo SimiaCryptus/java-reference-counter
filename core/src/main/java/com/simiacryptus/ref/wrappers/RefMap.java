@@ -37,15 +37,11 @@ import java.util.function.Function;
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Nonnull
-  static <K, V> RefMap<K, V>[] addRefs(@Nonnull RefMap<K, V>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefMap::addRef).toArray((x) -> new RefMap[x]);
-  }
-
-  @Nonnull
   RefMap<K, V> addRef();
 
   @Nullable
   @Override
+  @RefAware
   default V computeIfAbsent(@RefAware K key, @Nonnull @RefAware Function<? super K, ? extends V> mappingFunction) {
     V value = get(RefUtil.addRef(key));
     if (value == null) {
@@ -65,22 +61,14 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   @Override
   RefSet<Entry<K, V>> entrySet();
 
-  default void forEach(@Nonnull @RefAware BiConsumer<? super K, ? super V> action) {
-    final RefSet<Entry<K, V>> entries = entrySet();
-    entries.forEach(entry -> {
-      final K key = entry.getKey();
-      final V value = entry.getValue();
-      RefUtil.freeRef(entry);
-      action.accept(key, value);
-    });
-    entries.freeRef();
-  }
+  void forEach(@Nonnull @RefAware BiConsumer<? super K, ? super V> action);
 
   @Nonnull
   @Override
   RefSet<K> keySet();
 
   @Override
+  @RefAware
   default V merge(@RefAware K key, @RefAware V value,
                   @Nonnull @RefAware BiFunction<? super V, ? super V, ? extends V> fn) {
     V oldValue = get(RefUtil.addRef(key));
@@ -110,65 +98,71 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   boolean containsKey(@RefAware Object key);
 
   @Override
+  @RefAware
   boolean containsValue(@RefAware Object value);
 
   @Nullable
   @Override
+  @RefAware
   V get(@RefAware Object key);
 
   @Nullable
   @Override
+  @RefAware
   V put(@RefAware K key, @RefAware V value);
 
   @Override
+  @RefAware
   V remove(@RefAware Object key);
 
   @Nullable
   @Override
-  default V getOrDefault(@RefAware Object key,
-                         @RefAware V defaultValue) {
-    return null;
-  }
+  @RefAware
+  V getOrDefault(@RefAware Object key,
+                         @RefAware V defaultValue);
 
   @Override
-  default void replaceAll(@RefAware BiFunction<? super K, ? super V, ? extends V> function) {
-  }
+  void replaceAll(@RefAware BiFunction<? super K, ? super V, ? extends V> function);
 
   @Nullable
   @Override
+  @RefAware
   default V putIfAbsent(@RefAware K key, @RefAware V value) {
-    return null;
+    throw new RuntimeException("Not Implemented");
   }
 
   @Override
   default boolean remove(@RefAware Object key,
                          @RefAware Object value) {
-    return false;
+    throw new RuntimeException("Not Implemented");
   }
 
   @Override
   default boolean replace(@RefAware K key, @RefAware V oldValue,
                           @RefAware V newValue) {
-    return false;
+    throw new RuntimeException("Not Implemented");
   }
 
   @Nullable
   @Override
+  @RefAware
   default V replace(@RefAware K key, @RefAware V value) {
-    return null;
+    throw new RuntimeException("Not Implemented");
   }
 
   @Nullable
   @Override
+  @RefAware
   default V computeIfPresent(@RefAware K key,
                              @RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-    return null;
+    throw new RuntimeException("Not Implemented");
   }
 
   @Nullable
   @Override
+  @RefAware
   default V compute(@RefAware K key,
                     @RefAware BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-    return null;
+    throw new RuntimeException("Not Implemented");
   }
 }

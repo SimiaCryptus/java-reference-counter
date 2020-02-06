@@ -264,7 +264,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert 0 < values.stream().flatMapToDouble(foobar1 -> {
         return DoubleStream.of(foobar1.getValue());
-      }).collect(AtomicDouble::new, (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
+      }).collect(() -> new AtomicDouble(), (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
     });
     testOperations(values -> {
       final double sum = DoubleStream.iterate(1, x -> x + 1).limit(10).sum();
@@ -420,7 +420,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert 0 < values.stream().flatMapToInt(foobar1 -> {
         return IntStream.of(foobar1.getValue());
-      }).collect(AtomicInteger::new, (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
+      }).collect(() -> new AtomicInteger(), (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
     });
     testOperations(values -> {
       final int sum = IntStream.range(1, 5).sum();
@@ -610,7 +610,7 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testOperations(values -> {
       assert 0 < values.stream().flatMapToLong(foobar1 -> {
         return LongStream.of(foobar1.getValue());
-      }).collect(AtomicLong::new, (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
+      }).collect(() -> new AtomicLong(), (a, x) -> a.addAndGet(x), (a, b) -> a.addAndGet(b.get())).get();
     });
     testOperations(values -> {
       final long sum = LongStream.range(1, 5).sum();

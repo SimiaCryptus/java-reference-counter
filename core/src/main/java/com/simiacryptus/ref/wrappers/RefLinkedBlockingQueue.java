@@ -25,6 +25,7 @@ import com.simiacryptus.ref.lang.RefUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
@@ -48,12 +49,6 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
     return inner;
   }
 
-  @Nonnull
-  public static <T> RefLinkedBlockingQueue<T>[] addRefs(@Nonnull RefLinkedBlockingQueue<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedBlockingQueue::addRef)
-        .toArray((x) -> new RefLinkedBlockingQueue[x]);
-  }
-
   @Override
   public boolean add(@Nonnull @RefAware T t) {
     assertAlive();
@@ -64,7 +59,7 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
   public boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final BlockingQueue<T> inner = getInner();
-    final boolean b = c.stream().allMatch(inner::add);
+    final boolean b = c.stream().allMatch(e -> inner.add(e));
     RefUtil.freeRef(c);
     return b;
   }
@@ -91,12 +86,14 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
 
   @Nonnull
   @Override
+  @RefAware
   public T take() throws InterruptedException {
     return getInner().take();
   }
 
   @Nullable
   @Override
+  @RefAware
   public T poll(long timeout, @Nonnull @RefAware TimeUnit unit) throws InterruptedException {
     return getInner().poll(timeout, unit);
   }
@@ -118,16 +115,16 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
     return getInner().drainTo(c, maxElements);
   }
 
-  @Override
-  public @Nonnull
-  RefLinkedBlockingQueue<T> addRef() {
+  @Override @Nonnull
+  public RefLinkedBlockingQueue<T> addRef() {
     return (RefLinkedBlockingQueue) super.addRef();
   }
 
   @Override
   protected void _free() {
-    inner.forEach(RefUtil::freeRef);
-    inner.clear();
+    ArrayList<T> list = new ArrayList<>(inner.size());
+    inner.drainTo(list);
+    list.forEach(value -> RefUtil.freeRef(value));
     super._free();
   }
 }

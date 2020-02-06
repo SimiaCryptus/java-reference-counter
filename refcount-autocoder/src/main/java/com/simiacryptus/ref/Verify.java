@@ -54,12 +54,12 @@ public class Verify extends RefAutoCoderMojo {
       SymbolIndex index = new SymbolIndex();
       ArrayList<CollectableException> exceptions = new ArrayList<>();
       for (VisitorFactory visitorFactory : Arrays.<VisitorFactory>asList(
-          ((projectInfo, compilationUnit, file) -> new IndexSymbols(projectInfo, compilationUnit, file, index)),
-          (VerifyMethodCalls::new),
-          ((projectInfo, compilationUnit, file) -> new VerifyAssignments(projectInfo, compilationUnit, file, index)),
-          (VerifyFields::new),
-          (VerifyClosures::new),
-          (VerifyMethodVariables::new)
+          (projectInfo, compilationUnit, file) -> new IndexSymbols(projectInfo, compilationUnit, file, index),
+          VerifyMethodCalls::new,
+          (projectInfo, compilationUnit, file) -> new VerifyAssignments(projectInfo, compilationUnit, file, index),
+          VerifyFields::new,
+          VerifyClosures::new,
+          VerifyMethodVariables::new
       )) {
         try {
           rewrite(visitorFactory, isParallel(), true);

@@ -122,7 +122,7 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     if (parent instanceof QualifiedName) {
       final QualifiedName qualifiedName = (QualifiedName) parent;
       if (qualifiedName.getQualifier().equals(child)) {
-        if (!(newChild instanceof Name) && (newChild instanceof Expression)) {
+        if (!(newChild instanceof Name) && newChild instanceof Expression) {
           final FieldAccess fieldAccess = ast.newFieldAccess();
           fieldAccess.setExpression(copyIfAttached((Expression) newChild));
           fieldAccess.setName(copyIfAttached(qualifiedName.getName()));

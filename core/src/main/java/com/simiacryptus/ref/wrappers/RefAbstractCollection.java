@@ -50,7 +50,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
 
   @Override
   public synchronized void clear() {
-    getInner().forEach(RefUtil::freeRef);
+    getInner().forEach(value -> RefUtil.freeRef(value));
     getInner().clear();
   }
 
@@ -148,6 +148,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
 
   @Nonnull
   @Override
+  @RefAware
   public final Object[] toArray() {
     assertAlive();
     final @Nonnull Object[] returnValue = getInner().toArray();
@@ -159,6 +160,7 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
 
   @Nonnull
   @Override
+  @RefAware
   public final <T1> T1[] toArray(@Nonnull @RefAware T1[] a) {
     assertAlive();
     final @Nonnull T1[] returnValue = getInner().toArray(a);

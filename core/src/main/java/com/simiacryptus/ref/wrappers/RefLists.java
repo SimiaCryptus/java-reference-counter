@@ -39,10 +39,10 @@ public class RefLists {
     } else {
       inner = list;
     }
-    final List<RefList<T>> innerPartitions = Lists.partition(inner, size).stream().map(RefArrayList::new)
+    final List<RefList<T>> innerPartitions = Lists.partition(inner, size).stream().map(list1 -> new RefArrayList<T>(list1))
         .collect(Collectors.toList());
     final RefArrayList<RefList<T>> refLists = new RefArrayList<>(innerPartitions);
-    innerPartitions.forEach(ReferenceCounting::freeRef);
+    innerPartitions.forEach(ts -> ts.freeRef());
     RefUtil.freeRef(list);
     return refLists;
   }

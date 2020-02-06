@@ -22,6 +22,7 @@ package com.simiacryptus.ref;
 import com.simiacryptus.lang.Settings;
 import com.simiacryptus.ref.lang.PersistanceMode;
 import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +48,11 @@ public class RefSettings implements Settings {
 
   protected RefSettings() {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
-    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
+    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", true);
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
     this.ignoredClasses = Stream.<String>of(
+        "com.simiacryptus.mindseye.lang.Delta",
+        "com.simiacryptus.mindseye.lang.State",
         "com.simiacryptus.mindseye.lang.Tensor"
     ).map(name -> {
       try {
@@ -109,8 +112,8 @@ public class RefSettings implements Settings {
     return INSTANCE;
   }
 
-  public boolean isLifecycleDebug(@Nonnull ReferenceCountingBase obj) {
-    return watchedClasses.contains(obj.getClass()) || (lifecycleDebug && !ignoredClasses.contains(obj.getClass()));
+  public boolean isLifecycleDebug(Class<? extends ReferenceCounting> objClass) {
+    return watchedClasses.contains(objClass) || (lifecycleDebug && !ignoredClasses.contains(objClass));
   }
 
 }

@@ -37,9 +37,9 @@ public class ModifyAssignments extends RefASTOperator {
   @Override
   public void endVisit(@Nonnull Assignment assignment) {
     final Expression leftHandSide = assignment.getLeftHandSide();
-    final boolean isFieldSet = (leftHandSide instanceof FieldAccess) ||
-        ((leftHandSide instanceof SimpleName) && ASTUtil.isField((SimpleName) leftHandSide));
-    final boolean isArraySet = (leftHandSide instanceof ArrayAccess);
+    final boolean isFieldSet = leftHandSide instanceof FieldAccess ||
+        leftHandSide instanceof SimpleName && ASTUtil.isField((SimpleName) leftHandSide);
+    final boolean isArraySet = leftHandSide instanceof ArrayAccess;
     final boolean isFinal;
     if (isFieldSet) {
       if (leftHandSide instanceof SimpleName) {

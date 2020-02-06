@@ -62,12 +62,6 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
   }
 
   @Nonnull
-  public static <T> RefConcurrentLinkedDeque<T>[] addRefs(@Nonnull RefConcurrentLinkedDeque<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefConcurrentLinkedDeque::addRef)
-        .toArray((x) -> new RefConcurrentLinkedDeque[x]);
-  }
-
-  @Nonnull
   public @Override
   RefConcurrentLinkedDeque<T> addRef() {
     return (RefConcurrentLinkedDeque<T>) super.addRef();
@@ -83,7 +77,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
   public boolean addAll(@Nonnull @RefAware Collection<? extends T> c) {
     assertAlive();
     final Deque<T> inner = getInner();
-    final boolean b = c.stream().allMatch(inner::add);
+    final boolean b = c.stream().allMatch(e -> inner.add(e));
     RefUtil.freeRef(c);
     return b;
   }
@@ -208,7 +202,7 @@ public class RefConcurrentLinkedDeque<T> extends RefAbstractQueue<T> implements 
 
   @Override
   protected void _free() {
-    inner.forEach(RefUtil::freeRef);
+    inner.forEach(value -> RefUtil.freeRef(value));
     inner.clear();
     super._free();
   }

@@ -76,25 +76,12 @@ public class VerifyMethodVariables extends VerifyRefOperator {
   }
 
   @Override
-  public void endVisit(@Nonnull VariableDeclarationStatement node) {
-    ArrayList<CollectableException> exceptions = new ArrayList<>();
-    for (VariableDeclarationFragment fragment : (List<VariableDeclarationFragment>) node.fragments()) {
-      try {
-        processVariable(fragment);
-      } catch (CollectableException e) {
-        exceptions.add(e);
-      }
-    }
-    if (!exceptions.isEmpty()) {
-      throw CollectableException.combine(exceptions);
-    }
-    super.endVisit(node);
-  }
-
-  @Override
   public void endVisit(@Nonnull SingleVariableDeclaration node) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     try {
+      if (getLocation(node).equals("BasicTrainable.java:195")) {
+        info(node, "Processing %s", node);
+      }
       IVariableBinding binding = node.resolveBinding();
       if (null == binding) {
         warn(node, "Unresolved type");
@@ -112,63 +99,76 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     super.endVisit(node);
   }
 
-  public void processVariable(VariableDeclarationFragment node) {
+  @Override
+  public void endVisit(@Nonnull VariableDeclarationFragment node) {
     IVariableBinding binding = node.resolveBinding();
     if (null == binding) {
       warn(node, "Unresolved type");
       return;
     }
     if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
-      processScope(getStatements(node), node.getName(), TerminalState.Freed);
+      processStatements(node);
     }
   }
 
   @NotNull
-  public List<Statement> getStatements(VariableDeclarationFragment node) {
-    Block block = ASTUtil.getBlock(node);
-    if (block == null) fatal(node, "Block not found for %s", node);
-    List<Statement> statements = block.statements();
-    int definedAt = statements.indexOf(getStatement(node));
-    if (definedAt < 0) fatal(node, "Statement not found");
-    statements = statements.subList(definedAt + 1, statements.size());
-    return statements;
-  }
-
-  @NotNull
-  public void processStatements(SingleVariableDeclaration node) {
-    ASTNode astNode = getMethodTuplet(node);
-    if (astNode == null) fatal(node, "Lambda nor Method not found for %s", node);
-    if(astNode instanceof LambdaExpression) {
-      processBlock(node, ((LambdaExpression) astNode).getBody(), TerminalState.Freed);
-    } else if(astNode instanceof EnhancedForStatement) {
-      processBlock(node, ((EnhancedForStatement) astNode).getBody(), TerminalState.Any);
+  public void processStatements(VariableDeclaration node) {
+    ASTNode astNode = getExecutingMethod(node);
+    if (astNode == null) {
+      info(node, "Lambda nor Method not found for %s", node);
+      return;
+    }
+    if (astNode instanceof LambdaExpression) {
+      LambdaExpression lambdaExpression = (LambdaExpression) astNode;
+      ASTNode body = lambdaExpression.getBody();
+      processBlock(body, TerminalState.Freed, node.getName());
+    } else if (astNode instanceof MethodDeclaration) {
+      MethodDeclaration methodDeclaration = (MethodDeclaration) astNode;
+      ASTNode body = methodDeclaration.getBody();
+      if(body != null) processBlock(body, TerminalState.Freed, node.getName());
+    } else if (astNode instanceof EnhancedForStatement) {
+      processBlock(((EnhancedForStatement) astNode).getBody(), TerminalState.Any, node.getName());
     } else {
-      Block body = ((MethodDeclaration) astNode).getBody();
-      if(null != body) processBlock(node, body, TerminalState.Freed);
+      Block body = (Block) astNode;
+      if (null != body) {
+        SimpleName name = node.getName();
+        if (body == null) fatal(name, "Block not found");
+        List<Statement> statements = body.statements();
+        if (null != statements) {
+          Statement statement = getStatement(node);
+          int indexOf = statements.indexOf(statement);
+          if (indexOf >= 0) statements = statements.subList(indexOf+1, statements.size());
+          processScope(statements, name, TerminalState.Freed);
+        }
+      }
     }
   }
 
-  public void processBlock(SingleVariableDeclaration node, ASTNode block, TerminalState requiredTermination) {
-    if (block == null) fatal(node, "Block not found");
+  public void processBlock(ASTNode block, TerminalState requiredTermination, SimpleName name) {
+    if (block == null) {
+      fatal(name, "Block not found");
+    }
     if (block instanceof Block) {
       List<Statement> statements = ((Block) block).statements();
-      if (null != statements) processScope(statements, node.getName(), requiredTermination);
+      if (null != statements) processScope(statements, name, requiredTermination);
     } else {
-      ReferenceState startState = new ReferenceState(node.getName(), null, null);
-      ReferenceState endState = processNode(block, node.getName(), startState, new ArrayList<>(), requiredTermination);
+      ReferenceState startState = new ReferenceState(name, null, null);
+      ReferenceState endState = processNode(block, name, startState, new ArrayList<>(), requiredTermination);
       if (!requiredTermination.validate(endState)) {
-        fatal(block, "Invalid state for %s: %s", node, endState);
+        fatal(block, "Invalid state for %s: %s", name, endState);
       }
     }
   }
 
   @Nullable
-  public static ASTNode getMethodTuplet(@Nullable ASTNode node) {
+  public static ASTNode getExecutingMethod(@Nullable ASTNode node) {
     if (null == node) return null;
     if (node instanceof MethodDeclaration) return node;
     if (node instanceof EnhancedForStatement) return node;
     if (node instanceof LambdaExpression) return node;
-    return getMethodTuplet(node.getParent());
+    if (node instanceof Block) return node;
+    if (node instanceof TypeDeclaration) return null;
+    return getExecutingMethod(node.getParent());
   }
 
 

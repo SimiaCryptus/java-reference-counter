@@ -48,10 +48,4 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
     return inner;
   }
 
-  @Nonnull
-  public static <K, V> RefLinkedHashMap<K, V>[] addRefs(@Nonnull RefLinkedHashMap<K, V>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefLinkedHashMap::addRef)
-        .toArray((x) -> new RefLinkedHashMap[x]);
-  }
-
 }

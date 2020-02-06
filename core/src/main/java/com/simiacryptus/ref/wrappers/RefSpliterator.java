@@ -35,7 +35,7 @@ import java.util.function.LongConsumer;
 @SuppressWarnings("unused")
 public class RefSpliterator<T> extends ReferenceCountingBase implements Spliterator<T> {
   private final Spliterator<T> inner;
-  private final StackTraceElement[] createdBy = Thread.currentThread().getStackTrace();
+//  private final StackTraceElement[] createdBy = Thread.currentThread().getStackTrace();
   private final ArrayList<ReferenceCounting> list = new ArrayList<>();
   private long size;
 
@@ -56,12 +56,6 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   public Spliterator<T> getInner() {
     return inner;
-  }
-
-  @Nonnull
-  public static <T> RefSpliterator<T>[] addRefs(@Nonnull RefSpliterator<T>[] array) {
-    return Arrays.stream(array).filter((x) -> x != null).map(RefSpliterator::addRef)
-        .toArray((x) -> new RefSpliterator[x]);
   }
 
   @Nonnull
@@ -100,7 +94,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
   @Override
   protected void _free() {
-    list.forEach(ReferenceCounting::freeRef);
+    list.forEach(referenceCounting -> referenceCounting.freeRef());
     list.clear();
     RefUtil.freeRef(this.inner);
     super._free();
@@ -150,7 +144,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
     @Override
     protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
+      list.forEach(referenceCounting -> referenceCounting.freeRef());
       list.clear();
       super._free();
     }
@@ -197,7 +191,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
     @Override
     protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
+      list.forEach(referenceCounting -> referenceCounting.freeRef());
       list.clear();
       super._free();
     }
@@ -242,7 +236,7 @@ public class RefSpliterator<T> extends ReferenceCountingBase implements Splitera
 
     @Override
     protected void _free() {
-      list.forEach(ReferenceCounting::freeRef);
+      list.forEach(referenceCounting -> referenceCounting.freeRef());
       list.clear();
       super._free();
     }
