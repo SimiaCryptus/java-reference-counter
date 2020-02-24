@@ -71,22 +71,29 @@ public class RefCollectors {
       @Nonnull @RefAware Function<? super T, ? extends U> valueMapper,
       @RefAware BinaryOperator<U> mergeFunction,
       @RefAware Supplier<M> mapSupplier) {
-    return new RefCollector<>(mapSupplier,
-        RefUtil.wrapInterface((map, element) -> {
-          RefUtil.freeRef(map.merge(
-              keyMapper.apply(RefUtil.addRef(element)),
-              valueMapper.apply(element),
-              RefUtil.addRef(mergeFunction)
-          ));
-          map.freeRef();
-        }, keyMapper, valueMapper, mergeFunction),
-        RefUtil.wrapInterface((a, b) -> {
-          b.forEach((k, v) -> {
-            RefUtil.freeRef(a.merge(k, v, RefUtil.addRef(mergeFunction)));
-          });
-          RefUtil.freeRef(b);
-          return a;
-        }, RefUtil.addRef(mergeFunction)),
+    BiConsumer<M, T> accumulator = RefUtil.wrapInterface((map, element) -> {
+      try {
+        RefUtil.freeRef(map.merge(
+            keyMapper.apply(RefUtil.addRef(element)),
+            valueMapper.apply(element),
+            RefUtil.addRef(mergeFunction)
+        ));
+      } finally {
+        map.freeRef();
+      }
+    }, keyMapper, valueMapper, mergeFunction);
+    BinaryOperator<M> combiner = RefUtil.wrapInterface((a, b) -> {
+      try {
+        b.forEach((k, v) -> {
+          RefUtil.freeRef(a.merge(k, v, RefUtil.addRef(mergeFunction)));
+        });
+        return a;
+      } finally {
+        RefUtil.freeRef(b);
+      }
+    }, RefUtil.addRef(mergeFunction));
+    return new RefCollector<>(
+        mapSupplier, accumulator, combiner,
         Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH))
     );
   }
@@ -260,10 +267,9 @@ public class RefCollectors {
   private static <K, V, M extends RefMap<K, V>> BinaryOperator<M> mapMerger(
       @Nonnull @RefAware BinaryOperator<V> mergeFunction) {
     return RefUtil.wrapInterface((a, b) -> {
-      for (Map.Entry<K, V> e : b.entrySet()) {
-        RefUtil.freeRef(a.merge(e.getKey(), e.getValue(), mergeFunction));
-        RefUtil.freeRef(e);
-      }
+      b.forEach((k,v) -> {
+        RefUtil.freeRef(a.merge(k, v, mergeFunction));
+      });
       b.freeRef();
       return a;
     }, mergeFunction);

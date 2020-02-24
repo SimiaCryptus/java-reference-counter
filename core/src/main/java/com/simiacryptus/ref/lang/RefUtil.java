@@ -144,9 +144,15 @@ public class RefUtil {
     RefUtil.freeRef(prev);
   }
 
-  public static <T extends ReferenceCounting> boolean assertAlive(@RefIgnore @Nonnull T[] inputNodes) {
-    for (T x : inputNodes) {
-      x.assertAlive();
+  public static boolean assertAlive(@RefAware @RefIgnore @Nonnull Object obj) {
+    if (obj instanceof ReferenceCounting) ((ReferenceCounting) obj).assertAlive();
+    else if(obj.getClass().isArray()) {
+      synchronized (obj) {
+        int length = Array.getLength(obj);
+        for (int i = 0; i < length; i++) {
+          assertAlive(Array.get(obj, i));
+        }
+      }
     }
     return true;
   }

@@ -83,10 +83,13 @@ public abstract class RefAbstractSet<T> extends RefAbstractCollection<T> impleme
   @Override
   public void forEach(@Nonnull @RefAware Consumer<? super T> action) {
     assertAlive();
-    for (T t : getInnerMap().keySet()) {
-      action.accept(RefUtil.addRef(t));
+    try {
+      for (T t : getInnerMap().keySet()) {
+        action.accept(RefUtil.addRef(t));
+      }
+    } finally {
+      RefUtil.freeRef(action);
     }
-    RefUtil.freeRef(action);
   }
 
   @Override

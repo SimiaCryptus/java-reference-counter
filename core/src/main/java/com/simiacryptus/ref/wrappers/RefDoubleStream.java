@@ -206,7 +206,7 @@ public class RefDoubleStream implements DoubleStream {
   @Override
   public RefDoubleStream map(@Nonnull @RefAware DoubleUnaryOperator mapper) {
     track(mapper);
-    return new RefDoubleStream(inner.map(t -> storeRef(mapper.applyAsDouble(t))), lambdas, refs);
+    return new RefDoubleStream(inner.map(t -> mapper.applyAsDouble(t)), lambdas, refs);
   }
 
   @Nonnull
@@ -284,7 +284,7 @@ public class RefDoubleStream implements DoubleStream {
   public OptionalDouble reduce(@Nonnull @RefAware DoubleBinaryOperator accumulator) {
     track(accumulator);
     final OptionalDouble optionalDouble = inner
-        .reduce((double t, double u) -> storeRef(accumulator.applyAsDouble(getRef(t), getRef(u))));
+        .reduce((double t, double u) -> accumulator.applyAsDouble(t, u));
     close();
     return optionalDouble;
   }
@@ -334,7 +334,7 @@ public class RefDoubleStream implements DoubleStream {
 
   @Override
   public double[] toArray() {
-    final double[] array = inner.map(u -> getRef(u)).toArray();
+    final double[] array = inner.toArray();
     close();
     return array;
   }

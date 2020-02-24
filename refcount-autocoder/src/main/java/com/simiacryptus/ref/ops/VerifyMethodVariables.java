@@ -53,11 +53,13 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       try {
         IAnnotationBinding[] annotations = methodBinding.getParameterAnnotations(i);
         ITypeBinding type = methodBinding.getParameterTypes()[i];
-        if (ASTUtil.findAnnotation(RefAware.class, annotations).isPresent() || isRefCounted(node, type)) {
-          Block body = node.getBody();
-          SimpleName name = parameters.get(i).getName();
-          if (null == body) continue;
-          processScope(body, name, TerminalState.Freed);
+        if(!ASTUtil.findAnnotation(RefIgnore.class, annotations).isPresent()) {
+          if (ASTUtil.findAnnotation(RefAware.class, annotations).isPresent() || isRefCounted(node, type)) {
+            Block body = node.getBody();
+            SimpleName name = parameters.get(i).getName();
+            if (null == body) continue;
+            processScope(body, name, TerminalState.Freed);
+          }
         }
       } catch (CollectableException e) {
         exceptions.add(e);
@@ -86,8 +88,10 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       if (null == binding) {
         warn(node, "Unresolved type");
       } else {
-        if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
-          processStatements(node);
+        if(!ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
+          if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
+            processStatements(node);
+          }
         }
       }
     } catch (CollectableException e) {
@@ -106,8 +110,10 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       warn(node, "Unresolved type");
       return;
     }
-    if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
-      processStatements(node);
+    if(!ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
+      if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
+        processStatements(node);
+      }
     }
   }
 

@@ -36,10 +36,9 @@ public interface Settings {
   Logger logger = LoggerFactory.getLogger(Settings.class);
 
   static ObjectMapper getMapper() {
-    ObjectMapper enable = new ObjectMapper()
+    return new ObjectMapper()
         //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
         .enable(SerializationFeature.INDENT_OUTPUT);
-    return enable;
   }
 
   static boolean get(@Nonnull final @RefAware String key, final boolean defaultValue) {

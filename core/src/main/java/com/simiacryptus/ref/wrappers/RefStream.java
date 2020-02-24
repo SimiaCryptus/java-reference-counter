@@ -239,16 +239,21 @@ public class RefStream<T> implements Stream<T> {
   public <R, A> R collect(@RefAware Collector<? super T, A, R> collector) {
     if (collector instanceof ReferenceCounting) {
       final Function<A, R> finisher = collector.finisher();
-      final R result = finisher
-          .apply(this.collect(collector.supplier(), collector.accumulator(), getBiConsumer(collector.combiner())));
-      RefUtil.freeRef(finisher);
-      RefUtil.freeRef(collector);
-      close();
-      return result;
+      try {
+        return finisher
+            .apply(this.collect(collector.supplier(), collector.accumulator(), getBiConsumer(collector.combiner())));
+      } finally {
+        close();
+        RefUtil.freeRef(finisher);
+        RefUtil.freeRef(collector);
+      }
     } else {
-      final R collect = getInner().collect(collector);
-      close();
-      return collect;
+      try {
+        return getInner().collect(collector);
+      } finally {
+        close();
+        RefUtil.freeRef(collector);
+      }
     }
   }
 

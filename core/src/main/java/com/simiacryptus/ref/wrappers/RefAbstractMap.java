@@ -105,7 +105,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 
   public void forEach(@Nonnull @RefAware BiConsumer<? super K, ? super V> action) {
     try {
-      getInner().values().stream().forEach(entry -> {
+      getInner().values().forEach(entry -> {
         action.accept(RefUtil.addRef(entry.key), RefUtil.addRef(entry.value));
       });
     } finally {
@@ -138,6 +138,10 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     if (null == put)
       return null;
     RefUtil.freeRef(put.key);
+    if (put.value == value) {
+      RefUtil.freeRef(put.value);
+      return null;
+    }
     return put.value;
   }
 
@@ -151,10 +155,13 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
 //      });
 //    } else {
 //    }
-    m.forEach((k, v) -> {
-      RefUtil.freeRef(put(k, v));
-    });
-    RefUtil.freeRef(m);
+    try {
+      m.forEach((k, v) -> {
+        RefUtil.freeRef(put(k, v));
+      });
+    } finally {
+      RefUtil.freeRef(m);
+    }
   }
 
   @Override
@@ -162,12 +169,13 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   public V remove(@RefAware Object key) {
     assertAlive();
     final KeyValue<K, V> removed = getInner().remove(key);
-    if (null != removed) {
-      RefUtil.freeRef(removed.key);
-    }
     RefUtil.freeRef(key);
-    assert removed != null;
-    return removed.value;
+    if (null == removed) {
+      return null;
+    } else {
+      RefUtil.freeRef(removed.key);
+      return removed.value;
+    }
   }
 
   @Override

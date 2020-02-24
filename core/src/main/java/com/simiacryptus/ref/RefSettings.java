@@ -19,17 +19,16 @@
 
 package com.simiacryptus.ref;
 
+import com.simiacryptus.lang.LazyVal;
 import com.simiacryptus.lang.Settings;
-import com.simiacryptus.ref.lang.PersistanceMode;
-import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.ReferenceCounting;
-import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import com.simiacryptus.ref.lang.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,26 +42,28 @@ public class RefSettings implements Settings {
   private final boolean lifecycleDebug;
   @Nonnull
   private final PersistanceMode doubleCacheMode;
-  private final Set<Class<?>> watchedClasses;
-  private final Set<Class<?>> ignoredClasses;
+  private final LazyVal<Set<String>> watchedClasses;
+  private final LazyVal<Set<String>> ignoredClasses;
 
   protected RefSettings() {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
-    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", true);
+    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
-    this.ignoredClasses = Stream.<String>of(
+    this.ignoredClasses = LazyVal.wrap(()->Stream.<String>of(
         "com.simiacryptus.mindseye.lang.Delta",
-        "com.simiacryptus.mindseye.lang.State",
-        "com.simiacryptus.mindseye.lang.Tensor"
-    ).map(name -> {
-      try {
-        return Class.forName(name);
-      } catch (ClassNotFoundException e) {
-        logger.warn("No Class Found: " + name);
-        return null;
-      }
-    }).filter(x -> x != null).collect(Collectors.toSet());
-    this.watchedClasses = Stream.<String>of(
+        "com.simiacryptus.mindseye.lang.State"
+//        "com.simiacryptus.mindseye.lang.Tensor"
+//    ).map(name -> {
+//      try {
+//        return Class.forName(name);
+//      } catch (ClassNotFoundException e) {
+//        logger.warn("No Class Found: " + name);
+//        return null;
+//      }
+//    }
+    ).filter(x -> x != null).collect(Collectors.toSet()));
+    this.watchedClasses = LazyVal.wrap(()->Stream.<String>of(
+        "com.simiacryptus.mindseye.lang.cudnn.CudnnHandle"
 //        "com.simiacryptus.mindseye.art.util.VisualStyleContentNetwork.TileTrainer",
 //        "com.simiacryptus.mindseye.lang.Tensor"
 //        "com.simiacryptus.mindseye.network.PipelineNetwork",
@@ -84,14 +85,15 @@ public class RefSettings implements Settings {
 //        "com.simiacryptus.mindseye.layers.cudnn.PoolingLayer",
 //        "com.simiacryptus.mindseye.lang.TensorArray",
 //        "com.simiacryptus.mindseye.lang.cudnn.CudaTensor"
-    ).map(name -> {
-      try {
-        return Class.forName(name);
-      } catch (ClassNotFoundException e) {
-        logger.warn("No Class Found: " + name);
-        return null;
-      }
-    }).filter(x -> x != null).collect(Collectors.toSet());
+//    ).map(name -> {
+//      try {
+//        return Class.forName(name);
+//      } catch (ClassNotFoundException e) {
+//        logger.warn("No Class Found: " + name);
+//        return null;
+//      }
+//    }
+    ).filter(x -> x != null).collect(Collectors.toSet()));
   }
 
   @Nonnull
@@ -112,8 +114,10 @@ public class RefSettings implements Settings {
     return INSTANCE;
   }
 
+  private static AtomicBoolean inCall = new AtomicBoolean(false);
   public boolean isLifecycleDebug(Class<? extends ReferenceCounting> objClass) {
-    return watchedClasses.contains(objClass) || (lifecycleDebug && !ignoredClasses.contains(objClass));
+    String key = objClass.getCanonicalName();
+    return watchedClasses.get().contains(key) || (lifecycleDebug && !ignoredClasses.get().contains(key));
   }
 
 }

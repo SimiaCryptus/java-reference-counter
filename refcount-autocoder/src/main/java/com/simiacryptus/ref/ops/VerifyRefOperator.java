@@ -339,7 +339,8 @@ public class VerifyRefOperator extends RefASTOperator {
         if(node instanceof SimpleName) {
           IBinding binding = ((SimpleName) node).resolveBinding();
           if(binding instanceof IVariableBinding) {
-            if(((IVariableBinding) binding).isEffectivelyFinal()) {
+            IVariableBinding variableBinding = (IVariableBinding) binding;
+            if(variableBinding.isEffectivelyFinal() || Modifier.isFinal((variableBinding).getModifiers())) {
               return state;
             }
           }

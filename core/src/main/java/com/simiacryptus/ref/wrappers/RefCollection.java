@@ -40,11 +40,14 @@ public interface RefCollection<T> extends ReferenceCounting, Collection<T> {
 
   default void forEach(@Nonnull @RefAware Consumer<? super T> action) {
     final RefIterator<T> iterator = iterator();
-    while (iterator.hasNext()) {
-      action.accept(iterator.next());
+    try {
+      while (iterator.hasNext()) {
+        action.accept(iterator.next());
+      }
+    } finally {
+      iterator.freeRef();
+      RefUtil.freeRef(action);
     }
-    RefUtil.freeRef(action);
-    iterator.freeRef();
   }
 
   @Nonnull

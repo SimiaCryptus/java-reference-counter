@@ -143,13 +143,30 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   }
 
   public boolean assertAlive() {
-    if (isFinalized()) {
-      throw new LifecycleException(this);
+    boolean finalized = isFinalized();
+    if (finalized) {
+      if (!inFinalizer.get()) {
+        logger.warn(String.format("Using freed reference for %s", getClass().getSimpleName()));
+        logger.warn(referenceReport(true, finalized));
+        throw new LifecycleException(this);
+      } else {
+        throw new LifecycleException(this);
+      }
     }
-    if (isFinalized() && !inFinalizer.get()) {
-      logger.warn(String.format("Using freed reference for %s", getClass().getSimpleName()));
-      logger.warn(referenceReport(true, isFinalized()));
-      throw new LifecycleException(this);
+    return true;
+  }
+
+  public boolean assertFreed() {
+    boolean finalized = isFinalized();
+    if (!finalized) {
+      if (!inFinalizer.get()) {
+        System.gc();
+        logger.warn(String.format("Using freed reference for %s", getClass().getSimpleName()));
+        logger.warn(referenceReport(true, finalized));
+        throw new LifecycleException(this);
+      } else {
+        throw new LifecycleException(this);
+      }
     }
     return true;
   }
@@ -217,9 +234,8 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
             .filter(x -> x != null).map(x -> reverseCopy(x)).collect(Collectors.toList())));
 
     if (null != refCreatedBy) {
-      StackTraceElement[] trace = this.refCreatedBy;
       //trace = removeSuffix(trace, prefix);
-      out.println(String.format("created by \n\t%s", getString(trace).replaceAll("\n", "\n\t")));
+      out.println(String.format("created by \n\t%s", getString(this.refCreatedBy).replaceAll("\n", "\n\t")));
     }
     synchronized (addRefs) {
 

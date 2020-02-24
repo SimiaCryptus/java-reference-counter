@@ -22,6 +22,7 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -52,6 +53,7 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
   @Override
   public boolean add(@Nonnull @RefAware T t) {
     assertAlive();
+    RefUtil.assertAlive(t);
     return getInner().add(t);
   }
 

@@ -366,7 +366,6 @@ public class ArrayListContainer extends ReferenceCountingBase {
       final int inputDims = inputTensor.value;
       @Nonnull final BasicType result = new BasicType();
       for (int j = 0; j < outputPrototype377.length; j++) {
-        final int j_ = j;
         @Nonnull final WrapperType<BasicType> inputKey = new WrapperType<BasicType>(new BasicType());
         final WrapperType[] copyInput = Arrays.stream(array374)
             .map((Function<? super BasicType, WrapperType>) x -> {

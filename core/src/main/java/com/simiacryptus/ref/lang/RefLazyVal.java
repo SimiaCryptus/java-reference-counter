@@ -24,14 +24,14 @@ import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
 @RefIgnore
-public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCountingBase implements Supplier<T> {
+public abstract class RefLazyVal<T> extends ReferenceCountingBase implements Supplier<T> {
   @Nullable
   private volatile T val = null;
 
   @Nonnull
-  public static <T extends ReferenceCounting> LazyVal<T> wrap(
+  public static <T> RefLazyVal<T> wrap(
       @Nonnull @RefAware Supplier<T> fn) {
-    return new LazyVal<T>() {
+    return new RefLazyVal<T>() {
       @Nonnull
       @Override
       protected T build() {
@@ -49,14 +49,14 @@ public abstract class LazyVal<T extends ReferenceCounting> extends ReferenceCoun
         }
       }
     }
-    val.addRef();
+    RefUtil.addRef(val);
     return val;
   }
 
   @Override
   protected void _free() {
     if (null != val) {
-      val.freeRef();
+      RefUtil.freeRef(val);
       val = null;
     }
     super._free();

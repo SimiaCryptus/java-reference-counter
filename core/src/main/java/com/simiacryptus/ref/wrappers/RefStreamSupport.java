@@ -37,13 +37,11 @@ public class RefStreamSupport {
                                         boolean parallel) {
     if (spliterator instanceof RefSpliterator) {
       final RefSpliterator refSpliterator = (RefSpliterator) spliterator;
-      final Spliterator inner = refSpliterator.getInner();
-      ArrayList<ReferenceCounting> lambdas = new ArrayList<>();
       ConcurrentHashMap<RefStream.IdentityWrapper<ReferenceCounting>, AtomicInteger> refs = new ConcurrentHashMap<>();
       return new RefStream<>(
-          StreamSupport.stream(inner, parallel)
+          StreamSupport.stream(refSpliterator.getInner(), parallel)
               .peek(u -> RefStream.storeRef(RefUtil.addRef(u), refs)),
-          lambdas,
+          new ArrayList<ReferenceCounting>(),
           refs
       ).onClose(() -> refSpliterator.freeRef());
     } else {
