@@ -19,9 +19,10 @@
 
 package com.simiacryptus.ref;
 
-import com.simiacryptus.lang.LazyVal;
 import com.simiacryptus.lang.Settings;
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.PersistanceMode;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.ReferenceCounting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +39,23 @@ public class RefSettings implements Settings {
   private static final Logger logger = LoggerFactory.getLogger(RefSettings.class);
   @Nullable
   private static transient RefSettings INSTANCE = null;
+  public static final int maxTracesPerObject = 1000;
+  public static int maxStackSize = 20;
+  private static String stackPrefixFilter = "com.simiacryptus";
 
   private final boolean lifecycleDebug;
   @Nonnull
   private final PersistanceMode doubleCacheMode;
-  private final LazyVal<Set<String>> watchedClasses;
-  private final LazyVal<Set<String>> ignoredClasses;
+  public boolean watchCreation;
+  private final Set<String> watchedClasses;
+  private final Set<String> ignoredClasses;
 
   protected RefSettings() {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
-    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
-    this.ignoredClasses = LazyVal.wrap(()->Stream.<String>of(
+    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
+    this.watchCreation = Settings.get("WATCH_CREATE", true);
+    this.ignoredClasses = Stream.<String>of(
         "com.simiacryptus.mindseye.lang.Delta",
         "com.simiacryptus.mindseye.lang.State"
 //        "com.simiacryptus.mindseye.lang.Tensor"
@@ -61,9 +67,10 @@ public class RefSettings implements Settings {
 //        return null;
 //      }
 //    }
-    ).filter(x -> x != null).collect(Collectors.toSet()));
-    this.watchedClasses = LazyVal.wrap(()->Stream.<String>of(
-        "com.simiacryptus.mindseye.lang.cudnn.CudnnHandle"
+    ).filter(x -> x != null).collect(Collectors.toSet());
+    this.watchedClasses = Stream.<String>of(
+//        "com.simiacryptus.mindseye.network.PipelineNetwork"
+//        "com.simiacryptus.mindseye.lang.cudnn.CudnnHandle"
 //        "com.simiacryptus.mindseye.art.util.VisualStyleContentNetwork.TileTrainer",
 //        "com.simiacryptus.mindseye.lang.Tensor"
 //        "com.simiacryptus.mindseye.network.PipelineNetwork",
@@ -93,7 +100,7 @@ public class RefSettings implements Settings {
 //        return null;
 //      }
 //    }
-    ).filter(x -> x != null).collect(Collectors.toSet()));
+    ).filter(x -> x != null).collect(Collectors.toSet());
   }
 
   @Nonnull
@@ -115,9 +122,14 @@ public class RefSettings implements Settings {
   }
 
   private static AtomicBoolean inCall = new AtomicBoolean(false);
+
+  public static boolean filter(StackTraceElement stackTraceElement) {
+    return stackTraceElement.getClassName().startsWith(stackPrefixFilter);
+  }
+
   public boolean isLifecycleDebug(Class<? extends ReferenceCounting> objClass) {
     String key = objClass.getCanonicalName();
-    return watchedClasses.get().contains(key) || (lifecycleDebug && !ignoredClasses.get().contains(key));
+    return watchedClasses.contains(key) || (lifecycleDebug && !ignoredClasses.contains(key));
   }
 
 }

@@ -22,12 +22,6 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.*;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 @RefIgnore
 @SuppressWarnings("unused")
@@ -45,8 +39,8 @@ public class RefThreadLocal<T> extends ThreadLocal<T> implements ReferenceCounti
   }
 
   @Override
-  public boolean isFinalized() {
-    return refCounter.isFinalized();
+  public boolean isFreed() {
+    return refCounter.isFreed();
   }
 
   @Override

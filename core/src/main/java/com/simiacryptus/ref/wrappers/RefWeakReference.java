@@ -53,7 +53,7 @@ public class RefWeakReference<T> {
     if (t instanceof ReferenceCounting) {
       final ReferenceCounting referenceCounting = (ReferenceCounting) t;
       synchronized (referenceCounting) {
-        if (referenceCounting.isFinalized()) return null;
+        if (referenceCounting.isFreed()) return null;
         return (T) referenceCounting.addRef();
       }
     }

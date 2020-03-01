@@ -107,10 +107,14 @@ public class RefUtil {
   @Nonnull
   @RefIgnore
   public static <T> T orElseGet(@Nonnull @RefAware Optional<T> optional, @RefAware Supplier<T> orElse) {
-    if (optional.isPresent()) {
-      return optional.get();
-    } else {
-      return orElse.get();
+    try {
+      if (optional.isPresent()) {
+        return optional.get();
+      } else {
+        return orElse.get();
+      }
+    } finally {
+      RefUtil.freeRef(orElse);
     }
   }
 
@@ -157,6 +161,19 @@ public class RefUtil {
     return true;
   }
 
+  public static boolean watch(@RefAware @RefIgnore @Nonnull Object obj) {
+    if (obj instanceof ReferenceCounting) ((ReferenceCountingBase) obj).watch();
+    else if(obj.getClass().isArray()) {
+      synchronized (obj) {
+        int length = Array.getLength(obj);
+        for (int i = 0; i < length; i++) {
+          watch(Array.get(obj, i));
+        }
+      }
+    }
+    return true;
+  }
+
   private static class RefWrapperHandler<T> implements InvocationHandler {
     private final ReferenceCountingBase refcounter;
     private final T obj;
@@ -185,6 +202,7 @@ public class RefUtil {
     public RefProxy(T obj, Object... refs) {
       this.obj = obj;
       this.refs = refs;
+      //this.detach();
     }
 
     @Override

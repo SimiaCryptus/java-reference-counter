@@ -162,7 +162,10 @@ public class RefStream<T> implements Stream<T> {
   static <U> U getRef(@RefAware U u,
                       @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
-      final AtomicInteger refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
+      final AtomicInteger refCnt;
+      synchronized (refs) {
+        refCnt = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
+      }
       final AtomicBoolean obtained = new AtomicBoolean(false);
       int newStoredRefs = refCnt.updateAndGet(x -> {
         if (x <= 0)
@@ -187,7 +190,11 @@ public class RefStream<T> implements Stream<T> {
   static <U> U storeRef(@RefAware U u,
                         @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
     if (u instanceof ReferenceCounting) {
-      refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0)).incrementAndGet();
+      AtomicInteger atomicInteger;
+      synchronized (refs) {
+        atomicInteger = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
+      }
+      atomicInteger.incrementAndGet();
     } else if (null != u && u.getClass().isArray()) {
       int length = Array.getLength(u);
       for (int i = 0; i < length; i++) {

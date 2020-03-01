@@ -25,7 +25,7 @@ import java.util.Arrays;
 @RefIgnore
 public interface ReferenceCounting {
 
-  default boolean isFinalized() {
+  default boolean isFreed() {
     return false;
   }
 

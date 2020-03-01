@@ -32,8 +32,8 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
 
-  private final K key;
-  private V value;
+  protected final K key;
+  protected V value;
 
   public RefEntry(@Nonnull Map.Entry<K, V> inner) {
     this(RefUtil.addRef(inner.getKey()), RefUtil.addRef(inner.getValue()));

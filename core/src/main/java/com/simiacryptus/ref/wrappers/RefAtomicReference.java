@@ -35,8 +35,18 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
     inner = new AtomicReference<>();
   }
 
-  public RefAtomicReference(V obj) {
+  public RefAtomicReference(@RefAware V obj) {
     inner = new AtomicReference<>(obj);
+  }
+
+  public @RefAware V updateAndGet(UnaryOperator<V> o) {
+    synchronized (inner) {
+      return RefUtil.addRef(inner.updateAndGet(x->o.apply(x)));
+    }
+  }
+
+  public @RefAware V getAndSet(@RefAware V value) {
+    return inner.getAndSet(value);
   }
 
   protected void _free() {
@@ -55,6 +65,9 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
   }
 
   public final void set(@RefAware V newValue) {
+    assertAlive();
+    RefUtil.assertAlive(newValue);
+    //RefUtil.watch(newValue);
     RefUtil.freeRef(inner.getAndSet(newValue));
   }
 
