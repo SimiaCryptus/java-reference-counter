@@ -248,7 +248,7 @@ public class RefIntStream implements IntStream {
   @Override
   public <U> RefStream<U> mapToObj(@RefAware IntFunction<? extends U> mapper) {
     track(mapper);
-    return new RefStream<U>(inner.mapToObj(x->storeRef(mapper.apply(x))), lambdas, refs);
+    return new RefStream<U>(inner.mapToObj(x -> storeRef(mapper.apply(x))), lambdas, refs);
   }
 
   @Override

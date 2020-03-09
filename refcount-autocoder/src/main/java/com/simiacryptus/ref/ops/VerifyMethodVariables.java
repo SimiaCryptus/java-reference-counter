@@ -40,6 +40,17 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  @Nullable
+  public static ASTNode getExecutingMethod(@Nullable ASTNode node) {
+    if (null == node) return null;
+    if (node instanceof MethodDeclaration) return node;
+    if (node instanceof EnhancedForStatement) return node;
+    if (node instanceof LambdaExpression) return node;
+    if (node instanceof Block) return node;
+    if (node instanceof TypeDeclaration) return null;
+    return getExecutingMethod(node.getParent());
+  }
+
   @Override
   public void endVisit(@Nonnull MethodDeclaration node) {
     final IMethodBinding methodBinding = node.resolveBinding();
@@ -53,7 +64,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       try {
         IAnnotationBinding[] annotations = methodBinding.getParameterAnnotations(i);
         ITypeBinding type = methodBinding.getParameterTypes()[i];
-        if(!ASTUtil.findAnnotation(RefIgnore.class, annotations).isPresent()) {
+        if (!ASTUtil.findAnnotation(RefIgnore.class, annotations).isPresent()) {
           if (ASTUtil.findAnnotation(RefAware.class, annotations).isPresent() || isRefCounted(node, type)) {
             Block body = node.getBody();
             SimpleName name = parameters.get(i).getName();
@@ -88,7 +99,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       if (null == binding) {
         warn(node, "Unresolved type");
       } else {
-        if(!ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
+        if (!ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
           if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
             processStatements(node);
           }
@@ -110,7 +121,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       warn(node, "Unresolved type");
       return;
     }
-    if(!ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
+    if (!ASTUtil.hasAnnotation(binding, RefIgnore.class)) {
       if (isRefCounted(node, binding.getType()) || ASTUtil.hasAnnotation(binding, RefAware.class)) {
         processStatements(node);
       }
@@ -131,7 +142,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     } else if (astNode instanceof MethodDeclaration) {
       MethodDeclaration methodDeclaration = (MethodDeclaration) astNode;
       ASTNode body = methodDeclaration.getBody();
-      if(body != null) processBlock(body, TerminalState.Freed, node.getName());
+      if (body != null) processBlock(body, TerminalState.Freed, node.getName());
     } else if (astNode instanceof EnhancedForStatement) {
       processBlock(((EnhancedForStatement) astNode).getBody(), TerminalState.Any, node.getName());
     } else {
@@ -143,7 +154,7 @@ public class VerifyMethodVariables extends VerifyRefOperator {
         if (null != statements) {
           Statement statement = getStatement(node);
           int indexOf = statements.indexOf(statement);
-          if (indexOf >= 0) statements = statements.subList(indexOf+1, statements.size());
+          if (indexOf >= 0) statements = statements.subList(indexOf + 1, statements.size());
           processScope(statements, name, TerminalState.Freed);
         }
       }
@@ -165,18 +176,6 @@ public class VerifyMethodVariables extends VerifyRefOperator {
       }
     }
   }
-
-  @Nullable
-  public static ASTNode getExecutingMethod(@Nullable ASTNode node) {
-    if (null == node) return null;
-    if (node instanceof MethodDeclaration) return node;
-    if (node instanceof EnhancedForStatement) return node;
-    if (node instanceof LambdaExpression) return node;
-    if (node instanceof Block) return node;
-    if (node instanceof TypeDeclaration) return null;
-    return getExecutingMethod(node.getParent());
-  }
-
 
   public void processScope(List<Statement> statements, SimpleName name, TerminalState requiredTermination) {
     ArrayList<Statement> finalizers = new ArrayList<>();

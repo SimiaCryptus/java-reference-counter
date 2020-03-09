@@ -103,10 +103,10 @@ public class VerifyAssignments extends RefASTOperator {
   }
 
   private boolean isRefAware(@Nonnull Expression expression) {
-    if(expression instanceof FieldAccess) {
+    if (expression instanceof FieldAccess) {
       IVariableBinding fieldBinding = ((FieldAccess) expression).resolveFieldBinding();
-      if(null != fieldBinding) {
-        if(ASTUtil.hasAnnotation(fieldBinding, RefAware.class)) return true;
+      if (null != fieldBinding) {
+        if (ASTUtil.hasAnnotation(fieldBinding, RefAware.class)) return true;
       }
     }
     ITypeBinding typeBinding = expression.resolveTypeBinding();

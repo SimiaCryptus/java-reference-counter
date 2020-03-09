@@ -25,7 +25,7 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import org.eclipse.jdt.core.dom.*;
 
 import javax.annotation.Nonnull;
@@ -53,7 +53,7 @@ public class VerifyFields extends VerifyClassMembers {
                 warn(variableDeclarationFragment, "Unresolved binding");
                 return false;
               }
-              if(ASTUtil.hasAnnotation(resolveBinding, RefIgnore.class)) return false;
+              if (ASTUtil.hasAnnotation(resolveBinding, RefIgnore.class)) return false;
               return isRefCounted(variableDeclarationFragment, resolveBinding.getType()) || ASTUtil.hasAnnotation(resolveBinding, RefAware.class);
             })
             .map(VariableDeclaration::getName))
@@ -70,9 +70,13 @@ public class VerifyFields extends VerifyClassMembers {
           bindingID,
           getSpan(node),
           fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
-      if(!typeBinding.isInterface()) assertHasFree(node, node.bodyDeclarations());
+      if (!typeBinding.isInterface()) {
+        if (ASTUtil.derives(typeBinding, ReferenceCountingBase.class)) {
+          assertHasFree(node, node.bodyDeclarations());
+        }
+      }
       verifyClassDeclarations(node.bodyDeclarations());
-    } else if(!fields.isEmpty()) {
+    } else if (!fields.isEmpty()) {
       fatal(node, "Non-refcounted type defined refcounted fields %s",
           fields.stream().map(x -> x.getFullyQualifiedName()).reduce((a, b) -> a + ", " + b).orElse(""));
     }
@@ -90,7 +94,9 @@ public class VerifyFields extends VerifyClassMembers {
           getSpan(node),
           fields.stream().map(x -> x.toString()).reduce((a, b) -> a + ", " + b).orElse("")));
       verifyClassDeclarations(node.bodyDeclarations());
-      assertHasFree(node, node.bodyDeclarations());
+      if (ASTUtil.derives(typeBinding, ReferenceCountingBase.class)) {
+        assertHasFree(node, node.bodyDeclarations());
+      }
     } else {
       if (typeBinding.getSuperclass().getQualifiedName().equals("java.lang.Object")) {
         if (typeBinding.getInterfaces().length > 0) {

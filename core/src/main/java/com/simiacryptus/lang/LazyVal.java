@@ -20,7 +20,6 @@
 package com.simiacryptus.lang;
 
 import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

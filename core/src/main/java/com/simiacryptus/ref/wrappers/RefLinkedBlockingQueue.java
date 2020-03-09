@@ -22,12 +22,10 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -117,7 +115,8 @@ public class RefLinkedBlockingQueue<T> extends RefAbstractQueue<T> implements Re
     return getInner().drainTo(c, maxElements);
   }
 
-  @Override @Nonnull
+  @Override
+  @Nonnull
   public RefLinkedBlockingQueue<T> addRef() {
     return (RefLinkedBlockingQueue) super.addRef();
   }

@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.Queue;
 
 @RefIgnore

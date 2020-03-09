@@ -73,9 +73,9 @@ public class RemoveRefs extends RefASTOperator {
     @Override
     public void endVisit(@Nonnull final MethodInvocation node) {
       final String methodName = node.getName().toString();
-      if (Arrays.asList("addRef", "freeRef", "addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
+      if (Arrays.asList("addRef", "freeRef", "addRef", "freeRefs", "wrapInterface").contains(methodName)) {
         Expression subject;
-        if (Arrays.asList("addRefs", "freeRefs", "wrapInterface").contains(methodName)) {
+        if (Arrays.asList("addRef", "freeRefs", "wrapInterface").contains(methodName)) {
           subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
         } else {
           if (isRefUtil(node)) {

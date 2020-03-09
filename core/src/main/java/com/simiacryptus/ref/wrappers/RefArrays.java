@@ -28,12 +28,14 @@ import java.util.Arrays;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.Stream;
 
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefArrays {
   @Nonnull
   public static <T> RefStream<T> stream(@Nonnull @RefAware T[] array) {
+    if (null == array) return new RefStream<>(Stream.empty());
     return new RefStream<>(Arrays.stream(array).onClose(() -> {
       Arrays.stream(array).forEach(value -> RefUtil.freeRef(value));
     }));

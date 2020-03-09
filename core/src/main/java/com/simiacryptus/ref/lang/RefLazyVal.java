@@ -45,12 +45,13 @@ public abstract class RefLazyVal<T> extends ReferenceCountingBase implements Sup
     if (null == val) {
       synchronized (this) {
         if (null == val) {
-          val = build();
+          T build = build();
+          val = RefUtil.addRef(build);
+          return build;
         }
       }
     }
-    RefUtil.addRef(val);
-    return val;
+    return RefUtil.addRef(val);
   }
 
   @Override

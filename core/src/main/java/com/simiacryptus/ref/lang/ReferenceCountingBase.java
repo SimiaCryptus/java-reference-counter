@@ -65,7 +65,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private transient final AtomicBoolean isFreed = new AtomicBoolean(false);
   @Nullable
   private transient final StackTraceElement[] refCreatedBy;
-  private transient LinkedList<StackTraceElement[]> addRefs = null;
+  private transient LinkedList<StackTraceElement[]> addRef = null;
   private transient LinkedList<StackTraceElement[]> freeRefs = null;
   private transient volatile boolean isFinalized = false;
   private transient boolean detached = false;
@@ -73,7 +73,6 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   protected ReferenceCountingBase() {
     if (RefSettings.INSTANCE().isLifecycleDebug(getClass())) {
       refCreatedBy = getStackTrace();
-      watch();
     } else if (RefSettings.INSTANCE().watchCreation) {
       refCreatedBy = getStackTrace();
     } else {
@@ -81,9 +80,29 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
   }
 
-  public synchronized void watch() {
-    if (addRefs == null) addRefs = new LinkedList<>();
-    if (freeRefs == null) freeRefs = new LinkedList<>();
+  @NotNull
+  private StackTraceElement[] getStackTrace() {
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    //stackTrace = Arrays.stream(stackTrace).filter(RefSettings::filter).toArray(StackTraceElement[]::new);
+    int i = 0;
+    while (i < stackTrace.length) {
+      StackTraceElement stackTraceElement = stackTrace[i++];
+      String methodName = stackTraceElement.getMethodName();
+      if (methodName.equals("getStackTrace")) {
+        break;
+      }
+    }
+    while (i < stackTrace.length) {
+      StackTraceElement stackTraceElement = stackTrace[i];
+      String methodName = stackTraceElement.getMethodName();
+      if (Arrays.asList("addRef", "referenceReport").contains(methodName)) {
+        i++;
+      } else {
+        break;
+      }
+    }
+    stackTrace = Arrays.copyOfRange(stackTrace, i, Math.min(stackTrace.length, i + RefSettings.maxStackSize));
+    return stackTrace;
   }
 
   public boolean isDetached() {
@@ -138,26 +157,26 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
         : Arrays.stream(trace).parallel().map(x -> "at " + x).reduce((a, b) -> a + "\n" + b).orElse("");
   }
 
+  public synchronized void watch() {
+    if (RefSettings.INSTANCE().watchEnable) {
+      if (addRef == null) addRef = new LinkedList<>();
+      if (freeRefs == null) freeRefs = new LinkedList<>();
+    }
+  }
+
   @Override
   public ReferenceCounting addRef() {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0)
       throw new IllegalStateException(referenceReport(true, isFreed(), true));
-    if (null != addRefs && addRefs.size() < RefSettings.maxTracesPerObject) {
+    if (null != addRef && addRef.size() < RefSettings.maxTracesPerObject) {
       StackTraceElement[] stackTrace = getStackTrace();
       if (null != stackTrace) {
-        synchronized (addRefs) {
-          addRefs.add(stackTrace);
+        synchronized (addRef) {
+          addRef.add(stackTrace);
         }
       }
     }
     return this;
-  }
-
-  @NotNull
-  private StackTraceElement[] getStackTrace() {
-    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    stackTrace = Arrays.stream(stackTrace).filter(RefSettings::filter).toArray(StackTraceElement[]::new);
-    return Arrays.copyOfRange(stackTrace, 3, Math.min(stackTrace.length, 3 + RefSettings.maxStackSize));
   }
 
   public boolean assertAlive() {
@@ -207,8 +226,9 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
       return 0;
     }
     int refs = references.decrementAndGet();
-    StackTraceElement[] stackTrace = getStackTrace();
+    StackTraceElement[] stackTrace = null;
     if (refs < 0 && !detached) {
+      stackTrace = getStackTrace();
       boolean isInFinalizer = Arrays.stream(stackTrace)
           .filter(x -> x.getClassName().equals("java.lang.ref.Finalizer")).findAny().isPresent();
       if (!isInFinalizer) {
@@ -221,6 +241,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
 
     if (null != freeRefs && freeRefs.size() < RefSettings.maxTracesPerObject) {
+      if (null == stackTrace) stackTrace = getStackTrace();
       if (null != stackTrace) {
         synchronized (freeRefs) {
           freeRefs.add(stackTrace);
@@ -242,9 +263,9 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   }
 
   public String referenceHeader() {
-    LinkedList<StackTraceElement[]> addRefs = this.addRefs == null ? new LinkedList<>() : this.addRefs;
+    LinkedList<StackTraceElement[]> addRef = this.addRef == null ? new LinkedList<>() : this.addRef;
     LinkedList<StackTraceElement[]> freeRefs = this.freeRefs == null ? new LinkedList<>() : this.freeRefs;
-    return String.format("Object %s (%d refs; %d adds, %d frees) ", getClass().getName(), references.get(), 1 + addRefs.size(), freeRefs.size());
+    return String.format("Object %s (%d refs; %d adds, %d frees) ", getClass().getName(), references.get(), 1 + addRef.size(), freeRefs.size());
   }
 
   public String referenceReport(boolean includeCaller, boolean isFinalized, boolean includeHeader) {
@@ -252,21 +273,21 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     @Nonnull
     PrintStream out = new PrintStream(buffer);
-    LinkedList<StackTraceElement[]> addRefs = this.addRefs == null ? new LinkedList<>() : this.addRefs;
+    LinkedList<StackTraceElement[]> addRef = this.addRef == null ? new LinkedList<>() : this.addRef;
     LinkedList<StackTraceElement[]> freeRefs = this.freeRefs == null ? new LinkedList<>() : this.freeRefs;
-    if(includeHeader) out.print(
-        String.format("Object %s (%d refs; %d adds, %d frees) ", getClass().getName(), references.get(), 1 + addRefs.size(), freeRefs.size()));
+    if (includeHeader) out.print(
+        String.format("Object %s (%d refs; %d adds, %d frees) ", getClass().getName(), references.get(), 1 + addRef.size(), freeRefs.size()));
 //    List<StackTraceElement> prefix = reverseCopy(findCommonPrefix(
-//        Stream.concat(Stream.<StackTraceElement[]>of(refCreatedBy), Stream.concat(addRefs.stream(), freeRefs.stream()))
+//        Stream.concat(Stream.<StackTraceElement[]>of(refCreatedBy), Stream.concat(addRef.stream(), freeRefs.stream()))
 //            .filter(x -> x != null).map(x -> reverseCopy(x)).collect(Collectors.toList())));
 
     if (null != refCreatedBy) {
       //trace = removeSuffix(trace, prefix);
       out.println(String.format("created by \n\t%s", getString(this.refCreatedBy).replaceAll("\n", "\n\t")));
     }
-    for (int i = 0; i < addRefs.size(); i++) {
+    for (int i = 0; i < addRef.size(); i++) {
       try {
-        StackTraceElement[] stack = addRefs.get(i);
+        StackTraceElement[] stack = addRef.get(i);
         if (null == stack) stack = new StackTraceElement[]{};
         //stack = removeSuffix(stack, prefix);
         final String string = getString(stack);
@@ -311,11 +332,11 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0) {
       return false;
     }
-    if (null != addRefs) {
+    if (null != addRef) {
       StackTraceElement[] stackTrace = getStackTrace();
       if (null != stackTrace) {
-        synchronized (addRefs) {
-          addRefs.add(stackTrace);
+        synchronized (addRef) {
+          addRef.add(stackTrace);
         }
       }
     }

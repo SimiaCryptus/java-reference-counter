@@ -45,7 +45,7 @@ public class RemoveRefMethods extends RefASTOperator {
       removeMethods(node, "addRef");
       removeMethods(node, "freeRef");
       //removeMethods(node, "_free");
-      removeMethods(node, "addRefs");
+      removeMethods(node, "addRef");
       removeMethods(node, "freeRefs");
     }
   }

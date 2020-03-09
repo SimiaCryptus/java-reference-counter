@@ -346,7 +346,7 @@ public class RefDoubleStream implements DoubleStream {
   }
 
   @Nonnull
-  RefDoubleStream track(@Nonnull @RefAware Object... lambda) {
+  public RefDoubleStream track(@Nonnull @RefAware Object... lambda) {
     for (Object l : lambda) {
       if (null != l && l instanceof ReferenceCounting)
         lambdas.add((ReferenceCounting) l);

@@ -100,49 +100,59 @@ public class RefCollectors {
 
   @Nonnull
   public static <T, K> RefCollector<T, ?, RefMap<K, RefList<T>>> groupingBy(
-      @Nonnull @RefAware Function<? super T, ? extends K> classifier) {
+      @Nonnull @RefAware RefFunction<? super T, ? extends K> classifier) {
     return groupingBy(classifier, toList());
   }
 
   @Nonnull
   public static <T, K, A, D> RefCollector<T, ?, RefMap<K, D>> groupingBy(
-      @Nonnull @RefAware Function<? super T, ? extends K> classifier,
-      @Nonnull @RefAware Collector<? super T, A, D> downstream) {
+      @Nonnull @RefAware RefFunction<? super T, ? extends K> classifier,
+      @Nonnull @RefAware RefCollector<? super T, A, D> downstream) {
     return groupingBy(classifier, () -> new RefHashMap<K, D>(), downstream);
   }
 
   @Nonnull
   public static <T, K, D, A, M extends RefMap<K, D>> RefCollector<T, RefMap<K, A>, M> groupingBy(
-      @Nonnull @RefAware Function<? super T, ? extends K> classifier,
+      @Nonnull @RefAware RefFunction<? super T, ? extends K> classifier,
       @RefAware Supplier<M> mapFactory,
-      @Nonnull @RefAware Collector<? super T, A, D> downstream) {
+      @Nonnull @RefAware RefCollector<? super T, A, D> downstream) {
     final Supplier<A> downstream_supplier = downstream.supplier();
     final BiConsumer<A, ? super T> downstream_accumulator = downstream.accumulator();
-    final Set<Collector.Characteristics> downstream_characteristics = downstream.characteristics();
     final BiConsumer<RefMap<K, A>, T> consumer = RefUtil.wrapInterface((map, value) -> {
-      downstream_accumulator.accept(map.computeIfAbsent(classifier.apply(RefUtil.addRef(value)), k1 -> {
-        final A a = downstream_supplier.get();
-        RefUtil.freeRef(k1);
-        return a;
-      }), value);
+      A a;
+      synchronized (map) {
+        a = map.computeIfAbsent(classifier.apply(RefUtil.addRef(value)), k1 -> {
+          RefUtil.freeRef(k1);
+          return downstream_supplier.get();
+        });
+      }
       map.freeRef();
+      downstream_accumulator.accept(a, value);
     }, classifier, downstream_accumulator, downstream_supplier);
+    final Set<Collector.Characteristics> downstream_characteristics = downstream.characteristics();
     final BinaryOperator<RefMap<K, A>> combiner = RefCollectors.mapMerger(downstream.combiner());
     final Supplier<RefMap<K, A>> supplier = (Supplier<RefMap<K, A>>) mapFactory;
     final RefCollector<T, RefMap<K, A>, M> collector;
     if (downstream_characteristics.contains(Collector.Characteristics.IDENTITY_FINISH)) {
-      collector = new RefCollector<>(supplier, consumer, combiner,
-          Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
-    } else {
-      final Function<A, D> downstream_finisher = downstream.finisher();
       collector = new RefCollector<>(
           supplier,
           consumer,
           combiner,
-          RefUtil.wrapInterface(intermediate -> {
-            intermediate.replaceAll((K k, A v) -> ((Function<A, A>) downstream_finisher).apply(v));
-            return (M) intermediate;
-          }, downstream_finisher),
+          Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH)));
+    } else {
+      final RefFunction<A, D> downstream_finisher = downstream.finisher();
+      RefFunction<RefMap<K, A>, M> finisher = RefUtil.wrapInterface((RefMap<K, A> intermediate) -> {
+        try {
+          return (M) intermediate.mapValues(RefUtil.addRef(downstream_finisher));
+        } finally {
+          intermediate.freeRef();
+        }
+      }, downstream_finisher);
+      collector = new RefCollector<>(
+          supplier,
+          consumer,
+          combiner,
+          finisher,
           Collections.emptySet());
     }
     RefUtil.freeRef(downstream);
@@ -152,19 +162,23 @@ public class RefCollectors {
   @Nonnull
   public static <T, U, A, R> RefCollector<T, ?, R> mapping(
       @Nonnull @RefAware Function<? super T, ? extends U> mapper,
-      @Nonnull @RefAware Collector<? super U, A, R> downstream) {
+      @Nonnull @RefAware RefCollector<? super U, A, R> downstream) {
     BiConsumer<A, ? super U> downstreamAccumulator = downstream.accumulator();
-    final RefCollector<T, A, R> collector = new RefCollector<>(downstream.supplier(), RefUtil
-        .wrapInterface((r, t) -> downstreamAccumulator.accept(r, mapper.apply(t)), downstreamAccumulator, mapper),
-        downstream.combiner(), downstream.finisher(), downstream.characteristics());
+    final RefCollector<T, A, R> collector = new RefCollector<>(
+        downstream.supplier(),
+        RefUtil.wrapInterface((r, t) -> downstreamAccumulator.accept(r, mapper.apply(t)), downstreamAccumulator, mapper),
+        downstream.combiner(),
+        downstream.finisher(),
+        downstream.characteristics()
+    );
     RefUtil.freeRef(downstream);
     return collector;
   }
 
   @Nonnull
   public static <T, A, R, RR> RefCollector<T, A, RR> collectingAndThen(
-      @Nonnull @RefAware Collector<T, A, R> downstream,
-      @Nonnull @RefAware Function<R, RR> finisher) {
+      @Nonnull @RefAware RefCollector<T, A, R> downstream,
+      @Nonnull @RefAware RefFunction<R, RR> finisher) {
     Set<Collector.Characteristics> characteristics = downstream.characteristics();
     if (characteristics.contains(Collector.Characteristics.IDENTITY_FINISH)) {
       if (characteristics.size() == 1)
@@ -175,50 +189,37 @@ public class RefCollectors {
         characteristics = Collections.unmodifiableSet(characteristics);
       }
     }
-    final Function<A, R> downstream_finisher = downstream.finisher();
-    final RefCollector<T, A, RR> collector = new RefCollector<>(downstream.supplier(), downstream.accumulator(),
+    final RefFunction<A, R> downstream_finisher = downstream.finisher();
+    final RefCollector<T, A, RR> collector = new RefCollector<>(
+        downstream.supplier(),
+        downstream.accumulator(),
         downstream.combiner(),
-        RefUtil.wrapInterface(downstream_finisher.andThen(finisher), downstream_finisher, finisher), characteristics);
+        RefUtil.wrapInterface(downstream_finisher.andThen(finisher), downstream_finisher, finisher),
+        characteristics);
     RefUtil.freeRef(downstream);
     return collector;
   }
 
   @Nonnull
-  public static <T> RefCollector<T, ?, Optional<T>> reducing(
+  public static <T> RefCollector<T, OptionalBox<T>, Optional<T>> reducing(
       @Nonnull @RefAware BinaryOperator<T> op) {
-    @RefIgnore
-    class OptionalBox extends ReferenceCountingBase implements Consumer<T> {
-      @Nullable
-      T value = null;
-      boolean present = false;
-
-      @Override
-      public void accept(@RefAware T t) {
-        if (present) {
-          value = op.apply(value, t);
-        } else {
-          value = t;
-          present = true;
-        }
-      }
-
-      @Override
-      protected void _free() {
-        RefUtil.freeRef(op);
-        super._free();
-      }
-    }
-
-    return new RefCollector<T, OptionalBox, Optional<T>>(() -> new OptionalBox(), (optionalBox, t) -> {
+    return new RefCollector<T, OptionalBox<T>, Optional<T>>(() -> {
+      return new OptionalBox<>(op);
+    }, (OptionalBox<T> optionalBox, T t) -> {
       optionalBox.accept(t);
       RefUtil.freeRef(optionalBox);
-    }, (a, b) -> {
+    }, (OptionalBox<T> a, OptionalBox<T> b) -> {
       if (b.present)
-        a.accept(b.value);
+        a.accept(b.getValue());
       b.freeRef();
       return a;
-    }, a -> {
-      final Optional<T> value = Optional.ofNullable(a.value);
+    }, (OptionalBox<T> a) -> {
+      final Optional<T> value;
+      if (a.present) {
+        value = Optional.ofNullable(a.getValue());
+      } else {
+        value = Optional.empty();
+      }
       a.freeRef();
       return value;
     }, Collections.emptySet());
@@ -267,8 +268,8 @@ public class RefCollectors {
   private static <K, V, M extends RefMap<K, V>> BinaryOperator<M> mapMerger(
       @Nonnull @RefAware BinaryOperator<V> mergeFunction) {
     return RefUtil.wrapInterface((a, b) -> {
-      b.forEach((k,v) -> {
-        RefUtil.freeRef(a.merge(k, v, mergeFunction));
+      b.forEach((k, v) -> {
+        RefUtil.freeRef(a.merge(k, v, RefUtil.addRef(mergeFunction)));
       });
       b.freeRef();
       return a;
@@ -277,8 +278,8 @@ public class RefCollectors {
 
   @Nonnull
   @SuppressWarnings("unchecked")
-  private static <T> Supplier<T[]> boxSupplier(@RefAware T identity) {
-    return RefUtil.wrapInterface(() -> RefUtil.addRefs(identity), identity);
+  private static <T> Supplier<T[]> boxSupplier(@RefAware T... identity) {
+    return RefUtil.wrapInterface(() -> RefUtil.addRef(identity), identity);
   }
 
   @RefIgnore
@@ -286,13 +287,13 @@ public class RefCollectors {
     private final Supplier<A> supplier;
     private final BiConsumer<A, T> accumulator;
     private final BinaryOperator<A> combiner;
-    private final Function<A, R> finisher;
+    private final RefFunction<A, R> finisher;
     private final Set<Characteristics> characteristics;
 
     RefCollector(@RefAware Supplier<A> supplier,
                  @RefAware BiConsumer<A, T> accumulator,
                  @RefAware BinaryOperator<A> combiner,
-                 @RefAware Function<A, R> finisher,
+                 @RefAware RefFunction<A, R> finisher,
                  @RefAware Set<Characteristics> characteristics) {
       this.supplier = supplier;
       this.accumulator = accumulator;
@@ -328,7 +329,7 @@ public class RefCollectors {
 
     @Nullable
     @Override
-    public Function<A, R> finisher() {
+    public RefFunction<A, R> finisher() {
       return RefUtil.addRef(finisher);
     }
 
@@ -345,6 +346,45 @@ public class RefCollectors {
       RefUtil.freeRef(combiner);
       RefUtil.freeRef(finisher);
       RefUtil.freeRef(characteristics);
+      super._free();
+    }
+  }
+
+  @RefIgnore
+  private static class OptionalBox<T> extends ReferenceCountingBase implements Consumer<T> {
+    private final BinaryOperator<T> op;
+    @Nullable
+    private T value = null;
+    private boolean present = false;
+
+    public OptionalBox(BinaryOperator<T> op) {
+      this.op = op;
+    }
+
+    @Nullable
+    public synchronized T getValue() {
+      return RefUtil.addRef(value);
+    }
+
+    public synchronized void setValue(@Nullable T value) {
+      RefUtil.freeRef(this.value);
+      this.value = value;
+    }
+
+    @Override
+    public synchronized void accept(@RefAware T t) {
+      if (present) {
+        setValue(op.apply(getValue(), t));
+      } else {
+        setValue(t);
+        present = true;
+      }
+    }
+
+    @Override
+    protected void _free() {
+      RefUtil.freeRef(op);
+      RefUtil.freeRef(value);
       super._free();
     }
   }

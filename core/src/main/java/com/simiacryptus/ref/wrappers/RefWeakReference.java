@@ -19,7 +19,9 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;

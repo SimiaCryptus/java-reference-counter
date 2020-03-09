@@ -22,6 +22,7 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefAware;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.function.Function;
 
 public interface RefFunction<F, T> extends Function<F, T> {
@@ -29,4 +30,10 @@ public interface RefFunction<F, T> extends Function<F, T> {
   @Override
   @RefAware
   T apply(@RefAware F f);
+
+  default <V> RefFunction<F, V> andThen(RefFunction<? super T, ? extends V> after) {
+    Objects.requireNonNull(after);
+    return (F t) -> after.apply(apply(t));
+  }
+
 }

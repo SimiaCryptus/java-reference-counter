@@ -126,18 +126,10 @@ public class RefStream<T> implements Stream<T> {
     }
     RefStream<T> refStream = new RefStream<>(Stream.concat(a1, b1));
     if (a instanceof RefStream) {
-      RefStream<? extends T> refStream1 = (RefStream<? extends T>) a;
-      refStream.refs.putAll(refStream1.refs);
-      refStream1.refs.clear();
-      refStream.lambdas.addAll(refStream1.lambdas);
-      refStream1.lambdas.clear();
+      mergeTrackers(refStream, (RefStream<T>) a);
     }
     if (b instanceof RefStream) {
-      RefStream<? extends T> refStream1 = (RefStream<? extends T>) b;
-      refStream.refs.putAll(refStream1.refs);
-      refStream1.refs.clear();
-      refStream.lambdas.addAll(refStream1.lambdas);
-      refStream1.lambdas.clear();
+      mergeTrackers(refStream, (RefStream<T>) b);
     }
     return refStream.onClose(() -> {
       a.close();
@@ -161,6 +153,8 @@ public class RefStream<T> implements Stream<T> {
 
   static <U> U getRef(@RefAware U u,
                       @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    Class<?> uClass = null == u ? Object.class : u.getClass();
+    if (!RefUtil.isRefAware(uClass)) return u;
     if (u instanceof ReferenceCounting) {
       final AtomicInteger refCnt;
       synchronized (refs) {
@@ -178,7 +172,7 @@ public class RefStream<T> implements Stream<T> {
       if (!obtained.get()) {
         RefUtil.addRef(u);
       }
-    } else if (null != u && u.getClass().isArray()) {
+    } else if (null != u && uClass.isArray()) {
       int length = Array.getLength(u);
       for (int i = 0; i < length; i++) {
         getRef(Array.get(u, i), refs);
@@ -189,19 +183,38 @@ public class RefStream<T> implements Stream<T> {
 
   static <U> U storeRef(@RefAware U u,
                         @Nonnull @RefAware Map<IdentityWrapper<ReferenceCounting>, AtomicInteger> refs) {
+    Class<?> uClass = null == u ? Object.class : u.getClass();
+    if (!RefUtil.isRefAware(uClass)) return u;
     if (u instanceof ReferenceCounting) {
       AtomicInteger atomicInteger;
       synchronized (refs) {
         atomicInteger = refs.computeIfAbsent(new IdentityWrapper(u), x -> new AtomicInteger(0));
       }
       atomicInteger.incrementAndGet();
-    } else if (null != u && u.getClass().isArray()) {
+    } else if (null != u && uClass.isArray()) {
       int length = Array.getLength(u);
       for (int i = 0; i < length; i++) {
         storeRef(Array.get(u, i), refs);
       }
     }
     return u;
+  }
+
+  private static <T> void mergeTrackers(RefStream<T> dest, RefStream<T> source) {
+    mergeCountMaps(dest.refs, source.refs);
+    dest.lambdas.addAll(source.lambdas);
+    source.lambdas.clear();
+  }
+
+  private static <T> void mergeCountMaps(Map<T, AtomicInteger> dest, Map<T, AtomicInteger> source) {
+    source.forEach((k, v) -> {
+      AtomicInteger atomicInteger;
+      synchronized (dest) {
+        atomicInteger = dest.computeIfAbsent(k, x -> new AtomicInteger(0));
+      }
+      atomicInteger.addAndGet(v.get());
+    });
+    source.clear();
   }
 
   @Override

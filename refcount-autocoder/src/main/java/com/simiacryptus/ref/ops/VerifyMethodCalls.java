@@ -47,6 +47,10 @@ public class VerifyMethodCalls extends RefASTOperator {
     this.missingAttributes = missingAttributes;
   }
 
+  public static <T> boolean contains(List<T> superMethods, Predicate<T> predicate) {
+    return superMethods.stream().filter(predicate).findAny().isPresent();
+  }
+
   @Override
   public void endVisit(@Nonnull MethodDeclaration node) {
     final IMethodBinding methodBinding = node.resolveBinding();
@@ -56,7 +60,7 @@ public class VerifyMethodCalls extends RefASTOperator {
     }
     if (contains(ASTUtil.superMethods(methodBinding), binding -> ASTUtil.hasAnnotation(binding, MustCall.class))) {
       Block body = node.getBody();
-      if(null != body) {
+      if (null != body) {
         if (!contains((List<Statement>) body.statements(), statement -> {
           if (statement instanceof ExpressionStatement) {
             Expression expression = ((ExpressionStatement) statement).getExpression();
@@ -91,10 +95,6 @@ public class VerifyMethodCalls extends RefASTOperator {
     if (!exceptions.isEmpty()) {
       throw CollectableException.combine(exceptions);
     }
-  }
-
-  public static <T> boolean contains(List<T> superMethods, Predicate<T> predicate) {
-    return superMethods.stream().filter(predicate).findAny().isPresent();
   }
 
   @Override
@@ -245,7 +245,7 @@ public class VerifyMethodCalls extends RefASTOperator {
         //fatal(parent, "Reference tracked type used in chained method call");
         return false;
       } else {
-        if (methodInvocation.getName().toString().equals("addRefs")) return false;
+        if (methodInvocation.getName().toString().equals("addRef")) return false;
         int index = methodInvocation.arguments().indexOf(node);
         IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
         if (null == methodBinding) {
@@ -276,7 +276,7 @@ public class VerifyMethodCalls extends RefASTOperator {
     } else if (parent instanceof LambdaExpression) {
       IMethodBinding methodBinding = ((LambdaExpression) parent).resolveMethodBinding();
       ITypeBinding returnType = methodBinding.getReturnType();
-      if(returnType.isPrimitive()) {
+      if (returnType.isPrimitive()) {
         return false;
       } else {
         return true;

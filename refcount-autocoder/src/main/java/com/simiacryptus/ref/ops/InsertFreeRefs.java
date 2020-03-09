@@ -609,7 +609,7 @@ public class InsertFreeRefs extends RefASTOperator {
     public void endVisit(@Nonnull MethodInvocation node) {
       if (skip(node)) return;
       //astRewrite.track(node);
-      if (Arrays.asList("addRef", "addRefs").contains(node.getName().toString())) return;
+      if (Arrays.asList("addRef", "addRef").contains(node.getName().toString())) return;
       final IMethodBinding methodBinding = resolveMethodBinding(node);
       if (null == methodBinding) {
         warn(node, "Unresolved binding on %s", node);

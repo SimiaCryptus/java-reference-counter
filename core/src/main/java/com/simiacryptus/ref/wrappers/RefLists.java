@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
 
 import javax.annotation.Nonnull;
 import java.util.List;

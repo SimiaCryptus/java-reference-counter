@@ -41,13 +41,7 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   @Override
   public void add(int index, @RefAware T element) {
     assertAlive();
-    List<T> inner = getInner();
-    synchronized (inner) {
-      if(index < inner.size()) {
-        RefUtil.freeRef(inner.get(index));
-      }
-      inner.add(index, element);
-    }
+    getInner().add(index, element);
   }
 
   @Override
@@ -68,9 +62,9 @@ public abstract class RefAbstractList<T> extends RefAbstractCollection<T> implem
   public final boolean addAll(@Nonnull @RefAware Collection<? extends T> collection) {
     assertAlive();
     try {
-      if(collection.isEmpty()) return false;
+      if (collection.isEmpty()) return false;
       Iterator<? extends T> iterator = collection.iterator();
-      if(iterator instanceof ReferenceCounting) {
+      if (iterator instanceof ReferenceCounting) {
         while (iterator.hasNext()) {
           add(iterator.next());
         }

@@ -29,24 +29,23 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RefIgnore
 public class RefSettings implements Settings {
 
+  public static final int maxTracesPerObject = 100;
   private static final Logger logger = LoggerFactory.getLogger(RefSettings.class);
+  public static int maxStackSize = 50;
   @Nullable
   private static transient RefSettings INSTANCE = null;
-  public static final int maxTracesPerObject = 1000;
-  public static int maxStackSize = 20;
   private static String stackPrefixFilter = "com.simiacryptus";
-
+  public final boolean watchEnable;
+  public final boolean watchCreation;
   private final boolean lifecycleDebug;
   @Nonnull
   private final PersistanceMode doubleCacheMode;
-  public boolean watchCreation;
   private final Set<String> watchedClasses;
   private final Set<String> ignoredClasses;
 
@@ -54,10 +53,12 @@ public class RefSettings implements Settings {
     System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
     this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
-    this.watchCreation = Settings.get("WATCH_CREATE", true);
+    this.watchCreation = Settings.get("WATCH_CREATE", false);
+    this.watchEnable = Settings.get("WATCH_ENABLE", false);
     this.ignoredClasses = Stream.<String>of(
         "com.simiacryptus.mindseye.lang.Delta",
-        "com.simiacryptus.mindseye.lang.State"
+        "com.simiacryptus.mindseye.lang.State",
+        "com.simiacryptus.mindseye.network.InnerNode"
 //        "com.simiacryptus.mindseye.lang.Tensor"
 //    ).map(name -> {
 //      try {
@@ -120,8 +121,6 @@ public class RefSettings implements Settings {
     }
     return INSTANCE;
   }
-
-  private static AtomicBoolean inCall = new AtomicBoolean(false);
 
   public static boolean filter(StackTraceElement stackTraceElement) {
     return stackTraceElement.getClassName().startsWith(stackPrefixFilter);

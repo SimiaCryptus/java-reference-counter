@@ -19,7 +19,10 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import javax.annotation.Nonnull;
 import java.util.Comparator;
@@ -72,6 +75,16 @@ public class RefComparator<T> extends ReferenceCountingBase implements Comparato
     return new RefComparator(Comparator.comparingDouble(keyExtractor)).watch(keyExtractor);
   }
 
+  public static <T> RefComparator<T> reversed(RefComparator<T> comparator) {
+    return new RefComparator<T>(comparator::compare).watch(comparator);
+  }
+
+  public static <T, U> Comparator<T> comparing(
+      Function<? super T, ? extends U> keyExtractor,
+      Comparator<? super U> keyComparator) {
+    return new RefComparator<T>(Comparator.comparing(keyExtractor, keyComparator)).watch(keyComparator).watch(keyExtractor);
+  }
+
   @Override
   public int compare(T o1, T o2) {
     return inner.compare(o1, o2);
@@ -85,10 +98,6 @@ public class RefComparator<T> extends ReferenceCountingBase implements Comparato
   @Override
   public synchronized RefComparator<T> addRef() {
     return (RefComparator<T>) super.addRef();
-  }
-
-  public static <T> RefComparator<T> reversed(RefComparator<T> comparator) {
-    return new RefComparator<T>(comparator::compare).watch(comparator);
   }
 
   @Nonnull
@@ -106,13 +115,6 @@ public class RefComparator<T> extends ReferenceCountingBase implements Comparato
   @Override
   public <U> Comparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor, Comparator<? super U> keyComparator) {
     return thenComparing(comparing(keyExtractor, keyComparator));
-  }
-
-  public static <T, U> Comparator<T> comparing(
-      Function<? super T, ? extends U> keyExtractor,
-      Comparator<? super U> keyComparator)
-  {
-    return new RefComparator<T>(Comparator.comparing(keyExtractor, keyComparator)).watch(keyComparator).watch(keyExtractor);
   }
 
   @Override

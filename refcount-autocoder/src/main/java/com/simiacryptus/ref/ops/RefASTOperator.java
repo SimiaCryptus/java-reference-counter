@@ -64,7 +64,7 @@ abstract class RefASTOperator extends ASTOperator {
   @Nullable
   public static IMethodBinding getAddRefsMethod(@Nonnull ITypeBinding type) {
     return Arrays.stream(type.getDeclaredMethods()).filter(method ->
-        method.getName().equals("addRefs")
+        method.getName().equals("addRef")
             && 0 != (method.getModifiers() & Modifier.PUBLIC)
             && 0 != (method.getModifiers() & Modifier.STATIC)
             && method.getParameterTypes().length == 1
@@ -121,7 +121,7 @@ abstract class RefASTOperator extends ASTOperator {
 
   protected final boolean consumesRefs(@Nonnull IMethodBinding methodBinding, int index) {
     if (ASTUtil.hasAnnotation(methodBinding, RefIgnore.class)) return false;
-    if (methodBinding.getName().equals("addRefs")) {
+    if (methodBinding.getName().equals("addRef")) {
       return false;
     }
     if (methodBinding.getName().equals("freeRefs")) {
@@ -219,7 +219,7 @@ abstract class RefASTOperator extends ASTOperator {
     if (typeBinding.isArray()) {
       final String qualifiedName = typeBinding.getElementType().getQualifiedName();
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
-      methodInvocation.setName(ast.newSimpleName("addRefs"));
+      methodInvocation.setName(ast.newSimpleName("addRef"));
       methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, qualifiedName.split("\\.")));
       methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
@@ -282,7 +282,7 @@ abstract class RefASTOperator extends ASTOperator {
     return enclosingMethods(node).stream().anyMatch(enclosingMethod -> {
       if (ASTUtil.hasAnnotation(enclosingMethod, RefIgnore.class)) return true;
       final String methodName = enclosingMethod.getName();
-      return methodName.equals("addRefs") || methodName.equals("freeRefs");
+      return methodName.equals("addRef") || methodName.equals("freeRefs");
     });
   }
 
@@ -301,7 +301,7 @@ abstract class RefASTOperator extends ASTOperator {
       } else {
         final String qualifiedName = type.getElementType().getQualifiedName();
         final MethodInvocation methodInvocation = ast.newMethodInvocation();
-        methodInvocation.setName(ast.newSimpleName("addRefs"));
+        methodInvocation.setName(ast.newSimpleName("addRef"));
         methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, qualifiedName.split("<")[0].split("\\.")));
         methodInvocation.arguments().add(copyIfAttached(expression));
         debug(1, expression, "AddRef for %s", expression);

@@ -99,19 +99,19 @@ public class VerifyRefOperator extends RefASTOperator {
       int fromIndex = 0;
       for (int i = 0; i < statements.size(); i++) {
         Statement statement1 = statements.get(i);
-        if(statement1 instanceof BreakStatement || statement1 instanceof ReturnStatement || statement1 instanceof ThrowStatement) {
-          List<Statement> block = statements.subList(fromIndex, i+1);
+        if (statement1 instanceof BreakStatement || statement1 instanceof ReturnStatement || statement1 instanceof ThrowStatement) {
+          List<Statement> block = statements.subList(fromIndex, i + 1);
           ReferenceState blockState = expressionResult;
           for (Statement stmt : block) {
             blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
           }
           referenceStates.add(blockState);
-          fromIndex = i+1;
+          fromIndex = i + 1;
         }
       }
       {
         List<Statement> block = statements.subList(fromIndex, statements.size());
-        if(!block.isEmpty()) {
+        if (!block.isEmpty()) {
           ReferenceState blockState = expressionResult;
           for (Statement stmt : block) {
             blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
@@ -120,13 +120,13 @@ public class VerifyRefOperator extends RefASTOperator {
         }
       }
       List<Boolean> refConsumed = referenceStates.stream().filter(x -> !x.isTerminated()).map(x -> x.isRefConsumed()).distinct().collect(Collectors.toList());
-      if(refConsumed.size() == 0) {
+      if (refConsumed.size() == 0) {
         return referenceStates.get(0);
       }
-      if(refConsumed.size() > 1) {
+      if (refConsumed.size() > 1) {
         fatal(statement, "Inconsistent reference consumer for %s", name);
       }
-      return referenceStates.stream().filter(x->!x.isTerminated()).findAny().get();
+      return referenceStates.stream().filter(x -> !x.isTerminated()).findAny().get();
     } else if (statement instanceof TryStatement) {
       final TryStatement tryStatement = (TryStatement) statement;
       final Statement finallyStatement = tryStatement.getFinally();
@@ -289,7 +289,7 @@ public class VerifyRefOperator extends RefASTOperator {
         return state;
       } else {
         //if (methodName.equals("addRef")) return state;
-        //if (methodName.equals("addRefs")) return state;
+        //if (methodName.equals("addRef")) return state;
         //if (methodName.equals("freeRef")) return state.setRefConsumed(node);
         //if (methodName.equals("freeRefs")) return state.setRefConsumed(node);
         if (methodName.equals("equals")) return state;
@@ -304,7 +304,7 @@ public class VerifyRefOperator extends RefASTOperator {
           boolean isRefCounted = isRefCounted(node, parameterType);
           boolean hasRefAware = ASTUtil.findAnnotation(RefAware.class, parameterAnnotations).isPresent();
           boolean hasRefIgnore = ASTUtil.findAnnotation(RefIgnore.class, parameterAnnotations).isPresent();
-          if(hasRefIgnore) return state;
+          if (hasRefIgnore) return state;
           if (!isRefCounted && !hasRefAware) {
             fatal(node, "Reference passed as blind parameter %s of %s", argIndex, methodBinding.getName());
           }
@@ -336,11 +336,11 @@ public class VerifyRefOperator extends RefASTOperator {
       if (assignment.getRightHandSide() == node) {
         return state.setRefConsumed(node);
       } else if (assignment.getLeftHandSide() == node) {
-        if(node instanceof SimpleName) {
+        if (node instanceof SimpleName) {
           IBinding binding = ((SimpleName) node).resolveBinding();
-          if(binding instanceof IVariableBinding) {
+          if (binding instanceof IVariableBinding) {
             IVariableBinding variableBinding = (IVariableBinding) binding;
-            if(variableBinding.isEffectivelyFinal() || Modifier.isFinal((variableBinding).getModifiers())) {
+            if (variableBinding.isEffectivelyFinal() || Modifier.isFinal((variableBinding).getModifiers())) {
               return state;
             }
           }

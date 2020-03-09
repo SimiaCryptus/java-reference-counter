@@ -24,7 +24,6 @@ import com.simiacryptus.ref.lang.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
@@ -35,7 +34,7 @@ import java.util.function.LongConsumer;
 @SuppressWarnings("unused")
 public class RefSpliterator<T> extends ReferenceCountingBase implements Spliterator<T> {
   private final Spliterator<T> inner;
-//  private final StackTraceElement[] createdBy = Thread.currentThread().getStackTrace();
+  //  private final StackTraceElement[] createdBy = Thread.currentThread().getStackTrace();
   private final ArrayList<ReferenceCounting> list = new ArrayList<>();
   private long size;
 

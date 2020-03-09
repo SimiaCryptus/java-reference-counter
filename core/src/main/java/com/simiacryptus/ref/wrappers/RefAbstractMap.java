@@ -19,14 +19,15 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.ConcurrentModificationException;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -55,13 +56,10 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     RefHashSet<Entry<K, V>> entries = entrySet();
     try {
       entries.forEach(entry -> {
-        try {
-          entry.setValue(function.apply(entry.getKey(), entry.getValue()));
-          RefUtil.freeRef(entry);
-        } catch(IllegalStateException ise) {
-          // this usually means the entry is no longer in the map.
-          throw new ConcurrentModificationException(ise);
-        }
+        K key = entry.getKey();
+        V value = entry.getValue();
+        RefUtil.freeRef(entry);
+        RefUtil.freeRef(put(key, function.apply(RefUtil.addRef(key), value)));
       });
     } finally {
       entries.freeRef();
@@ -120,7 +118,7 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
     assertAlive();
     final KeyValue<K, V> keyValue = getInner().get(key);
     RefUtil.freeRef(key);
-    return RefUtil.addRef(null == keyValue ? null : keyValue.value);
+    return null == keyValue ? null : RefUtil.addRef(keyValue.value);
   }
 
   @Nonnull
@@ -199,10 +197,10 @@ public abstract class RefAbstractMap<K, V> extends ReferenceCountingBase
   @Override
   @RefAware
   public V getOrDefault(@RefAware Object key,
-                         @RefAware V defaultValue) {
+                        @RefAware V defaultValue) {
     Map<K, KeyValue<K, V>> inner = getInner();
     KeyValue<K, V> value = inner.get(key);
-    if(null == value) return defaultValue;
+    if (null == value) return defaultValue;
     else RefUtil.freeRef(defaultValue);
     return RefUtil.addRef(value.value);
   }

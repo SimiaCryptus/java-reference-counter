@@ -23,10 +23,10 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCounting;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -35,6 +35,36 @@ import java.util.function.Function;
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
+
+  @NotNull
+  default RefList<K> keyList() {
+    RefList<K> keys = new RefArrayList<>();
+    this.forEach((k, v) -> {
+      keys.add(k);
+      RefUtil.freeRef(v);
+    });
+    return keys;
+  }
+
+  @NotNull
+  default RefList<V> valueList() {
+    RefList<V> values = new RefArrayList<>();
+    this.forEach((k, v) -> {
+      values.add(v);
+      RefUtil.freeRef(k);
+    });
+    return values;
+  }
+
+  @NotNull
+  default <D> RefMap<K, V> mapValues(RefFunction<V, D> mapper) {
+    RefHashMap<K, V> map = new RefHashMap<>();
+    forEach((k, v) -> {
+      RefUtil.freeRef(map.put(k, (V) mapper.apply(v)));
+    });
+    RefUtil.freeRef(mapper);
+    return map;
+  }
 
   @Nonnull
   RefMap<K, V> addRef();
@@ -69,22 +99,25 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
 
   @Override
   @RefAware
-  default V merge(@RefAware K key, @RefAware V value,
+  default V merge(@RefAware K key,
+                  @RefAware V value,
                   @Nonnull @RefAware BiFunction<? super V, ? super V, ? extends V> fn) {
-    V oldValue = get(RefUtil.addRef(key));
-    V newValue;
-    if (oldValue == null) {
-      newValue = value;
-    } else {
-      newValue = fn.apply(oldValue, value);
+    synchronized (this) {
+      V oldValue = get(RefUtil.addRef(key));
+      V newValue;
+      if (oldValue == null) {
+        newValue = value;
+      } else {
+        newValue = fn.apply(oldValue, value);
+      }
+      RefUtil.freeRef(fn);
+      if (newValue == null) {
+        RefUtil.freeRef(remove(key));
+      } else {
+        RefUtil.freeRef(put(key, RefUtil.addRef(newValue)));
+      }
+      return newValue;
     }
-    RefUtil.freeRef(fn);
-    if (newValue == null) {
-      RefUtil.freeRef(remove(key));
-    } else {
-      RefUtil.freeRef(put(key, RefUtil.addRef(newValue)));
-    }
-    return newValue;
   }
 
   @Nonnull
@@ -119,7 +152,7 @@ public interface RefMap<K, V> extends ReferenceCounting, Map<K, V> {
   @Override
   @RefAware
   V getOrDefault(@RefAware Object key,
-                         @RefAware V defaultValue);
+                 @RefAware V defaultValue);
 
   @Override
   void replaceAll(@RefAware BiFunction<? super K, ? super V, ? extends V> function);

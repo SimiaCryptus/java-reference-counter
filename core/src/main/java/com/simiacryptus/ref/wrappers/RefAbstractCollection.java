@@ -163,10 +163,6 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
   @RefAware
   public final <T1> T1[] toArray(@Nonnull @RefAware T1[] a) {
     assertAlive();
-    final @Nonnull T1[] returnValue = getInner().toArray(a);
-    for (T1 x : returnValue) {
-      RefUtil.addRef(x);
-    }
-    return returnValue;
+    return RefUtil.addRef(getInner().toArray(a));
   }
 }

@@ -19,11 +19,12 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 
 @RefIgnore
@@ -39,18 +40,24 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
     inner = new AtomicReference<>(obj);
   }
 
-  public @RefAware V updateAndGet(UnaryOperator<V> o) {
-    synchronized (inner) {
-      return RefUtil.addRef(inner.updateAndGet(x->o.apply(x)));
+  public static <T> T get(RefAtomicReference<T> atomicReference) {
+    try {
+      return atomicReference.get();
+    } finally {
+      atomicReference.freeRef();
     }
   }
 
-  public @RefAware V getAndSet(@RefAware V value) {
-    return inner.getAndSet(value);
+  public @RefAware
+  V updateAndGet(UnaryOperator<V> o) {
+    synchronized (inner) {
+      return RefUtil.addRef(inner.updateAndGet(x -> o.apply(x)));
+    }
   }
 
-  protected void _free() {
-    RefUtil.freeRef(inner.get());
+  public @RefAware
+  V getAndSet(@RefAware V value) {
+    return inner.getAndSet(value);
   }
 
   @Override
@@ -69,6 +76,10 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
     RefUtil.assertAlive(newValue);
     //RefUtil.watch(newValue);
     RefUtil.freeRef(inner.getAndSet(newValue));
+  }
+
+  protected void _free() {
+    RefUtil.freeRef(inner.get());
   }
 
 //  public final void lazySet(@RefAware V newValue) {

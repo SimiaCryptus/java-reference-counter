@@ -38,9 +38,13 @@ public class RefUtil {
 
   public static <T> void freeRef(@Nullable @RefAware T value) {
     if (null != value) {
+      Class<?> valueClass = value.getClass();
+      if (!RefUtil.isFreeRefAware(valueClass)) {
+        return;
+      }
       if (value instanceof ReferenceCounting) {
         ((ReferenceCounting) value).freeRef();
-      } else if (value.getClass().isArray()) {
+      } else if (valueClass.isArray()) {
         synchronized (value) {
           int length = Array.getLength(value);
           for (int i = 0; i < length; i++) {
@@ -63,8 +67,12 @@ public class RefUtil {
   @RefAware
   public static <T> T addRef(@Nullable @RefIgnore T value) {
     if (null != value) {
+      Class<?> valueClass = value.getClass();
+      if (!RefUtil.isRefAware(valueClass)) {
+        return value;
+      }
       if (value instanceof ReferenceCounting) ((ReferenceCounting) value).addRef();
-      else if (value.getClass().isArray()) {
+      else if (valueClass.isArray()) {
         synchronized (value) {
           int length = Array.getLength(value);
           for (int i = 0; i < length; i++) {
@@ -76,12 +84,15 @@ public class RefUtil {
     return value;
   }
 
-  public static <T> T[] addRefs(@RefIgnore T... array) {
-    synchronized (array) {
-      for (int i = 0; i < array.length; i++) {
-        RefUtil.addRef(array[i]);
-      }
-      return array;
+  public static void addRefs(@RefIgnore Object... array) {
+    for (int i = 0; i < array.length; i++) {
+      RefUtil.addRef(array[i]);
+    }
+  }
+
+  public static void freeRefs(@RefIgnore Object... array) {
+    for (int i = 0; i < array.length; i++) {
+      RefUtil.freeRef(array[i]);
     }
   }
 
@@ -150,7 +161,7 @@ public class RefUtil {
 
   public static boolean assertAlive(@RefAware @RefIgnore @Nonnull Object obj) {
     if (obj instanceof ReferenceCounting) ((ReferenceCounting) obj).assertAlive();
-    else if(obj.getClass().isArray()) {
+    else if (obj.getClass().isArray()) {
       synchronized (obj) {
         int length = Array.getLength(obj);
         for (int i = 0; i < length; i++) {
@@ -163,7 +174,7 @@ public class RefUtil {
 
   public static boolean watch(@RefAware @RefIgnore @Nonnull Object obj) {
     if (obj instanceof ReferenceCounting) ((ReferenceCountingBase) obj).watch();
-    else if(obj.getClass().isArray()) {
+    else if (obj.getClass().isArray()) {
       synchronized (obj) {
         int length = Array.getLength(obj);
         for (int i = 0; i < length; i++) {
@@ -172,6 +183,34 @@ public class RefUtil {
       }
     }
     return true;
+  }
+
+  public static boolean isRefAware(Class<?> c) {
+    if (ReferenceCounting.class.isAssignableFrom(c)) {
+      return true;
+    } else if (c.isArray()) {
+      Class<?> componentType = c.getComponentType();
+      if (componentType.isPrimitive()) return false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public static boolean isFreeRefAware(Class<?> c) {
+    if (ReferenceCounting.class.isAssignableFrom(c)) {
+      return true;
+    } else if (Map.Entry.class.isAssignableFrom(c)) {
+      return true;
+    } else if (Optional.class.isAssignableFrom(c)) {
+      return true;
+    } else if (c.isArray()) {
+      Class<?> componentType = c.getComponentType();
+      if (componentType.isPrimitive()) return false;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private static class RefWrapperHandler<T> implements InvocationHandler {

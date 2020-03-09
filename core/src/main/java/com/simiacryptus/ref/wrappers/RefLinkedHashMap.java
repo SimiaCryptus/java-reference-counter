@@ -23,7 +23,6 @@ import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefIgnore;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -48,4 +47,9 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
     return inner;
   }
 
+  @Nonnull
+  @Override
+  public RefLinkedHashMap<K, V> addRef() {
+    return (RefLinkedHashMap<K, V>) super.addRef();
+  }
 }

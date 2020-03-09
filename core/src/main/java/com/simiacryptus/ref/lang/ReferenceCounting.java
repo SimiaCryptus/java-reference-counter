@@ -20,7 +20,6 @@
 package com.simiacryptus.ref.lang;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 
 @RefIgnore
 public interface ReferenceCounting {

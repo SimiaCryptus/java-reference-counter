@@ -22,7 +22,6 @@ package com.simiacryptus.ref.wrappers;
 import com.simiacryptus.ref.lang.RefIgnore;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.Deque;
 
 @RefIgnore

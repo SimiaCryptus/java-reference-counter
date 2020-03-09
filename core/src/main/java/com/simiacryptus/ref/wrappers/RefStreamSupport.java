@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.StreamSupport;
 
 @RefIgnore

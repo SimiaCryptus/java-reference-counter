@@ -21,8 +21,6 @@ package com.simiacryptus.ref.wrappers;
 
 import com.simiacryptus.ref.lang.RefAware;
 
-import javax.annotation.Nonnull;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface RefPredicate<T> extends Predicate<T> {

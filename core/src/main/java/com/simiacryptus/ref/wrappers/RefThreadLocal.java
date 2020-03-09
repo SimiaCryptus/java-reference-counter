@@ -19,7 +19,10 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.*;
+import com.simiacryptus.ref.lang.RefIgnore;
+import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCounting;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import javax.annotation.Nonnull;
 
@@ -27,16 +30,13 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("unused")
 public class RefThreadLocal<T> extends ThreadLocal<T> implements ReferenceCounting {
 
-  private final ReferenceCountingBase refCounter = new ReferenceCountingBase(){
+  private final ReferenceCountingBase refCounter = new ReferenceCountingBase() {
     @Override
     protected void _free() {
       super._free();
       RefThreadLocal.this._free();
     }
   };
-
-  protected void _free() {
-  }
 
   @Override
   public boolean isFreed() {
@@ -76,8 +76,8 @@ public class RefThreadLocal<T> extends ThreadLocal<T> implements ReferenceCounti
 
   public T get() {
     T t = super.get();
-    if(null == t) return null;
-    if(t instanceof ReferenceCounting) {
+    if (null == t) return null;
+    if (t instanceof ReferenceCounting) {
       if (!((ReferenceCounting) t).tryAddRef()) {
         this.remove();
         return get();
@@ -95,5 +95,8 @@ public class RefThreadLocal<T> extends ThreadLocal<T> implements ReferenceCounti
   @Override
   public void remove() {
     set(null);
+  }
+
+  protected void _free() {
   }
 }
