@@ -31,7 +31,6 @@ public class PrintAST extends AutoCoderMojo {
   @Override
   public AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new AutoCoder(projectInfo) {
-      @Nonnull
       @Override
       public void rewrite() {
         rewrite((projectInfo1, compilationUnit, file) -> new LogNodes(projectInfo1, compilationUnit, file));

@@ -121,7 +121,7 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       final ConcurrentHashMap<Integer, BasicType> closureMap = new ConcurrentHashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
-        public void accept(@Nonnull Map.Entry<Integer, BasicType> anonymousParameter) {
+        public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
             if (null == anonymousParameter.getValue()) {
               throw new AssertionError();

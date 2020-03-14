@@ -54,7 +54,7 @@ public class RefSettings implements Settings {
     this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
     this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
     this.watchCreation = Settings.get("WATCH_CREATE", false);
-    this.watchEnable = Settings.get("WATCH_ENABLE", false);
+    this.watchEnable = Settings.get("WATCH_ENABLE", true);
     this.ignoredClasses = Stream.<String>of(
         "com.simiacryptus.mindseye.lang.Delta",
         "com.simiacryptus.mindseye.lang.State",

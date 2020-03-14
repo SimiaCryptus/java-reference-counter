@@ -44,7 +44,6 @@ public class Temp extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       rewrite((projectInfo, compilationUnit, file) -> new RemoveTypeAnnotations(projectInfo, compilationUnit, file,
           "com.simiacryptus.ref.lang.RefAware"

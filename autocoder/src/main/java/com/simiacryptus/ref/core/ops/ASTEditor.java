@@ -78,7 +78,6 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return !AutoCoder.read(this.file).equals(initialContent);
   }
 
-  @Nonnull
   public ASTEditor.Span getSpan(@Nonnull ASTNode node) {
     final int startPosition = node.getStartPosition();
     final int length = node.getLength();

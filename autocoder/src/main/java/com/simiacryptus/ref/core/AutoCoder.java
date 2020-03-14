@@ -73,7 +73,6 @@ public abstract class AutoCoder {
     }
   }
 
-  @Nonnull
   public abstract void rewrite();
 
   protected int rewrite(@Nonnull VisitorFactory visitorFactory) {

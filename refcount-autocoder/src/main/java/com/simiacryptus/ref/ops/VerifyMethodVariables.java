@@ -128,7 +128,6 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
-  @NotNull
   public void processStatements(VariableDeclaration node) {
     ASTNode astNode = getExecutingMethod(node);
     if (astNode == null) {

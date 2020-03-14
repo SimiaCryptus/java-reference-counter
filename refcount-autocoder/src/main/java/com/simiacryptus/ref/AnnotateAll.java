@@ -44,7 +44,6 @@ public class AnnotateAll extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       rewrite(AnnotateAllMethodParams::new, isParallel(), true);
     }

@@ -49,7 +49,6 @@ public class Verify extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       SymbolIndex index = new SymbolIndex();
       ArrayList<CollectableException> exceptions = new ArrayList<>();

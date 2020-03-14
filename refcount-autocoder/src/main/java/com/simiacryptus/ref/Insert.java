@@ -46,7 +46,6 @@ public class Insert extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       new Check.Coder(projectInfo).rewrite();
       new Remove().getAutoCoder(projectInfo).rewrite();

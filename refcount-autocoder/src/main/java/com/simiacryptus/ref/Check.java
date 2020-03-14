@@ -44,7 +44,6 @@ public class Check extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       rewrite(ValidateTypeHierarchy::new, isParallel(), true);
     }

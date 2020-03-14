@@ -46,7 +46,6 @@ public class Update extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       final HashMap missingAttributes = new HashMap();
       rewrite((projectInfo1, compilationUnit, file) -> new VerifyMethodCalls(projectInfo1, compilationUnit, file, missingAttributes), isParallel(), true);

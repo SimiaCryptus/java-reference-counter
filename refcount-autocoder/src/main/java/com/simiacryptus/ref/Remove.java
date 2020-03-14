@@ -48,7 +48,6 @@ public class Remove extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       while (rewrite(RemoveRefs.ModifyBlock::new) + rewrite(RemoveRefs.ModifyMethodInvocation::new) > 0) {
         logger.info("Re-running RemoveRefs");

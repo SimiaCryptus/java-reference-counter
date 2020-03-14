@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 public class ASTUtil {
 
-  @Nonnull
   public static ASTEditor.ASTMapping align(@Nonnull ASTNode from, @Nonnull ASTNode to) {
     final ASTEditor.ASTMapping mapping = new ASTEditor.ASTMapping();
     if (!from.getClass().equals(to.getClass())) {

@@ -42,7 +42,6 @@ public class ModifyAPI extends RefAutoCoderMojo {
     }
 
     @Override
-    @Nonnull
     public void rewrite() {
       new Check.Coder(projectInfo).rewrite();
       rewrite(RemoveRefMethods::new);

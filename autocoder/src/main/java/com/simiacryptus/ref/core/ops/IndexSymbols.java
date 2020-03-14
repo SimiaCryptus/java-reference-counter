@@ -133,7 +133,6 @@ public class IndexSymbols extends ASTScanner {
     index.references.computeIfAbsent(bindingID, x -> new ArrayList<>()).add(node);
   }
 
-  @Nonnull
   private SymbolIndex.ContextLocation getContextLocation(@Nonnull ASTNode node) {
     return new SymbolIndex.ContextLocation(getSpan(node), index.context(node));
   }

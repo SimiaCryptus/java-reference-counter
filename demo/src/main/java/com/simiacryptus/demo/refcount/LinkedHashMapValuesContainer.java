@@ -124,7 +124,7 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
       final LinkedHashMap<Integer, BasicType> closureMap = new LinkedHashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
         @Override
-        public void accept(@Nonnull Map.Entry<Integer, BasicType> anonymousParameter) {
+        public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
             if (null == anonymousParameter.getValue()) {
               throw new AssertionError();
