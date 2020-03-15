@@ -28,7 +28,6 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.wrappers.*;
 import org.eclipse.jdt.core.dom.*;
-import org.junit.Assert;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -80,7 +79,6 @@ public class ReplaceTypes extends RefASTOperator {
     replacements.put(AbstractSet.class, RefAbstractSet.class);
     replacements.put(ArrayList.class, RefArrayList.class);
     replacements.put(Arrays.class, RefArrays.class);
-    replacements.put(Assert.class, RefAssert.class);
     replacements.put(Collection.class, RefCollection.class);
     replacements.put(LinkedBlockingQueue.class, RefLinkedBlockingQueue.class);
     replacements.put(Collections.class, RefCollections.class);

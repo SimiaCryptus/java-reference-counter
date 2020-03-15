@@ -36,7 +36,7 @@ public class Test {
     System.setProperty("DEBUG_LIFECYCLE", "true");
   }
 
-  @org.junit.Test
+  @org.junit.jupiter.api.Test
   public void test() throws InterruptedException {
     Logger logger = (Logger) LoggerFactory
         .getLogger(ReferenceCountingBase.class.getCanonicalName());

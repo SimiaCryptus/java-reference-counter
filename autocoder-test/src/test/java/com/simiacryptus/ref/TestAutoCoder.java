@@ -25,7 +25,7 @@ import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
 import java.io.File;
