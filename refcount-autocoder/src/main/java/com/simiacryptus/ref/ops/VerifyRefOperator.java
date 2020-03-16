@@ -231,15 +231,6 @@ public class VerifyRefOperator extends RefASTOperator {
     return processNode(statement, name, state, finalizers, requiredTermination);
   }
 
-  private ReferenceState processBlock(@Nonnull SimpleName name, @Nonnull ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination, Block block) {
-    ReferenceState blockState = state;
-    List<Statement> statements = block.statements();
-    for (Statement stmt : statements) {
-      blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
-    }
-    return blockState;
-  }
-
   protected ReferenceState processNode(@Nullable ASTNode node, @Nonnull SimpleName name, ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination) {
     if (null == node) return state;
     List<Name> mentions = getMentions(node, name).stream()
@@ -425,6 +416,15 @@ public class VerifyRefOperator extends RefASTOperator {
             return SymbolIndex.equals(nameBinding, mentionBinding);
           }).collect(Collectors.toList());
     }
+  }
+
+  private ReferenceState processBlock(@Nonnull SimpleName name, @Nonnull ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination, Block block) {
+    ReferenceState blockState = state;
+    List<Statement> statements = block.statements();
+    for (Statement stmt : statements) {
+      blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
+    }
+    return blockState;
   }
 
   public enum TerminalState {
