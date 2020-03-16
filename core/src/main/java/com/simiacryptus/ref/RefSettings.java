@@ -32,81 +32,34 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.simiacryptus.lang.Settings.get;
+
 @RefIgnore
 public class RefSettings implements Settings {
 
   public static final int maxTracesPerObject = 100;
   private static final Logger logger = LoggerFactory.getLogger(RefSettings.class);
   public static int maxStackSize = 50;
+  public static String stackPrefixFilter = "com.simiacryptus";
   @Nullable
   private static transient RefSettings INSTANCE = null;
-  private static String stackPrefixFilter = "com.simiacryptus";
-  public final boolean watchEnable;
-  public final boolean watchCreation;
-  private final boolean lifecycleDebug;
+  public final boolean watchEnable = get("WATCH_ENABLE", true);
+  public final boolean watchCreation = get("WATCH_CREATE", false);
+  public final boolean lifecycleDebug = get("DEBUG_LIFECYCLE", false);
   @Nonnull
-  private final PersistanceMode doubleCacheMode;
-  private final Set<String> watchedClasses;
-  private final Set<String> ignoredClasses;
-
-  protected RefSettings() {
-    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", Integer.toString(Settings.get("THREADS", 64)));
-    this.doubleCacheMode = Settings.get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
-    this.lifecycleDebug = Settings.get("DEBUG_LIFECYCLE", false);
-    this.watchCreation = Settings.get("WATCH_CREATE", false);
-    this.watchEnable = Settings.get("WATCH_ENABLE", true);
-    this.ignoredClasses = Stream.<String>of(
-        "com.simiacryptus.mindseye.lang.Delta",
-        "com.simiacryptus.mindseye.lang.State",
-        "com.simiacryptus.mindseye.network.InnerNode"
-//        "com.simiacryptus.mindseye.lang.Tensor"
-//    ).map(name -> {
-//      try {
-//        return Class.forName(name);
-//      } catch (ClassNotFoundException e) {
-//        logger.warn("No Class Found: " + name);
-//        return null;
-//      }
-//    }
-    ).filter(x -> x != null).collect(Collectors.toSet());
-    this.watchedClasses = Stream.<String>of(
+  public final PersistanceMode doubleCacheMode = get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
+  private final Set<String> watchedClasses = Stream.<String>of(
 //        "com.simiacryptus.mindseye.network.PipelineNetwork"
-//        "com.simiacryptus.mindseye.lang.cudnn.CudnnHandle"
-//        "com.simiacryptus.mindseye.art.util.VisualStyleContentNetwork.TileTrainer",
-//        "com.simiacryptus.mindseye.lang.Tensor"
-//        "com.simiacryptus.mindseye.network.PipelineNetwork",
-//        "com.simiacryptus.mindseye.network.CountingResult",
-//        "com.simiacryptus.mindseye.lang.PointSample",
-//        "com.simiacryptus.mindseye.lang.cudnn.CudaTensorList",
-//        "com.simiacryptus.mindseye.network.InnerNode",
-//        "com.simiacryptus.mindseye.layers.cudnn.GramianLayer",
-//        "com.simiacryptus.mindseye.layers.java.ImgTileSelectLayer",
-//        "com.simiacryptus.mindseye.layers.ValueLayer",
-//        "com.simiacryptus.mindseye.layers.java.ImgPixelGateLayer",
-//        "com.simiacryptus.mindseye.network.PipelineNetwork",
-//        "com.simiacryptus.mindseye.lang.StateSet",
-//        "com.simiacryptus.mindseye.lang.DeltaSet",
-//        "com.simiacryptus.mindseye.lang.State",
-//        "com.simiacryptus.mindseye.lang.Delta",
-//        "com.simiacryptus.mindseye.lang.Tensor",
-//        "com.simiacryptus.mindseye.network.GraphEvaluationContext",
-//        "com.simiacryptus.mindseye.layers.cudnn.PoolingLayer",
-//        "com.simiacryptus.mindseye.lang.TensorArray",
-//        "com.simiacryptus.mindseye.lang.cudnn.CudaTensor"
-//    ).map(name -> {
-//      try {
-//        return Class.forName(name);
-//      } catch (ClassNotFoundException e) {
-//        logger.warn("No Class Found: " + name);
-//        return null;
-//      }
-//    }
-    ).filter(x -> x != null).collect(Collectors.toSet());
-  }
+  ).filter(x -> x != null).collect(Collectors.toSet());
+  private final Set<String> ignoredClasses = Stream.<String>of(
+      "com.simiacryptus.mindseye.lang.Delta",
+      "com.simiacryptus.mindseye.lang.State",
+      "com.simiacryptus.mindseye.network.InnerNode"
+  ).filter(x -> x != null).collect(Collectors.toSet());
 
-  @Nonnull
-  public PersistanceMode getDoubleCacheMode() {
-    return doubleCacheMode;
+  private RefSettings() {
+    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism",
+        Integer.toString(get("THREADS", 64)));
   }
 
   @Nullable

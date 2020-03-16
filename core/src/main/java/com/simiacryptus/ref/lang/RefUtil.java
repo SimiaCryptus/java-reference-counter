@@ -213,6 +213,12 @@ public class RefUtil {
     }
   }
 
+  public static boolean isNotNull(@RefAware Object x) {
+    boolean notNull = null != x;
+    RefUtil.freeRef(x);
+    return notNull;
+  }
+
   private static class RefWrapperHandler<T> implements InvocationHandler {
     private final ReferenceCountingBase refcounter;
     private final T obj;

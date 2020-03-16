@@ -54,7 +54,7 @@ public abstract class RecycleBin<T> {
     @Override
     protected void free(double[] obj) {
     }
-  }.setPersistanceMode(RefSettings.INSTANCE().getDoubleCacheMode());
+  }.setPersistanceMode(RefSettings.INSTANCE().doubleCacheMode);
   public static final RecycleBin<float[]> FLOATS = new RecycleBin<float[]>() {
     @Nonnull
     @Override
@@ -71,7 +71,7 @@ public abstract class RecycleBin<T> {
     @Override
     protected void free(float[] obj) {
     }
-  }.setPersistanceMode(RefSettings.INSTANCE().getDoubleCacheMode());
+  }.setPersistanceMode(RefSettings.INSTANCE().doubleCacheMode);
   protected static final Logger logger = LoggerFactory.getLogger(RecycleBin.class);
   private static volatile ScheduledExecutorService garbageTruck;
   private final Map<Long, ConcurrentLinkedDeque<ObjectWrapper>> buckets = new ConcurrentHashMap<>();

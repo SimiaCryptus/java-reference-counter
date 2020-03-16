@@ -219,11 +219,7 @@ public class VerifyRefOperator extends RefASTOperator {
               finalizers, requiredTermination),
           finalizers, requiredTermination);
     } else if (statement instanceof Block) {
-      ReferenceState blockState = state;
-      for (Statement stmt : (List<Statement>) ((Block) statement).statements()) {
-        blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
-      }
-      return blockState;
+      return processBlock(name, state, finalizers, requiredTermination, (Block) statement);
     } else if (statement instanceof ExpressionStatement) {
       Expression expression = ((ExpressionStatement) statement).getExpression();
       if (expression instanceof Assignment) {
@@ -233,6 +229,15 @@ public class VerifyRefOperator extends RefASTOperator {
       }
     }
     return processNode(statement, name, state, finalizers, requiredTermination);
+  }
+
+  private ReferenceState processBlock(@Nonnull SimpleName name, @Nonnull ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination, Block block) {
+    ReferenceState blockState = state;
+    List<Statement> statements = block.statements();
+    for (Statement stmt : statements) {
+      blockState = processStatement(stmt, name, blockState, finalizers, requiredTermination);
+    }
+    return blockState;
   }
 
   protected ReferenceState processNode(@Nullable ASTNode node, @Nonnull SimpleName name, ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination) {
@@ -340,7 +345,7 @@ public class VerifyRefOperator extends RefASTOperator {
           IBinding binding = ((SimpleName) node).resolveBinding();
           if (binding instanceof IVariableBinding) {
             IVariableBinding variableBinding = (IVariableBinding) binding;
-            if (variableBinding.isEffectivelyFinal() || Modifier.isFinal((variableBinding).getModifiers())) {
+            if (Modifier.isFinal((variableBinding).getModifiers())) {
               return state;
             }
           }
