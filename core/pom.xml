@@ -31,7 +31,6 @@
     <artifactId>refcount-core</artifactId>
     <description>src</description>
     <properties>
-        <github.project>refcount-core</github.project>
         <github.global.userName></github.global.userName>
         <github.global.oauth2Token></github.global.oauth2Token>
     </properties>
