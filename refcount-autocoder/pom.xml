@@ -33,8 +33,8 @@
     <url>https://simiacryptus.github.io/${github.project}/</url>
     <packaging>maven-plugin</packaging>
     <scm>
-        <url>https://github.com/simiacryptus/refcount-util-java/</url>
-        <connection>scm:git:git@github.com:simiacryptus/refcount-util-java.git</connection>
+        <url>https://github.com/simiacryptus/java-reference-counter/</url>
+        <connection>scm:git:git@github.com:simiacryptus/java-reference-counter.git</connection>
     </scm>
 
     <properties>
