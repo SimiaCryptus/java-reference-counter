@@ -30,7 +30,7 @@
 
     <artifactId>autocoder-core</artifactId>
     <description>Java 8 Reference Counting Code Utilities</description>
-    <url>https://simiacryptus.github.io/${github.project}/</url>
+
     <packaging>maven-plugin</packaging>
     <scm>
         <url>https://github.com/simiacryptus/refcount-util-java/</url>

@@ -30,7 +30,7 @@
 
     <artifactId>refcount-demo</artifactId>
     <description>Java 8 Reference Counting Code Utilities</description>
-    <url>https://simiacryptus.github.io/${github.project}/</url>
+
     <scm>
         <url>https://github.com/simiacryptus/refcount-util-java-test/</url>
         <connection>scm:git:git@github.com:simiacryptus/refcount-util-java.git</connection>

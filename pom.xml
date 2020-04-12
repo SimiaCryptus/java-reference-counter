@@ -33,12 +33,8 @@
     <version>MINDSEYE-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <url>https://simiacryptus.github.io/${github.project}/</url>
-    <scm>
-        <connection>scm:git:git@github.com:SimiaCryptus/${github.project}.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/SimiaCryptus/${github.project}.git</developerConnection>
-        <url>https://github.com/SimiaCryptus/${github.project}/tree/master</url>
-    </scm>
+
+
 
     <properties>
         <github.global.userName></github.global.userName>
