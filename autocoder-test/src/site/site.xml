@@ -17,7 +17,7 @@
   ~ under the License.
   -->
 
-<project name="core">
+<project name="autocoder-test">
     <skin>
         <groupId>org.apache.maven.skins</groupId>
         <artifactId>maven-fluido-skin</artifactId>
@@ -29,7 +29,7 @@
             <sideBarEnabled>false</sideBarEnabled>
             <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled>
             <gitHub>
-                <projectId>SimiaCryptus/core</projectId>
+                <projectId>SimiaCryptus/autocoder-test</projectId>
                 <ribbonOrientation>left</ribbonOrientation>
                 <ribbonColor>black</ribbonColor>
             </gitHub>
