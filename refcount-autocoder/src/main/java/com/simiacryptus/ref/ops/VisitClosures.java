@@ -62,6 +62,7 @@ public class VisitClosures extends RefASTOperator {
           }
         }
       }
+      RefUtil.freeRef(e);
       return Stream.empty();
     }).collect(Collectors.toList());
   }

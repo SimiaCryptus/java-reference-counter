@@ -19,10 +19,7 @@
 
 package com.simiacryptus.ref.wrappers;
 
-import com.simiacryptus.ref.lang.RefIgnore;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.lang.ReferenceCounting;
-import com.simiacryptus.ref.lang.ReferenceCountingBase;
+import com.simiacryptus.ref.lang.*;
 
 import javax.annotation.Nonnull;
 
@@ -87,7 +84,7 @@ public class RefThreadLocal<T> extends ThreadLocal<T> implements ReferenceCounti
 
   }
 
-  public void set(T t) {
+  public void set(@RefAware T t) {
     RefUtil.freeRef(super.get());
     super.set(t);
   }
