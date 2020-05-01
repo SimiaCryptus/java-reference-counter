@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
   ~ Copyright (c) 2020 by Andrew Charneski.
   ~
@@ -16,7 +17,6 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -38,21 +38,11 @@
     </scm>
 
     <properties>
-        <github.global.userName></github.global.userName>
-        <github.global.oauth2Token></github.global.oauth2Token>
+        <github.global.userName/>
+        <github.global.oauth2Token/>
         <maven.version>3.6.0</maven.version>
     </properties>
 
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.simiacryptus</groupId>
-                <artifactId>java-parent</artifactId>
-                <version>${project.parent.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -89,40 +79,40 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-embedder</artifactId>
-            <version>${maven.version}</version>
+
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${maven.version}</version>
+
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>${maven.version}</version>
+
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>${maven.version}</version>
+
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.simiacryptus</groupId>
             <artifactId>refcount-core</artifactId>
-            <version>MINDSEYE-SNAPSHOT</version>
+
         </dependency>
         <dependency>
             <groupId>com.simiacryptus</groupId>
             <artifactId>autocoder-core</artifactId>
-            <version>MINDSEYE-SNAPSHOT</version>
+
         </dependency>
         <dependency>
             <groupId>com.simiacryptus</groupId>
             <artifactId>autocoder-test</artifactId>
-            <version>MINDSEYE-SNAPSHOT</version>
+
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -138,4 +128,23 @@
             </plugins>
         </pluginManagement>
     </build>
+    <url>http://code.simiacrypt.us/release/${project.version}/refcount-autocoder</url>
+    <distributionManagement>
+        <site>
+            <url>s3://code.simiacrypt.us/release/${project.version}/refcount-autocoder</url>
+        </site>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.simiacryptus</groupId>
+                <artifactId>bom</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>
