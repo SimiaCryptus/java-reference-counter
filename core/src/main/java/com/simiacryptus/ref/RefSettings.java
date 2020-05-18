@@ -45,7 +45,7 @@ public class RefSettings implements Settings {
   private static transient RefSettings INSTANCE = null;
   public final boolean watchEnable = get("WATCH_ENABLE", true);
   public final boolean watchCreation = get("WATCH_CREATE", false);
-  public final boolean lifecycleDebug = get("DEBUG_LIFECYCLE", false);
+  public final boolean lifecycleDebug = get("DEBUG_LIFECYCLE", true);
   @Nonnull
   public final PersistanceMode doubleCacheMode = get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
   private final Set<String> watchedClasses = Stream.<String>of(
