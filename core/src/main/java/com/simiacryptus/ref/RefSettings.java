@@ -45,16 +45,17 @@ public class RefSettings implements Settings {
   private static transient RefSettings INSTANCE = null;
   public final boolean watchEnable = get("WATCH_ENABLE", true);
   public final boolean watchCreation = get("WATCH_CREATE", false);
-  public final boolean lifecycleDebug = get("DEBUG_LIFECYCLE", true);
+  public final boolean lifecycleDebug = get("DEBUG_LIFECYCLE", false);
   @Nonnull
   public final PersistanceMode doubleCacheMode = get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
   private final Set<String> watchedClasses = Stream.<String>of(
+//          "com.simiacryptus.mindseye.lang.ConstantResult"
 //        "com.simiacryptus.mindseye.network.PipelineNetwork"
   ).filter(x -> x != null).collect(Collectors.toSet());
   private final Set<String> ignoredClasses = Stream.<String>of(
-      "com.simiacryptus.mindseye.lang.Delta",
-      "com.simiacryptus.mindseye.lang.State",
-      "com.simiacryptus.mindseye.network.InnerNode"
+//      "com.simiacryptus.mindseye.lang.Delta",
+//      "com.simiacryptus.mindseye.lang.State",
+//      "com.simiacryptus.mindseye.network.InnerNode"
   ).filter(x -> x != null).collect(Collectors.toSet());
 
   private RefSettings() {

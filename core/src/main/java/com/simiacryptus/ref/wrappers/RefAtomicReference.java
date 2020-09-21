@@ -74,8 +74,10 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
   public void set(@RefAware V newValue) {
     assertAlive();
     if (null != newValue) RefUtil.assertAlive(newValue);
-    //RefUtil.watch(newValue);
-    RefUtil.freeRef(inner.getAndSet(newValue));
+    if(inner.get() != newValue) {
+      //RefUtil.watch(newValue);
+      RefUtil.freeRef(inner.getAndSet(newValue));
+    }
   }
 
   protected void _free() {

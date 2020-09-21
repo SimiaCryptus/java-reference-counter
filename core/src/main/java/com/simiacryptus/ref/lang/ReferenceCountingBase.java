@@ -73,6 +73,7 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   protected ReferenceCountingBase() {
     if (RefSettings.INSTANCE().isLifecycleDebug(getClass())) {
       refCreatedBy = getStackTrace();
+      watch();
     } else if (RefSettings.INSTANCE().watchCreation) {
       refCreatedBy = getStackTrace();
     } else {
