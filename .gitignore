@@ -3,6 +3,7 @@
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 *.hprof
 *.iml
+*.pem
 .idea/
 .mvn/timing.properties
 buildNumber.properties
