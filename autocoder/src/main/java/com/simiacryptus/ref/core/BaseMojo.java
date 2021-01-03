@@ -33,6 +33,7 @@ import org.apache.maven.repository.RepositorySystem;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -48,10 +49,14 @@ public abstract class BaseMojo extends AbstractMojo {
 
   @Nonnull
   public String[] getDependencies() {
-    return project.getDependencies().stream()
+    if(project == null) return new String[]{};
+    List<Dependency> dependencies = project.getDependencies();
+    if(dependencies == null) return new String[]{};
+    return dependencies.stream()
         .map(x -> toArtifact(x))
         .flatMap(x -> resolve(x).getArtifacts().stream())
         .map(artifact -> artifact.getFile())
+        .filter(file -> null != file)
         .map(file -> file.getAbsolutePath())
         .distinct()
         .toArray(i -> new String[i]);
