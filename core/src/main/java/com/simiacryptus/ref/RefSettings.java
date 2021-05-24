@@ -44,7 +44,7 @@ public class RefSettings implements Settings {
   @Nullable
   private static transient RefSettings INSTANCE = null;
   public final boolean watchEnable = get("WATCH_ENABLE", true);
-  public final boolean watchCreation = get("WATCH_CREATE", false);
+  public final boolean watchCreation = get("WATCH_CREATE", true);
   public final boolean lifecycleDebug = get("DEBUG_LIFECYCLE", false);
   @Nonnull
   public final PersistanceMode doubleCacheMode = get("DOUBLE_CACHE_MODE", PersistanceMode.WEAK);
