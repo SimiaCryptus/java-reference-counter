@@ -68,7 +68,8 @@ public interface Settings {
       try {
         return new URI(value);
       } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
+        logger.warn(String.format("Error parsing %s = %s", key, value), e);
+        return defaultValue;
       }
     }
   }
@@ -81,21 +82,38 @@ public interface Settings {
   }
 
   static int get(@Nonnull final String key, final int defaultValue) {
-    int value = Integer.parseInt(System.getProperty(key, Integer.toString(defaultValue)));
-    logger.info(String.format("%s = %s", key, value));
-    return value;
+    String property = System.getProperty(key, Integer.toString(defaultValue));
+    try {
+      logger.info(String.format("%s = %s", key, property));
+      return Integer.parseInt(property);
+    } catch (Exception e) {
+      logger.warn(String.format("Error parsing %s = %s", key, property), e);
+      return defaultValue;
+    }
   }
 
   static double get(@Nonnull final String key, final double defaultValue) {
-    double value = Double.parseDouble(System.getProperty(key, Double.toString(defaultValue)));
-    logger.info(String.format("%s = %s", key, value));
-    return value;
+    String property = System.getProperty(key, Double.toString(defaultValue));
+    try {
+      double value = Double.parseDouble(property);
+      logger.info(String.format("%s = %s", key, property));
+      return value;
+    } catch (Exception e) {
+      logger.warn(String.format("Error parsing %s = %s", key, property), e);
+      return defaultValue;
+    }
   }
 
   static long get(@Nonnull final String key, final long defaultValue) {
-    long value = Long.parseLong(System.getProperty(key, Long.toString(defaultValue)));
-    logger.info(String.format("%s = %s", key, value));
-    return value;
+    String property = System.getProperty(key, Long.toString(defaultValue));
+    try {
+      long value = Long.parseLong(property);
+      logger.info(String.format("%s = %s", key, value));
+      return value;
+    } catch (Exception e) {
+      logger.warn(String.format("Error parsing %s = %s", key, property), e);
+      return defaultValue;
+    }
   }
 
   @Nonnull

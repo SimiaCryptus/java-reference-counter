@@ -316,10 +316,19 @@ public class RefStream<T> implements Stream<T> {
   @Override
   public <R> RefStream<R> flatMap(
       @Nonnull @RefAware Function<? super T, ? extends Stream<? extends R>> mapper) {
+    RefStream<T> self = this;
     track(mapper);
-    return new RefStream<>(getInner().flatMap((T t) -> mapper.apply(getRef(t))
-        //.collect(RefCollectors.toList()).stream()
-        .map(u -> storeRef(u))), lambdas, refs);
+    return new RefStream<>(getInner().flatMap((T t) -> {
+              Stream<? extends R> stream = mapper.apply(getRef(t));
+              if(stream instanceof RefStream) {
+                RefStream<? extends R> refStream = (RefStream<? extends R>) stream;
+                return refStream.getInner().map(u -> self.storeRef(refStream.getRef(u)));
+              } else {
+                return stream.map(u -> self.storeRef(u));
+              }
+            }
+            //.collect(RefCollectors.toList()).stream()
+    ), lambdas, refs);
   }
 
   @Nonnull
