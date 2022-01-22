@@ -211,7 +211,10 @@ public class RefArrays {
 
   @Nonnull
   public static <T> T[] copyOfRange(@Nonnull @RefAware T[] original, int from, int to) {
-    return Arrays.copyOfRange(original, from, to);
+    T[] copy = Arrays.copyOfRange(original, from, to);
+    RefUtil.addRefs(copy);
+    RefUtil.freeRefs(original);
+    return copy;
   }
 
   @Nonnull

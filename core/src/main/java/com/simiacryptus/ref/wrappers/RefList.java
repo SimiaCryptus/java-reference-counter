@@ -33,7 +33,11 @@ import java.util.function.UnaryOperator;
 @SuppressWarnings("unused")
 public interface RefList<T> extends ReferenceCounting, List<T>, RefCollection<T> {
 
-  @Nonnull
+  static <T> RefList<T> empty() {
+    return new RefArrayList();
+  }
+
+    @Nonnull
   List<T> getInner();
 
   @Nonnull
