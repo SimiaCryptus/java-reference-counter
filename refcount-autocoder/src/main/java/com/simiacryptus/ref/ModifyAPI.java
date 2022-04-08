@@ -27,20 +27,41 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * This class is responsible for modifying the API.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "modifyAPI")
 public class ModifyAPI extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * Class that represents a coder.
+   *
+   * @docgenVersion 9
+   */
   public static class Coder extends AutoCoder {
     public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
     }
 
+    /**
+     * @Override public void rewrite();
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       new Check.Coder(projectInfo).rewrite();

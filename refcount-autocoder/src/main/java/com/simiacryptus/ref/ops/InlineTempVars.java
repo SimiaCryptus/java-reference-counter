@@ -27,6 +27,11 @@ import org.eclipse.jdt.core.dom.*;
 import javax.annotation.Nonnull;
 import java.io.File;
 
+/**
+ * This class demonstrates how to inline temporary variables.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class InlineTempVars extends RefASTOperator {
 
@@ -34,6 +39,12 @@ public class InlineTempVars extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of a VariableDeclarationStatement is reached in the Java code.
+   *
+   * @param node the VariableDeclarationStatement that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull VariableDeclarationStatement node) {
     if (node.fragments().size() > 1) return;

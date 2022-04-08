@@ -34,6 +34,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * This class fixes variable declarations.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class FixVariableDeclarations extends RefASTOperator {
 
@@ -41,6 +46,12 @@ public class FixVariableDeclarations extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * @param type        the type to apply
+   * @param initializer the initializer to use, or null
+   * @return the applied type, or null if unable to apply
+   * @docgenVersion 9
+   */
   @Nullable
   protected Type apply(@Nonnull Type type, @Nullable Expression initializer) {
     final ITypeBinding typeBinding = resolveBinding(type);
@@ -85,6 +96,13 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  /**
+   * @param node            the first type
+   * @param typeBinding     the second type
+   * @param initializerType the type of the initializer
+   * @return the common interface between node and typeBinding, or null if there is no common interface
+   * @docgenVersion 9
+   */
   @Nullable
   protected Type commonInterface(@Nonnull Type node, @Nonnull ITypeBinding typeBinding, @Nonnull ITypeBinding initializerType) {
     if (initializerType.isAssignmentCompatible(typeBinding)) {
@@ -97,6 +115,13 @@ public class FixVariableDeclarations extends RefASTOperator {
     return null;
   }
 
+  /**
+   * Returns the list of type bindings for the given type binding.
+   *
+   * @param typeBinding the type binding to get the list of type bindings for
+   * @return the list of type bindings for the given type binding
+   * @docgenVersion 9
+   */
   protected List<ITypeBinding> typePath(@Nonnull ITypeBinding typeBinding) {
     final ArrayList<ITypeBinding> list = new ArrayList<>();
     list.add(typeBinding);
@@ -110,6 +135,13 @@ public class FixVariableDeclarations extends RefASTOperator {
     return list.stream().distinct().collect(Collectors.toList());
   }
 
+  /**
+   * @param node            the node whose type is being resolved
+   * @param typeBinding     the type of the node
+   * @param initializerType the type of the initializer for the node
+   * @return the common superclass of node and typeBinding, or null if none exists
+   * @docgenVersion 9
+   */
   @Nullable
   @SuppressWarnings("unused")
   protected Type commonSuperclass(@Nonnull Type node, @Nonnull ITypeBinding typeBinding, @Nonnull ITypeBinding initializerType) {
@@ -125,12 +157,23 @@ public class FixVariableDeclarations extends RefASTOperator {
     return commonInterface(node, superclass, initializerType);
   }
 
+  /**
+   * This class represents a statement that modifies a variable declaration.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationStatement extends FixVariableDeclarations {
     public ModifyVariableDeclarationStatement(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of a VariableDeclarationStatement is reached in the Java code.
+     *
+     * @param node the VariableDeclarationStatement that is ending
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull VariableDeclarationStatement node) {
       final Type type = node.getType();
@@ -144,12 +187,23 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify field declarations.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyFieldDeclaration extends FixVariableDeclarations {
     public ModifyFieldDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of a field declaration is reached in the Java source code.
+     *
+     * @param node the field declaration node that is being visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull FieldDeclaration node) {
       final Type type = node.getType();
@@ -163,12 +217,21 @@ public class FixVariableDeclarations extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a variable declaration fragment.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends FixVariableDeclarations {
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * @docgenVersion 9
+     * @see org.eclipse.jdt.core.dom.ASTVisitor#endVisit(org.eclipse.jdt.core.dom.VariableDeclarationFragment)
+     */
     @Override
     public void endVisit(VariableDeclarationFragment node) {
       super.endVisit(node);

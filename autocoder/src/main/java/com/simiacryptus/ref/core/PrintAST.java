@@ -24,13 +24,31 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Prints the Abstract Syntax Tree (AST) of a given Java program.
+ *
+ * @docgenVersion 9
+ */
 @Mojo(name = "printAST")
 public class PrintAST extends AutoCoderMojo {
 
+  /**
+   * @param projectInfo the project information to use
+   * @return a new AutoCoder instance
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new AutoCoder(projectInfo) {
+      /**
+       * @Override
+       * public void rewrite() {
+       *     rewrite((projectInfo1, compilationUnit, file) -> new LogNodes(projectInfo1, compilationUnit, file));
+       * }
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public void rewrite() {
         rewrite((projectInfo1, compilationUnit, file) -> new LogNodes(projectInfo1, compilationUnit, file));

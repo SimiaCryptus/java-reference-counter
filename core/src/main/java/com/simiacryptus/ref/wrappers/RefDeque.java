@@ -24,10 +24,21 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import javax.annotation.Nonnull;
 import java.util.Deque;
 
+/**
+ * This is the RefDeque interface.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefDeque<T> extends RefQueue<T>, Deque<T> {
 
+  /**
+   * Adds a new reference to the deque.
+   *
+   * @return the deque with the new reference added
+   * @docgenVersion 9
+   */
   @Nonnull
   RefDeque<T> addRef();
 }

@@ -29,31 +29,61 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * This class is the abstract superclass of all collections.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     implements RefCollection<T>, Cloneable, Serializable {
 
+  /**
+   * Returns a collection of type T. This collection cannot be null.
+   *
+   * @docgenVersion 9
+   */
   @Nonnull
   public abstract Collection<T> getInner();
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws IllegalStateException if this {@code Optional} is empty
+   * @docgenVersion 9
+   */
   @Override
   public final boolean isEmpty() {
     assertAlive();
     return getInner().isEmpty();
   }
 
+  /**
+   * @return RefAbstractCollection<T>
+   * @docgenVersion 9
+   */
   @Nonnull
   public @Override
   RefAbstractCollection<T> addRef() {
     return (RefAbstractCollection<T>) super.addRef();
   }
 
+  /**
+   * Clears the inner map.
+   *
+   * @docgenVersion 9
+   */
   @Override
   public synchronized void clear() {
     getInner().forEach(value -> RefUtil.freeRef(value));
     getInner().clear();
   }
 
+  /**
+   * @param o The object to check for containment
+   * @return True if the object is contained in this container, false otherwise
+   * @docgenVersion 9
+   */
   @Override
   public final boolean contains(@RefAware Object o) {
     assertAlive();
@@ -62,6 +92,10 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return returnValue;
   }
 
+  /**
+   * @docgenVersion 9
+   * @see Collection#containsAll(Collection)
+   */
   @Override
   public final boolean containsAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
@@ -77,6 +111,10 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return b;
   }
 
+  /**
+   * @return an iterator over the elements in this list in proper sequence
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public final RefIterator<T> iterator() {
@@ -84,6 +122,10 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return new RefIterator<>(getInner().iterator()).track(this.addRef());
   }
 
+  /**
+   * @Override public synchronized boolean removeAll(@Nonnull @RefAware Collection<?> c);
+   * @docgenVersion 9
+   */
   @Override
   public synchronized boolean removeAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
@@ -107,6 +149,10 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return b;
   }
 
+  /**
+   * @Override public boolean retainAll(@Nonnull @RefAware Collection<?> c);
+   * @docgenVersion 9
+   */
   @Override
   public boolean retainAll(@Nonnull @RefAware Collection<?> c) {
     assertAlive();
@@ -130,22 +176,47 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return b;
   }
 
+  /**
+   * @Override public final int size() {
+   * assertAlive();
+   * return getInner().size();
+   * }
+   * @docgenVersion 9
+   */
   @Override
   public final int size() {
     assertAlive();
     return getInner().size();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @return a {@code RefSpliterator} over the elements in this collection
+   * @docgenVersion 9
+   */
   @Override
   public RefSpliterator<T> spliterator() {
     return RefCollection.super.spliterator();
   }
 
+  /**
+   * @return a stream of the elements in this collection
+   * @docgenVersion 9
+   */
   @Override
   public RefStream<T> stream() {
     return RefCollection.super.stream();
   }
 
+  /**
+   * @return an array containing all of the elements in this list in proper sequence (from first to last element);
+   * the runtime type of the returned array is that of the specified array.
+   * If the list fits in the specified array, it is returned therein.
+   * Otherwise, a new array is allocated with the runtime type of the specified array and the size of this list.
+   * @throws NullPointerException if the specified array is null
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   @RefAware
@@ -158,6 +229,14 @@ public abstract class RefAbstractCollection<T> extends ReferenceCountingBase
     return returnValue;
   }
 
+  /**
+   * @param a the array into which the elements of this list are to
+   *          be stored, if it is big enough; otherwise, a new array of the
+   *          same runtime type is allocated for this purpose.
+   * @return an array containing the elements of this list
+   * @throws NullPointerException if the specified array is null
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   @RefAware

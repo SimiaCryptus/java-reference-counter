@@ -33,6 +33,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This class is responsible for inserting free references.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class InsertFreeRefs extends RefASTOperator {
 
@@ -40,6 +45,14 @@ public class InsertFreeRefs extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Returns the line number of the first line in the given block of code.
+   *
+   * @param body       the block of code to examine
+   * @param declaredAt the line number where the block of code was declared
+   * @return the line number of the first line in the given block of code
+   * @docgenVersion 9
+   */
   private static int firstLine(@Nonnull Block body, int declaredAt) {
     final List<Statement> statements = body.statements();
     for (int i = Math.max(declaredAt, 0); i < statements.size(); i++) {
@@ -56,6 +69,13 @@ public class InsertFreeRefs extends RefASTOperator {
     return declaredAt;
   }
 
+  /**
+   * Adds a free type reference for the given variable declaration and type binding.
+   *
+   * @param declaration the variable declaration to add a free type reference for
+   * @param typeBinding the type binding to add a free type reference for
+   * @docgenVersion 9
+   */
   public void addFreeRef(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding) {
     if (skip(declaration)) return;
     debug(1, declaration, "addFreeRef: %s", declaration);
@@ -108,6 +128,15 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Adds a free reference entry for the given declaration, type binding, and name.
+   *
+   * @param declaration the declaration to add
+   * @param typeBinding the type binding to add
+   * @param name        the name to add
+   * @param parent      the parent AST node
+   * @docgenVersion 9
+   */
   public void add_freeRef_entry(@Nonnull VariableDeclaration declaration, @Nonnull ITypeBinding typeBinding, @Nonnull SimpleName name, @Nonnull ASTNode parent) {
     final ASTNode fieldParent = parent.getParent();
     if (fieldParent instanceof TypeDeclaration) {
@@ -129,6 +158,16 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Inserts a free reference of the given type binding into the given node in the given body at the given line.
+   *
+   * @param typeBinding the type binding of the free reference to insert
+   * @param node        the node to insert the free reference into
+   * @param body        the body containing the node
+   * @param line        the line number of the node in the body
+   * @param isNonNull   whether the free reference is non-null
+   * @docgenVersion 9
+   */
   public void insertFreeRef(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block body, int line, boolean isNonNull) {
     final Statement statement = isNonNull ? newFreeRef(node, typeBinding) : freeRefStatement(node, typeBinding);
     if (line < 0) {
@@ -139,6 +178,17 @@ public class InsertFreeRefs extends RefASTOperator {
     debug(1, body, "Added freeRef for value %s (%s) at line %s", node, typeBinding.getQualifiedName(), line);
   }
 
+  /**
+   * Inserts references to {@code typeBinding} into {@code body} at the location {@code declaredAt}.
+   * If {@code isNonNull} is true, the references will be annotated with {@code @Nonnull}.
+   *
+   * @param typeBinding the type to insert references to
+   * @param node        the node to insert references for
+   * @param body        the body to insert references into
+   * @param declaredAt  the location to insert references at
+   * @param isNonNull   whether or not the references should be annotated with {@code @Nonnull}
+   * @docgenVersion 9
+   */
   public void insertFreeRefs(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block body, int declaredAt, boolean isNonNull) {
     debug(1, node, "Insert freeRef for %s", node);
     declaredAt = firstLine(body, declaredAt);
@@ -202,6 +252,13 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns true if the given variable declaration is final.
+   *
+   * @param declaration the variable declaration to check
+   * @return true if the declaration is final, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean isFinal(@Nonnull VariableDeclaration declaration) {
     if (declaration instanceof SingleVariableDeclaration) {
       return Modifier.isFinal(((SingleVariableDeclaration) declaration).getModifiers());
@@ -219,6 +276,13 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This method is used to free the result of an expression.
+   *
+   * @param node        The expression node.
+   * @param typeBinding The type binding of the expression.
+   * @docgenVersion 9
+   */
   protected void freeExpressionResult(@Nonnull Expression node, @Nonnull ITypeBinding typeBinding) {
     if (isRefCounted(node, typeBinding)) {
       debug(node, "Ref-returning method: %s", node);
@@ -288,12 +352,29 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns true if the given line can have flow past it, false otherwise.
+   *
+   * @param body the body of the method
+   * @param line the line to check
+   * @return true if the given line can have flow past it, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean canFlowPast(@Nonnull Block body, int line) {
     final List statements = body.statements();
     if (statements.size() - 1 > line) return true;
     return !isTerminal((Statement) statements.get(line));
   }
 
+  /**
+   * This method frees the references for the given node and type binding. If the node is non-null,
+   * then the references are freed. Otherwise, they are not freed.
+   *
+   * @param node        the node to free references for
+   * @param typeBinding the type binding to free references for
+   * @param isNonNull   whether or not the node is non-null
+   * @docgenVersion 9
+   */
   protected void freeRefs(@Nonnull Expression node, @Nonnull ITypeBinding typeBinding, boolean isNonNull) {
     final LambdaExpression lambda = ASTUtil.getLambda(node);
     if (null != lambda) {
@@ -351,6 +432,15 @@ public class InsertFreeRefs extends RefASTOperator {
     debug(node, "Wrapped method call with freeRef for %s at line %s", name, lineNumber);
   }
 
+  /**
+   * Returns the type of the given node.
+   *
+   * @param node          the node to get the type of
+   * @param typeBinding   the type binding of the node
+   * @param isDeclaration whether the node is a declaration
+   * @return the type of the node, or null if the type could not be determined
+   * @docgenVersion 9
+   */
   @Nullable
   protected Type getType(@Nonnull Expression node, @Nonnull ITypeBinding typeBinding, boolean isDeclaration) {
     final Type type = getType(node, typeBinding.getQualifiedName(), isDeclaration);
@@ -363,6 +453,13 @@ public class InsertFreeRefs extends RefASTOperator {
     return type;
   }
 
+  /**
+   * Returns true if the given statement has a break; false otherwise.
+   *
+   * @param statement the statement to check
+   * @return true if the statement has a break; false otherwise
+   * @docgenVersion 9
+   */
   protected boolean hasBreak(Statement statement) {
     if (statement instanceof BreakStatement) {
       return true;
@@ -393,6 +490,15 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns true if the given node represents a lambda expression with a return value, false otherwise.
+   *
+   * @param node          the node to check
+   * @param lambdaParent  the parent node of the lambda expression
+   * @param methodBinding the binding for the lambda expression, or null if none
+   * @return true if the given node represents a lambda expression with a return value, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean hasReturnValue(LambdaExpression node, ASTNode lambdaParent, @Nullable IMethodBinding methodBinding) {
     if (null != methodBinding) {
       if (methodBinding.getReturnType().toString().equals("void")) {
@@ -409,6 +515,16 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Inserts a free reference of the given type binding into the given block at the given line.
+   *
+   * @param typeBinding the type binding of the free reference to insert
+   * @param node        the node corresponding to the free reference to insert
+   * @param block       the block into which to insert the free reference
+   * @param line        the line at which to insert the free reference
+   * @param isNonNull   whether the free reference is known to be non-null
+   * @docgenVersion 9
+   */
   protected void insertFreeRef_ComplexReturn(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block block, int line, boolean isNonNull) {
     debug(1, node, "Adding freeRef for %s at %s", node, line);
     ReturnStatement returnStatement = (ReturnStatement) block.statements().get(line);
@@ -432,6 +548,15 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * @param typeBinding
+   * @param node
+   * @param block
+   * @param line
+   * @param isNonNull
+   * @SuppressWarnings("unused")
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   protected void insertFreeRef_ComplexThrow(@Nonnull ITypeBinding typeBinding, @Nonnull SimpleName node, @Nonnull Block block, int line, boolean isNonNull) {
     ThrowStatement throwStatement = (ThrowStatement) block.statements().get(line);
@@ -455,6 +580,13 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns true if the given statement is a terminal statement.
+   *
+   * @param statement the statement to check
+   * @return true if the statement is a terminal statement
+   * @docgenVersion 9
+   */
   protected boolean isTerminal(Statement statement) {
     if (statement instanceof ReturnStatement) return true;
     else if (statement instanceof ThrowStatement) return true;
@@ -497,6 +629,13 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Sets the given name to null.
+   *
+   * @param name the name to set to null
+   * @return the assignment setting the name to null
+   * @docgenVersion 9
+   */
   @Nonnull
   private Assignment setToNull(@Nonnull SimpleName name) {
     final Assignment assignment = ast.newAssignment();
@@ -506,12 +645,23 @@ public class InsertFreeRefs extends RefASTOperator {
     return assignment;
   }
 
+  /**
+   * This class is responsible for modifying a variable declaration fragment.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertFreeRefs {
     public ModifyVariableDeclarationFragment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the visitor encounters a variable declaration fragment.
+     *
+     * @param declaration the variable declaration fragment to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull VariableDeclarationFragment declaration) {
       if (skip(declaration)) return;
@@ -558,12 +708,24 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class demonstrates how to modify a single
+   * variable declaration in Java.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifySingleVariableDeclaration extends InsertFreeRefs {
     public ModifySingleVariableDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of a SingleVariableDeclaration is reached in the Java code.
+     *
+     * @param declaration the SingleVariableDeclaration that is ending
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull SingleVariableDeclaration declaration) {
       if (skip(declaration)) return;
@@ -577,12 +739,23 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify an instance of a class.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertFreeRefs {
     public ModifyClassInstanceCreation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the visitor encounters a class instance creation expression.
+     *
+     * @param node the class instance creation expression to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull ClassInstanceCreation node) {
       debug(node, "Processing constructor: %s", node);
@@ -599,12 +772,23 @@ public class InsertFreeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a method invocation.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertFreeRefs {
     public ModifyMethodInvocation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the visitor encounters a method invocation node.
+     *
+     * @param node the method invocation node that was visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull MethodInvocation node) {
       if (skip(node)) return;

@@ -40,6 +40,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 import java.util.stream.*;
 
+/**
+ * This class is responsible for replacing types in a map.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class ReplaceTypes extends RefASTOperator {
 
@@ -50,11 +55,25 @@ public class ReplaceTypes extends RefASTOperator {
     this.replacements = classMapping(invert);
   }
 
+  /**
+   * Returns an ArrayList of Objects.
+   *
+   * @return an ArrayList of Objects
+   * @docgenVersion 9
+   */
   @Nonnull
   @SuppressWarnings("unused")
   protected ArrayList<Object> getTypes() {
     final ArrayList<Object> names = new ArrayList<>();
     compilationUnit.accept(new ASTVisitor() {
+      /**
+       * This method is called when the end of a type declaration statement is reached in the Java code.
+       * The fully qualified name of the type is added to the "names" list.
+       *
+       * @param node the type declaration statement node that is being visited
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public void endVisit(@Nonnull TypeDeclarationStatement node) {
         names.add(node.resolveBinding().getQualifiedName());
@@ -63,6 +82,13 @@ public class ReplaceTypes extends RefASTOperator {
     return names;
   }
 
+  /**
+   * Returns a mapping of class names to other class names, optionally inverting the mapping.
+   *
+   * @param invert whether to invert the mapping
+   * @return the mapping of class names
+   * @docgenVersion 9
+   */
   public static Map<String, String> classMapping(boolean invert) {
     return (invert ? classMapping().inverse() : classMapping())
         .entrySet().stream().collect(Collectors.toMap(
@@ -70,6 +96,12 @@ public class ReplaceTypes extends RefASTOperator {
             x -> x.getValue().getCanonicalName()));
   }
 
+  /**
+   * Returns a BiMap mapping Classes to their corresponding Classes.
+   *
+   * @return a BiMap mapping Classes to their corresponding Classes
+   * @docgenVersion 9
+   */
   @Nonnull
   public static BiMap<Class<?>, Class<?>> classMapping() {
     BiMap<Class<?>, Class<?>> replacements = HashBiMap.create();
@@ -125,6 +157,13 @@ public class ReplaceTypes extends RefASTOperator {
     return replacements;
   }
 
+  /**
+   * Applies the given node.
+   *
+   * @param node the node to apply
+   * @throws NullPointerException if the node is null
+   * @docgenVersion 9
+   */
   public void apply(@Nonnull Name node) {
     if (isImport(node)) {
       return;
@@ -136,6 +175,11 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
+  /**
+   * @param node the node to replace
+   * @return the replaced node, or null if the node could not be replaced
+   * @docgenVersion 9
+   */
   @Nullable
   protected Name replace(@Nonnull Name node) {
     final IBinding binding = resolveBinding(node);
@@ -156,6 +200,13 @@ public class ReplaceTypes extends RefASTOperator {
     return null;
   }
 
+  /**
+   * Returns true if the given node is an import statement.
+   *
+   * @param node the node to check
+   * @return true if the node is an import statement
+   * @docgenVersion 9
+   */
   private boolean isImport(@Nonnull ASTNode node) {
     if (node instanceof ImportDeclaration) return true;
     if (node instanceof Statement) return false;
@@ -165,11 +216,22 @@ public class ReplaceTypes extends RefASTOperator {
     return isImport(parent);
   }
 
+  /**
+   * This class is responsible for modifying a compilation unit.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyCompilationUnit extends ReplaceTypes {
     public ModifyCompilationUnit(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
+    /**
+     * This method is called when the end of a compilation unit is reached in the tree walker.
+     *
+     * @param node the compilation unit node that is being visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull CompilationUnit node) {
       final Iterator<ImportDeclaration> iterator = node.imports().iterator();
@@ -189,11 +251,22 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify a type parameter.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyTypeParameter extends ReplaceTypes {
     public ModifyTypeParameter(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
+    /**
+     * Visits a type parameter.
+     *
+     * @param node the type parameter to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull TypeParameter node) {
       if (skip(node)) return;
@@ -201,11 +274,24 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a simple name.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifySimpleName extends ReplaceTypes {
     public ModifySimpleName(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
+    /**
+     * This is the endVisit method for the SimpleName node.
+     * If the node is skipped, the method will return.
+     * If the node's parent is a QualifiedName, the method will return.
+     * Otherwise, the node will be applied.
+     *
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull SimpleName node) {
       if (skip(node)) return;
@@ -214,11 +300,23 @@ public class ReplaceTypes extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a qualified name.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyQualifiedName extends ReplaceTypes {
     public ModifyQualifiedName(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean invert) {
       super(projectInfo, compilationUnit, file, invert);
     }
 
+    /**
+     * This is the endVisit method for the QualifiedName node.
+     * If the node is skipped, the method will return.
+     * Otherwise, it will apply the node.
+     *
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull QualifiedName node) {
       if (skip(node)) return;

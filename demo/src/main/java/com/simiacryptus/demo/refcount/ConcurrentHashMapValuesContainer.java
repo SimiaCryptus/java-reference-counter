@@ -26,11 +26,23 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+/**
+ * This class provides a container for values in a ConcurrentHashMap.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
   public ConcurrentHashMapValuesContainer() {
   }
 
+  /**
+   * Tests basic operations on a {@link ConcurrentHashMap} of {@link BasicType} values.
+   *
+   * @param valuesMap the {@link ConcurrentHashMap} to test
+   * @throws NullPointerException if {@code valuesMap} is {@code null}
+   * @docgenVersion 9
+   */
   public static void testBasicOperations(
       @Nonnull ConcurrentHashMap<Integer, BasicType> valuesMap) {
     final ConcurrentHashMap<Integer, BasicType> copyMap = new ConcurrentHashMap<>();
@@ -57,18 +69,33 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests stream operations on a ConcurrentHashMap.
+   *
+   * @param values the ConcurrentHashMap to test
+   * @docgenVersion 9
+   */
   public static void testStreamOperations(@Nonnull ConcurrentHashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
+  /**
+   * @param fn A function that takes a ConcurrentHashMap as a parameter and does something with it.
+   * @docgenVersion 9
+   */
   private static void test(
       @Nonnull Consumer<ConcurrentHashMap<Integer, BasicType>> fn) {
     final ConcurrentHashMap<Integer, BasicType> hashMap = new ConcurrentHashMap<>();
     fn.accept(hashMap);
   }
 
+  /**
+   * Tests the entry objects.
+   *
+   * @docgenVersion 9
+   */
   private static void testEntries() {
     test(values -> {
       values.put(1, new BasicType());
@@ -120,6 +147,12 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
       values.put(2, new BasicType());
       final ConcurrentHashMap<Integer, BasicType> closureMap = new ConcurrentHashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
+        /**
+         * @Override
+         * public void accept(Map.Entry<Integer, BasicType> anonymousParameter);
+         *
+         *   @docgenVersion 9
+         */
         @Override
         public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
@@ -134,6 +167,11 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
           closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
         }
 
+        /**
+         * Frees this object from memory.
+         *
+         *   @docgenVersion 9
+         */
         public void _free() {
         }
       };
@@ -142,11 +180,21 @@ public class ConcurrentHashMapValuesContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();
   }
 
+  /**
+   * This method tests the entries, basic operations, and stream operations of a ConcurrentHashMap.
+   *
+   * @docgenVersion 9
+   */
   public void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testEntries();

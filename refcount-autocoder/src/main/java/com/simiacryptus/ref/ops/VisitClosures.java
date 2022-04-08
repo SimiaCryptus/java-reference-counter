@@ -33,6 +33,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * This class represents a closure for visiting symbols in an index.
+ *
+ * @author Some Author
+ * @version 1.0
+ * @docgenVersion 9
+ * @since 1.0
+ */
 public class VisitClosures extends RefASTOperator {
   @Nonnull
   protected final SymbolIndex index;
@@ -42,6 +50,15 @@ public class VisitClosures extends RefASTOperator {
     this.index = getSymbolIndex(compilationUnit);
   }
 
+  /**
+   * Returns a collection of SymbolIndex.BindingID objects that represent the closures of the given node.
+   *
+   * @param visitClosures a RefASTOperator that is used to visit the closures of the given node
+   * @param index         the SymbolIndex to use to look up information about the closures
+   * @param node          the ASTNode for which to find the closures
+   * @return a Collection of SymbolIndex.BindingID objects that represent the closures of the given node
+   * @docgenVersion 9
+   */
   public static Collection<SymbolIndex.BindingID> getClosures(@Nonnull RefASTOperator visitClosures, @Nonnull SymbolIndex index, @Nonnull ASTNode node) {
     return visitClosures.getSymbolIndex(node).references.entrySet().stream().flatMap(e -> {
       final SymbolIndex.BindingID bindingID = e.getKey();
@@ -67,6 +84,13 @@ public class VisitClosures extends RefASTOperator {
     }).collect(Collectors.toList());
   }
 
+  /**
+   * Returns a collection of closures for the given node.
+   *
+   * @param node the node to get closures for
+   * @return a collection of closures for the given node
+   * @docgenVersion 9
+   */
   protected Collection<SymbolIndex.BindingID> getClosures(@Nonnull ASTNode node) {
     return getClosures(this, index, node);
   }

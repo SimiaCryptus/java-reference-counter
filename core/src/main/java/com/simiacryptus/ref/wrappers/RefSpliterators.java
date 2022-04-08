@@ -29,8 +29,25 @@ import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Spliterators;
 
+/**
+ * This class provides static methods for creating and working
+ * with Spliterators.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RefSpliterators {
+  /**
+   * Returns a new {@code RefSpliterator} that wraps the given {@code Iterator}.
+   *
+   * <p>The {@code RefSpliterator} is not bound and has no size, but it does have the given characteristics.
+   *
+   * @param <T>             the type of elements returned by the {@code Iterator}
+   * @param iterator        the {@code Iterator} to wrap
+   * @param characteristics the characteristics of the returned {@code RefSpliterator}
+   * @return a new {@code RefSpliterator} that wraps the given {@code Iterator}
+   * @docgenVersion 9
+   */
   @Nonnull
   public static <T> RefSpliterator<T> spliterator(@RefAware Iterator<T> iterator, int size,
                                                   int characteristics) {
@@ -41,6 +58,15 @@ public class RefSpliterators {
           .track((ReferenceCounting) iterator);
     } else if (iterator instanceof RefIteratorBase) {
       return new RefSpliterator<T>(RefUtil.wrapInterface(Spliterators.spliterator(iterator, size, characteristics))) {
+        /**
+         * @Nullable
+         * @Override
+         * protected T getRef(@RefAware T t) {
+         *     return t;
+         * }
+         *
+         *   @docgenVersion 9
+         */
         @Nullable
         @Override
         protected T getRef(@RefAware T t) {
@@ -57,6 +83,16 @@ public class RefSpliterators {
     }
   }
 
+  /**
+   * Creates a {@code RefSpliterator} from an {@code Iterator} with
+   * unknown size, and returns it.
+   *
+   * @param <T>             the type of elements returned by the iterator
+   * @param iterator        the iterator to create a {@code RefSpliterator} from
+   * @param characteristics the characteristics of the created {@code RefSpliterator}
+   * @return the created {@code RefSpliterator}
+   * @docgenVersion 9
+   */
   @Nonnull
   public static <T> RefSpliterator<T> spliteratorUnknownSize(@RefAware Iterator<T> iterator,
                                                              int characteristics) {
@@ -68,6 +104,15 @@ public class RefSpliterators {
     } else if (iterator instanceof RefIteratorBase) {
       return new RefSpliterator<T>(
           RefUtil.wrapInterface(Spliterators.spliteratorUnknownSize(iterator, characteristics))) {
+        /**
+         * @Nullable
+         * @Override
+         * protected T getRef(@RefAware T t) {
+         *     return t;
+         * }
+         *
+         *   @docgenVersion 9
+         */
         @Nullable
         @Override
         protected T getRef(@RefAware T t) {

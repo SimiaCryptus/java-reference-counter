@@ -27,15 +27,32 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * This is the Temp class.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "temp")
 public class Temp extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The Coder class is a class that contains code.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
 
@@ -43,6 +60,15 @@ public class Temp extends RefAutoCoderMojo {
       super(projectInfo);
     }
 
+    /**
+     * Rewrites the code to remove type annotations.
+     *
+     * @param projectInfo     the project information
+     * @param compilationUnit the compilation unit
+     * @param file            the file
+     * @param type            the type to remove
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       rewrite((projectInfo, compilationUnit, file) -> new RemoveTypeAnnotations(projectInfo, compilationUnit, file,

@@ -26,6 +26,13 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * A class that represents a concurrent hash map.
+ *
+ * @param <K> the type of keys maintained by this map
+ * @param <V> the type of mapped values
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
@@ -41,6 +48,12 @@ public class RefConcurrentHashMap<K, V> extends RefAbstractMap<K, V> {
     putAll(values);
   }
 
+  /**
+   * Returns the inner map.
+   *
+   * @return the inner map
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {

@@ -33,6 +33,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * The InstrumentClosures class contains methods for working with instrument closures.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class InstrumentClosures extends VisitClosures {
 
@@ -40,6 +45,13 @@ public class InstrumentClosures extends VisitClosures {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Adds refcounting to the given anonymous class declaration node and closures.
+   *
+   * @param node     the anonymous class declaration node
+   * @param closures the closures
+   * @docgenVersion 9
+   */
   public void addRefcounting(@Nonnull AnonymousClassDeclaration node, @Nonnull Collection<SymbolIndex.BindingID> closures) {
     final Optional<MethodDeclaration> freeMethodOpt = ASTUtil.findMethod(node, "_free");
     if (freeMethodOpt.isPresent()) {
@@ -78,6 +90,13 @@ public class InstrumentClosures extends VisitClosures {
     node.bodyDeclarations().add(initializer);
   }
 
+  /**
+   * Wraps the given interface node with the given closures.
+   *
+   * @param node     the interface node to wrap
+   * @param closures the closures to wrap the interface node with
+   * @docgenVersion 9
+   */
   public void wrapInterface(@Nonnull Expression node, @Nonnull Collection<SymbolIndex.BindingID> closures) {
     final List<ASTNode> refClosures = closures.stream().filter(bindingID -> {
       final ASTNode definition = index.definitions.get(bindingID);
@@ -140,12 +159,23 @@ public class InstrumentClosures extends VisitClosures {
     }
   }
 
+  /**
+   * This class demonstrates how to modify an anonymous class declaration.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InstrumentClosures {
     public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of an anonymous class declaration is reached.
+     *
+     * @param node the node to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull AnonymousClassDeclaration node) {
       final Collection<SymbolIndex.BindingID> closures = getClosures(node);
@@ -175,12 +205,23 @@ public class InstrumentClosures extends VisitClosures {
     }
   }
 
+  /**
+   * This class demonstrates how to modify a lambda expression.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyLambdaExpression extends InstrumentClosures {
     public ModifyLambdaExpression(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of a lambda expression is visited.
+     *
+     * @param node the lambda expression that is ending
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull LambdaExpression node) {
       final IMethodBinding methodBinding = resolveMethodBinding(node);

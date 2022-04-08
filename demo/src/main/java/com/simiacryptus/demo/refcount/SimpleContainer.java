@@ -24,6 +24,12 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+/**
+ * A simple container class that can hold a value of any BasicType.
+ * The value can be null.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class SimpleContainer extends ReferenceCountingBase {
   @Nullable
@@ -37,17 +43,33 @@ public class SimpleContainer extends ReferenceCountingBase {
     this.value = value;
   }
 
+  /**
+   * Frees this object from memory.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     value = null;
     super._free();
   }
 
+  /**
+   * Tests that the value is not null and then increments the value.
+   *
+   * @docgenVersion 9
+   */
   public void test() {
     assert this.value != null;
     this.value.setValue(this.value.getValue() + 1);
   }
 
+  /**
+   * Returns a string representation of this SimpleContainer.
+   *
+   * @return a string representation of this SimpleContainer.
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public String toString() {

@@ -29,6 +29,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Class RefHashSet
+ *
+ * @param inner - a map of type T
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefHashSet<T> extends RefAbstractSet<T> {
@@ -56,12 +62,24 @@ public class RefHashSet<T> extends RefAbstractSet<T> {
     addAll(values);
   }
 
+  /**
+   * Returns the inner map.
+   *
+   * @return the inner map
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected Map<T, T> getInnerMap() {
     return inner;
   }
 
+  /**
+   * Adds a reference to this object.
+   *
+   * @return a reference to this object
+   * @docgenVersion 9
+   */
   @Nonnull
   public @Override
   RefHashSet<T> addRef() {

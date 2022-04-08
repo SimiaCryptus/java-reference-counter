@@ -28,6 +28,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ListIterator;
 
+/**
+ * This class is an iterator for a list of references.
+ *
+ * @param <T> the type of reference in the list
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterator<T> {
 
@@ -37,28 +43,55 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
     this.inner = inner;
   }
 
+  /**
+   * Returns the inner list iterator.
+   *
+   * @return the inner list iterator
+   * @docgenVersion 9
+   */
   public ListIterator<T> getInner() {
     return inner;
   }
 
+  /**
+   * Adds the specified element to this set if it is not already present.
+   *
+   * @param t element to be added to this set
+   * @return {@code true} if this set did not already contain the specified element
+   * @throws NullPointerException if the specified element is null
+   * @docgenVersion 9
+   */
   @Override
   public void add(@RefAware T t) {
     assert getInner() != null;
     getInner().add(t);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @docgenVersion 9
+   */
   @Override
   public boolean hasPrevious() {
     assert getInner() != null;
     return getInner().hasPrevious();
   }
 
+  /**
+   * @return the next index
+   * @docgenVersion 9
+   */
   @Override
   public int nextIndex() {
     assert getInner() != null;
     return getInner().nextIndex();
   }
 
+  /**
+   * @return the previous element in the list, or null if the list is empty
+   * @docgenVersion 9
+   */
   @Nullable
   @Override
   public T previous() {
@@ -67,12 +100,20 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
     return RefUtil.addRef(current);
   }
 
+  /**
+   * @return the index of the previous element, or -1 if there is no such element
+   * @docgenVersion 9
+   */
   @Override
   public int previousIndex() {
     assert getInner() != null;
     return getInner().previousIndex();
   }
 
+  /**
+   * @param t
+   * @docgenVersion 9
+   */
   @Override
   public void set(@RefAware T t) {
     assert getInner() != null;
@@ -81,6 +122,11 @@ public class RefListIterator<T> extends RefIteratorBase<T> implements ListIterat
     current = null;
   }
 
+  /**
+   * @param obj the object to track
+   * @return this RefListIterator
+   * @docgenVersion 9
+   */
   public @Nonnull
   RefListIterator<T> track(ReferenceCounting obj) {
     super.track(obj);

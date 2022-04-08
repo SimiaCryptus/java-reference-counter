@@ -27,8 +27,18 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import java.util.stream.*;
 
+/**
+ * This class represents a deque container.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class DeququeContainer extends ReferenceCountingBase {
+  /**
+   * This is a test method.
+   *
+   * @docgenVersion 9
+   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations(new ConcurrentLinkedDeque<>());
@@ -39,6 +49,12 @@ public class DeququeContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the given function with a ConcurrentLinkedDeque of BasicTypes.
+   *
+   * @param fn the function to test
+   * @docgenVersion 9
+   */
   private static void testOperations(
       @Nonnull Consumer<ConcurrentLinkedDeque<BasicType>> fn) {
     ConcurrentLinkedDeque<BasicType> values = new ConcurrentLinkedDeque<>();
@@ -48,6 +64,13 @@ public class DeququeContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
+  /**
+   * Tests the operations of an array.
+   *
+   * @param values the array to test
+   * @throws RuntimeException if the array is empty or the size of the array is not equal to the length of the array
+   * @docgenVersion 9
+   */
   private static void testArrayOperations(@Nonnull ConcurrentLinkedDeque<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
@@ -57,6 +80,13 @@ public class DeququeContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the element operations of the concurrent linked deque.
+   *
+   * @param values the concurrent linked deque to test
+   * @throws NullPointerException if values is null
+   * @docgenVersion 9
+   */
   private static void testElementOperations(@Nonnull ConcurrentLinkedDeque<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
@@ -84,6 +114,13 @@ public class DeququeContainer extends ReferenceCountingBase {
     values.clear();
   }
 
+  /**
+   * Tests the collection operations on the given deque.
+   *
+   * @param values the deque to test
+   * @throws NullPointerException if values is null
+   * @docgenVersion 9
+   */
   private static void testCollectionOperations(@Nonnull ConcurrentLinkedDeque<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
@@ -102,6 +139,11 @@ public class DeququeContainer extends ReferenceCountingBase {
     values.clear();
   }
 
+  /**
+   * Tests the Deque operations.
+   *
+   * @docgenVersion 9
+   */
   private static void testDequeOperations() {
     testOperations(values -> {
       final int initSize = values.size();
@@ -178,6 +220,11 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the iterator operations of the LinkedList class.
+   *
+   * @docgenVersion 9
+   */
   private static void testIteratorOperations() {
     testOperations(values -> {
       final Iterator<BasicType> iterator48093 = values.iterator();
@@ -195,6 +242,11 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the stream operations.
+   *
+   * @docgenVersion 9
+   */
   private static void testStreamOperations() {
     testOperations(values_conditionalBlock -> {
       assert values_conditionalBlock.size() == values_conditionalBlock.stream().toArray(i -> new BasicType[i]).length;
@@ -366,6 +418,11 @@ public class DeququeContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

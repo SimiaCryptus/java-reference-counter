@@ -29,6 +29,11 @@ import org.eclipse.jdt.core.dom.*;
 import javax.annotation.Nonnull;
 import java.io.File;
 
+/**
+ * This class is responsible for fixing custom implementations.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class FixCustomImplementations extends RefASTOperator {
 
@@ -36,6 +41,12 @@ public class FixCustomImplementations extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of an anonymous class declaration is reached.
+   *
+   * @param node the node to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
@@ -46,6 +57,16 @@ public class FixCustomImplementations extends RefASTOperator {
     if (replace(node, typeBinding, RefIterator.class, RefIteratorBase.class)) return;
   }
 
+  /**
+   * Replaces an anonymous class declaration with the specified type binding, match, and replace.
+   *
+   * @param node        the anonymous class declaration to replace
+   * @param typeBinding the type binding to use
+   * @param match       the class to match
+   * @param replace     the class to replace
+   * @return true if the replacement was successful, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean replace(@Nonnull AnonymousClassDeclaration node, @Nonnull ITypeBinding typeBinding, @Nonnull Class<?> match, @Nonnull Class<?> replace) {
     if (typeBinding.getSuperclass().getBinaryName().equals(match.getName())) {
       debug(node, "RefIterator anonymous class");

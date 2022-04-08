@@ -26,12 +26,23 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import javax.annotation.Nonnull;
 import java.io.File;
 
+/**
+ * This class represents a log of nodes.
+ *
+ * @docgenVersion 9
+ */
 public class LogNodes extends ASTOperator {
 
   public LogNodes(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * @Override public void preVisit(@Nonnull ASTNode node) {
+   * debug(node, "Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));
+   * }
+   * @docgenVersion 9
+   */
   @Override
   public void preVisit(@Nonnull ASTNode node) {
     debug(node, "Previsit: %s at (%s:%s)", node.getClass(), file.getName(), compilationUnit.getLineNumber(node.getStartPosition()));

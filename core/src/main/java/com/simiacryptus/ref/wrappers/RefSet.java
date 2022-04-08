@@ -25,13 +25,34 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
+/**
+ * This is the RefSet interface.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefSet<T> extends ReferenceCounting, Set<T>, RefCollection<T> {
 
+  /**
+   * Adds a reference to the RefSet.
+   *
+   * @return the RefSet with the added reference
+   * @throws NullPointerException if the reference is null
+   * @docgenVersion 9
+   */
   @Nonnull
   RefSet<T> addRef();
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>The default implementation creates a {@link RefSpliterator}
+   * that covers the elements of this collection.
+   *
+   * @return a {@code RefSpliterator} over the elements in this collection
+   * @docgenVersion 9
+   */
   @Override
   default RefSpliterator<T> spliterator() {
     return RefCollection.super.spliterator();

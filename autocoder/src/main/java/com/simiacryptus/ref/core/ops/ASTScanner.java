@@ -25,11 +25,22 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import javax.annotation.Nonnull;
 import java.io.File;
 
+/**
+ * The ASTScanner class is used to scan an Abstract Syntax Tree (AST).
+ *
+ * @docgenVersion 9
+ */
 public class ASTScanner extends ASTEditor {
   public ASTScanner(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file, boolean record) {
     super(projectInfo, compilationUnit, file, record);
   }
 
+  /**
+   * @Override public boolean write(boolean format) {
+   * return false;
+   * }
+   * @docgenVersion 9
+   */
   @Override
   public boolean write(boolean format) {
     return false;

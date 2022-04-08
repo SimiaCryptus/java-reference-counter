@@ -35,6 +35,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * The VerifyFields class is used to verify that all fields in a class are valid.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class VerifyFields extends VerifyClassMembers {
 
@@ -42,6 +47,14 @@ public class VerifyFields extends VerifyClassMembers {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Returns a list of fields in the given list of body declarations.
+   *
+   * @param bodyDeclarations the list of body declarations
+   * @return a list of fields
+   * @throws NullPointerException if the given list is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public List<SimpleName> fields(@Nonnull List<ASTNode> bodyDeclarations) {
     return bodyDeclarations.stream().filter(x -> x instanceof FieldDeclaration).map(x -> (FieldDeclaration) x)
@@ -60,6 +73,12 @@ public class VerifyFields extends VerifyClassMembers {
         .collect(Collectors.toList());
   }
 
+  /**
+   * This method is called when the end of a type declaration is reached.
+   *
+   * @param node the type declaration that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull TypeDeclaration node) {
     final List<SimpleName> fields = fields(node.bodyDeclarations());
@@ -82,6 +101,12 @@ public class VerifyFields extends VerifyClassMembers {
     }
   }
 
+  /**
+   * This method is called when the end of an anonymous class declaration is reached.
+   *
+   * @param node the node to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull AnonymousClassDeclaration node) {
     final ITypeBinding typeBinding = resolveBinding(node);
@@ -122,6 +147,13 @@ public class VerifyFields extends VerifyClassMembers {
     }
   }
 
+  /**
+   * Asserts that the given node has a free declaration in the given list of body declarations.
+   *
+   * @param node             the node to check
+   * @param bodyDeclarations the list of body declarations to check
+   * @docgenVersion 9
+   */
   protected void assertHasFree(ASTNode node, @Nonnull List<ASTNode> bodyDeclarations) {
     Optional<String> freeMethod = bodyDeclarations.stream()
         .filter(x -> x instanceof MethodDeclaration)
@@ -134,6 +166,13 @@ public class VerifyFields extends VerifyClassMembers {
     }
   }
 
+  /**
+   * Verifies that all class declarations in the given list of body declarations are valid.
+   *
+   * @param bodyDeclarations the list of body declarations to check
+   * @throws IllegalArgumentException if any of the declarations is invalid
+   * @docgenVersion 9
+   */
   protected void verifyClassDeclarations(@Nonnull List<ASTNode> bodyDeclarations) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     List<SimpleName> fields = fields(bodyDeclarations);

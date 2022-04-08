@@ -23,9 +23,20 @@ import com.simiacryptus.ref.core.AutoCoderMojo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import org.apache.maven.plugin.MojoExecutionException;
 
+/**
+ * This is the RefAutoCoderMojo class.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public abstract class RefAutoCoderMojo extends AutoCoderMojo {
 
+  /**
+   * Executes the mojo.
+   *
+   * @throws MojoExecutionException if an error occurs
+   * @docgenVersion 9
+   */
   public void execute() throws MojoExecutionException {
     if (!findDependency("com.simiacryptus", "refcount-core").isPresent()) {
       getLog().warn("Dependency not found: refcount-core");

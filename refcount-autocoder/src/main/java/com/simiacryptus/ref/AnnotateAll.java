@@ -27,15 +27,32 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * This class is responsible for annotating all classes.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "annotate")
 public class AnnotateAll extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The Coder class is a class that contains code.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
 
@@ -43,6 +60,13 @@ public class AnnotateAll extends RefAutoCoderMojo {
       super(projectInfo);
     }
 
+    /**
+     * Rewrites the code.
+     *
+     * @param isParallel true if the code should be run in parallel
+     * @param rewriteAll true if all code should be rewritten
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       rewrite(AnnotateAllMethodParams::new, isParallel(), true);

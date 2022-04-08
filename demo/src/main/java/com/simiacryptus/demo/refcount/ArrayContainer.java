@@ -26,6 +26,12 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
+/**
+ * This class contains an array of BasicType objects.
+ * The array may be null.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class ArrayContainer extends ReferenceCountingBase {
   @Nullable
@@ -35,12 +41,22 @@ public class ArrayContainer extends ReferenceCountingBase {
     this.values = values;
   }
 
+  /**
+   * Frees this object from memory.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     values = null;
     super._free();
   }
 
+  /**
+   * Tests that the values are not null and increments each value by 1.
+   *
+   * @docgenVersion 9
+   */
   public void test() {
     assert this.values != null;
     Arrays.stream(this.values).forEach(x -> {
@@ -48,12 +64,24 @@ public class ArrayContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Returns a string representation of this ArrayContainer.
+   *
+   * @return a string representation of this ArrayContainer
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public String toString() {
     return "ArrayContainer{" + "values=" + Arrays.toString(values) + '}';
   }
 
+  /**
+   * Use closures to add the value of the right BasicType to each value in the values array.
+   *
+   * @param right the BasicType whose value will be added to each value in the values array
+   * @docgenVersion 9
+   */
   public void useClosures1(@Nonnull BasicType right) {
     assert this.values != null;
     Arrays.stream(this.values)
@@ -62,27 +90,62 @@ public class ArrayContainer extends ReferenceCountingBase {
         });
   }
 
+  /**
+   * @param right the right BasicType to use
+   * @throws NullPointerException if right is null
+   * @docgenVersion 9
+   */
   public void useClosures2(@Nonnull BasicType right) {
     assert this.values != null;
     Arrays.stream(this.values).forEach(new Consumer<BasicType>() {
+      /**
+       * @Override
+       * public void accept(@Nonnull BasicType x) {
+       *     x.setValue(x.getValue() + right.getValue());
+       * }
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public void accept(@Nonnull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
       }
 
+      /**
+       * Frees this object from memory.
+       *
+       *   @docgenVersion 9
+       */
       public void _free() {
       }
     });
   }
 
+  /**
+   * @param right the right BasicType to use
+   * @docgenVersion 9
+   */
   public void useClosures3(@Nonnull BasicType right) {
     assert this.values != null;
     Arrays.stream(this.values).forEach(new RefAwareConsumer<BasicType>() {
+      /**
+       * @Override
+       * public void accept(@Nonnull BasicType x) {
+       *     x.setValue(x.getValue() + right.getValue());
+       * }
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public void accept(@Nonnull BasicType x) {
         x.setValue(x.getValue() + right.getValue());
       }
 
+      /**
+       * This method frees the object.
+       *
+       *   @docgenVersion 9
+       */
       public @Override
       void _free() {
         super._free();

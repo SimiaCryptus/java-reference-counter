@@ -29,6 +29,15 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public enum PersistanceMode {
   SOFT {
+    /**
+     * @Override
+     * public <T> Supplier<T> wrap(@RefAware T obj) {
+     *     SoftReference<T> softReference = new SoftReference<>(obj);
+     *     return () -> softReference.get();
+     * }
+     *
+     *   @docgenVersion 9
+     */
     @Override
     public <T> Supplier<T> wrap(@RefAware T obj) {
       SoftReference<T> softReference = new SoftReference<>(obj);
@@ -36,6 +45,15 @@ public enum PersistanceMode {
     }
   },
   WEAK {
+    /**
+     * @Override
+     * public <T> Supplier<T> wrap(@RefAware T obj) {
+     *     WeakReference<T> weakReference = new WeakReference<>(obj);
+     *     return () -> weakReference.get();
+     * }
+     *
+     *   @docgenVersion 9
+     */
     @Override
     public <T> Supplier<T> wrap(@RefAware T obj) {
       WeakReference<T> weakReference = new WeakReference<>(obj);
@@ -43,6 +61,12 @@ public enum PersistanceMode {
     }
   },
   STRONG {
+    /**
+     * @param obj the object to be wrapped
+     * @return a supplier that wraps the given object
+     *
+     *   @docgenVersion 9
+     */
     @Nonnull
     @Override
     public <T> Supplier<T> wrap(@Nonnull @RefAware T obj) {
@@ -50,6 +74,15 @@ public enum PersistanceMode {
     }
   },
   NULL {
+    /**
+     * @Nonnull
+     * @Override
+     * public <T> Supplier<T> wrap(@RefAware T obj) {
+     *     return () -> null;
+     * }
+     *
+     *   @docgenVersion 9
+     */
     @Nonnull
     @Override
     public <T> Supplier<T> wrap(@RefAware T obj) {
@@ -57,6 +90,10 @@ public enum PersistanceMode {
     }
   };
 
+  /**
+   * @Nullable public abstract <T> Supplier<T> wrap(@RefAware T obj);
+   * @docgenVersion 9
+   */
   @Nullable
   public abstract <T> Supplier<T> wrap(@RefAware T obj);
 }

@@ -25,12 +25,35 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.function.Function;
 
+/**
+ * This is the RefFunction interface.
+ *
+ * @docgenVersion 9
+ */
 public interface RefFunction<F, T> extends Function<F, T> {
+  /**
+   * Applies this function to the given argument.
+   *
+   * @param f the function argument
+   * @return the function result
+   * @throws NullPointerException if f is null
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   @RefAware
   T apply(@RefAware F f);
 
+  /**
+   * Returns a composed function that first applies this function to its input, and then applies the {@code after} function to the result.
+   * If evaluation of either function throws an exception, it is relayed to the caller of the composed function.
+   *
+   * @param <V>   the type of output of the {@code after} function, and of the composed function
+   * @param after the function to apply after this function is applied
+   * @return a composed function that first applies this function and then applies the {@code after} function
+   * @throws NullPointerException if {@code after} is null
+   * @docgenVersion 9
+   */
   default <V> RefFunction<F, V> andThen(RefFunction<? super T, ? extends V> after) {
     Objects.requireNonNull(after);
     return (F t) -> after.apply(apply(t));

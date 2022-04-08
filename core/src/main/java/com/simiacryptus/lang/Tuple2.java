@@ -24,6 +24,13 @@ import com.simiacryptus.ref.lang.RefIgnore;
 
 import java.io.Serializable;
 
+/**
+ * A tuple of two elements.
+ *
+ * @param <A> the type of the first element
+ * @param <B> the type of the second element
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class Tuple2<A, B> implements Serializable {
@@ -39,10 +46,22 @@ public class Tuple2<A, B> implements Serializable {
     _2 = b;
   }
 
+  /**
+   * Returns the first element in the list.
+   *
+   * @return the first element in the list
+   * @docgenVersion 9
+   */
   public A getFirst() {
     return _1;
   }
 
+  /**
+   * Returns the second element of the tuple.
+   *
+   * @return the second element of the tuple
+   * @docgenVersion 9
+   */
   public B getSecond() {
     return _2;
   }

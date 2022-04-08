@@ -25,6 +25,13 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+/**
+ * Class WrapperType
+ *
+ * @param <T> the type of the wrapped object
+ * @author Your Name
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class WrapperType<T extends ReferenceCounting> extends ReferenceCountingBase {
   @Nullable
@@ -34,17 +41,33 @@ public class WrapperType<T extends ReferenceCounting> extends ReferenceCountingB
     this.setInner(inner);
   }
 
+  /**
+   * @return the inner value, or null if it does not exist
+   * @docgenVersion 9
+   */
   @Nullable
   public T getInner() {
     return inner;
   }
 
+  /**
+   * Sets the inner type of this WrapperType.
+   *
+   * @param innerWrapperType the inner type to set
+   * @return this WrapperType instance
+   * @docgenVersion 9
+   */
   @Nonnull
   public WrapperType<T> setInner(T innerWrapperType) {
     this.inner = innerWrapperType;
     return this;
   }
 
+  /**
+   * Frees the inner object.
+   *
+   * @docgenVersion 9
+   */
   public void _free() {
     inner = null;
   }

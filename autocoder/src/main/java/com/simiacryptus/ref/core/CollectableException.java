@@ -24,6 +24,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Stream;
 
+/**
+ * CollectableException class
+ *
+ * @param messages the messages to be collected
+ * @docgenVersion 9
+ */
 public class CollectableException extends RuntimeException {
   @Nonnull
   private final String[] messages;
@@ -33,11 +39,23 @@ public class CollectableException extends RuntimeException {
     this.messages = str;
   }
 
+  /**
+   * Returns an array of messages.
+   *
+   * @return an array of messages
+   * @docgenVersion 9
+   */
   @Nonnull
   public String[] getMessages() {
     return messages;
   }
 
+  /**
+   * @param others the Collection of CollectableExceptions to combine
+   * @return a new CollectableException that is the combination of the given Collection of CollectableExceptions
+   * @throws NullPointerException if others is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public static CollectableException combine(@Nonnull Collection<CollectableException> others) {
     return new CollectableException(others.stream()
@@ -45,12 +63,18 @@ public class CollectableException extends RuntimeException {
         .toArray(i -> new String[i]));
   }
 
+  /**
+   * @Nonnull public CollectableException combine(CollectableException... others) {
+   * return new CollectableException(Stream.concat(Stream.of(this), Stream.of(others)).flatMap(x -> Arrays.stream(x.messages)).toArray(i -> new String[i]));
+   * }
+   * @docgenVersion 9
+   */
   @Nonnull
   public CollectableException combine(CollectableException... others) {
     return new CollectableException(Stream.concat(
-        Stream.of(this),
-        Stream.of(others)
-    ).flatMap(x -> Arrays.stream(x.messages))
+            Stream.of(this),
+            Stream.of(others)
+        ).flatMap(x -> Arrays.stream(x.messages))
         .toArray(i -> new String[i]));
   }
 }

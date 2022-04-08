@@ -25,15 +25,34 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
+/**
+ * This class represents a lazy value.
+ *
+ * @param <T> the type of the lazy value
+ * @docgenVersion 9
+ */
 @RefIgnore
 public abstract class LazyVal<T> implements Supplier<T> {
   @Nullable
   private volatile T val = null;
 
+  /**
+   * @param fn  A function that supplies a value of type {@code T}
+   * @param <T> The type of the value supplied by {@code fn}
+   * @return A {@link LazyVal} that wraps the given function {@code fn}
+   * @docgenVersion 9
+   */
   @Nonnull
   public static <T> LazyVal<T> wrap(
       @Nonnull Supplier<T> fn) {
     return new LazyVal<T>() {
+      /**
+       * Builds the object.
+       *
+       * @return the built object
+       *
+       *   @docgenVersion 9
+       */
       @Nonnull
       @Override
       protected T build() {
@@ -42,6 +61,12 @@ public abstract class LazyVal<T> implements Supplier<T> {
     };
   }
 
+  /**
+   * Returns the value, if it exists. If it does not exist, it will create it.
+   *
+   * @return the value
+   * @docgenVersion 9
+   */
   @Nullable
   public T get() {
     if (null == val) {
@@ -54,6 +79,11 @@ public abstract class LazyVal<T> implements Supplier<T> {
     return val;
   }
 
+  /**
+   * @return the built object
+   * @throws NullPointerException if the built object is null
+   * @docgenVersion 9
+   */
   @Nonnull
   protected abstract T build();
 }

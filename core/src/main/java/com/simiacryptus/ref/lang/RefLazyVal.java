@@ -23,15 +23,34 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
+/**
+ * This class represents a lazy value that is reference-based.
+ *
+ * @param <T> the type of the lazy value
+ * @docgenVersion 9
+ */
 @RefIgnore
 public abstract class RefLazyVal<T> extends ReferenceCountingBase implements Supplier<T> {
   @Nullable
   private volatile T val = null;
 
+  /**
+   * @param fn  A {@link Supplier} of the value to be wrapped.
+   * @param <T> The type of the value to be wrapped.
+   * @return A {@link RefLazyVal} that wraps the given {@link Supplier}.
+   * @docgenVersion 9
+   */
   @Nonnull
   public static <T> RefLazyVal<T> wrap(
       @Nonnull @RefAware Supplier<T> fn) {
     return new RefLazyVal<T>() {
+      /**
+       * Builds the object.
+       *
+       * @return the built object
+       *
+       *   @docgenVersion 9
+       */
       @Nonnull
       @Override
       protected T build() {
@@ -40,6 +59,10 @@ public abstract class RefLazyVal<T> extends ReferenceCountingBase implements Sup
     };
   }
 
+  /**
+   * @return the element at the top of the stack, or null if the stack is empty
+   * @docgenVersion 9
+   */
   @Nullable
   public T get() {
     if (null == val) {
@@ -54,6 +77,12 @@ public abstract class RefLazyVal<T> extends ReferenceCountingBase implements Sup
     return RefUtil.addRef(val);
   }
 
+  /**
+   * Frees resources used by this object.
+   *
+   * @docgenVersion 9
+   * @see Ref#freeRef()
+   */
   @Override
   protected void _free() {
     if (null != val) {
@@ -63,6 +92,11 @@ public abstract class RefLazyVal<T> extends ReferenceCountingBase implements Sup
     super._free();
   }
 
+  /**
+   * @return the built object
+   * @throws NullPointerException if the built object is null
+   * @docgenVersion 9
+   */
   @Nonnull
   protected abstract T build();
 }

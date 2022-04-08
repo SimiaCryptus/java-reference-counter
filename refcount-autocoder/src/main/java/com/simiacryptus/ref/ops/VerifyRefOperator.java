@@ -35,11 +35,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * The VerifyRefOperator class is used to verify that a reference is valid.
+ *
+ * @docgenVersion 9
+ */
 public class VerifyRefOperator extends RefASTOperator {
   public VerifyRefOperator(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Returns true if the given node is a writing node.
+   *
+   * @param node the node to check
+   * @return true if the node is a writing node
+   * @docgenVersion 9
+   */
   public static boolean isWriting(@Nonnull ASTNode node) {
     ASTNode parent = node.getParent();
     if (parent instanceof Assignment) {
@@ -53,6 +65,17 @@ public class VerifyRefOperator extends RefASTOperator {
     }
   }
 
+  /**
+   * Processes a statement, given a name and a reference state.
+   *
+   * @param statement           The statement to be processed.
+   * @param name                The name associated with the statement.
+   * @param state               The current reference state.
+   * @param finalizers          A list of finalizers for the statement.
+   * @param requiredTermination The required termination state for the statement.
+   * @return The new reference state after processing the statement.
+   * @docgenVersion 9
+   */
   protected ReferenceState processStatement(Statement statement, @Nonnull SimpleName name, @Nonnull final ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination) {
     if (statement instanceof IfStatement) {
       final IfStatement ifStatement = (IfStatement) statement;
@@ -87,7 +110,8 @@ public class VerifyRefOperator extends RefASTOperator {
       } else if (ifNull) {
         return elseResult;
       } else {
-        if (thenResult.isRefConsumed() != elseResult.isRefConsumed()) fatal(statement, "Mismatch ref consumed for %s", name);
+        if (thenResult.isRefConsumed() != elseResult.isRefConsumed())
+          fatal(statement, "Mismatch ref consumed for %s", name);
         return thenResult;
       }
     } else if (statement instanceof SwitchStatement) {
@@ -231,6 +255,17 @@ public class VerifyRefOperator extends RefASTOperator {
     return processNode(statement, name, state, finalizers, requiredTermination);
   }
 
+  /**
+   * Processes the given node.
+   *
+   * @param node                the node to process
+   * @param name                the name of the node
+   * @param state               the state of the node
+   * @param finalizers          the finalizers for the node
+   * @param requiredTermination the required termination for the node
+   * @return the reference state for the node
+   * @docgenVersion 9
+   */
   protected ReferenceState processNode(@Nullable ASTNode node, @Nonnull SimpleName name, ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination) {
     if (null == node) return state;
     List<Name> mentions = getMentions(node, name).stream()
@@ -251,9 +286,10 @@ public class VerifyRefOperator extends RefASTOperator {
         .filter(throwStatement -> !ASTUtil.withinSubMethod(node, throwStatement))
         .collect(Collectors.toList());
     if (returnStatements.size() > 0 || throwStatements.size() > 0) {
-      if (returnStatements.size() + throwStatements.size() > 1) fatal(node, "Multiple exit points: %s", RefUtil.get(Stream.concat(
-          returnStatements.stream(), throwStatements.stream()
-      ).map(x -> getLocation(x)).reduce((a, b) -> a + ", " + b)));
+      if (returnStatements.size() + throwStatements.size() > 1)
+        fatal(node, "Multiple exit points: %s", RefUtil.get(Stream.concat(
+            returnStatements.stream(), throwStatements.stream()
+        ).map(x -> getLocation(x)).reduce((a, b) -> a + ", " + b)));
       state = state.setTerminated(returnStatements.isEmpty() ? throwStatements.get(0) : returnStatements.get(0));
       state = processStatements(name, state, requiredTermination, finalizers.toArray(new Statement[]{}));
       if (!requiredTermination.validate(state)) {
@@ -263,6 +299,16 @@ public class VerifyRefOperator extends RefASTOperator {
     return state;
   }
 
+  /**
+   * Processes the given statements.
+   *
+   * @param name                the name
+   * @param state               the state
+   * @param requiredTermination the required termination
+   * @param statements          the statements
+   * @return the reference state
+   * @docgenVersion 9
+   */
   protected ReferenceState processStatements(@Nonnull SimpleName name, ReferenceState state, @Nonnull TerminalState requiredTermination, @Nonnull Statement... statements) {
     for (Statement statement : statements) {
       state = processStatement(statement, name, state, new ArrayList<>(), requiredTermination);
@@ -270,6 +316,15 @@ public class VerifyRefOperator extends RefASTOperator {
     return state;
   }
 
+  /**
+   * Processes a reference.
+   *
+   * @param name  the name of the reference
+   * @param node  the node of the reference
+   * @param state the state of the reference
+   * @return the state of the reference
+   * @docgenVersion 9
+   */
   @Nonnull
   protected ReferenceState processReference(Name name, @Nonnull ASTNode node, @Nonnull ReferenceState state) {
     if (!isWriting(node) && state.isRefConsumed() && getStatement(state.refConsumedAt) != getStatement(node)) {
@@ -294,7 +349,8 @@ public class VerifyRefOperator extends RefASTOperator {
         if (null == methodBinding) {
           warn(node, "Unresolved binding");
         } else {
-          if (argIndex >= methodBinding.getParameterTypes().length) argIndex = methodBinding.getParameterTypes().length - 1;
+          if (argIndex >= methodBinding.getParameterTypes().length)
+            argIndex = methodBinding.getParameterTypes().length - 1;
           ITypeBinding parameterType = methodBinding.getParameterTypes()[argIndex];
           IAnnotationBinding[] parameterAnnotations = methodBinding.getParameterAnnotations(argIndex);
           boolean isRefCounted = isRefCounted(node, parameterType);
@@ -397,6 +453,14 @@ public class VerifyRefOperator extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns a list of names that match the search criteria.
+   *
+   * @param node      the node to search
+   * @param searchFor the name to search for
+   * @return a list of matching names
+   * @docgenVersion 9
+   */
   @Nonnull
   protected List<Name> getMentions(@Nullable ASTNode node, @Nonnull Name searchFor) {
     final IBinding nameBinding = searchFor.resolveBinding();
@@ -418,6 +482,17 @@ public class VerifyRefOperator extends RefASTOperator {
     }
   }
 
+  /**
+   * Processes a block.
+   *
+   * @param name                the name
+   * @param state               the state
+   * @param finalizers          the finalizers
+   * @param requiredTermination the required termination
+   * @param block               the block
+   * @return the reference state
+   * @docgenVersion 9
+   */
   private ReferenceState processBlock(@Nonnull SimpleName name, @Nonnull ReferenceState state, @Nonnull List<Statement> finalizers, @Nonnull TerminalState requiredTermination, Block block) {
     ReferenceState blockState = state;
     List<Statement> statements = block.statements();
@@ -429,27 +504,66 @@ public class VerifyRefOperator extends RefASTOperator {
 
   public enum TerminalState {
     Freed {
+      /**
+       * @Override
+       * public boolean validate(@Nonnull ReferenceState state) {
+       *     return state.isRefConsumed();
+       * }
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public boolean validate(@Nonnull ReferenceState state) {
         return state.isRefConsumed();
       }
     },
     Open {
+      /**
+       * @Override
+       * public boolean validate(@Nonnull ReferenceState state) {
+       * return !state.isRefConsumed();
+       * }
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public boolean validate(@Nonnull ReferenceState state) {
         return !state.isRefConsumed();
       }
     },
     Any {
+      /**
+       * Validates the given state.
+       *
+       * @param state the state to validate
+       * @return true if the state is valid, false otherwise
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public boolean validate(ReferenceState state) {
         return true;
       }
     };
 
+    /**
+     * Validates the given state.
+     *
+     * @param state the state to validate
+     * @return true if the state is valid, false otherwise
+     * @docgenVersion 9
+     */
     public abstract boolean validate(ReferenceState state);
   }
 
+  /**
+   * This class represents the state of a reference.
+   *
+   * @param refConsumedAt the ASTNode where the reference is consumed
+   * @param terminatedAt  the ASTNode where the reference is terminated
+   * @param name          the SimpleName of the reference
+   * @docgenVersion 9
+   */
   protected class ReferenceState {
 
     public final ASTNode refConsumedAt;
@@ -462,10 +576,24 @@ public class VerifyRefOperator extends RefASTOperator {
       this.terminatedAt = terminatedAt;
     }
 
+    /**
+     * Returns true if the reference has been consumed.
+     *
+     * @return true if the reference has been consumed
+     * @docgenVersion 9
+     */
     public boolean isRefConsumed() {
       return refConsumedAt != null;
     }
 
+    /**
+     * Sets the node where the reference was consumed.
+     *
+     * @param refConsumedAt the node where the reference was consumed
+     * @return the current state
+     * @throws NullPointerException if the given node is null
+     * @docgenVersion 9
+     */
     @Nonnull
     public ReferenceState setRefConsumed(@Nullable ASTNode refConsumedAt) {
       if (null != refConsumedAt && isRefConsumed()) {
@@ -474,10 +602,24 @@ public class VerifyRefOperator extends RefASTOperator {
       return new VerifyMethodVariables.ReferenceState(this.name, refConsumedAt, terminatedAt);
     }
 
+    /**
+     * Returns true if the thread has been terminated.
+     *
+     * @return true if the thread has been terminated
+     * @docgenVersion 9
+     */
     public boolean isTerminated() {
       return terminatedAt != null;
     }
 
+    /**
+     * Sets the node where this reference was terminated.
+     *
+     * @param terminatedAt the node where this reference was terminated
+     * @return the new state of this reference
+     * @throws IllegalStateException if this reference was already terminated
+     * @docgenVersion 9
+     */
     @Nonnull
     public ReferenceState setTerminated(@Nonnull ASTNode terminatedAt) {
       if (isTerminated()) {
@@ -486,6 +628,10 @@ public class VerifyRefOperator extends RefASTOperator {
       return new VerifyMethodVariables.ReferenceState(this.name, refConsumedAt, terminatedAt);
     }
 
+    /**
+     * @return a non-null String representation of this object
+     * @docgenVersion 9
+     */
     @Nonnull
     @Override
     public String toString() {

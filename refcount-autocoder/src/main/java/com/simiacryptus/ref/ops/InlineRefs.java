@@ -29,6 +29,11 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
+/**
+ * This class provides a way to reference inline elements.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class InlineRefs extends RefASTOperator {
 
@@ -36,6 +41,14 @@ public class InlineRefs extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Returns the previous statement of the given node.
+   *
+   * @param node the node
+   * @return the previous statement of the given node, or {@code null} if there is no previous statement
+   * @throws NullPointerException if the given node is {@code null}
+   * @docgenVersion 9
+   */
   @Nullable
   public Statement previousStatement(@Nonnull ASTNode node) {
     if (node instanceof Statement) {
@@ -64,12 +77,23 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The ModifyBlock class is used to modify a block.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyBlock extends InlineRefs {
 
     public ModifyBlock(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of a block is reached during parsing.
+     *
+     * @param node the node being visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull Block node) {
       if (node.statements().size() == 1 && node.getParent() instanceof Block) {
@@ -80,12 +104,23 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The ModifyAssignment class is used to modify an assignment.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyAssignment extends InlineRefs {
 
     public ModifyAssignment(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of an assignment is visited.
+     *
+     * @param node the assignment that is being visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull Assignment node) {
       Statement previousStatement = previousStatement(node);
@@ -121,12 +156,23 @@ public class InlineRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class demonstrates how to modify a return statement.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyReturnStatement extends InlineRefs {
 
     public ModifyReturnStatement(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of a return statement is reached.
+     *
+     * @param node the return statement that is ending
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull ReturnStatement node) {
       if (node.getExpression() instanceof Name) {

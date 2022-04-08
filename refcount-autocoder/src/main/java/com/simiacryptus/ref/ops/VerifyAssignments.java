@@ -31,6 +31,12 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.List;
 
+/**
+ * The VerifyAssignments class is used to verify assignments.
+ *
+ * @param symbolIndex The symbol index to use.
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class VerifyAssignments extends RefASTOperator {
 
@@ -47,6 +53,12 @@ public class VerifyAssignments extends RefASTOperator {
     this.symbolIndex = symbolIndex;
   }
 
+  /**
+   * This method is used to visit a VariableDeclarationFragment node.
+   *
+   * @param node the VariableDeclarationFragment node to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(VariableDeclarationFragment node) {
     Expression initializer = node.getInitializer();
@@ -55,6 +67,12 @@ public class VerifyAssignments extends RefASTOperator {
     }
   }
 
+  /**
+   * This method is used to visit an assignment node.
+   *
+   * @param node the node to be visited
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull Assignment node) {
     if (isRefAware(node.getRightHandSide()) && !isRefAware(node.getLeftHandSide())) {
@@ -62,6 +80,12 @@ public class VerifyAssignments extends RefASTOperator {
     }
   }
 
+  /**
+   * This method is called when the end of a return statement is reached.
+   *
+   * @param node the return statement that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull ReturnStatement node) {
     final Expression expression = node.getExpression();
@@ -84,6 +108,13 @@ public class VerifyAssignments extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns true if the given fragment is aware of references.
+   *
+   * @param fragment the fragment to check
+   * @return true if the fragment is aware of references, false otherwise
+   * @docgenVersion 9
+   */
   private boolean isRefAware(@Nonnull VariableDeclarationFragment fragment) {
     IVariableBinding typeBinding = fragment.resolveBinding();
     if (null == typeBinding) {
@@ -102,6 +133,13 @@ public class VerifyAssignments extends RefASTOperator {
     return isRefCounted(fragment, fragmentBinding.getType()) || ASTUtil.hasAnnotation(fragmentBinding, RefAware.class);
   }
 
+  /**
+   * Returns true if the given expression is aware of references.
+   *
+   * @param expression the expression to check
+   * @return true if the expression is aware of references
+   * @docgenVersion 9
+   */
   private boolean isRefAware(@Nonnull Expression expression) {
     if (expression instanceof FieldAccess) {
       IVariableBinding fieldBinding = ((FieldAccess) expression).resolveFieldBinding();

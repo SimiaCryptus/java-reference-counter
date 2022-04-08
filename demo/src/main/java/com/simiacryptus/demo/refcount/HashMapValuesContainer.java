@@ -26,8 +26,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * This class is a container for values in a HashMap.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class HashMapValuesContainer extends ReferenceCountingBase {
+  /**
+   * Tests basic operations on a HashMap of Integers to BasicTypes.
+   *
+   * @param valuesMap the HashMap to test
+   * @throws NullPointerException if valuesMap is null
+   * @docgenVersion 9
+   */
   public static void testBasicOperations(@Nonnull HashMap<Integer, BasicType> valuesMap) {
     final HashMap<Integer, BasicType> copyMap = new HashMap<>();
     copyMap.putAll(valuesMap);
@@ -53,12 +65,23 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests stream operations on the given map.
+   *
+   * @param values the map to test on
+   * @docgenVersion 9
+   */
   public static void testStreamOperations(@Nonnull HashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
+  /**
+   * This is the test method.
+   *
+   * @docgenVersion 9
+   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testEntries();
@@ -67,11 +90,22 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the given function with a HashMap.
+   *
+   * @param fn the function to test
+   * @docgenVersion 9
+   */
   private static void test(@Nonnull Consumer<HashMap<Integer, BasicType>> fn) {
     final HashMap<Integer, BasicType> hashMap = new HashMap<>();
     fn.accept(hashMap);
   }
 
+  /**
+   * Tests the entry objects.
+   *
+   * @docgenVersion 9
+   */
   private static void testEntries() {
     test(values -> {
       values.put(1, new BasicType());
@@ -123,6 +157,12 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
       values.put(2, new BasicType());
       final HashMap<Integer, BasicType> closureMap = new HashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
+        /**
+         * @Override
+         * public void accept(Map.Entry<Integer, BasicType> anonymousParameter);
+         *
+         *   @docgenVersion 9
+         */
         @Override
         public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
@@ -137,6 +177,11 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
           closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
         }
 
+        /**
+         * Frees this object from memory.
+         *
+         *   @docgenVersion 9
+         */
         public void _free() {
         }
       };
@@ -145,6 +190,11 @@ public class HashMapValuesContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

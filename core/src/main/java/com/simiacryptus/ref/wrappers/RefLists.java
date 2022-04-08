@@ -28,8 +28,22 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * This class defines a reference list.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RefLists {
+  /**
+   * Partitions the given list into a list of sublists, each of the given size.
+   *
+   * @param list the list to partition
+   * @param size the desired size of each sublist
+   * @return a list of sublists
+   * @throws NullPointerException if the given list is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public static <T> RefList<RefList<T>> partition(@RefAware List<T> list, int size) {
     final List<T> inner;

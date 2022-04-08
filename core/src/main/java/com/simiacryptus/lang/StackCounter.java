@@ -30,12 +30,24 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Class that counts stack frames.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class StackCounter {
 
   @Nonnull
   Map<StackFrame, DoubleStatistics> stats = new ConcurrentHashMap<>();
 
+  /**
+   * @param left  the left stack counter
+   * @param right the right stack counter
+   * @param fn    the function to apply
+   * @return the string representation
+   * @docgenVersion 9
+   */
   public static String toString(@Nonnull final @RefAware StackCounter left,
                                 @Nonnull final @RefAware StackCounter right,
                                 @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
@@ -49,6 +61,12 @@ public class StackCounter {
         .limit(100).reduce((a, b) -> a + "\n" + b).orElse("");
   }
 
+  /**
+   * Increments the value of the specified {@code long} length by one.
+   *
+   * @param length the {@code long} length to increment
+   * @docgenVersion 9
+   */
   public void increment(final long length) {
     final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     for (@Nonnull final StackTraceElement frame : stackTrace) {
@@ -56,11 +74,25 @@ public class StackCounter {
     }
   }
 
+  /**
+   * @Override public String toString() {
+   * return toString(value -> summaryStat(value));
+   * }
+   * @docgenVersion 9
+   */
   @Override
   public String toString() {
     return toString(value -> summaryStat(value));
   }
 
+  /**
+   * Returns a string representation of the value returned by the given function applied to the statistics.
+   *
+   * @param fn the function to apply to the statistics
+   * @return a string representation of the value returned by the given function applied to the statistics
+   * @throws NullPointerException if fn is null
+   * @docgenVersion 9
+   */
   public String toString(@Nonnull final @RefAware Function<DoubleStatistics, Number> fn) {
     Comparator<Map.Entry<StackFrame, DoubleStatistics>> comparing = Comparator
         .comparing(e -> -fn.apply(e.getValue()).doubleValue());
@@ -70,17 +102,34 @@ public class StackCounter {
         .reduce((a, b) -> a + "\n" + b).orElse(super.toString());
   }
 
+  /**
+   * @param other the other stack counter
+   * @param fn    the function to apply
+   * @return the string representation
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   public CharSequence toString(@Nonnull final @RefAware StackCounter other,
                                @Nonnull final @RefAware BiFunction<DoubleStatistics, DoubleStatistics, Number> fn) {
     return StackCounter.toString(this, other, fn);
   }
 
+  /**
+   * @param value the value to use
+   * @return the summary statistic
+   * @throws NullPointerException if value is null
+   * @docgenVersion 9
+   */
   @Nonnull
   protected Number summaryStat(@Nonnull final @RefAware DoubleStatistics value) {
     return (int) value.getSum();
   }
 
+  /**
+   * A stack frame in a Java stack trace.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class StackFrame {
     public final String declaringClass;
@@ -101,6 +150,12 @@ public class StackCounter {
       this.lineNumber = lineNumber;
     }
 
+    /**
+     * @param o the object to compare this instance with
+     * @return true if the specified object is equal to this instance
+     * @docgenVersion 9
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(final @RefAware Object o) {
       if (this == o)
@@ -120,6 +175,10 @@ public class StackCounter {
       return fileName != null ? fileName.equals(that.fileName) : that.fileName == null;
     }
 
+    /**
+     * @Override public int hashCode();
+     * @docgenVersion 9
+     */
     @Override
     public int hashCode() {
       int result = declaringClass != null ? declaringClass.hashCode() : 0;
@@ -129,6 +188,12 @@ public class StackCounter {
       return result;
     }
 
+    /**
+     * @Override public String toString() {
+     * return String.format("%s.%s(%s:%s)", declaringClass, methodName, fileName, lineNumber);
+     * }
+     * @docgenVersion 9
+     */
     @Override
     public String toString() {
       return String.format("%s.%s(%s:%s)", declaringClass, methodName, fileName, lineNumber);

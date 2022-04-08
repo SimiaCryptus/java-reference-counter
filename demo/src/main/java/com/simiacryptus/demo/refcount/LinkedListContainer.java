@@ -29,8 +29,19 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.*;
 
+/**
+ * This class represents a LinkedListContainer.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class LinkedListContainer extends ReferenceCountingBase {
+  /**
+   * This is the test method.
+   * It will test the collection, element, stream, and iterator operations.
+   *
+   * @docgenVersion 9
+   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations(new LinkedList<>());
@@ -40,6 +51,12 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the operations of the {@link LinkedList}.
+   *
+   * @param fn the function to test the operations
+   * @docgenVersion 9
+   */
   private static void testOperations(@Nonnull Consumer<LinkedList<BasicType>> fn) {
     LinkedList<BasicType> values = new LinkedList<>();
     for (int i = 0; i < TestOperations.count; i++) {
@@ -48,6 +65,13 @@ public class LinkedListContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
+  /**
+   * Tests the operations of an array.
+   *
+   * @param values the values to test.
+   * @throws RuntimeException if the test fails.
+   * @docgenVersion 9
+   */
   private static void testArrayOperations(@Nonnull LinkedList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
@@ -57,6 +81,13 @@ public class LinkedListContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the element operations of the {@link LinkedList}.
+   *
+   * @param values the {@link LinkedList} to test
+   * @throws NullPointerException if {@code values} is {@code null}
+   * @docgenVersion 9
+   */
   private static void testElementOperations(@Nonnull LinkedList<BasicType> values) {
     if (!values.isEmpty()) {
       throw new RuntimeException();
@@ -111,6 +142,13 @@ public class LinkedListContainer extends ReferenceCountingBase {
     values.clear();
   }
 
+  /**
+   * Tests the collection operations on the given list of values.
+   *
+   * @param values the list of values to test
+   * @throws NullPointerException if values is null
+   * @docgenVersion 9
+   */
   private static void testCollectionOperations(@Nonnull LinkedList<BasicType> values) {
     values.add(new BasicType());
     final BasicType basicType = new BasicType();
@@ -129,6 +167,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     values.clear();
   }
 
+  /**
+   * Tests the DoubleStream class.
+   *
+   * @docgenVersion 9
+   */
   private static void testDoubleStream() {
     testOperations(values -> {
       final DoubleStream doubleStream = values.stream().mapToDouble(foobar1 -> {
@@ -275,6 +318,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the int stream.
+   *
+   * @docgenVersion 9
+   */
   private static void testIntStream() {
     testOperations(values -> {
       final IntStream intStream = values.stream().mapToInt(foobar1 -> {
@@ -431,6 +479,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the iterator operations.
+   *
+   * @docgenVersion 9
+   */
   private static void testIteratorOperations() {
     testOperations(values -> {
       final Iterator<BasicType> iterator = values.iterator();
@@ -470,6 +523,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the LongStream class.
+   *
+   * @docgenVersion 9
+   */
   private static void testLongStream() {
     testOperations(values -> {
       final LongStream intStream = values.stream().mapToLong(foobar1 -> {
@@ -621,6 +679,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the ObjectOutputStream class.
+   *
+   * @docgenVersion 9
+   */
   private static void testObjStream() {
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
@@ -778,6 +841,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the stream operations for objects, integers, doubles, and longs.
+   *
+   * @docgenVersion 9
+   */
   private static void testStreamOperations() {
     testObjStream();
     testIntStream();
@@ -785,6 +853,11 @@ public class LinkedListContainer extends ReferenceCountingBase {
     testLongStream();
   }
 
+  /**
+   * This method overrides the free method in the superclass.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

@@ -29,6 +29,11 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 
+/**
+ * The OptimizeRefs class is used to optimize references.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class OptimizeRefs extends RefASTOperator {
 
@@ -36,6 +41,12 @@ public class OptimizeRefs extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This is the endVisit method for the MethodInvocation class.
+   *
+   * @param freeRefNode the node to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull MethodInvocation freeRefNode) {
     if (freeRefNode.getName().toString().equals("freeRef")) {
@@ -85,12 +96,25 @@ public class OptimizeRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * @Nullable private MethodInvocation findAddRef(@Nonnull Block block, int line, @Nonnull final Expression subject);
+   * <p>
+   * This method returns a MethodInvocation that is nullable, and takes in a Block, line, and Expression that are all nonnull.
+   * @docgenVersion 9
+   */
   @Nullable
   private MethodInvocation findAddRef(@Nonnull Block block, int line, @Nonnull final Expression subject) {
     final ArrayList<MethodInvocation> addRefInvocations = new ArrayList<>();
     for (int i = line - 1; i >= 0; i--) {
       final Statement statement = (Statement) block.statements().get(i);
       statement.accept(new ASTVisitor() {
+        /**
+         * This method overrides the endVisit method for MethodInvocation nodes.
+         * If the name of the MethodInvocation node is "addRef" and the expression is equal to the subject,
+         * the MethodInvocation node is added to the addRefInvocations list.
+         *
+         *   @docgenVersion 9
+         */
         @Override
         public void endVisit(@Nonnull MethodInvocation addRefNode) {
           if (addRefNode.getName().toString().equals("addRef")) {
@@ -100,11 +124,26 @@ public class OptimizeRefs extends RefASTOperator {
           }
         }
 
+        /**
+         * @override
+         * public boolean visit(Block node) {
+         *     return false;
+         * }
+         *
+         *   @docgenVersion 9
+         */
         @Override
         public boolean visit(Block node) {
           return false;
         }
 
+        /**
+         * @override
+         * @param node
+         * @return false
+         *
+         *   @docgenVersion 9
+         */
         @Override
         public boolean visit(AnonymousClassDeclaration node) {
           return false;

@@ -29,8 +29,21 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 
+/**
+ * This is the ReflectionUtil class.
+ *
+ * @docgenVersion 9
+ */
 public class ReflectionUtil {
 
+  /**
+   * Returns the value of the field with the given name from the given object.
+   *
+   * @param obj  the object to get the field value from
+   * @param name the name of the field to get the value of
+   * @return the value of the field, or null if the field does not exist
+   * @docgenVersion 9
+   */
   @Nullable
   public static <T> T getField(@Nonnull Object obj, String name) {
     final Field value = Arrays.stream(obj.getClass().getDeclaredFields()).filter(x -> x.getName().equals(name)).findFirst().orElse(null);
@@ -45,6 +58,10 @@ public class ReflectionUtil {
     return null;
   }
 
+  /**
+   * @Nonnull public static <T> T invokeMethod(@Nonnull Object obj, String name, @Nonnull Object... args);
+   * @docgenVersion 9
+   */
   @Nonnull
   public static <T> T invokeMethod(@Nonnull Object obj, String name, @Nonnull Object... args) {
     final Method value = Arrays.stream(obj.getClass().getDeclaredMethods())
@@ -72,6 +89,15 @@ public class ReflectionUtil {
     throw new RuntimeException(String.format("Method %s.%s(%s) not found", obj.getClass(), name, Arrays.stream(args).map(x -> x.getClass().getSimpleName()).reduce((a, b) -> a + ", " + b).get()));
   }
 
+  /**
+   * Returns the field with the given name in the given node class.
+   *
+   * @param nodeClass the node class to search in
+   * @param name      the name of the field to search for
+   * @return the field with the given name in the given node class
+   * @throws NullPointerException if nodeClass or name is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public static Field getField(@Nonnull Class<?> nodeClass, String name) {
     final Field[] fields = nodeClass.getDeclaredFields();
@@ -89,6 +115,16 @@ public class ReflectionUtil {
     return field;
   }
 
+  /**
+   * Sets the value of the field with the given name in the given AST node to the given value.
+   *
+   * @param astNode the AST node whose field is to be set
+   * @param name    the name of the field to be set
+   * @param value   the value to set the field to
+   * @return the AST node with the given field set to the given value
+   * @throws RuntimeException if the field cannot be set
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   @Nonnull
   public static <T> T setField(@Nonnull T astNode, String name, Object value) {

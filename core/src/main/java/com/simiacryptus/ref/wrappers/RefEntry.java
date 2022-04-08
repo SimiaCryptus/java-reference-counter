@@ -28,6 +28,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 
+/**
+ * This class represents an entry in a reference map.
+ *
+ * @param <K> the type of the key
+ * @param <V> the type of the value
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Map.Entry<K, V> {
@@ -44,6 +51,10 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
     this.value = value;
   }
 
+  /**
+   * @return the key, or null if it does not exist
+   * @docgenVersion 9
+   */
   @Nullable
   @Override
   @RefAware
@@ -51,6 +62,10 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
     return RefUtil.addRef(key);
   }
 
+  /**
+   * @return the value, or null if there is no value
+   * @docgenVersion 9
+   */
   @Nullable
   @Override
   @RefAware
@@ -58,11 +73,23 @@ public abstract class RefEntry<K, V> extends ReferenceCountingBase implements Ma
     return RefUtil.addRef(value);
   }
 
+  /**
+   * @Nullable
+   * @Override
+   * @RefAware public abstract V setValue(@RefAware V value);
+   * @docgenVersion 9
+   */
   @Nullable
   @Override
   @RefAware
   public abstract V setValue(@RefAware V value);
 
+  /**
+   * Frees resources used by this object.
+   *
+   * @docgenVersion 9
+   * @see Ref#freeRef()
+   */
   @Override
   protected void _free() {
     RefUtil.freeRef(value);

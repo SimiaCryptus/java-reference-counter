@@ -34,40 +34,93 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+/**
+ * This class is a RecycleBin for doubles and floats.
+ *
+ * @author Java
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class RecycleBin<T> {
 
   public static final RecycleBin<double[]> DOUBLES = new RecycleBin<double[]>() {
+    /**
+     * Creates an array of doubles with the given length.
+     *
+     * @param length the length of the array
+     * @return the array of doubles
+     *
+     *   @docgenVersion 9
+     */
     @Nonnull
     @Override
     public double[] create(final long length) {
       return new double[(int) length];
     }
 
+    /**
+     * Resets the data array to all zeros.
+     *
+     * @param data the data array to reset
+     * @param size the size of the data array
+     *
+     *   @docgenVersion 9
+     */
     @Override
     public void reset(@Nonnull final double[] data, long size) {
       assert data.length == size;
       Arrays.fill(data, 0);
     }
 
+    /**
+     * This method frees the given object.
+     *
+     * @param obj The object to free.
+     *
+     *   @docgenVersion 9
+     */
     @Override
     protected void free(double[] obj) {
     }
   }.setPersistanceMode(RefSettings.INSTANCE().doubleCacheMode);
   public static final RecycleBin<float[]> FLOATS = new RecycleBin<float[]>() {
+    /**
+     * Creates a new float array of the specified length.
+     *
+     * @param length the length of the array
+     * @return the new array
+     * @throws NullPointerException if the specified array is null
+     *
+     *   @docgenVersion 9
+     */
     @Nonnull
     @Override
     public float[] create(final long length) {
       return new float[(int) length];
     }
 
+    /**
+     * Resets the data array to all zeros.
+     *
+     * @param data the data array to reset
+     * @param size the size of the data array
+     *
+     *   @docgenVersion 9
+     */
     @Override
     public void reset(@Nonnull final float[] data, long size) {
       assert data.length == size;
       Arrays.fill(data, 0);
     }
 
+    /**
+     * This method frees the given object.
+     *
+     * @param obj The object to be freed.
+     *
+     *   @docgenVersion 9
+     */
     @Override
     protected void free(float[] obj) {
     }
@@ -108,6 +161,12 @@ public abstract class RecycleBin<T> {
     }, purgeFreq, purgeFreq, TimeUnit.SECONDS);
   }
 
+  /**
+   * Returns a ScheduledExecutorService that can be used to schedule garbage truck pickups.
+   *
+   * @return a ScheduledExecutorService that can be used to schedule garbage truck pickups
+   * @docgenVersion 9
+   */
   public static ScheduledExecutorService getGarbageTruck() {
     if (null == RecycleBin.garbageTruck) {
       synchronized (RecycleBin.class) {
@@ -120,66 +179,153 @@ public abstract class RecycleBin<T> {
     return RecycleBin.garbageTruck;
   }
 
+  /**
+   * Returns the maximum number of items that can be stored in a buffer.
+   *
+   * @return the maximum number of items that can be stored in a buffer
+   * @docgenVersion 9
+   */
   public int getMaxItemsPerBuffer() {
     return maxItemsPerBuffer;
   }
 
+  /**
+   * Sets the maximum number of items per buffer.
+   *
+   * @param maxItemsPerBuffer the maximum number of items per buffer
+   * @return the recycle bin
+   * @docgenVersion 9
+   */
   @Nonnull
   public RecycleBin<T> setMaxItemsPerBuffer(int maxItemsPerBuffer) {
     this.maxItemsPerBuffer = maxItemsPerBuffer;
     return this;
   }
 
+  /**
+   * Returns the maximum length per buffer.
+   *
+   * @return the maximum length per buffer
+   * @docgenVersion 9
+   */
   public double getMaxLengthPerBuffer() {
     return maxLengthPerBuffer;
   }
 
+  /**
+   * Sets the maximum length per buffer.
+   *
+   * @param maxLengthPerBuffer the maximum length per buffer
+   * @return the recycle bin
+   * @docgenVersion 9
+   */
   @Nonnull
   public RecycleBin<T> setMaxLengthPerBuffer(double maxLengthPerBuffer) {
     this.maxLengthPerBuffer = maxLengthPerBuffer;
     return this;
   }
 
+  /**
+   * Returns the minimum length per buffer.
+   *
+   * @return the minimum length per buffer
+   * @docgenVersion 9
+   */
   public int getMinLengthPerBuffer() {
     return minLengthPerBuffer;
   }
 
+  /**
+   * Sets the minimum length per buffer.
+   *
+   * @param minLengthPerBuffer the minimum length per buffer
+   * @return the recycle bin
+   * @docgenVersion 9
+   */
   @Nonnull
   public RecycleBin<T> setMinLengthPerBuffer(int minLengthPerBuffer) {
     this.minLengthPerBuffer = minLengthPerBuffer;
     return this;
   }
 
+  /**
+   * Returns the current persistance mode.
+   *
+   * @return the current persistance mode
+   * @docgenVersion 9
+   */
   public PersistanceMode getPersistanceMode() {
     return persistanceMode;
   }
 
+  /**
+   * Sets the persistance mode.
+   *
+   * @param persistanceMode the new persistance mode
+   * @return the recycle bin
+   * @docgenVersion 9
+   */
   @Nonnull
   public RecycleBin<T> setPersistanceMode(@RefAware PersistanceMode persistanceMode) {
     this.persistanceMode = persistanceMode;
     return this;
   }
 
+  /**
+   * Returns the purge frequency.
+   *
+   * @return the purge frequency
+   * @docgenVersion 9
+   */
   public int getPurgeFreq() {
     return purgeFreq;
   }
 
+  /**
+   * Sets the purge frequency.
+   *
+   * @param purgeFreq the purge frequency
+   * @return the recycle bin
+   * @docgenVersion 9
+   */
   @Nonnull
   public RecycleBin<T> setPurgeFreq(int purgeFreq) {
     this.purgeFreq = purgeFreq;
     return this;
   }
 
+  /**
+   * Returns the size of the cache.
+   *
+   * @return the size of the cache
+   * @docgenVersion 9
+   */
   public long getSize() {
     return this.buckets.entrySet().stream().mapToLong(e -> e.getKey() * e.getValue().size()).sum();
   }
 
+  /**
+   * Sets the profiling threshold.
+   *
+   * @param threshold the profiling threshold
+   * @return the recycle bin
+   * @docgenVersion 9
+   */
   @Nonnull
   public RecycleBin<T> setProfiling(final int threshold) {
     this.profilingThreshold = threshold;
     return this;
   }
 
+  /**
+   * Returns true if the arguments are equal to each other
+   * and false otherwise.
+   *
+   * @param a an Object
+   * @param b an Object
+   * @return true if the arguments are equal to each other and false otherwise.
+   * @docgenVersion 9
+   */
   public static boolean equals(@Nullable @RefAware Object a, @Nullable @RefAware Object b) {
     if (a == b)
       return true;
@@ -188,6 +334,15 @@ public abstract class RecycleBin<T> {
     return a.equals(b);
   }
 
+  /**
+   * Clears the bits in this {@code BitSet} whose corresponding
+   * {@code boolean} value is {@code true}.
+   *
+   * @return the number of bits set to {@code false} in this {@code BitSet}
+   * as a {@code long}
+   * @docgenVersion 9
+   * @since 1.7
+   */
   public long clear() {
     Map<Long, ConcurrentLinkedDeque<ObjectWrapper>> buckets = this.buckets;
     return buckets.keySet().stream().mapToLong(length -> {
@@ -200,6 +355,14 @@ public abstract class RecycleBin<T> {
     }).sum();
   }
 
+  /**
+   * Returns a copy of the original object, or null if the original is null.
+   *
+   * @param original the object to copy
+   * @param size     the size of the object to copy
+   * @return a copy of the original object, or null if the original is null
+   * @docgenVersion 9
+   */
   @Nullable
   public T copyOf(@Nullable final @RefAware T original, long size) {
     if (null == original)
@@ -209,9 +372,27 @@ public abstract class RecycleBin<T> {
     return copy;
   }
 
+  /**
+   * Creates an object of type T with the specified length.
+   *
+   * @param length the length of the object to be created
+   * @return the newly created object
+   * @throws NullPointerException if length is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public abstract T create(long length);
 
+  /**
+   * Creates a new object with the specified length.
+   *
+   * @param length  the length of the new object
+   * @param retries the number of retries
+   * @return the new object
+   * @throws IllegalArgumentException if the length is negative
+   * @throws RetryException           if the number of retries is negative
+   * @docgenVersion 9
+   */
   @Nonnull
   public T create(long length, int retries) {
     try {
@@ -231,6 +412,13 @@ public abstract class RecycleBin<T> {
     return create(length, retries - 1);
   }
 
+  /**
+   * Returns the number of allocations if the length is being profiled, or null if not.
+   *
+   * @param length the number to check
+   * @return the number of allocations or null
+   * @docgenVersion 9
+   */
   @Nullable
   public StackCounter getAllocations(final long length) {
     if (!isProfiling(length))
@@ -238,6 +426,13 @@ public abstract class RecycleBin<T> {
     return allocations;
   }
 
+  /**
+   * Returns the number of free stack frames, or null if profiling is disabled.
+   *
+   * @param length the number of stack frames to check
+   * @return the number of free stack frames, or null
+   * @docgenVersion 9
+   */
   @Nullable
   public StackCounter getFrees(final long length) {
     if (!isProfiling(length))
@@ -245,6 +440,10 @@ public abstract class RecycleBin<T> {
     return frees;
   }
 
+  /**
+   * @return the recycle_get stack counter if the specified length is being profiled, null otherwise
+   * @docgenVersion 9
+   */
   @Nullable
   public StackCounter getRecycle_get(final long length) {
     if (!isProfiling(length))
@@ -252,6 +451,10 @@ public abstract class RecycleBin<T> {
     return recycle_get;
   }
 
+  /**
+   * @return the recycle_put stack counter if the specified length is being profiled, null otherwise
+   * @docgenVersion 9
+   */
   @Nullable
   public StackCounter getRecycle_put(final long length) {
     if (!isProfiling(length))
@@ -259,10 +462,24 @@ public abstract class RecycleBin<T> {
     return recycle_put;
   }
 
+  /**
+   * Returns true if the specified length is greater than the profiling threshold.
+   *
+   * @param length the length to check
+   * @return true if the specified length is greater than the profiling threshold
+   * @docgenVersion 9
+   */
   public boolean isProfiling(final long length) {
     return length > profilingThreshold;
   }
 
+  /**
+   * Obtains an object of type T with a length of long.
+   *
+   * @param length the length of the object to be obtained
+   * @return an object of type T with the specified length
+   * @docgenVersion 9
+   */
   public T obtain(final long length) {
     final ConcurrentLinkedDeque<ObjectWrapper> bin = buckets.get(length);
     @Nullable
@@ -283,11 +500,23 @@ public abstract class RecycleBin<T> {
     return create(length, 1);
   }
 
+  /**
+   * Prints all profiling information to the given PrintStream.
+   *
+   * @param out the PrintStream to print to; must not be null
+   * @docgenVersion 9
+   */
   public void printAllProfiling(@Nonnull final @RefAware PrintStream out) {
     printDetailedProfiling(out);
     printNetProfiling(out);
   }
 
+  /**
+   * Prints a detailed report of the profiling information to the given {@link PrintStream}.
+   *
+   * @param out the {@link PrintStream} to print the report to
+   * @docgenVersion 9
+   */
   public void printDetailedProfiling(@Nonnull final @RefAware PrintStream out) {
     out.println("Memory Allocation Profiling:\n\t" + allocations.toString().replaceAll("\n", "\n\t"));
     out.println("Freed Memory Profiling:\n\t" + frees.toString().replaceAll("\n", "\n\t"));
@@ -295,6 +524,12 @@ public abstract class RecycleBin<T> {
     out.println("Recycle Bin (Get) Profiling:\n\t" + recycle_get.toString().replaceAll("\n", "\n\t"));
   }
 
+  /**
+   * Prints the net profiling for the recycle bin.
+   *
+   * @param out the print stream to use, or null to not print anything
+   * @docgenVersion 9
+   */
   public void printNetProfiling(@Nullable final @RefAware PrintStream out) {
     if (null != out) {
       out.println("Recycle Bin (Net) Profiling:\n\t" + StackCounter
@@ -302,6 +537,13 @@ public abstract class RecycleBin<T> {
     }
   }
 
+  /**
+   * Recycles the given data if it is not null and its size is greater than 0.
+   *
+   * @param data the data to recycle
+   * @param size the size of the data
+   * @docgenVersion 9
+   */
   public void recycle(@Nullable final @RefAware T data, long size) {
     if (null != data && size >= getMinLengthPerBuffer() && size <= getMaxLengthPerBuffer()) {
       @Nullable
@@ -325,8 +567,20 @@ public abstract class RecycleBin<T> {
     freeItem(data, size);
   }
 
+  /**
+   * Resets the data and size.
+   *
+   * @param data the data to be reset
+   * @param size the size to be reset
+   * @docgenVersion 9
+   */
   public abstract void reset(@RefAware T data, long size);
 
+  /**
+   * @param size
+   * @return
+   * @docgenVersion 9
+   */
   public boolean want(long size) {
     if (size < getMinLengthPerBuffer())
       return false;
@@ -341,8 +595,22 @@ public abstract class RecycleBin<T> {
     return bin.size() < Math.min(Math.max(1, (int) (getMaxLengthPerBuffer() / size)), getMaxItemsPerBuffer());
   }
 
+  /**
+   * This method is used to free an object.
+   *
+   * @param obj The object to be freed.
+   * @docgenVersion 9
+   */
   protected abstract void free(@RefAware T obj);
 
+  /**
+   * This method returns the size of the freed item.
+   *
+   * @param obj  The object to be freed.
+   * @param size The size of the object to be freed.
+   * @return The size of the freed object.
+   * @docgenVersion 9
+   */
   protected long freeItem(@Nullable @RefAware T obj, long size) {
     @Nullable
     StackCounter stackCounter = getFrees(size);
@@ -354,15 +622,33 @@ public abstract class RecycleBin<T> {
     return size;
   }
 
+  /**
+   * Returns the bin for the given size. If no bin exists for the given size, a new bin is created.
+   *
+   * @param size the size to get the bin for
+   * @return the bin for the given size
+   * @docgenVersion 9
+   */
   protected ConcurrentLinkedDeque<ObjectWrapper> getBin(long size) {
     return buckets.computeIfAbsent(size, x -> new ConcurrentLinkedDeque<>());
   }
 
+  /**
+   * @param data the data to wrap
+   * @return a supplier of the wrapped data
+   * @docgenVersion 9
+   */
   @Nullable
   protected Supplier<T> wrap(@RefAware T data) {
     return persistanceMode.wrap(data);
   }
 
+  /**
+   * Clears the memory.
+   *
+   * @param length the length of the memory to be cleared
+   * @docgenVersion 9
+   */
   private void clearMemory(long length) {
     long max = Runtime.getRuntime().maxMemory();
     long previous = Runtime.getRuntime().freeMemory();
@@ -376,6 +662,12 @@ public abstract class RecycleBin<T> {
     logger.warn(String.format("Clearing memory freed %s/%s bytes", previous - after, max));
   }
 
+  /**
+   * This class wraps an object in a supplier with a timestamp.
+   *
+   * @param <T> The type of the object to be wrapped.
+   * @docgenVersion 9
+   */
   @RefIgnore
   private class ObjectWrapper {
     public final Supplier<T> obj;
@@ -385,6 +677,12 @@ public abstract class RecycleBin<T> {
       this.obj = obj;
     }
 
+    /**
+     * Returns the age of the object in seconds.
+     *
+     * @return the age of the object in seconds
+     * @docgenVersion 9
+     */
     public final double age() {
       return (System.nanoTime() - createdAt) / 1e9;
     }

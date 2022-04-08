@@ -28,6 +28,11 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
 
+/**
+ * This class is responsible for ensuring that all imports are distinct.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class DistinctImports extends RefASTOperator {
 
@@ -35,6 +40,12 @@ public class DistinctImports extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of a compilation unit is reached in the tree walker.
+   *
+   * @param node the compilation unit node that is being visited
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull CompilationUnit node) {
     final Iterator iterator = node.imports().iterator();

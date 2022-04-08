@@ -27,6 +27,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Iterator;
 
+/**
+ * This class is an iterator for nullable references.
+ *
+ * @param <T> the type of the nullable references
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RefIterator<T> extends RefIteratorBase<T> {
 
@@ -41,17 +47,32 @@ public class RefIterator<T> extends RefIteratorBase<T> {
     }
   }
 
+  /**
+   * @return an iterator for the inner data structure
+   * @docgenVersion 9
+   */
   @Override
   public Iterator<T> getInner() {
     return inner;
   }
 
+  /**
+   * @Nonnull public RefIterator<T> track(ReferenceCounting obj) {
+   * super.track(obj);
+   * return this;
+   * }
+   * @docgenVersion 9
+   */
   public @Nonnull
   RefIterator<T> track(ReferenceCounting obj) {
     super.track(obj);
     return this;
   }
 
+  /**
+   * @return a new RefIterator with a reference added
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public RefIterator<T> addRef() {

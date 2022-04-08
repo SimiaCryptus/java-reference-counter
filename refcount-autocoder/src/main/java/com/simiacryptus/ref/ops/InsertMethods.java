@@ -34,6 +34,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * The InsertMethods class contains methods for inserting
+ * data into a database.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class InsertMethods extends RefASTOperator {
 
@@ -41,6 +47,14 @@ public class InsertMethods extends RefASTOperator {
     super(projectInfo, cu, file);
   }
 
+  /**
+   * @param node           the AST node
+   * @param name           the name of the method
+   * @param isInterface    whether the method is an interface
+   * @param typeParameters the type parameters
+   * @return the method declaration
+   * @docgenVersion 9
+   */
   @Nonnull
   public MethodDeclaration method_addRef(@Nonnull ASTNode node, @Nonnull SimpleName name, boolean isInterface, TypeParameter... typeParameters) {
     final String fqTypeName = name.getFullyQualifiedName();
@@ -65,6 +79,13 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
+  /**
+   * @param ast        the AST to use
+   * @param isAbstract whether the method is abstract
+   * @param isOverride whether the method overrides another
+   * @return the newly created method declaration
+   * @docgenVersion 9
+   */
   @Nonnull
   public MethodDeclaration method_free(@Nonnull AST ast, boolean isAbstract, boolean isOverride) {
     final MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
@@ -84,6 +105,15 @@ public class InsertMethods extends RefASTOperator {
     return methodDeclaration;
   }
 
+  /**
+   * Returns the type of the given node.
+   *
+   * @param node           the node to get the type of
+   * @param fqTypeName     the fully qualified type name
+   * @param typeParameters the type parameters
+   * @return the type of the given node
+   * @docgenVersion 9
+   */
   @Nonnull
   private Type getType(@Nonnull ASTNode node, @Nonnull String fqTypeName, @Nonnull TypeParameter... typeParameters) {
     final Type baseType = getType(node, fqTypeName, false);
@@ -105,12 +135,23 @@ public class InsertMethods extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify type declarations.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyTypeDeclaration extends InsertMethods {
     public ModifyTypeDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit cu, @Nonnull File file) {
       super(projectInfo, cu, file);
     }
 
+    /**
+     * This method is called when the end of a type declaration is reached.
+     *
+     * @param node the type declaration that is ending
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull TypeDeclaration node) {
       final ITypeBinding typeBinding = ASTOperator.resolveBinding(node);
@@ -143,12 +184,23 @@ public class InsertMethods extends RefASTOperator {
     }
   }
 
+  /**
+   * This class demonstrates how to modify an anonymous class declaration.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyAnonymousClassDeclaration extends InsertMethods {
     public ModifyAnonymousClassDeclaration(ProjectInfo projectInfo, @Nonnull CompilationUnit cu, @Nonnull File file) {
       super(projectInfo, cu, file);
     }
 
+    /**
+     * This method is called when the end of an anonymous class declaration is reached.
+     *
+     * @param node the node to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull AnonymousClassDeclaration node) {
       final ITypeBinding typeBinding = resolveBinding(node);

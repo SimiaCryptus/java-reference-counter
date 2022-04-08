@@ -23,8 +23,18 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 
 import java.util.function.Consumer;
 
+/**
+ * A class that is aware of references.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public abstract class RefAwareConsumer<T> extends ReferenceCountingBase implements Consumer<T> {
+  /**
+   * This method overrides the free method in the superclass.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

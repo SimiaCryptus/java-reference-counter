@@ -35,6 +35,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * This class annotates method calls with the attributes
+ * that are missing from the corresponding method declaration.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class AnnotateMethodCalls extends RefASTOperator {
 
@@ -45,6 +51,12 @@ public class AnnotateMethodCalls extends RefASTOperator {
     this.missingAttributes = missingAttributes;
   }
 
+  /**
+   * This method is called when the visitor encounters a MethodDeclaration node.
+   *
+   * @param node the MethodDeclaration node
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull MethodDeclaration node) {
     final IMethodBinding methodBinding = node.resolveBinding();

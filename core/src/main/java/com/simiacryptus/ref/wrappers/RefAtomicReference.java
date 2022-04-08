@@ -27,6 +27,11 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
+/**
+ * This class is a wrapper for the AtomicReference class that ensures that all objects passed into its methods are properly freed.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefAtomicReference<V> extends ReferenceCountingBase {
@@ -40,6 +45,14 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
     inner = new AtomicReference<>(obj);
   }
 
+  /**
+   * Gets the value of an AtomicReference.
+   *
+   * @param <T>             the type of the value
+   * @param atomicReference the AtomicReference to get the value from
+   * @return the value of the AtomicReference
+   * @docgenVersion 9
+   */
   public static <T> T get(RefAtomicReference<T> atomicReference) {
     try {
       return atomicReference.get();
@@ -48,6 +61,14 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * @RefAware public V updateAndGet(UnaryOperator<V> o) {
+   * synchronized (inner) {
+   * return RefUtil.addRef(inner.updateAndGet(x -> o.apply(x)));
+   * }
+   * }
+   * @docgenVersion 9
+   */
   public @RefAware
   V updateAndGet(UnaryOperator<V> o) {
     synchronized (inner) {
@@ -55,31 +76,59 @@ public class RefAtomicReference<V> extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * @param value the new value
+   * @return the previous value
+   * @RefAware
+   * @docgenVersion 9
+   */
   public @RefAware
   V getAndSet(@RefAware V value) {
     return inner.getAndSet(value);
   }
 
+  /**
+   * @Override public RefAtomicReference<V> addRef() {
+   * return (RefAtomicReference<V>) super.addRef();
+   * }
+   * @docgenVersion 9
+   */
   @Override
   public RefAtomicReference<V> addRef() {
     return (RefAtomicReference<V>) super.addRef();
   }
 
+  /**
+   * @RefAware public V get() {
+   * assertAlive();
+   * return RefUtil.addRef(inner.get());
+   * }
+   * @docgenVersion 9
+   */
   @RefAware
   public V get() {
     assertAlive();
     return RefUtil.addRef(inner.get());
   }
 
+  /**
+   * @param newValue
+   * @docgenVersion 9
+   */
   public void set(@RefAware V newValue) {
     assertAlive();
     if (null != newValue) RefUtil.assertAlive(newValue);
-    if(inner.get() != newValue) {
+    if (inner.get() != newValue) {
       //RefUtil.watch(newValue);
       RefUtil.freeRef(inner.getAndSet(newValue));
     }
   }
 
+  /**
+   * Frees the inner object.
+   *
+   * @docgenVersion 9
+   */
   protected void _free() {
     RefUtil.freeRef(inner.get());
   }

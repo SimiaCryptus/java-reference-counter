@@ -36,6 +36,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The VerifyClosures class is used to verify that closures are working properly.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class VerifyClosures extends VerifyClassMembers {
 
@@ -43,6 +48,12 @@ public class VerifyClosures extends VerifyClassMembers {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of an anonymous class declaration is reached.
+   *
+   * @param node the node to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull AnonymousClassDeclaration node) {
     final List<SimpleName> closures = getClosures(node);
@@ -82,6 +93,12 @@ public class VerifyClosures extends VerifyClassMembers {
     }
   }
 
+  /**
+   * This method is called when the end of a lambda expression is visited.
+   *
+   * @param node the lambda expression that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull LambdaExpression node) {
     final IMethodBinding methodBinding = resolveMethodBinding(node);
@@ -104,6 +121,13 @@ public class VerifyClosures extends VerifyClassMembers {
     }
   }
 
+  /**
+   * This method verifies that all class declarations are correct.
+   *
+   * @param closures         The closures to verify.
+   * @param bodyDeclarations The body declarations to verify.
+   * @docgenVersion 9
+   */
   protected void verifyClassDeclarations(@Nonnull Collection<SimpleName> closures, @Nonnull List<ASTNode> bodyDeclarations) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     for (MethodDeclaration methodDeclaration : VerifyClassMembers.methods(bodyDeclarations)) {
@@ -118,6 +142,13 @@ public class VerifyClosures extends VerifyClassMembers {
     }
   }
 
+  /**
+   * Returns the name of the given binding ID, or null if the binding ID is not found.
+   *
+   * @param bindingID the binding ID to look up
+   * @return the name of the binding ID, or null if the binding ID is not found
+   * @docgenVersion 9
+   */
   @Nullable
   protected SimpleName getName(SymbolIndex.BindingID bindingID) {
     ASTNode definition = index.definitions.get(bindingID);
@@ -135,6 +166,13 @@ public class VerifyClosures extends VerifyClassMembers {
     }
   }
 
+  /**
+   * Returns a list of SimpleName nodes that represent closures.
+   *
+   * @param node the ASTNode to search
+   * @return a list of SimpleName nodes that represent closures
+   * @docgenVersion 9
+   */
   protected List<SimpleName> getClosures(@Nonnull ASTNode node) {
     return VisitClosures.getClosures(this, index, node).stream().filter(bindingID -> {
       ASTNode definition = index.definitions.get(bindingID);

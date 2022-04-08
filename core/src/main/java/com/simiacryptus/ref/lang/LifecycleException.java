@@ -21,6 +21,14 @@ package com.simiacryptus.ref.lang;
 
 import javax.annotation.Nonnull;
 
+/**
+ * An exception that is thrown when a {@link Lifecycle} method is invoked on an object
+ * that is not in the appropriate state.
+ *
+ * @author John Doe
+ * @docgenVersion 9
+ * @since 1.0
+ */
 @RefIgnore
 public class LifecycleException extends RuntimeException {
   @Nonnull

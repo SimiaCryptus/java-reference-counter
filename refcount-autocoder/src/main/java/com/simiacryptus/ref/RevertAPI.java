@@ -30,20 +30,42 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * The RevertAPI class contains methods for reverting
+ * changes to a file.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "revertAPI")
 public class RevertAPI extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The Coder class is a class that contains code.
+   *
+   * @docgenVersion 9
+   */
   public static class Coder extends AutoCoder {
     public Coder(ProjectInfo projectInfo) {
       super(projectInfo);
     }
 
+    /**
+     * @Override public void rewrite();
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       rewrite((projectInfo, cu, file) -> new ReplaceTypes.ModifyTypeParameter(projectInfo, cu, file, true));

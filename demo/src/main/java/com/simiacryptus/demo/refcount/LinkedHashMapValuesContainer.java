@@ -26,8 +26,20 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * This class contains the values for a LinkedHashMap.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
+  /**
+   * Tests basic operations on a LinkedHashMap of Integers to BasicTypes.
+   *
+   * @param valuesMap the LinkedHashMap to test
+   * @throws NullPointerException if valuesMap is null
+   * @docgenVersion 9
+   */
   public static void testBasicOperations(@Nonnull LinkedHashMap<Integer, BasicType> valuesMap) {
     final LinkedHashMap<Integer, BasicType> copyMap = new LinkedHashMap<>();
     copyMap.putAll(valuesMap);
@@ -53,12 +65,23 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests stream operations on the given map.
+   *
+   * @param values the map to test on
+   * @docgenVersion 9
+   */
   public static void testStreamOperations(@Nonnull LinkedHashMap<Integer, BasicType> values) {
     values.values().stream().forEach(x -> {
       x.setValue(x.getValue() + 1);
     });
   }
 
+  /**
+   * This is the test method.
+   *
+   * @docgenVersion 9
+   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testEntries();
@@ -67,11 +90,22 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * @param fn Function that takes a LinkedHashMap as a parameter
+   *           <p>
+   *           This method tests the function passed in as a parameter. The function must take a LinkedHashMap as a parameter.
+   * @docgenVersion 9
+   */
   private static void test(@Nonnull Consumer<LinkedHashMap<Integer, BasicType>> fn) {
     final LinkedHashMap<Integer, BasicType> hashMap = new LinkedHashMap<>();
     fn.accept(hashMap);
   }
 
+  /**
+   * Tests the entry objects.
+   *
+   * @docgenVersion 9
+   */
   private static void testEntries() {
     test(values -> {
       values.put(1, new BasicType());
@@ -123,6 +157,12 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
       values.put(2, new BasicType());
       final LinkedHashMap<Integer, BasicType> closureMap = new LinkedHashMap<>();
       final Consumer<Map.Entry<Integer, BasicType>> entryConsumer = new Consumer<Map.Entry<Integer, BasicType>>() {
+        /**
+         * @Override
+         * public void accept(Map.Entry<Integer, BasicType> anonymousParameter);
+         *
+         *   @docgenVersion 9
+         */
         @Override
         public void accept(Map.Entry<Integer, BasicType> anonymousParameter) {
           if (1 == anonymousParameter.getKey()) {
@@ -137,6 +177,11 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
           closureMap.put(anonymousParameter.getKey(), anonymousParameter.getValue());
         }
 
+        /**
+         * Frees this object from memory.
+         *
+         *   @docgenVersion 9
+         */
         public void _free() {
         }
       };
@@ -145,6 +190,11 @@ public class LinkedHashMapValuesContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

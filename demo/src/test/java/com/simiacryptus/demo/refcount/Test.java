@@ -31,11 +31,23 @@ import java.io.PrintStream;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * This is the Test class.
+ *
+ * @docgenVersion 9
+ */
 public class Test {
   static {
     System.setProperty("DEBUG_LIFECYCLE", "true");
   }
 
+  /**
+   * @author
+   * @version
+   * @docgenVersion 9
+   * @see
+   * @since
+   */
   @org.junit.jupiter.api.Test
   public void test() throws InterruptedException {
     Logger logger = (Logger) LoggerFactory
@@ -45,6 +57,13 @@ public class Test {
     final PrintStream out = System.out;
     final AtomicInteger bytes = new AtomicInteger(0);
     AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>() {
+      /**
+       * Appends the given logging event to the console.
+       *
+       * @param iLoggingEvent the logging event to append
+       *
+       *   @docgenVersion 9
+       */
       @Override
       protected synchronized void append(@Nonnull ILoggingEvent iLoggingEvent) {
         String formattedMessage = iLoggingEvent.getFormattedMessage();

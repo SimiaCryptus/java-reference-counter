@@ -25,10 +25,20 @@ import com.simiacryptus.ref.lang.ReferenceCounting;
 import javax.annotation.Nonnull;
 import java.util.Queue;
 
+/**
+ * This is the RefQueue interface.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefQueue<T> extends ReferenceCounting, Queue<T> {
 
+  /**
+   * @return a new {@link RefQueue} instance
+   * @throws NullPointerException if the argument is {@code null}
+   * @docgenVersion 9
+   */
   @Nonnull
   RefQueue<T> addRef();
 }

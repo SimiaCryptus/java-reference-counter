@@ -35,21 +35,43 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * This class represents an operator in an abstract syntax tree.
+ *
+ * @docgenVersion 9
+ */
 public abstract class ASTOperator extends ASTEditor {
 
   public ASTOperator(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     super(projectInfo, compilationUnit, file, true);
   }
 
+  /**
+   * Resolves the binding for the given type declaration.
+   *
+   * @param typeDeclaration the type declaration to resolve
+   * @return the type binding for the given type declaration
+   * @docgenVersion 9
+   */
   protected final static ITypeBinding resolveBinding(@Nonnull TypeDeclaration typeDeclaration) {
     return typeDeclaration.resolveBinding();
   }
 
+  /**
+   * @param node the given node
+   * @return the symbol index for the given node
+   * @docgenVersion 9
+   */
   @Nonnull
   public final SymbolIndex getSymbolIndex(@Nonnull ASTNode node) {
     return getSymbolIndex(node, new SymbolIndex());
   }
 
+  /**
+   * @return a stream of all methods in the given target class
+   * @throws NullPointerException if targetClass is null
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final Stream<IMethodBinding> allMethods(@Nonnull ITypeBinding targetClass) {
     final ITypeBinding superclass = targetClass.getSuperclass();
@@ -61,6 +83,13 @@ public abstract class ASTOperator extends ASTEditor {
     return declaredMethods.distinct();
   }
 
+  /**
+   * Deletes the given statement.
+   *
+   * @param statement the statement to delete
+   * @throws NullPointerException if the statement is null
+   * @docgenVersion 9
+   */
   protected final void delete(@Nonnull Statement statement) {
     debug(1, statement, "Deleting %s", statement);
     final ASTNode parent = statement.getParent();
@@ -162,6 +191,13 @@ public abstract class ASTOperator extends ASTEditor {
     statement.delete();
   }
 
+  /**
+   * Returns a list of the IMethodBindings for the methods that enclose the given node.
+   *
+   * @param node the node to find the enclosing methods of
+   * @return a list of the IMethodBindings for the methods that enclose the given node
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final List<IMethodBinding> enclosingMethods(@Nullable ASTNode node) {
     final ArrayList<IMethodBinding> list = new ArrayList<>();
@@ -178,6 +214,15 @@ public abstract class ASTOperator extends ASTEditor {
     return list;
   }
 
+  /**
+   * Returns a list of StatementOfInterest objects for the given block, starting at the given startAt index and ending at the given endAt index.
+   *
+   * @param block   the given block
+   * @param startAt the given startAt index
+   * @param endAt   the given endAt index
+   * @return a list of StatementOfInterest objects
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final List<StatementOfInterest> exits(@Nonnull Block block, int startAt, int endAt) {
     final ArrayList<StatementOfInterest> exits = exits_(block, startAt, endAt);
@@ -187,6 +232,13 @@ public abstract class ASTOperator extends ASTEditor {
     return exits;
   }
 
+  /**
+   * Returns a list of evaluable statements for the given expression.
+   *
+   * @param expression the expression to get evaluable statements for
+   * @return a list of evaluable statements for the given expression
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final List<Statement> getEvaluableStatements(Expression expression) {
     final ArrayList<Statement> statements = new ArrayList<>();
@@ -231,13 +283,34 @@ public abstract class ASTOperator extends ASTEditor {
     return statements;
   }
 
+  /**
+   * Returns the line number of the given node in the given block.
+   *
+   * @param block the block containing the given node
+   * @param node  the node whose line number is to be returned
+   * @return the line number of the given node in the given block
+   * @docgenVersion 9
+   */
   protected final int getLineNumber(@Nonnull Block block, ASTNode node) {
     return block.statements().indexOf(ASTUtil.getStatement(node));
   }
 
+  /**
+   * @param node        the node to get the symbol index for
+   * @param symbolIndex the symbol index to use
+   * @return the symbol index for the given node
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final SymbolIndex getSymbolIndex(@Nonnull ASTNode node, @Nonnull SymbolIndex symbolIndex) {
     node.accept(new IndexSymbols(projectInfo, compilationUnit, file, symbolIndex) {
+      /**
+       * This method is called when the end of a qualified name is visited.
+       *
+       * @param node the qualified name that is ending
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public void endVisit(QualifiedName node) {
         Name root = node;
@@ -253,6 +326,13 @@ public abstract class ASTOperator extends ASTEditor {
     return symbolIndex;
   }
 
+  /**
+   * @param node          the node to check
+   * @param name          the name of the type
+   * @param isDeclaration whether or not the node is a declaration
+   * @return the type of the given node, or null if the type could not be determined
+   * @docgenVersion 9
+   */
   @Nullable
   @SuppressWarnings("unused")
   protected final Type getType(@Nonnull ASTNode node, @Nonnull String name, boolean isDeclaration) {
@@ -318,6 +398,13 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * @param node          the node to check
+   * @param isDeclaration whether the node is a declaration or not
+   * @return the type of the given node, or null if the type could not be determined
+   * @throws NullPointerException if node is null
+   * @docgenVersion 9
+   */
   @Nullable
   protected final Type getType(@Nonnull Expression node, boolean isDeclaration) {
     final ITypeBinding typeBinding = resolveTypeBinding(node);
@@ -333,6 +420,13 @@ public abstract class ASTOperator extends ASTEditor {
     return getType(node, qualifiedName, isDeclaration);
   }
 
+  /**
+   * Checks if the given lambda expression has a return value.
+   *
+   * @param lambdaExpression the lambda expression to check
+   * @return true if the lambda expression has a return value, false otherwise
+   * @docgenVersion 9
+   */
   protected final boolean hasReturnValue(@Nonnull LambdaExpression lambdaExpression) {
     ASTNode parent = lambdaExpression.getParent();
     if (!(parent instanceof MethodInvocation)) {
@@ -342,6 +436,11 @@ public abstract class ASTOperator extends ASTEditor {
     return hasReturnValue((MethodInvocation) parent, lambdaExpression);
   }
 
+  /**
+   * @return whether the given {@link MethodInvocation} has a return value,
+   * or {@code null} if the given {@link LambdaExpression} is {@code null}
+   * @docgenVersion 9
+   */
   @Nullable
   protected final boolean hasReturnValue(@Nonnull MethodInvocation methodInvocation, LambdaExpression lambdaExpression) {
     final int argIndex = methodInvocation.arguments().indexOf(lambdaExpression);
@@ -376,11 +475,25 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * @param block    the block to search
+   * @param variable the variable to look for
+   * @param startAt  the index of the first statement to consider
+   * @param stopAt   the index of the last statement to consider
+   * @param depth    the maximum depth to search
+   * @return the last mention of the given variable in the given block, or null if there is no mention
+   * @docgenVersion 9
+   */
   @Nullable
   protected final StatementOfInterest lastMention(@Nonnull Block block, @Nonnull SimpleName variable, int startAt) {
     return lastMention(block, variable, startAt, block.statements().size(), 2);
   }
 
+  /**
+   * @return the last mention of the given {@code variable} in the given {@code block}, or {@code null} if there is no such mention
+   * @throws NullPointerException if {@code block} or {@code variable} is {@code null}
+   * @docgenVersion 9
+   */
   @Nullable
   protected final StatementOfInterest lastMention(@Nonnull Block block, @Nonnull SimpleName variable, int startAt, int endAt, int frames) {
     IBinding binding = resolveBinding(variable);
@@ -405,6 +518,16 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * Creates a new local variable with the given identifier, expression, and type.
+   *
+   * @param identifier the identifier for the new variable
+   * @param expression the expression for the new variable
+   * @param type       the type for the new variable
+   * @return the new local variable
+   * @throws NullPointerException if any argument is null
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final VariableDeclarationStatement newLocalVariable(@Nonnull String identifier, @Nonnull Expression expression, @Nonnull Type type) {
     final VariableDeclarationFragment variableDeclarationFragment = ast.newVariableDeclarationFragment();
@@ -415,6 +538,12 @@ public abstract class ASTOperator extends ASTEditor {
     return variableDeclarationStatement;
   }
 
+  /**
+   * @param identifier the name of the new local variable
+   * @param expression the initializer for the new local variable
+   * @return a {@link VariableDeclarationStatement} for the new local variable, or {@code null} if the type of {@code expression} could not be resolved
+   * @docgenVersion 9
+   */
   @Nullable
   protected final VariableDeclarationStatement newLocalVariable(@Nonnull String identifier, @Nonnull Expression expression) {
     final Type type = getType(expression, true);
@@ -425,6 +554,11 @@ public abstract class ASTOperator extends ASTEditor {
     return newLocalVariable(identifier, expression, type);
   }
 
+  /**
+   * @param node
+   * @param methodName
+   * @docgenVersion 9
+   */
   protected final void removeMethods(@Nonnull TypeDeclaration node, String methodName) {
     for (final Iterator iterator = node.bodyDeclarations().iterator(); iterator.hasNext(); ) {
       final ASTNode bodyDecl = (ASTNode) iterator.next();
@@ -438,6 +572,10 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * @Nullable protected final <T extends ASTNode, R extends IBinding> R resolve(@Nullable T node, @Nonnull Function<T, R> function);
+   * @docgenVersion 9
+   */
   @Nullable
   protected final <T extends ASTNode, R extends IBinding> R resolve(@Nullable T node, @Nonnull Function<T, R> function) {
     if (null == node) return null;
@@ -456,6 +594,16 @@ public abstract class ASTOperator extends ASTEditor {
     return null;
   }
 
+  /**
+   * @SuppressWarnings("unused") protected <T extends ASTNode> T findReparsed(@Nonnull T node) {
+   * T reparsed = findReparsed1(node).orElse(null);
+   * if (null != reparsed) {
+   * return reparsed;
+   * }
+   * return findReparsed2(node).orElse(null);
+   * }
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   protected <T extends ASTNode> T findReparsed(@Nonnull T node) {
     T reparsed = findReparsed1(node).orElse(null);
@@ -465,77 +613,170 @@ public abstract class ASTOperator extends ASTEditor {
     return findReparsed2(node).orElse(null);
   }
 
+  /**
+   * @Nullable protected final IBinding resolveBinding(@Nonnull Name node) {
+   * return resolve(node, name -> name.resolveBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IBinding resolveBinding(@Nonnull Name node) {
     return resolve(node, name -> name.resolveBinding());
   }
 
+  /**
+   * @Nullable protected final IMethodBinding resolveBinding(MethodDeclaration node) {
+   * return resolve(node, methodDeclaration -> methodDeclaration.resolveBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IMethodBinding resolveBinding(MethodDeclaration node) {
     return resolve(node, methodDeclaration -> methodDeclaration.resolveBinding());
   }
 
+  /**
+   * @Nullable
+   * @SuppressWarnings("unused") protected final IVariableBinding resolveBinding(VariableDeclarationFragment node) {
+   * return resolve(node, variableDeclarationFragment -> variableDeclarationFragment.resolveBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   @SuppressWarnings("unused")
   protected final IVariableBinding resolveBinding(VariableDeclarationFragment node) {
     return resolve(node, variableDeclarationFragment -> variableDeclarationFragment.resolveBinding());
   }
 
+  /**
+   * @param node
+   * @return the binding for the given node
+   * @Nullable
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IVariableBinding resolveBinding(SingleVariableDeclaration node) {
     return resolve(node, singleVariableDeclaration -> singleVariableDeclaration.resolveBinding());
   }
 
+  /**
+   * @Nullable protected final ITypeBinding resolveBinding(TypeParameter node) {
+   * return resolve(node, typeParameter -> typeParameter.resolveBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final ITypeBinding resolveBinding(TypeParameter node) {
     return resolve(node, typeParameter -> typeParameter.resolveBinding());
   }
 
+  /**
+   * @Nullable protected final ITypeBinding resolveBinding(Type node) {
+   * return resolve(node, type -> type.resolveBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final ITypeBinding resolveBinding(Type node) {
     return resolve(node, type -> type.resolveBinding());
   }
 
+  /**
+   * @Nullable protected final ITypeBinding resolveBinding(AnonymousClassDeclaration node) {
+   * return resolve(node, anonymousClassDeclaration -> anonymousClassDeclaration.resolveBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final ITypeBinding resolveBinding(AnonymousClassDeclaration node) {
     return resolve(node, anonymousClassDeclaration -> anonymousClassDeclaration.resolveBinding());
   }
 
+  /**
+   * @return the {@link IVariableBinding} for the given {@link VariableDeclaration}, or {@code null} if the binding cannot be resolved
+   * @throws IllegalArgumentException if the node is not a {@link VariableDeclaration}
+   * @Nullable
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IVariableBinding resolveBinding(@Nonnull VariableDeclaration node) {
     return resolve(node, variableDeclaration -> variableDeclaration.resolveBinding());
   }
 
+  /**
+   * @Nullable protected final IMethodBinding resolveConstructorBinding(@Nonnull ClassInstanceCreation node) {
+   * return resolve(node, classInstanceCreation -> classInstanceCreation.resolveConstructorBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IMethodBinding resolveConstructorBinding(@Nonnull ClassInstanceCreation node) {
     return resolve(node, classInstanceCreation -> classInstanceCreation.resolveConstructorBinding());
   }
 
+  /**
+   * @Nullable protected final IMethodBinding resolveConstructorBinding(@Nonnull ConstructorInvocation node) {
+   * return resolve(node, constructorInvocation -> constructorInvocation.resolveConstructorBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IMethodBinding resolveConstructorBinding(@Nonnull ConstructorInvocation node) {
     return resolve(node, constructorInvocation -> constructorInvocation.resolveConstructorBinding());
   }
 
+  /**
+   * @Nullable protected final IVariableBinding resolveFieldBinding(FieldAccess node) {
+   * return resolve(node, fieldAccess -> fieldAccess.resolveFieldBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IVariableBinding resolveFieldBinding(FieldAccess node) {
     return resolve(node, fieldAccess -> fieldAccess.resolveFieldBinding());
   }
 
+  /**
+   * @Nullable protected final IMethodBinding resolveMethodBinding(LambdaExpression node) {
+   * return resolve(node, lambdaExpression -> lambdaExpression.resolveMethodBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IMethodBinding resolveMethodBinding(LambdaExpression node) {
     return resolve(node, lambdaExpression -> lambdaExpression.resolveMethodBinding());
   }
 
+  /**
+   * @Nullable protected final IMethodBinding resolveMethodBinding(MethodInvocation node) {
+   * return resolve(node, methodInvocation -> methodInvocation.resolveMethodBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final IMethodBinding resolveMethodBinding(MethodInvocation node) {
     return resolve(node, methodInvocation -> methodInvocation.resolveMethodBinding());
   }
 
+  /**
+   * @Nullable protected final ITypeBinding resolveTypeBinding(@Nonnull Expression node) {
+   * return resolve(node, expression -> expression.resolveTypeBinding());
+   * }
+   * @docgenVersion 9
+   */
   @Nullable
   protected final ITypeBinding resolveTypeBinding(@Nonnull Expression node) {
     return resolve(node, expression -> expression.resolveTypeBinding());
   }
 
+  /**
+   * Converts the given lambda expression into a block.
+   *
+   * @param lambdaExpression the lambda expression to convert
+   * @return the converted block
+   * @throws NullPointerException if the lambda expression is null
+   * @docgenVersion 9
+   */
   @Nonnull
   protected final Block toBlock(@Nonnull LambdaExpression lambdaExpression) {
     final ASTNode body = lambdaExpression.getBody();
@@ -556,6 +797,13 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * @param block   the given block
+   * @param startAt the given start
+   * @param endAt   the given end
+   * @return an ArrayList of StatementsOfInterest
+   * @docgenVersion 9
+   */
   @Nonnull
   private ArrayList<StatementOfInterest> exits_(@Nonnull Block block, int startAt, int endAt) {
     final List statements = block.statements();
@@ -596,6 +844,13 @@ public abstract class ASTOperator extends ASTEditor {
     return exits;
   }
 
+  /**
+   * @param ast      the AST to process
+   * @param supplier the supplier of statements
+   * @param consumer the consumer of blocks
+   * @return the list of statement of interests
+   * @docgenVersion 9
+   */
   @Nonnull
   private List<StatementOfInterest> exits_(@Nonnull AST ast, @Nonnull Supplier<Statement> supplier, @Nonnull Consumer<Block> consumer) {
     Statement body = supplier.get();
@@ -613,12 +868,25 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * Finds a reparsed node.
+   *
+   * @param node the node to find
+   * @return the reparsed node, if found
+   * @docgenVersion 9
+   */
   private <T extends ASTNode> Optional<T> findReparsed1(@Nonnull T node) {
     ASTMapping reparsed = getReparsed();
     if (null == reparsed) return Optional.empty();
     return find(node, reparsed);
   }
 
+  /**
+   * @param node
+   * @param <T>
+   * @return
+   * @docgenVersion 9
+   */
   private <T extends ASTNode> Optional<T> findReparsed2(@Nonnull T node) {
     ASTMapping reparsed = getReparsed();
     if (null != reparsed) {
@@ -631,6 +899,13 @@ public abstract class ASTOperator extends ASTEditor {
     return optional;
   }
 
+  /**
+   * @param node     the node to find
+   * @param reparsed the reparsed node
+   * @param <T>      the type of node
+   * @return an optional node
+   * @docgenVersion 9
+   */
   private <T extends ASTNode> Optional<T> find(@Nonnull T node, @Nullable ASTMapping reparsed) {
     T any;
     final Optional<T> optional;
@@ -648,6 +923,12 @@ public abstract class ASTOperator extends ASTEditor {
     return optional;
   }
 
+  /**
+   * @param node       the ASTNode to check
+   * @param typeString the String to check for type delimiters
+   * @return an ArrayList of Integers that represent the top type delimiters, or null if there are none
+   * @docgenVersion 9
+   */
   @Nullable
   private ArrayList<Integer> getTopTypeDelimiters(@Nonnull ASTNode node, @Nonnull String typeString) {
     int nesting = 0;
@@ -666,6 +947,13 @@ public abstract class ASTOperator extends ASTEditor {
     return delimiters;
   }
 
+  /**
+   * @param node          the node to search for type parameters
+   * @param name          the name of the type parameter to search for
+   * @param isDeclaration whether the type parameter is a declaration
+   * @return the type parameter with the given name, or null if there is no such type parameter
+   * @docgenVersion 9
+   */
   @Nullable
   private Type getTypeParameter(@Nonnull ASTNode node, @Nonnull String name, boolean isDeclaration) {
     final String extendsPrefix = "? extends ";
@@ -685,6 +973,14 @@ public abstract class ASTOperator extends ASTEditor {
     }
   }
 
+  /**
+   * This class represents a statement of interest.
+   *
+   * @param line      the line number
+   * @param statement the statement
+   * @param block     the block
+   * @docgenVersion 9
+   */
   public static class StatementOfInterest {
     public final int line;
     @Nonnull
@@ -698,15 +994,32 @@ public abstract class ASTOperator extends ASTEditor {
       this.line = line;
     }
 
+    /**
+     * Returns true if the return statement is complex.
+     *
+     * @return true if the return statement is complex
+     * @docgenVersion 9
+     */
     public boolean isComplexReturn() {
       if (!isReturn()) return false;
       return !(((ReturnStatement) statement).getExpression() instanceof SimpleName);
     }
 
+    /**
+     * Returns true if the statement is a return statement.
+     *
+     * @return true if the statement is a return statement
+     * @docgenVersion 9
+     */
     public boolean isReturn() {
       return statement instanceof ReturnStatement;
     }
 
+    /**
+     * Returns true if the statement is a return value, false otherwise.
+     *
+     * @docgenVersion 9
+     */
     @SuppressWarnings("unused")
     public boolean isReturnValue() {
       if (!isReturn()) return false;

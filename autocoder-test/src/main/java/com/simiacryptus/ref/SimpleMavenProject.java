@@ -37,6 +37,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/**
+ * This class represents a simple Maven project.
+ *
+ * @author John Doe
+ * @version 1.0
+ * @docgenVersion 9
+ * @see MavenProject
+ * @since 1.0
+ */
 public class SimpleMavenProject {
   private static final File repositoryLocation = new File(System.getProperty("user.home"), ".m2/repository");
   private static final Logger logger = LoggerFactory.getLogger(SimpleMavenProject.class);
@@ -58,6 +67,12 @@ public class SimpleMavenProject {
     this.project = MavenUtil.getMavenProject(new File(projectRoot, "pom.xml"), plexusContainer, session);
   }
 
+  /**
+   * Returns an array of dependencies.
+   *
+   * @return an array of dependencies
+   * @docgenVersion 9
+   */
   @Nonnull
   public String[] getDependencies() {
     return resolve().getDependencies().stream()
@@ -67,11 +82,22 @@ public class SimpleMavenProject {
         .toArray(i -> new String[i]);
   }
 
+  /**
+   * Returns a new ProjectInfo object containing the project root, sources, and dependencies.
+   *
+   * @return ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   public ProjectInfo getProjectInfo() {
     return new ProjectInfo(this.projectRoot, getSources(), getDependencies());
   }
 
+  /**
+   * @return a String array of the project's test compile source roots and compile source roots
+   * @throws NullPointerException if the project or any of its source roots are null
+   * @docgenVersion 9
+   */
   @Nonnull
   public String[] getSources() {
     return Stream.concat(
@@ -80,6 +106,18 @@ public class SimpleMavenProject {
     ).toArray(i -> new String[i]);
   }
 
+  /**
+   * Loads a SimpleMavenProject from the given root.
+   *
+   * @param root the root of the SimpleMavenProject
+   * @return the SimpleMavenProject loaded from the root
+   * @throws IOException                   if an I/O error occurs
+   * @throws PlexusContainerException      if there is an error with the Plexus container
+   * @throws ComponentLookupException      if there is an error looking up a component
+   * @throws ProjectBuildingException      if there is an error building the project
+   * @throws DependencyResolutionException if there is an error resolving dependencies
+   * @docgenVersion 9
+   */
   @Nonnull
   public static SimpleMavenProject load(String root) throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     SimpleMavenProject mavenProject = new SimpleMavenProject(root);
@@ -89,6 +127,12 @@ public class SimpleMavenProject {
     return mavenProject;
   }
 
+  /**
+   * Resolves all dependencies for the project.
+   *
+   * @return the dependency resolution result
+   * @docgenVersion 9
+   */
   public DependencyResolutionResult resolve() {
     try {
       final ProjectDependenciesResolver resolver = plexusContainer.lookup(ProjectDependenciesResolver.class);

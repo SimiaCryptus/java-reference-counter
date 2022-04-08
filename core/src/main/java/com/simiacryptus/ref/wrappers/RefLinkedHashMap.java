@@ -26,6 +26,14 @@ import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Class RefLinkedHashMap
+ *
+ * @param <K> the type of keys maintained by this map
+ * @param <V> the type of mapped values
+ * @Nonnull private final Map<K, KeyValue<K, V>> inner;
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
@@ -41,12 +49,24 @@ public class RefLinkedHashMap<K, V> extends RefAbstractMap<K, V> {
     putAll(values);
   }
 
+  /**
+   * Returns the inner map.
+   *
+   * @return the inner map
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {
     return inner;
   }
 
+  /**
+   * Returns a new reference to this {@code RefLinkedHashMap}.
+   *
+   * @return a new reference to this {@code RefLinkedHashMap}
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public RefLinkedHashMap<K, V> addRef() {

@@ -31,6 +31,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Class to remove type annotations.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RemoveTypeAnnotations extends RefASTOperator {
 
@@ -41,6 +46,12 @@ public class RemoveTypeAnnotations extends RefASTOperator {
     toRemove = Arrays.asList(annotationsToRemove);
   }
 
+  /**
+   * This method is called when the end of a type declaration is reached.
+   *
+   * @param node the type declaration that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull TypeDeclaration node) {
     final Iterator iterator = node.modifiers().iterator();

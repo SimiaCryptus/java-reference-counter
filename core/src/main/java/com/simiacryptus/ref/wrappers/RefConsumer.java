@@ -23,7 +23,16 @@ import com.simiacryptus.ref.lang.RefAware;
 
 import java.util.function.Consumer;
 
+/**
+ * This is the RefConsumer interface.
+ *
+ * @docgenVersion 9
+ */
 public interface RefConsumer<T> extends Consumer<T> {
+  /**
+   * @Override void accept(@RefAware T t);
+   * @docgenVersion 9
+   */
   @Override
   void accept(@RefAware T t);
 }

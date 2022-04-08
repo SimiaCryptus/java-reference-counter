@@ -31,6 +31,11 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import javax.annotation.Nonnull;
 import java.io.File;
 
+/**
+ * This class contains methods for removing references.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RemoveRefMethods extends RefASTOperator {
 
@@ -38,6 +43,12 @@ public class RemoveRefMethods extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of a type declaration is reached.
+   *
+   * @param node the type declaration that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull TypeDeclaration node) {
     final ITypeBinding typeBinding = ASTOperator.resolveBinding(node);

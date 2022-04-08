@@ -30,8 +30,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
+/**
+ * This class provides support for reference streams, which
+ * allow for the reading and writing of references to objects.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RefStreamSupport {
+  /**
+   * Returns a {@link RefStream} for the given {@link Spliterator}.
+   *
+   * <p>The {@code RefStream} is backed by the given {@code Spliterator}, and
+   * inherits its characteristics.
+   *
+   * @param <T>         the type of stream elements
+   * @param spliterator the spliterator to use
+   * @param parallel    if {@code true} then the returned stream is a parallel stream;
+   *                    if {@code false} then the returned stream is a sequential stream
+   * @return a stream backed by the given spliterator
+   * @throws NullPointerException if the given spliterator is {@code null}
+   * @docgenVersion 9
+   */
   public static <T> RefStream<T> stream(@RefAware Spliterator<T> spliterator,
                                         boolean parallel) {
     if (spliterator instanceof RefSpliterator) {

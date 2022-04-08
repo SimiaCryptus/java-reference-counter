@@ -22,6 +22,12 @@ package com.simiacryptus.ref.lang;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+/**
+ * This class is a wrapper for an object reference.
+ *
+ * @param <T> the type of the object being referenced
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class ReferenceWrapper<T> {
   final T obj;
@@ -34,16 +40,35 @@ public class ReferenceWrapper<T> {
     this.destructor = destructor;
   }
 
+  /**
+   * This method destroys the object.
+   *
+   * @param obj the object to be destroyed
+   * @docgenVersion 9
+   */
   public void destroy() {
     if (!isFinalized.getAndSet(true)) {
       destructor.accept(obj);
     }
   }
 
+  /**
+   * Returns the object at the top of the stack without removing it.
+   *
+   * @return the object at the top of the stack
+   * @docgenVersion 9
+   */
   public T peek() {
     return obj;
   }
 
+  /**
+   * Unwraps the object.
+   *
+   * @return the unwrapped object
+   * @throws IllegalStateException if the object is already finalized
+   * @docgenVersion 9
+   */
   public T unwrap() {
     if (isFinalized.getAndSet(true)) {
       throw new IllegalStateException();
@@ -51,6 +76,12 @@ public class ReferenceWrapper<T> {
     return obj;
   }
 
+  /**
+   * This method is called when the object is no longer in use.
+   * It destroys the object and calls the superclass's finalize method.
+   *
+   * @docgenVersion 9
+   */
   @Override
   protected void finalize() throws Throwable {
     destroy();

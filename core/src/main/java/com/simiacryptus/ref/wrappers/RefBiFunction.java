@@ -23,7 +23,19 @@ import com.simiacryptus.ref.lang.RefAware;
 
 import java.util.function.BiFunction;
 
+/**
+ * @interface RefBiFunction
+ * @docgenVersion 9
+ */
 public interface RefBiFunction<T, U, R> extends BiFunction<T, U, R> {
+  /**
+   * Applies this function to the given arguments.
+   *
+   * @param t the first function argument
+   * @param u the second function argument
+   * @return the function result
+   * @docgenVersion 9
+   */
   @Override
   @RefAware
   R apply(@RefAware T t, @RefAware U u);

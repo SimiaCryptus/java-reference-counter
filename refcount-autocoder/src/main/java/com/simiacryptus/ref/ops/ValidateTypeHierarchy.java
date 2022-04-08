@@ -27,6 +27,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 
+/**
+ * This class validates the type hierarchy.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class ValidateTypeHierarchy extends RefASTOperator {
 
@@ -34,6 +39,12 @@ public class ValidateTypeHierarchy extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of a type declaration is reached.
+   *
+   * @param node the type declaration that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull TypeDeclaration node) {
     final ITypeBinding typeBinding = node.resolveBinding();
@@ -46,6 +57,12 @@ public class ValidateTypeHierarchy extends RefASTOperator {
     }
   }
 
+  /**
+   * This method is called when the visitor encounters a variable declaration fragment.
+   *
+   * @param declaration the variable declaration fragment to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull VariableDeclarationFragment declaration) {
     if (skip(declaration)) return;
@@ -76,6 +93,13 @@ public class ValidateTypeHierarchy extends RefASTOperator {
     }
   }
 
+  /**
+   * Validates a field.
+   *
+   * @param declaration the field declaration
+   * @param typeBinding the type binding, or null if none
+   * @docgenVersion 9
+   */
   private void validateField(@Nonnull VariableDeclarationFragment declaration, @Nullable ITypeBinding typeBinding) {
     if (null == typeBinding) {
       warn(declaration, "Unresolved binding");

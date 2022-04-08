@@ -34,6 +34,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Class that contains information about a project.
+ *
+ * @param projectRoot       The root directory of the project.
+ * @param sourcepathEntries An array of sourcepath entries.
+ * @param classpathEntries  An array of classpath entries.
+ * @docgenVersion 9
+ */
 public class ProjectInfo {
   private final String projectRoot;
   private final String[] sourcepathEntries;
@@ -45,6 +53,11 @@ public class ProjectInfo {
     this.classpathEntries = classpathEntries;
   }
 
+  /**
+   * @return a new ASTParser
+   * @throws NullPointerException if the given parser is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public ASTParser newAstParser() {
     HashMap<String, String> compilerOptions = new HashMap<>();
@@ -59,11 +72,21 @@ public class ProjectInfo {
     return astParser;
   }
 
+  /**
+   * @return a HashMap mapping each File to its corresponding CompilationUnit
+   * @docgenVersion 9
+   */
   @Nonnull
   public HashMap<File, CompilationUnit> parse() {
     return read(sourceFiles());
   }
 
+  /**
+   * @param files the files to read
+   * @return a map of the files to their compilation units
+   * @throws NullPointerException if files is null
+   * @docgenVersion 9
+   */
   public @Nonnull
   HashMap<File, CompilationUnit> read(@Nonnull File... files) {
     final Map<String, File> fileMap = new HashMap<>();
@@ -77,6 +100,14 @@ public class ProjectInfo {
           null,
           new String[]{},
           new FileASTRequestor() {
+            /**
+             * @Override
+             * public void acceptAST(final String source, final CompilationUnit ast) {
+             *     results.put(fileMap.get(source), ast);
+             * }
+             *
+             *   @docgenVersion 9
+             */
             @Override
             public void acceptAST(final String source, final CompilationUnit ast) {
               results.put(fileMap.get(source), ast);
@@ -88,12 +119,21 @@ public class ProjectInfo {
     return results;
   }
 
+  /**
+   * @return an array of source files in the project
+   * @throws NullPointerException if the project root is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public File[] sourceFiles() {
     return FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true)
         .stream().map(file -> file.getAbsoluteFile()).distinct().toArray(i -> new File[i]);
   }
 
+  /**
+   * @return a non-null String
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public String toString() {

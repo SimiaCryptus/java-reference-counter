@@ -26,6 +26,12 @@ import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 
+/**
+ * A class that represents a weak reference.
+ *
+ * @param <T> the type of object that this reference refers to
+ * @docgenVersion 9
+ */
 public class RefWeakReference<T> {
   private final WeakReference<T> inner;
 
@@ -37,17 +43,37 @@ public class RefWeakReference<T> {
     this.inner = inner;
   }
 
+  /**
+   * Returns true if this task is queued for execution.
+   *
+   * @return true if this task is queued for execution.
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   public boolean isEnqueued() {
     return inner.isEnqueued();
   }
 
+  /**
+   * Wraps a {@link ReferenceCountingBase} object in a {@link RefWeakReference}.
+   *
+   * @param obj the object to wrap
+   * @param <T> the type of the object to wrap
+   * @return a {@link RefWeakReference} wrapping the specified object
+   * @docgenVersion 9
+   */
   public static <T extends ReferenceCountingBase> RefWeakReference<T> wrap(T obj) {
     RefWeakReference<T> reference = new RefWeakReference<>(obj);
     obj.freeRef();
     return reference;
   }
 
+  /**
+   * @return the element at the specified position in this list,
+   * or null if the index is out of range
+   * (<tt>index &lt; 0 || index &gt;= size()</tt>)
+   * @docgenVersion 9
+   */
   @Nullable
   @SuppressWarnings("unused")
   public T get() {
@@ -62,11 +88,22 @@ public class RefWeakReference<T> {
     return t;
   }
 
+  /**
+   * This method clears the inner list.
+   *
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   public void clear() {
     inner.clear();
   }
 
+  /**
+   * @SuppressWarnings("unused") public boolean enqueue() {
+   * return inner.enqueue();
+   * }
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   public boolean enqueue() {
     return inner.enqueue();

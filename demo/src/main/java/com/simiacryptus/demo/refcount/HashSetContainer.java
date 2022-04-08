@@ -27,8 +27,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * This class represents a hash set container.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class HashSetContainer extends ReferenceCountingBase {
+  /**
+   * This is the test method.
+   * It will test the collection, element, stream, and array operations.
+   *
+   * @docgenVersion 9
+   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCollectionOperations();
@@ -38,6 +49,12 @@ public class HashSetContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests stream operations on a {@link ValueContainer}.
+   *
+   * @param operation the operation to test
+   * @docgenVersion 9
+   */
   private static void testStreamOperations() {
     testOperations(values -> {
       values.stream().forEach(x -> {
@@ -46,6 +63,11 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the ArrayOperations class.
+   *
+   * @docgenVersion 9
+   */
   private static void testArrayOperations() {
     testOperations(values -> {
       values.add(new BasicType());
@@ -59,6 +81,11 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the element operations of the stack.
+   *
+   * @docgenVersion 9
+   */
   private static void testElementOperations() {
     testOperations(values -> {
       if (!values.isEmpty()) {
@@ -91,12 +118,23 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the operations of a set.
+   *
+   * @param setRefConsumer the set to test
+   * @docgenVersion 9
+   */
   private static void testOperations(
       @Nonnull Consumer<HashSet<BasicType>> setRefConsumer) {
     HashSet<BasicType> values = new HashSet<>();
     setRefConsumer.accept(values);
   }
 
+  /**
+   * Tests the collection operations.
+   *
+   * @docgenVersion 9
+   */
   private static void testCollectionOperations() {
     testOperations(setValues -> {
       setValues.add(new BasicType());
@@ -118,6 +156,11 @@ public class HashSetContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

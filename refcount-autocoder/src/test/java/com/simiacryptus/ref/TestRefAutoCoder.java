@@ -30,15 +30,41 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * This class is a test for the RefAutoCoder class.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class TestRefAutoCoder {
+  /**
+   * @return the project info
+   * @throws IOException
+   * @throws PlexusContainerException
+   * @throws ComponentLookupException
+   * @throws ProjectBuildingException
+   * @throws DependencyResolutionException
+   * @docgenVersion 9
+   */
   @Nonnull
   public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }
 
+  /**
+   * This class is responsible for adding two numbers together.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Add {
+    /**
+     * Main method for the Insert Coder class.
+     *
+     * @param args Array of String arguments.
+     * @throws Exception
+     * @docgenVersion 9
+     */
     public static void main(String[] args) {
       try {
         new Insert.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();
@@ -48,8 +74,20 @@ public class TestRefAutoCoder {
     }
   }
 
+  /**
+   * This class removes something.
+   *
+   * @author Your Name
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Remove {
+    /**
+     * Main method for the Remove Coder class.
+     *
+     * @param args command line arguments
+     * @docgenVersion 9
+     */
     public static void main(String[] args) {
       try {
         new com.simiacryptus.ref.Remove.Coder(TestRefAutoCoder.getProjectInfo(), true).rewrite();

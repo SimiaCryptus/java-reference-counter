@@ -34,6 +34,12 @@ import java.util.stream.Stream;
 
 import static com.simiacryptus.lang.Settings.get;
 
+/**
+ * This class contains settings for the reference manager.
+ *
+ * @author SimonCryptus (https://github.com/SimonCryptus)
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RefSettings implements Settings {
 
@@ -63,6 +69,10 @@ public class RefSettings implements Settings {
         Integer.toString(get("THREADS", 64)));
   }
 
+  /**
+   * @return the singleton instance of RefSettings, or null if it does not exist
+   * @docgenVersion 9
+   */
   @Nullable
   public static RefSettings INSTANCE() {
     if (null == INSTANCE) {
@@ -76,10 +86,24 @@ public class RefSettings implements Settings {
     return INSTANCE;
   }
 
+  /**
+   * Returns true if the stack trace element's class name starts with the stack prefix filter.
+   *
+   * @param stackTraceElement the stack trace element to check
+   * @return true if the stack trace element's class name starts with the stack prefix filter
+   * @docgenVersion 9
+   */
   public static boolean filter(StackTraceElement stackTraceElement) {
     return stackTraceElement.getClassName().startsWith(stackPrefixFilter);
   }
 
+  /**
+   * Checks if the lifecycle debug is enabled for the given class.
+   *
+   * @param objClass the class to check
+   * @return true if the lifecycle debug is enabled, false otherwise
+   * @docgenVersion 9
+   */
   public boolean isLifecycleDebug(Class<? extends ReferenceCounting> objClass) {
     String key = objClass.getCanonicalName();
     return watchedClasses.contains(key) || (lifecycleDebug && !ignoredClasses.contains(key));

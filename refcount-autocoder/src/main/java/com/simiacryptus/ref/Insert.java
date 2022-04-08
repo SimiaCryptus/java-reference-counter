@@ -27,15 +27,31 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * This class represents the insert operation.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "insert")
 public class Insert extends RefAutoCoderMojo {
+  /**
+   * @return an AutoCoder object
+   * @throws NullPointerException if projectInfo is null
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo, getBoolean("modifyAPI", false));
   }
 
+  /**
+   * Class Coder
+   *
+   * @param shouldChangeAPI A boolean value that determines whether or not the API should be changed
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
     private final boolean shouldChangeAPI;
@@ -45,6 +61,10 @@ public class Insert extends RefAutoCoderMojo {
       this.shouldChangeAPI = shouldChangeAPI;
     }
 
+    /**
+     * @Override public void rewrite();
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       new Check.Coder(projectInfo).rewrite();

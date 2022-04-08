@@ -31,12 +31,32 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The TestAutoCoder class is used to test the AutoCoder class.
+ *
+ * @docgenVersion 9
+ */
 public class TestAutoCoder {
+  /**
+   * @return the project info
+   * @throws IOException
+   * @throws PlexusContainerException
+   * @throws ComponentLookupException
+   * @throws ProjectBuildingException
+   * @throws DependencyResolutionException
+   * @docgenVersion 9
+   */
   @Nonnull
   private ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
     return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
   }
 
+  /**
+   * @Test public void print() throws ComponentLookupException, PlexusContainerException, ProjectBuildingException, DependencyResolutionException, IOException {
+   * new PrintAST().getAutoCoder(TestAutoCoder.this.getProjectInfo()).rewrite();
+   * }
+   * @docgenVersion 9
+   */
   @Test
   public void print() throws ComponentLookupException, PlexusContainerException, ProjectBuildingException, DependencyResolutionException, IOException {
     new PrintAST().getAutoCoder(TestAutoCoder.this.getProjectInfo()).rewrite();

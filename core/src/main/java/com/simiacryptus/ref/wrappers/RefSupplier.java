@@ -24,7 +24,18 @@ import com.simiacryptus.ref.lang.RefAware;
 import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
+/**
+ * This is the RefSupplier interface.
+ *
+ * @docgenVersion 9
+ */
 public interface RefSupplier<T> extends Supplier<T> {
+  /**
+   * Returns an object.
+   *
+   * @return an object
+   * @docgenVersion 9
+   */
   @Nonnull
   @RefAware
   @Override

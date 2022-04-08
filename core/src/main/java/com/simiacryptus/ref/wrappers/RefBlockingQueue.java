@@ -24,10 +24,21 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import javax.annotation.Nonnull;
 import java.util.concurrent.BlockingQueue;
 
+/**
+ * This is the RefBlockingQueue interface.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public interface RefBlockingQueue<T> extends RefQueue<T>, BlockingQueue<T> {
 
+  /**
+   * Adds a reference to the queue.
+   *
+   * @return the queue
+   * @docgenVersion 9
+   */
   @Nonnull
   RefBlockingQueue<T> addRef();
 }

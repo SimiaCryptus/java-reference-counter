@@ -33,6 +33,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/**
+ * The AutoCoder class contains information about the project being coded, as well as a boolean value that
+ * determines whether or not the coding should be done in parallel.
+ *
+ * @docgenVersion 9
+ */
 public abstract class AutoCoder {
   protected static final Logger logger = LoggerFactory.getLogger(AutoCoderMojo.class);
   protected final ProjectInfo projectInfo;
@@ -42,10 +48,22 @@ public abstract class AutoCoder {
     this.projectInfo = projectInfo;
   }
 
+  /**
+   * Returns the projectInfo.
+   *
+   * @return the projectInfo
+   * @docgenVersion 9
+   */
   protected ProjectInfo getProjectInfo() {
     return projectInfo;
   }
 
+  /**
+   * Returns a symbol index.
+   *
+   * @return a symbol index
+   * @docgenVersion 9
+   */
   @SuppressWarnings("unused")
   @Nonnull
   protected SymbolIndex getSymbolIndex() {
@@ -54,10 +72,24 @@ public abstract class AutoCoder {
     return index;
   }
 
+  /**
+   * Returns true if this line is parallel to the given line, and false otherwise.
+   *
+   * @param line the given line
+   * @return true if this line is parallel to the given line, and false otherwise
+   * @docgenVersion 9
+   */
   public boolean isParallel() {
     return parallel;
   }
 
+  /**
+   * Sets the parallel flag to the given value.
+   *
+   * @param parallel the new value for the parallel flag
+   * @return this AutoCoder instance
+   * @docgenVersion 9
+   */
   @Nonnull
   @SuppressWarnings("unused")
   public AutoCoder setParallel(boolean parallel) {
@@ -65,6 +97,14 @@ public abstract class AutoCoder {
     return this;
   }
 
+  /**
+   * Reads the contents of a file into a String.
+   *
+   * @param file The file to read from.
+   * @return The contents of the file as a String.
+   * @throws RuntimeException if an I/O error occurs.
+   * @docgenVersion 9
+   */
   public static String read(@Nonnull File file) {
     try {
       return FileUtils.readFileToString(file, "UTF-8");
@@ -73,12 +113,33 @@ public abstract class AutoCoder {
     }
   }
 
+  /**
+   * This is the rewrite method that is abstract.
+   *
+   * @docgenVersion 9
+   */
   public abstract void rewrite();
 
+  /**
+   * Rewrites this node using the given {@link VisitorFactory}.
+   *
+   * @param visitorFactory the {@link VisitorFactory} to use
+   * @return the result of the rewrite
+   * @docgenVersion 9
+   */
   protected int rewrite(@Nonnull VisitorFactory visitorFactory) {
     return rewrite(visitorFactory, isParallel(), false);
   }
 
+  /**
+   * Rewrites the AST using the given {@link VisitorFactory}.
+   *
+   * @param visitorFactory the factory to use for creating visitors
+   * @param parallel       whether to rewrite in parallel
+   * @param failAtEnd      whether to fail if rewriting fails
+   * @return the number of nodes rewritten
+   * @docgenVersion 9
+   */
   protected int rewrite(@Nonnull VisitorFactory visitorFactory, boolean parallel, boolean failAtEnd) {
     Stream<Map.Entry<File, CompilationUnit>> stream = getProjectInfo().parse().entrySet().stream();
     if (parallel) stream = stream.parallel();
@@ -121,6 +182,12 @@ public abstract class AutoCoder {
     return sum;
   }
 
+  /**
+   * Scans the given visitor for any @Nonnull annotations.
+   *
+   * @param visitor the visitor to scan
+   * @docgenVersion 9
+   */
   protected void scan(@Nonnull VisitorFactory visitor) {
     getProjectInfo().parse().entrySet().stream().forEach(entry -> {
       File file = entry.getKey();
@@ -134,7 +201,22 @@ public abstract class AutoCoder {
     });
   }
 
+  /**
+   * The VisitorFactory interface is used to create visitors.
+   *
+   * @docgenVersion 9
+   */
   public interface VisitorFactory {
+    /**
+     * Applies the given project info and compilation unit to the given file.
+     *
+     * @param projectInfo     the project info to apply
+     * @param compilationUnit the compilation unit to apply
+     * @param file            the file to apply the project info and compilation unit to
+     * @return the AST editor that was used to apply the project info and compilation unit
+     * @throws NullPointerException if any of the arguments are null
+     * @docgenVersion 9
+     */
     @Nonnull
     ASTEditor apply(ProjectInfo projectInfo, CompilationUnit compilationUnit, File file);
   }

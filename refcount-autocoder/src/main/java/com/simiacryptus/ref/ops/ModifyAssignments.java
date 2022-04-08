@@ -27,6 +27,11 @@ import org.eclipse.jdt.core.dom.*;
 import javax.annotation.Nonnull;
 import java.io.File;
 
+/**
+ * This class is responsible for modifying assignments.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class ModifyAssignments extends RefASTOperator {
 
@@ -34,6 +39,12 @@ public class ModifyAssignments extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the end of an assignment is visited.
+   *
+   * @param assignment the assignment that is being visited
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull Assignment assignment) {
     final Expression leftHandSide = assignment.getLeftHandSide();

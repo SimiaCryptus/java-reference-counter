@@ -30,6 +30,12 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
+/**
+ * The InsertAddRefs class is used to insert additional references into a
+ * document.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class InsertAddRefs extends RefASTOperator {
 
@@ -37,6 +43,14 @@ public class InsertAddRefs extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Adds references to the arguments of a given node.
+   *
+   * @param node          the node to add references to
+   * @param arguments     the arguments to add references to
+   * @param methodBinding the method binding for the node
+   * @docgenVersion 9
+   */
   public void addRefsToArguments(@Nonnull ASTNode node, @Nonnull List<ASTNode> arguments, @Nonnull IMethodBinding methodBinding) {
     String name = methodBinding.getReturnType().getQualifiedName();
     for (int i = 0; i < arguments.size(); i++) {
@@ -56,6 +70,10 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * @return an Expression that represents a reference to the given ASTNode, or null if the node cannot be represented as a reference
+   * @docgenVersion 9
+   */
   @Nullable
   public Expression wrapAddRef(ASTNode node) {
     if (node instanceof SimpleName) {
@@ -67,6 +85,12 @@ public class InsertAddRefs extends RefASTOperator {
     return null;
   }
 
+  /**
+   * Adds a reference to the given expression.
+   *
+   * @param expression the expression to add a reference to
+   * @docgenVersion 9
+   */
   protected void addRef(@Nonnull Expression expression) {
     final ITypeBinding resolveTypeBinding = resolveTypeBinding(expression);
     if (null == resolveTypeBinding) {
@@ -79,6 +103,13 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Returns true if the given expression is an instance accessor.
+   *
+   * @param expression the expression to check
+   * @return true if the expression is an instance accessor, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean isInstanceAccessor(Expression expression) {
     if (expression instanceof ThisExpression) return true;
     if (expression instanceof SimpleName) {
@@ -89,15 +120,31 @@ public class InsertAddRefs extends RefASTOperator {
     return false;
   }
 
+  /**
+   * Returns true if the given expression should be added to the reference list, false otherwise.
+   *
+   * @param expression the expression to check
+   * @return true if the expression should be added to the reference list, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean shouldAddRef(Expression expression) {
     if (expression instanceof MethodInvocation) return false;
     if (expression instanceof ClassInstanceCreation) return false;
     if (expression instanceof CastExpression) return false;
     if (expression instanceof ArrayCreation) return false;
-    if (expression instanceof ParenthesizedExpression) return shouldAddRef(((ParenthesizedExpression) expression).getExpression());
+    if (expression instanceof ParenthesizedExpression)
+      return shouldAddRef(((ParenthesizedExpression) expression).getExpression());
     return true;
   }
 
+  /**
+   * Returns true if the given ASTNode should be wrapped in a new node with the given name.
+   *
+   * @param arg  the ASTNode to check
+   * @param name the name of the new node
+   * @return true if the ASTNode should be wrapped, false otherwise
+   * @docgenVersion 9
+   */
   protected boolean shouldWrap(ASTNode arg, String name) {
     if (arg instanceof ClassInstanceCreation) {
       debug(arg, "Ignored argument type %s on %s", arg.getClass().getSimpleName(), name);
@@ -126,6 +173,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify an array initializer.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyArrayInitializer extends InsertAddRefs {
 
@@ -133,6 +185,12 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of an array initializer is reached.
+     *
+     * @param node the node to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull ArrayInitializer node) {
       if (skip(node)) return;
@@ -153,6 +211,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a method invocation.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyMethodInvocation extends InsertAddRefs {
 
@@ -160,6 +223,12 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the visitor encounters a method invocation node.
+     *
+     * @param node the method invocation node that was visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull MethodInvocation node) {
       final Expression expression = node.getExpression();
@@ -175,6 +244,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * The ModifyAssignment class is used to modify an assignment.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyAssignment extends InsertAddRefs {
 
@@ -182,6 +256,12 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the end of an assignment is visited.
+     *
+     * @param node the node being visited
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull Assignment node) {
       final Expression expression = node.getRightHandSide();
@@ -189,6 +269,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a variable declaration fragment.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyVariableDeclarationFragment extends InsertAddRefs {
 
@@ -196,6 +281,13 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This is the endVisit method for the VariableDeclarationFragment class.
+     * It overrides the endVisit method in the ASTVisitor class.
+     *
+     * @param node the VariableDeclarationFragment object
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull VariableDeclarationFragment node) {
       final Expression initializer = node.getInitializer();
@@ -203,6 +295,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class demonstrates how to modify a return statement.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyReturnStatement extends InsertAddRefs {
 
@@ -210,6 +307,14 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This is the endVisit method for the ReturnStatement class.
+     * It overrides the endVisit method in the ASTVisitor class.
+     *
+     * @param node the ReturnStatement node to be visited
+     * @return void
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull ReturnStatement node) {
       final Expression expression = node.getExpression();
@@ -217,6 +322,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify constructor invocations.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyConstructorInvocation extends InsertAddRefs {
 
@@ -224,6 +334,12 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the visitor encounters a constructor invocation.
+     *
+     * @param node the constructor invocation node
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull ConstructorInvocation node) {
       if (skip(node)) return;
@@ -236,6 +352,11 @@ public class InsertAddRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is used to modify an instance of a class.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class ModifyClassInstanceCreation extends InsertAddRefs {
 
@@ -243,6 +364,12 @@ public class InsertAddRefs extends RefASTOperator {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This method is called when the visitor encounters a class instance creation expression.
+     *
+     * @param node the class instance creation expression to visit
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull ClassInstanceCreation node) {
       if (skip(node)) return;

@@ -26,6 +26,12 @@ import javax.annotation.Nonnull;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * A class that represents a linked list.
+ *
+ * @param <T> the type of element in the list
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefLinkedList<T> extends RefAbstractList<T> {
@@ -41,12 +47,22 @@ public class RefLinkedList<T> extends RefAbstractList<T> {
     this.addAll(list);
   }
 
+  /**
+   * @return the inner linked list
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public LinkedList<T> getInner() {
     return inner;
   }
 
+  /**
+   * Adds a reference to this object.
+   *
+   * @return a reference to this object
+   * @docgenVersion 9
+   */
   @Nonnull
   public @Override
   RefLinkedList<T> addRef() {

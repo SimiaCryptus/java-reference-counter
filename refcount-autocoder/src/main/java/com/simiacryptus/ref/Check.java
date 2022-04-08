@@ -27,15 +27,32 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
+/**
+ * The Check class is used to track checks.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "check")
 public class Check extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The Coder class is a class that contains code.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
 
@@ -43,6 +60,14 @@ public class Check extends RefAutoCoderMojo {
       super(projectInfo);
     }
 
+    /**
+     * Rewrites the type hierarchy.
+     *
+     * @param validator  the validator to use
+     * @param isParallel true if the rewrite should be done in parallel, false otherwise
+     * @param update     true if the type hierarchy should be updated, false otherwise
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       rewrite(ValidateTypeHierarchy::new, isParallel(), true);

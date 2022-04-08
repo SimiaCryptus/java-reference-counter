@@ -33,6 +33,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The VerifyClassMembers class is used to verify the class members.
+ *
+ * @param index The index of the class members.
+ * @docgenVersion 9
+ */
 public class VerifyClassMembers extends VerifyRefOperator {
   @Nonnull
   protected SymbolIndex index;
@@ -42,6 +48,13 @@ public class VerifyClassMembers extends VerifyRefOperator {
     index = getSymbolIndex(compilationUnit);
   }
 
+  /**
+   * Returns a list of all the methods in the given list of body declarations.
+   *
+   * @param bodyDeclarations the list of body declarations to search through
+   * @return a list of all the methods in the given list of body declarations
+   * @docgenVersion 9
+   */
   @Nonnull
   public static List<MethodDeclaration> methods(@Nonnull List<ASTNode> bodyDeclarations) {
     return bodyDeclarations.stream()
@@ -58,6 +71,15 @@ public class VerifyClassMembers extends VerifyRefOperator {
         .collect(Collectors.toList());
   }
 
+  /**
+   * Verifies that the given class method has the given body and contains
+   * only the given names.
+   *
+   * @param methodName the name of the method to verify
+   * @param body       the expected body of the method
+   * @param names      the expected names in the method
+   * @docgenVersion 9
+   */
   protected void verifyClassMethod(@Nonnull String methodName, @Nonnull List<Statement> body, @Nonnull Collection<SimpleName> names) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     for (SimpleName closureName : names) {
@@ -87,6 +109,13 @@ public class VerifyClassMembers extends VerifyRefOperator {
     }
   }
 
+  /**
+   * @param methodName          the name of the method to verify
+   * @param expression          the expression to verify
+   * @param requiredTermination the required termination state
+   * @param names               the collection of simple names
+   * @docgenVersion 9
+   */
   protected void verifyLambda(String methodName, @Nonnull Expression expression, @Nonnull TerminalState requiredTermination, @Nonnull Collection<SimpleName> names) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
     for (SimpleName closureName : names) {

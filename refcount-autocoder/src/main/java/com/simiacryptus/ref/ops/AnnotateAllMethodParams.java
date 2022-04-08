@@ -30,6 +30,11 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This class is responsible for annotating all method parameters.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class AnnotateAllMethodParams extends RefASTOperator {
 
@@ -37,6 +42,12 @@ public class AnnotateAllMethodParams extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * This method is called when the visitor encounters a MethodDeclaration node.
+   *
+   * @param node the MethodDeclaration node
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull MethodDeclaration node) {
     for (SingleVariableDeclaration param : (List<SingleVariableDeclaration>) node.parameters()) {
@@ -64,11 +75,24 @@ public class AnnotateAllMethodParams extends RefASTOperator {
     }
   }
 
+  /**
+   * @return {@code false}
+   * @override
+   * @protected
+   * @docgenVersion 9
+   */
   @Override
   protected boolean skip(ASTNode node, IBinding binding) {
     return false;
   }
 
+  /**
+   * Remove the given parameter from the list of parameters.
+   *
+   * @param param           the parameter to remove
+   * @param variableBinding the variable binding for the parameter
+   * @docgenVersion 9
+   */
   private void remove(@Nonnull SingleVariableDeclaration param, IVariableBinding variableBinding) {
     if (ASTUtil.hasAnnotation(variableBinding, RefAware.class)) {
       warn(param, "Needless @RefAware: %s", param);

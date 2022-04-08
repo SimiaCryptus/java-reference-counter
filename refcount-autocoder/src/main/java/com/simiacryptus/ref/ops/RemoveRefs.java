@@ -30,6 +30,11 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This class is responsible for removing references.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class RemoveRefs extends RefASTOperator {
 
@@ -37,6 +42,13 @@ public class RemoveRefs extends RefASTOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Returns true if the given node is a reference to a utility class.
+   *
+   * @param node the node to check
+   * @return true if the node is a reference to a utility class
+   * @docgenVersion 9
+   */
   protected boolean isRefUtil(@Nonnull MethodInvocation node) {
     final Expression expression = node.getExpression();
     if (expression instanceof SimpleName) {
@@ -55,6 +67,13 @@ public class RemoveRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * Unwraps the given {@link Expression}.
+   *
+   * @param subject the {@link Expression} to unwrap
+   * @return the unwrapped {@link Expression}
+   * @docgenVersion 9
+   */
   protected Expression unwrap(Expression subject) {
     if (subject instanceof ParenthesizedExpression) {
       return unwrap(((ParenthesizedExpression) subject).getExpression());
@@ -65,11 +84,22 @@ public class RemoveRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying a method invocation.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyMethodInvocation extends RemoveRefs {
     public ModifyMethodInvocation(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * This is the endVisit method for the MethodInvocation node.
+     *
+     * @param node the MethodInvocation node
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull final MethodInvocation node) {
       final String methodName = node.getName().toString();
@@ -151,11 +181,28 @@ public class RemoveRefs extends RefASTOperator {
     }
   }
 
+  /**
+   * This class is responsible for modifying blocks.
+   *
+   * @docgenVersion 9
+   */
   public static class ModifyBlock extends RemoveRefs {
     public ModifyBlock(ProjectInfo projectInfo, @Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
       super(projectInfo, compilationUnit, file);
     }
 
+    /**
+     * @Override public void endVisit(@Nonnull Block node) {
+     * if (node.statements().isEmpty()) {
+     * final ASTNode parent = node.getParent();
+     * if (parent instanceof Initializer) {
+     * debug(node, "delete %s", parent);
+     * parent.delete();
+     * }
+     * }
+     * }
+     * @docgenVersion 9
+     */
     @Override
     public void endVisit(@Nonnull Block node) {
       if (node.statements().isEmpty()) {

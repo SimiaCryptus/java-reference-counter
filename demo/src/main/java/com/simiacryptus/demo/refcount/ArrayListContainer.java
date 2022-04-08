@@ -34,16 +34,33 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.*;
 
+/**
+ * This class represents a container for an ArrayList.
+ *
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class ArrayListContainer extends ReferenceCountingBase {
   public ArrayListContainer() {
   }
 
+  /**
+   * Returns a predicate that tests if a given BasicType passes test1.
+   *
+   * @return a predicate that tests if a given BasicType passes test1
+   * @docgenVersion 9
+   */
   @Nonnull
   private static Predicate<BasicType> getTest() {
     return x -> test1(x);
   }
 
+  /**
+   * This is the test method.
+   * It will test the code generation, collection operations, element operations, iterator operations, and stream operations.
+   *
+   * @docgenVersion 9
+   */
   public static void test() {
     for (int i = 0; i < TestOperations.count; i++) {
       testCodeGen();
@@ -54,6 +71,12 @@ public class ArrayListContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the operations of the {@link BasicType} class.
+   *
+   * @param fn the function to test the operations with
+   * @docgenVersion 9
+   */
   private static void testOperations(@Nonnull Consumer<ArrayList<BasicType>> fn) {
     ArrayList<BasicType> values = new ArrayList<>();
     for (int i = 0; i < TestOperations.count; i++) {
@@ -62,6 +85,13 @@ public class ArrayListContainer extends ReferenceCountingBase {
     fn.accept(values);
   }
 
+  /**
+   * Tests the operations of an array.
+   *
+   * @param values the array to test
+   * @throws RuntimeException if the array is empty or the size of the array is not equal to the length of the array
+   * @docgenVersion 9
+   */
   private static void testArrayOperations(@Nonnull ArrayList<BasicType> values) {
     if (0 == values.size()) {
       throw new RuntimeException();
@@ -71,6 +101,11 @@ public class ArrayListContainer extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the element operations of the stack.
+   *
+   * @docgenVersion 9
+   */
   private static void testElementOperations() {
     testOperations(values -> {
       // Test
@@ -127,6 +162,11 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the code generation.
+   *
+   * @docgenVersion 9
+   */
   private static void testCodeGen() {
     testOperations(values -> {
       assert values.size() == values.stream().map(x -> {
@@ -193,18 +233,40 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Returns the number of elements in the given iterator.
+   *
+   * @param iterator the iterator to count
+   * @return the number of elements in the iterator
+   * @docgenVersion 9
+   */
   private static long getCount1(@Nonnull Iterator<BasicType> iterator) {
     return StreamSupport.stream(Spliterators.spliterator(new RefIteratorBase<BasicType>() {
+      /**
+       * @return true if the iteration has more elements.
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public boolean hasNext() {
         return iterator.hasNext();
       }
 
+      /**
+       * @return the next BasicType in the iteration
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public BasicType next() {
         return iterator.next();
       }
 
+      /**
+       * This method frees the object.
+       *
+       *   @docgenVersion 9
+       */
       public @Override
       void _free() {
         super._free();
@@ -218,18 +280,40 @@ public class ArrayListContainer extends ReferenceCountingBase {
     }).count();
   }
 
+  /**
+   * Returns the number of elements in the given iterator.
+   *
+   * @param iterator the iterator to count
+   * @return the number of elements in the iterator
+   * @docgenVersion 9
+   */
   private static long getCount2(@Nonnull Iterator<BasicType> iterator) {
     return StreamSupport.stream(Spliterators.spliterator(new RefIteratorBase<BasicType>() {
+      /**
+       * @return true if the iteration has more elements.
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public boolean hasNext() {
         return iterator.hasNext();
       }
 
+      /**
+       * @return the next BasicType in the iteration
+       *
+       *   @docgenVersion 9
+       */
       @Override
       public BasicType next() {
         return iterator.next();
       }
 
+      /**
+       * This method frees the object.
+       *
+       *   @docgenVersion 9
+       */
       public @Override
       void _free() {
         super._free();
@@ -243,14 +327,33 @@ public class ArrayListContainer extends ReferenceCountingBase {
     }).collect(Collectors.toList()).size();
   }
 
+  /**
+   * Tests if the value of the BasicType is greater than 0.
+   *
+   * @param x the BasicType being tested
+   * @return true if the value is greater than 0, false otherwise
+   * @docgenVersion 9
+   */
   private static boolean test1(@Nonnull BasicType x) {
     return 0 < x.value;
   }
 
+  /**
+   * Tests if x is a BasicType
+   *
+   * @param x the object to be tested
+   * @return true if x is a BasicType, false otherwise
+   * @docgenVersion 9
+   */
   private static boolean test2(BasicType x) {
     return true;
   }
 
+  /**
+   * Tests the collection operations.
+   *
+   * @docgenVersion 9
+   */
   private static void testCollectionOperations() {
     testOperations(values289 -> {
       assert values289.size() == values289.stream().collect(Collectors.mapping(x291 -> {
@@ -312,6 +415,11 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the iterator operations of the LinkedList class.
+   *
+   * @docgenVersion 9
+   */
   private static void testIteratorOperations() {
     testOperations(values -> {
       final Iterator<BasicType> iterator = values.iterator();
@@ -348,6 +456,11 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * Tests the stream operations.
+   *
+   * @docgenVersion 9
+   */
   private static void testStreamOperations() {
     testOperations(values -> {
       assert values.size() == values.stream()
@@ -372,12 +485,22 @@ public class ArrayListContainer extends ReferenceCountingBase {
               return new WrapperType(x);
             }).toArray(i -> new WrapperType[i]);
         copyInput[inputIndex] = new WrapperType(new BasicType()) {
+          /**
+           * @return the inner {@link ReferenceCounting}, or {@code null} if there is none
+           *
+           *   @docgenVersion 9
+           */
           @Nullable
           @Override
           public ReferenceCounting getInner() {
             return super.getInner();
           }
 
+          /**
+           * This method frees the object.
+           *
+           *   @docgenVersion 9
+           */
           public @Override
           void _free() {
             super._free();
@@ -591,6 +714,11 @@ public class ArrayListContainer extends ReferenceCountingBase {
     });
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     super._free();

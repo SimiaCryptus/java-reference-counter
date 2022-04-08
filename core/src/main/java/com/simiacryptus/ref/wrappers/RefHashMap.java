@@ -26,6 +26,13 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class represents a RefHashMap, which is a map that contains keys and values.
+ *
+ * @param <K> the type of the keys in the map
+ * @param <V> the type of the values in the map
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
@@ -45,6 +52,12 @@ public class RefHashMap<K, V> extends RefAbstractMap<K, V> {
     putAll(values);
   }
 
+  /**
+   * Returns the inner map.
+   *
+   * @return the inner map
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public Map<K, KeyValue<K, V>> getInner() {

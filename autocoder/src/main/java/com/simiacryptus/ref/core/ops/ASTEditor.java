@@ -33,6 +33,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * The ASTEditor class is used to manage the projectInfo and initialContent fields.
+ * The class also provides a method to check if the ASTMapping has been reparsed.
+ *
+ * @docgenVersion 9
+ */
 public abstract class ASTEditor extends LoggingASTVisitor {
   protected final ProjectInfo projectInfo;
   protected final String initialContent;
@@ -50,15 +56,32 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     if (record) compilationUnit.recordModifications();
   }
 
+  /**
+   * @return the reparsed ASTMapping, or null if there is none
+   * @docgenVersion 9
+   */
   @Nullable
   public ASTMapping getReparsed() {
     return reparsed;
   }
 
+  /**
+   * Sets the reparsed ASTMapping.
+   *
+   * @param reparsed the reparsed ASTMapping
+   * @docgenVersion 9
+   */
   protected void setReparsed(ASTMapping reparsed) {
     this.reparsed = reparsed;
   }
 
+  /**
+   * Updates the content and writes it to the file.
+   *
+   * @param format true if the content should be formatted, false otherwise
+   * @return true if the content was updated, false otherwise
+   * @docgenVersion 9
+   */
   public boolean write(boolean format) {
     final String finalSrc = updateContent();
     if (initialContent.equals(finalSrc)) return false;
@@ -66,6 +89,12 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return true;
   }
 
+  /**
+   * Reverts the file to its initial content.
+   *
+   * @return true if the file was reverted, false if the file was already in its initial state
+   * @docgenVersion 9
+   */
   public boolean revert() {
     final String currentContent = AutoCoder.read(this.file);
     if (currentContent.equals(initialContent)) return false;
@@ -73,11 +102,23 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return true;
   }
 
+  /**
+   * @param format
+   * @return
+   * @docgenVersion 9
+   */
   public boolean writeFinal(boolean format) {
     update(true, format);
     return !AutoCoder.read(this.file).equals(initialContent);
   }
 
+  /**
+   * Returns the span of the given node.
+   *
+   * @param node the node to get the span of
+   * @return the span of the given node
+   * @docgenVersion 9
+   */
   public ASTEditor.Span getSpan(@Nonnull ASTNode node) {
     final int startPosition = node.getStartPosition();
     final int length = node.getLength();
@@ -91,21 +132,42 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     );
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @docgenVersion 9
+   */
   @Override
   public void preVisit(ASTNode node) {
     super.preVisit(node);
   }
 
+  /**
+   * @Override public boolean preVisit2(ASTNode node) {
+   * return super.preVisit2(node);
+   * }
+   * @docgenVersion 9
+   */
   @Override
   public boolean preVisit2(ASTNode node) {
     return super.preVisit2(node);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @docgenVersion 9
+   */
   @Override
   public void postVisit(ASTNode node) {
     super.postVisit(node);
   }
 
+  /**
+   * @param node the node to copy
+   * @return the node, or a copy of the node if it is attached to a parent
+   * @docgenVersion 9
+   */
   @Nonnull
   protected <T extends ASTNode> T copyIfAttached(@Nonnull T node) {
     if (node.getParent() == null) {
@@ -116,6 +178,14 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * Replaces the given child node of this node with the given replacement node.
+   *
+   * @param child    the child node to be replaced
+   * @param newChild the replacement node
+   * @throws NullPointerException if the given child or replacement node is null
+   * @docgenVersion 9
+   */
   protected final void replace(@Nonnull ASTNode child, ASTNode newChild) {
     final ASTNode parent = child.getParent();
     if (parent instanceof QualifiedName) {
@@ -147,6 +217,10 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * @Nonnull protected <T extends ASTNode> ASTMapping update(boolean write, boolean format);
+   * @docgenVersion 9
+   */
   @Nonnull
   protected <T extends ASTNode> ASTMapping update(boolean write, boolean format) {
     if (write) {
@@ -166,6 +240,12 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     return align;
   }
 
+  /**
+   * Writes the given data to the file.
+   *
+   * @param data the data to write
+   * @docgenVersion 9
+   */
   protected void write(String data) {
     throwQueuedExceptions();
     try {
@@ -178,11 +258,32 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * Repairs and updates the given compilation unit and AST mapping.
+   *
+   * @param format           whether or not to format the compilation unit
+   * @param compilationUnit0 the compilation unit to repair and update
+   * @param align0           the AST mapping to repair and update
+   * @param maxIterations    the maximum number of iterations to perform
+   * @return the repaired and updated AST mapping
+   * @docgenVersion 9
+   */
   @Nonnull
   private ASTMapping repairAndUpdate(boolean format, @Nonnull CompilationUnit compilationUnit0, @Nonnull ASTMapping align0) {
     return repairAndUpdate(format, compilationUnit0, align0, 3);
   }
 
+  /**
+   * Repairs and updates the given compilation unit and AST mapping.
+   *
+   * @param format           whether to format the compilation unit
+   * @param compilationUnit0 the compilation unit to repair and update
+   * @param align0           the AST mapping to repair and update
+   * @param retries          the number of retries
+   * @return the repaired and updated AST mapping
+   * @throws IllegalArgumentException if the compilation unit or AST mapping is null
+   * @docgenVersion 9
+   */
   @Nonnull
   private ASTMapping repairAndUpdate(boolean format, @Nonnull CompilationUnit compilationUnit0, @Nonnull ASTMapping align0, int retries) {
     compilationUnit0.recordModifications();
@@ -209,19 +310,47 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * Reads a compilation unit from a file.
+   *
+   * @return the compilation unit
+   * @docgenVersion 9
+   */
   private CompilationUnit read() {
     return projectInfo.read(file).values().iterator().next();
   }
 
+  /**
+   * Updates the content of the compilation unit to the given string.
+   *
+   * @param initialContent  the new content of the compilation unit
+   * @param compilationUnit the compilation unit to update
+   * @return the updated content of the compilation unit
+   * @docgenVersion 9
+   */
   private String updateContent() {
     return ASTUtil.updateContent(initialContent, compilationUnit);
   }
 
+  /**
+   * This class represents a mapping between two Abstract Syntax Trees (ASTs).
+   *
+   * @author Your Name
+   * @docgenVersion 9
+   */
   public static class ASTMapping {
     public final HashMap<ASTNode, ASTNode> matches = new HashMap<>();
     public final HashMap<ASTNode, ASTNode> mismatches = new HashMap<>();
     public final List<String> errors = new ArrayList<>();
 
+    /**
+     * @param other The other ASTMapping to get the matches, mismatches, and errors from.
+     * @return This ASTMapping with the new matches, mismatches, and errors.
+     * @Nonnull public ASTMapping putAll(@Nonnull ASTMapping other)
+     * <p>
+     * This method puts all of the other ASTMapping's matches, mismatches, and errors into this ASTMapping.
+     * @docgenVersion 9
+     */
     @Nonnull
     public ASTMapping putAll(@Nonnull ASTMapping other) {
       matches.putAll(other.matches);
@@ -231,6 +360,16 @@ public abstract class ASTEditor extends LoggingASTVisitor {
     }
   }
 
+  /**
+   * This class represents a span of text in a file.
+   *
+   * @param lineStart the line number where the span starts
+   * @param colStart  the column number where the span starts
+   * @param lineEnd   the line number where the span ends
+   * @param colEnd    the column number where the span ends
+   * @param file      the file containing the span
+   * @docgenVersion 9
+   */
   public static class Span {
     public final int lineStart;
     public final int colStart;
@@ -246,6 +385,11 @@ public abstract class ASTEditor extends LoggingASTVisitor {
       this.colEnd = colEnd;
     }
 
+    /**
+     * @return a String representation of this object in the format
+     * {@code <file name>:{<line start>:<column start>-<line end>:<column end>}}
+     * @docgenVersion 9
+     */
     @Override
     public String toString() {
       return String.format("%s:{%d:%d-%d:%d}", file.getName(), lineStart, colStart, lineEnd, colEnd);

@@ -26,6 +26,12 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * A class that represents an ArrayList of references.
+ *
+ * @param <T> the type of reference contained in this list
+ * @docgenVersion 9
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public class RefArrayList<T> extends RefAbstractList<T> {
@@ -45,12 +51,20 @@ public class RefArrayList<T> extends RefAbstractList<T> {
     addAll(list);
   }
 
+  /**
+   * @return the inner ArrayList
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   public ArrayList<T> getInner() {
     return inner;
   }
 
+  /**
+   * @return a new RefArrayList with a reference to this object
+   * @docgenVersion 9
+   */
   @Nonnull
   public @Override
   RefArrayList<T> addRef() {

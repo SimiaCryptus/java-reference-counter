@@ -38,6 +38,15 @@ import java.util.stream.IntStream;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
+/**
+ * This is the ReferenceCountingBase class.
+ *
+ * @author Author Name
+ * @version 1.0, Date
+ * @docgenVersion 9
+ * @see java.lang.Object
+ * @since 1.0
+ */
 @RefIgnore
 @SuppressWarnings("unused")
 public abstract class ReferenceCountingBase implements ReferenceCounting {
@@ -48,6 +57,11 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
   private static final ExecutorService gcPool = newFixedThreadPool(1,
       new ThreadFactoryBuilder().setDaemon(true).build());
   private static final ThreadLocal<Boolean> inFinalizer = new ThreadLocal<Boolean>() {
+    /**
+     * @return the initial value for this thread-local variable
+     *
+     *   @docgenVersion 9
+     */
     @Nonnull
     @Override
     protected Boolean initialValue() {
@@ -81,6 +95,18 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
   }
 
+  /**
+   * Returns an array of stack trace elements representing the stack trace
+   * pertaining to this throwable.  The result is an array of the same length
+   * as that returned by {@link Throwable#getStackTrace()}.  Elements of the
+   * returned array represent stack frames as described in {@link
+   * StackTraceElement}.
+   *
+   * @return an array of stack trace elements representing the stack trace
+   * pertaining to this throwable.
+   * @docgenVersion 9
+   * @since 1.4
+   */
   @NotNull
   private StackTraceElement[] getStackTrace() {
     StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
@@ -106,18 +132,46 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return stackTrace;
   }
 
+  /**
+   * Returns true if the object is detached, false otherwise.
+   *
+   * @return true if the object is detached, false otherwise
+   * @docgenVersion 9
+   */
   public boolean isDetached() {
     return detached;
   }
 
+  /**
+   * Returns true if the object is freed.
+   *
+   * @return true if the object is freed
+   * @docgenVersion 9
+   */
   public final boolean isFreed() {
     return isFreed.get();
   }
 
+  /**
+   * Returns a report on the given {@link ReferenceCountingBase} object.
+   *
+   * @param obj           the object to generate a report for
+   * @param includeCaller whether or not to include information on the caller in the report
+   * @return a report on the given object
+   * @docgenVersion 9
+   */
   public static CharSequence referenceReport(@Nonnull ReferenceCountingBase obj, boolean includeCaller) {
     return obj.referenceReport(includeCaller, obj.isFreed(), true);
   }
 
+  /**
+   * Removes the suffix from the stack trace.
+   *
+   * @param stack  the stack trace
+   * @param prefix the suffix to remove
+   * @return the stack trace with the suffix removed
+   * @docgenVersion 9
+   */
   @Nonnull
   public static StackTraceElement[] removeSuffix(
       @Nonnull final @RefAware StackTraceElement[] stack,
@@ -125,6 +179,11 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return Arrays.stream(stack).limit(stack.length - prefix.size()).toArray(i -> new StackTraceElement[i]);
   }
 
+  /**
+   * @param reversedStacks
+   * @return List<StackTraceElement>
+   * @docgenVersion 9
+   */
   @Nullable
   public static List<StackTraceElement> findCommonPrefix(
       @Nonnull final @RefAware List<List<StackTraceElement>> reversedStacks) {
@@ -140,6 +199,13 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return protoprefix;
   }
 
+  /**
+   * Returns a list that is the reverse of the input list.
+   *
+   * @param x the input list
+   * @return the reversed list
+   * @docgenVersion 9
+   */
   public static <T> List<T> reverseCopy(
       @Nullable final @RefAware List<T> x) {
     if (null == x)
@@ -148,16 +214,36 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
         .collect(Collectors.toList());
   }
 
+  /**
+   * Returns a list that is the reverse of the given array.
+   *
+   * @param x the array to reverse
+   * @return a list that is the reverse of the given array
+   * @docgenVersion 9
+   */
   public static <T> List<T> reverseCopy(@Nonnull final @RefAware T[] x) {
     return IntStream.range(0, x.length).map(i -> x.length - 1 - i).mapToObj(i -> x[i]).collect(Collectors.toList());
   }
 
+  /**
+   * Returns a string representation of the given stack trace.
+   *
+   * @param trace the stack trace to convert to a string
+   * @return a string representation of the given stack trace
+   * @docgenVersion 9
+   */
   @Nonnull
   private static String getString(@Nullable @RefAware StackTraceElement[] trace) {
     return null == trace ? ""
         : Arrays.stream(trace).parallel().map(x -> "at " + x).reduce((a, b) -> a + "\n" + b).orElse("");
   }
 
+  /**
+   * This method watches for the RefSettings.INSTANCE().watchEnable setting. If it is true,
+   * it initializes the addRef and freeRefs objects.
+   *
+   * @docgenVersion 9
+   */
   public synchronized void watch() {
     if (RefSettings.INSTANCE().watchEnable) {
       if (addRef == null) addRef = new LinkedList<>();
@@ -165,6 +251,12 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     }
   }
 
+  /**
+   * Adds a reference to this object.
+   *
+   * @return a reference to this object
+   * @docgenVersion 9
+   */
   @Override
   public ReferenceCounting addRef() {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0)
@@ -180,6 +272,12 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return this;
   }
 
+  /**
+   * Checks whether the player is alive.
+   *
+   * @return true if the player is alive, false otherwise
+   * @docgenVersion 9
+   */
   public boolean assertAlive() {
     boolean finalized = isFreed();
     if (finalized) {
@@ -194,6 +292,12 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return true;
   }
 
+  /**
+   * Asserts that the object has been freed.
+   *
+   * @return true if the object has been freed, false otherwise
+   * @docgenVersion 9
+   */
   public boolean assertFreed() {
     boolean finalized = isFreed();
     if (!finalized) {
@@ -209,17 +313,34 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return true;
   }
 
+  /**
+   * Returns the current number of references to this object.
+   *
+   * @docgenVersion 9
+   */
   @Override
   public int currentRefCount() {
     return references.get();
   }
 
+  /**
+   * Detaches this object from its owner.
+   *
+   * @return This object.
+   * @docgenVersion 9
+   */
   @Nonnull
   public ReferenceCountingBase detach() {
     this.detached = true;
     return this;
   }
 
+  /**
+   * This method returns the number of free references.
+   *
+   * @return the number of free references
+   * @docgenVersion 9
+   */
   @Override
   public int freeRef() {
     if (isFreed()) {
@@ -263,12 +384,26 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return refs;
   }
 
+  /**
+   * Returns a string containing the HTML header for a reference page.
+   *
+   * @docgenVersion 9
+   */
   public String referenceHeader() {
     LinkedList<StackTraceElement[]> addRef = this.addRef == null ? new LinkedList<>() : this.addRef;
     LinkedList<StackTraceElement[]> freeRefs = this.freeRefs == null ? new LinkedList<>() : this.freeRefs;
     return String.format("Object %s (%d refs; %d adds, %d frees) ", getClass().getName(), references.get(), 1 + addRef.size(), freeRefs.size());
   }
 
+  /**
+   * Returns a string that contains information about the object's references.
+   *
+   * @param includeCaller If true, the report will include information about the object that called this method.
+   * @param isFinalized   If true, the report will include information about whether or not the object has been finalized.
+   * @param includeHeader If true, the report will include a header.
+   * @return A string that contains information about the object's references.
+   * @docgenVersion 9
+   */
   public String referenceReport(boolean includeCaller, boolean isFinalized, boolean includeHeader) {
     @Nonnull
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -328,6 +463,10 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return buffer.toString();
   }
 
+  /**
+   * @return whether or not the reference was successfully added
+   * @docgenVersion 9
+   */
   @Override
   public boolean tryAddRef() {
     if (references.updateAndGet(i -> i > 0 ? i + 1 : 0) == 0) {
@@ -344,10 +483,22 @@ public abstract class ReferenceCountingBase implements ReferenceCounting {
     return true;
   }
 
+  /**
+   * This method must be called in order to free resources.
+   *
+   * @docgenVersion 9
+   */
   @MustCall
   protected void _free() {
   }
 
+  /**
+   * This method is called when the object is no longer in use.
+   * It is the responsibility of the programmer to ensure that
+   * this method is called when the object is no longer needed.
+   *
+   * @docgenVersion 9
+   */
   @Override
   protected final void finalize() {
     isFinalized = true;

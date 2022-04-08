@@ -25,6 +25,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Random;
 
+/**
+ * This class tests the operations of the other classes.
+ *
+ * @author Java
+ * @docgenVersion 9
+ */
 @SuppressWarnings("unused")
 public class TestOperations extends ReferenceCountingBase {
   public static final int count = 1;
@@ -50,11 +56,22 @@ public class TestOperations extends ReferenceCountingBase {
   @Nullable
   private TreeSetContainer treeSetContainer;
 
+  /**
+   * Main method for the TestOperations class.
+   *
+   * @param args Command line arguments.
+   * @docgenVersion 9
+   */
   public static void main(String... args) {
     final TestOperations testOperations2424 = new TestOperations();
     testOperations2424.run();
   }
 
+  /**
+   * This method frees the object.
+   *
+   * @docgenVersion 9
+   */
   public @Override
   void _free() {
     treeSetContainer = null;
@@ -70,12 +87,24 @@ public class TestOperations extends ReferenceCountingBase {
     super._free();
   }
 
+  /**
+   * This method runs the tests for the BasicType and SimpleContainer classes.
+   *
+   * @param basicType an instance of the BasicType class
+   * @docgenVersion 9
+   */
   private void run() {
     BasicType basicType = testBasicType();
     testSimpleContainer();
     test(basicType);
   }
 
+  /**
+   * Tests the functionality of the data structures.
+   *
+   * @param datum1 the first piece of data to test with
+   * @docgenVersion 9
+   */
   private void test(BasicType datum1) {
     testList();
     testArray(new BasicType[]{datum1});
@@ -84,6 +113,12 @@ public class TestOperations extends ReferenceCountingBase {
     testMap();
   }
 
+  /**
+   * Tests the given array of BasicType values.
+   *
+   * @param values the array of BasicType values to test
+   * @docgenVersion 9
+   */
   private void testArray(BasicType[] values) {
     this.arrayContainer = new ArrayContainer(values);
     for (int i = 0; i < count; i++) {
@@ -94,6 +129,10 @@ public class TestOperations extends ReferenceCountingBase {
     arrayContainer.useClosures3(testBasicType());
   }
 
+  /**
+   * @return BasicType
+   * @docgenVersion 9
+   */
   @Nonnull
   private BasicType testBasicType() {
     BasicType datum1 = new BasicType();
@@ -101,6 +140,12 @@ public class TestOperations extends ReferenceCountingBase {
     return datum1;
   }
 
+  /**
+   * @param datum1 the BasicType to use
+   * @return the BasicType that was used
+   * @throws NullPointerException if datum1 is null
+   * @docgenVersion 9
+   */
   @Nonnull
   private BasicType testBasicType(@Nonnull BasicType datum1) {
     for (int i = 0; i < count; i++) {
@@ -109,6 +154,11 @@ public class TestOperations extends ReferenceCountingBase {
     return datum1;
   }
 
+  /**
+   * Tests the DequeContainer class.
+   *
+   * @docgenVersion 9
+   */
   private void testDeque() {
     this.deququeContainer = new DeququeContainer();
     for (int i = 0; i < count; i++) {
@@ -116,6 +166,11 @@ public class TestOperations extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the list to see if it is empty.
+   *
+   * @docgenVersion 9
+   */
   private void testList() {
     this.arrayListContainer = new ArrayListContainer();
     for (int i = 0; i < count; i++) {
@@ -127,6 +182,11 @@ public class TestOperations extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the map.
+   *
+   * @docgenVersion 9
+   */
   private void testMap() {
     this.hashMapValuesContainer = new HashMapValuesContainer();
     for (int i = 0; i < count; i++) {
@@ -142,6 +202,10 @@ public class TestOperations extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * @testSet private void testSet();
+   * @docgenVersion 9
+   */
   private void testSet() {
     this.hashSetContainer = new HashSetContainer();
     for (int i = 0; i < count; i++) {
@@ -153,6 +217,11 @@ public class TestOperations extends ReferenceCountingBase {
     }
   }
 
+  /**
+   * Tests the simple container.
+   *
+   * @docgenVersion 9
+   */
   private void testSimpleContainer() {
     this.simpleContainer = new SimpleContainer();
     for (int i = 0; i < count; i++) {

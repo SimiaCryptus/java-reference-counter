@@ -37,6 +37,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * @param basedir          the directory where the pom.xml file is located
+ * @param session          the Maven session object
+ * @param project          the Maven project object
+ * @param repositorySystem the RepositorySystem object
+ * @author Some Author
+ * @docgenVersion 9
+ */
 public abstract class BaseMojo extends AbstractMojo {
   @Parameter(defaultValue = "${basedir}", required = true, readonly = true)
   protected File basedir;
@@ -47,11 +55,17 @@ public abstract class BaseMojo extends AbstractMojo {
   @Component
   protected RepositorySystem repositorySystem;
 
+  /**
+   * Returns an array of dependencies for this object.
+   *
+   * @return an array of dependencies for this object
+   * @docgenVersion 9
+   */
   @Nonnull
   public String[] getDependencies() {
-    if(project == null) return new String[]{};
+    if (project == null) return new String[]{};
     List<Dependency> dependencies = project.getDependencies();
-    if(dependencies == null) return new String[]{};
+    if (dependencies == null) return new String[]{};
     return dependencies.stream()
         .map(x -> toArtifact(x))
         .flatMap(x -> resolve(x).getArtifacts().stream())
@@ -62,6 +76,11 @@ public abstract class BaseMojo extends AbstractMojo {
         .toArray(i -> new String[i]);
   }
 
+  /**
+   * @return an array of strings containing the sources
+   * @throws NullPointerException if the array is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public String[] getSources() {
     return Stream.concat(
@@ -70,6 +89,13 @@ public abstract class BaseMojo extends AbstractMojo {
     ).filter(s -> new File(s).exists()).toArray(i -> new String[i]);
   }
 
+  /**
+   * Resolves the specified artifact.
+   *
+   * @param artifact The artifact to resolve.
+   * @return The artifact resolution result.
+   * @docgenVersion 9
+   */
   public ArtifactResolutionResult resolve(Artifact artifact) {
     try {
       return repositorySystem.resolve(new ArtifactResolutionRequest()
@@ -83,6 +109,11 @@ public abstract class BaseMojo extends AbstractMojo {
     }
   }
 
+  /**
+   * @return an Optional containing the first Dependency object in the project's dependencies list whose groupId and artifactId match the parameters, or an empty Optional if no such Dependency is found
+   * @Nonnull
+   * @docgenVersion 9
+   */
   @Nonnull
   protected Optional<Dependency> findDependency(String groupId, String artifactId) {
     return project.getDependencies().stream().filter(artifact ->
@@ -90,6 +121,13 @@ public abstract class BaseMojo extends AbstractMojo {
             artifact.getArtifactId().equals(artifactId)).findAny();
   }
 
+  /**
+   * Converts a given dependency into an artifact.
+   *
+   * @param dependency the dependency to convert
+   * @return the converted artifact
+   * @docgenVersion 9
+   */
   @Nonnull
   private Artifact toArtifact(@Nonnull Dependency dependency) {
     final ProjectArtifact artifact = new ProjectArtifact(project);

@@ -23,7 +23,16 @@ import com.simiacryptus.ref.lang.RefAware;
 
 import java.util.function.Predicate;
 
+/**
+ * This is the RefPredicate interface.
+ *
+ * @docgenVersion 9
+ */
 public interface RefPredicate<T> extends Predicate<T> {
+  /**
+   * @Override boolean test(@RefAware T t);
+   * @docgenVersion 9
+   */
   @Override
   boolean test(@RefAware T t);
 }

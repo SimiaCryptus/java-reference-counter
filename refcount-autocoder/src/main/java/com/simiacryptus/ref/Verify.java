@@ -32,15 +32,32 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * The Verify class is used to verify that a certain condition is met.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "verify")
 public class Verify extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The Coder class is a class that contains code.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
 
@@ -48,6 +65,10 @@ public class Verify extends RefAutoCoderMojo {
       super(projectInfo);
     }
 
+    /**
+     * @Override public void rewrite();
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       SymbolIndex index = new SymbolIndex();

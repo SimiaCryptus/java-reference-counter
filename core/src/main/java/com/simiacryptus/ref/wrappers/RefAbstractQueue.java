@@ -26,16 +26,39 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Queue;
 
+/**
+ * This class represents an abstract queue data structure.
+ *
+ * @param <E> the type of elements in this queue
+ * @author John Doe
+ * @docgenVersion 9
+ * @since 1.0
+ */
 public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> implements RefQueue<T> {
+  /**
+   * @return the inner queue
+   * @throws NullPointerException if the inner queue is null
+   * @docgenVersion 9
+   */
   @Nonnull
   public abstract Queue<T> getInner();
 
+  /**
+   * Adds a reference to this object.
+   *
+   * @return a reference to this object
+   * @docgenVersion 9
+   */
   @Nonnull
   public @Override
   RefAbstractQueue<T> addRef() {
     return (RefAbstractQueue<T>) super.addRef();
   }
 
+  /**
+   * @return the element at the top of the stack, or null if the stack is empty
+   * @docgenVersion 9
+   */
   @Nullable
   @Override
   public T element() {
@@ -43,6 +66,10 @@ public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> imple
     return RefUtil.addRef(getInner().element());
   }
 
+  /**
+   * @return the element at the top of the stack without removing it, or null if the stack is empty
+   * @docgenVersion 9
+   */
   @Nullable
   @Override
   @RefAware
@@ -51,6 +78,12 @@ public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> imple
     return RefUtil.addRef(getInner().peek());
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws IllegalStateException if this {@linkplain BlockingQueue} is no longer {@linkplain #isAlive() alive}
+   * @docgenVersion 9
+   */
   @Override
   @RefAware
   public T poll() {
@@ -58,6 +91,17 @@ public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> imple
     return getInner().poll();
   }
 
+  /**
+   * @param o the object to be removed from this list, if present
+   * @return {@code true} if an element was removed as a result of this call
+   * @throws ClassCastException            if the type of the specified element is incompatible with this
+   *                                       list (<a href="Collection.html#optional-restrictions">optional</a>)
+   * @throws NullPointerException          if the specified element is null and this list does not permit
+   *                                       null elements (<a href="Collection.html#optional-restrictions">optional</a>)
+   * @throws UnsupportedOperationException if the {@code remove} operation is not supported by this
+   *                                       list
+   * @docgenVersion 9
+   */
   @Override
   public boolean remove(@RefAware Object o) {
     assertAlive();
@@ -68,6 +112,14 @@ public abstract class RefAbstractQueue<T> extends RefAbstractCollection<T> imple
     return remove;
   }
 
+  /**
+   * @Override
+   * @RefAware public T remove() {
+   * assertAlive();
+   * return getInner().remove();
+   * }
+   * @docgenVersion 9
+   */
   @Override
   @RefAware
   public T remove() {

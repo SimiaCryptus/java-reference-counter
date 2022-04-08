@@ -29,15 +29,32 @@ import org.apache.maven.plugins.annotations.Mojo;
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 
+/**
+ * The Update class represents an update to a piece of data.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 @Mojo(name = "update")
 public class Update extends RefAutoCoderMojo {
+  /**
+   * Returns an AutoCoder for the given ProjectInfo.
+   *
+   * @param projectInfo the ProjectInfo to get an AutoCoder for
+   * @return an AutoCoder for the given ProjectInfo
+   * @docgenVersion 9
+   */
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
     return new Coder(projectInfo);
   }
 
+  /**
+   * The Coder class is a class that contains code.
+   *
+   * @docgenVersion 9
+   */
   @RefIgnore
   public static class Coder extends AutoCoder {
 
@@ -45,6 +62,10 @@ public class Update extends RefAutoCoderMojo {
       super(projectInfo);
     }
 
+    /**
+     * @Override public void rewrite();
+     * @docgenVersion 9
+     */
     @Override
     public void rewrite() {
       final HashMap missingAttributes = new HashMap();

@@ -32,6 +32,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The VerifyMethodVariables class is used to verify the variables in a method.
+ *
+ * @docgenVersion 9
+ */
 @RefIgnore
 public class VerifyMethodVariables extends VerifyRefOperator {
 
@@ -39,6 +44,13 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     super(projectInfo, compilationUnit, file);
   }
 
+  /**
+   * Returns the ASTNode of the currently executing method, or null if not available.
+   *
+   * @param node the ASTNode to check
+   * @return the ASTNode of the currently executing method, or null if not available
+   * @docgenVersion 9
+   */
   @Nullable
   public static ASTNode getExecutingMethod(@Nullable ASTNode node) {
     if (null == node) return null;
@@ -50,6 +62,12 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     return getExecutingMethod(node.getParent());
   }
 
+  /**
+   * This method is called when the visitor encounters a MethodDeclaration node.
+   *
+   * @param node the MethodDeclaration node
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull MethodDeclaration node) {
     final IMethodBinding methodBinding = node.resolveBinding();
@@ -80,6 +98,12 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
+  /**
+   * Processes the given scope, looking for the given name. If the name is found,
+   * the required termination state is set.
+   *
+   * @docgenVersion 9
+   */
   public void processScope(Block body, SimpleName name, TerminalState requiredTermination) {
     ReferenceState finalState = processStatement(body, name, new ReferenceState(name, null, null), new ArrayList<>(), requiredTermination);
     if (!requiredTermination.validate(finalState)) {
@@ -87,6 +111,12 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
+  /**
+   * This method is called when the end of a SingleVariableDeclaration node is visited.
+   *
+   * @param node the SingleVariableDeclaration node that is ending
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull SingleVariableDeclaration node) {
     ArrayList<CollectableException> exceptions = new ArrayList<>();
@@ -113,6 +143,12 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     super.endVisit(node);
   }
 
+  /**
+   * This method is called when the visitor encounters a variable declaration fragment.
+   *
+   * @param node the variable declaration fragment to visit
+   * @docgenVersion 9
+   */
   @Override
   public void endVisit(@Nonnull VariableDeclarationFragment node) {
     IVariableBinding binding = node.resolveBinding();
@@ -127,6 +163,12 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
+  /**
+   * Processes a variable declaration node.
+   *
+   * @param node the node to be processed
+   * @docgenVersion 9
+   */
   public void processStatements(VariableDeclaration node) {
     ASTNode astNode = getExecutingMethod(node);
     if (astNode == null) {
@@ -159,6 +201,14 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
+  /**
+   * Processes a given block, checking for the required termination.
+   *
+   * @param block               The block to process.
+   * @param requiredTermination The required termination state for the block.
+   * @param name                The name of the block.
+   * @docgenVersion 9
+   */
   public void processBlock(ASTNode block, TerminalState requiredTermination, SimpleName name) {
     if (block == null) {
       fatal(name, "Block not found");
@@ -175,6 +225,14 @@ public class VerifyMethodVariables extends VerifyRefOperator {
     }
   }
 
+  /**
+   * Processes a scope, given a list of statements and a required termination state.
+   *
+   * @param statements          the list of statements in the scope
+   * @param name                the name of the scope
+   * @param requiredTermination the required termination state for the scope
+   * @docgenVersion 9
+   */
   public void processScope(List<Statement> statements, SimpleName name, TerminalState requiredTermination) {
     ArrayList<Statement> finalizers = new ArrayList<>();
     ReferenceState state = new ReferenceState(name, null, null);
