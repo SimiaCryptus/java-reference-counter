@@ -138,10 +138,11 @@ java -DDEBUG_LIFECYCLE=true -jar myapp.jar
 Additional configuration in `RefSettings`:
 
 ```java
-// Adjust stack trace depth (static fields)
-RefSettings.maxStackSize = 20;           // Max stack frames to capture
-RefSettings.maxTracesPerObject = 100;    // Max traces per object
-RefSettings.stackPrefixFilter = "com.simiacryptus";  // Filter for stack traces
+// Adjust stack trace depth (modifiable static fields)
+RefSettings.maxStackSize = 20;                           // Max stack frames to capture
+RefSettings.stackPrefixFilter = "com.simiacryptus";      // Filter for stack traces
+
+// Note: maxTracesPerObject is final and cannot be changed (default: 100)
 ```
 
 ## Thread Safety
