@@ -180,14 +180,29 @@ The `refcount-autocoder` Maven plugin can automatically instrument your code wit
 The library includes comprehensive debugging support for tracking reference leaks:
 
 ```java
-// Enable lifecycle debugging for specific classes
-RefSettings.INSTANCE().setLifecycleDebug(MyResource.class, true);
-
 // Watch specific objects for debugging
 resource.watch();
 
 // Get detailed reference report
 String report = ReferenceCountingBase.referenceReport(resource, true);
+```
+
+### Configuration via Environment Variables
+
+Lifecycle debugging is configured through environment variables or system properties:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DEBUG_LIFECYCLE` | Enable lifecycle debugging for all classes | `false` |
+| `WATCH_ENABLE` | Enable watch functionality | `true` |
+| `WATCH_CREATE` | Track creation stack traces | `false` |
+
+```bash
+# Enable lifecycle debugging
+export DEBUG_LIFECYCLE=true
+
+# Or via system property
+java -DDEBUG_LIFECYCLE=true -jar myapp.jar
 ```
 
 Debug output includes:

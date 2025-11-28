@@ -118,17 +118,30 @@ try {
 
 ## Configuration
 
-Reference counting behavior can be configured through `RefSettings`:
+Reference counting behavior is configured through environment variables or system properties:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DEBUG_LIFECYCLE` | Enable lifecycle debugging | `false` |
+| `WATCH_ENABLE` | Enable watch functionality | `true` |
+| `WATCH_CREATE` | Track creation stack traces | `false` |
+| `THREADS` | ForkJoinPool parallelism | `64` |
+
+```bash
+# Enable lifecycle debugging
+export DEBUG_LIFECYCLE=true
+
+# Or via system property
+java -DDEBUG_LIFECYCLE=true -jar myapp.jar
+```
+
+Additional configuration in `RefSettings`:
 
 ```java
-RefSettings settings = RefSettings.INSTANCE();
-
-// Enable debugging for specific classes
-settings.setLifecycleDebug(MyResource.class, true);
-
-// Configure stack trace depth
-RefSettings.maxStackSize = 20;
-RefSettings.maxTracesPerObject = 10;
+// Adjust stack trace depth (static fields)
+RefSettings.maxStackSize = 20;           // Max stack frames to capture
+RefSettings.maxTracesPerObject = 100;    // Max traces per object
+RefSettings.stackPrefixFilter = "com.simiacryptus";  // Filter for stack traces
 ```
 
 ## Thread Safety
