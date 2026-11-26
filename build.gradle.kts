@@ -16,6 +16,7 @@ dependencies {
     jacocoAggregation(project(":refcount-core"))
     jacocoAggregation(project(":autocoder-core"))
     jacocoAggregation(project(":refcount-autocoder"))
+    jacocoAggregation(project(":refcount-bytecode"))
     jacocoAggregation(project(":autocoder-test"))
     jacocoAggregation(project(":refcount-demo"))
 }

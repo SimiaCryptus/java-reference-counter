@@ -10,11 +10,12 @@ Java's garbage collector manages heap memory automatically, but it does not guar
 - **Large transient allocations** that benefit from immediate release or pooling rather than waiting for GC
 - **Deterministic teardown sequences** where parent/child resources must be freed in a well-defined order
 
-The Java Reference Counter toolkit addresses this with three integrated layers:
+The Java Reference Counter toolkit addresses this with four integrated layers:
 
 1. **Core runtime (`refcount-core`)** — `ReferenceCounting` / `ReferenceCountingBase`, `RefUtil`, lifecycle debugging with stack-trace history, `RecycleBin` pooling, and reference-aware wrappers for Java collections, streams, iterators, and functional interfaces.
 2. **AST transformation framework (`autocoder-core`)** — Reusable Eclipse JDT–based AST parsing, symbol indexing, and source-rewriting infrastructure for Gradle tasks.
 3. **Reference-counting Gradle plugin (`refcount-autocoder`)** — Automatically inserts, optimizes, verifies, and removes reference counting operations (`addRef()`, `freeRef()`, `_free()`, closure capture handling, and collection type rewrites).
+4. **Bytecode analyzer & verifier (`refcount-bytecode`)** — ASM-based bytecode verification and reporting for compiled `.class` / `.jar` artifacts and non-Java JVM modules (Kotlin, Scala, Groovy).
 
 ## Modules
 
@@ -23,6 +24,7 @@ The Java Reference Counter toolkit addresses this with three integrated layers:
 | `:refcount-core` | `core/` | Core runtime library: base classes, annotations, `RefUtil`, `RecycleBin`, and reference-counted wrappers | [core/README.md](core/README.md) |
 | `:autocoder-core` | `autocoder/` | Base Eclipse JDT AST transformation framework and `AutoCoderTask` base class | [autocoder/README.md](autocoder/README.md) |
 | `:refcount-autocoder` | `refcount-autocoder/` | Gradle plugin (`com.simiacryptus.refcount-autocoder`) and CLI for automatic reference-count instrumentation and verification | [refcount-autocoder/README.md](refcount-autocoder/README.md) |
+| `:refcount-bytecode` | `refcount-bytecode/` | Gradle plugin (`com.simiacryptus.refcount-bytecode`) and CLI for bytecode analysis and verification of compiled and non-Java modules | [refcount-bytecode/README.md](refcount-bytecode/README.md) |
 | `:autocoder-test` | `autocoder-test/` | Test harness (`SimpleGradleProject`) for running autocoder passes against Gradle projects | [autocoder-test/README.md](autocoder-test/README.md) |
 | `:refcount-demo` | `demo/` | End-to-end example project instrumented at build time and verified for zero leaks under `DEBUG_LIFECYCLE=true` | [demo/README.md](demo/README.md) |
 

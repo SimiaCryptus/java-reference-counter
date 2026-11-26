@@ -12,6 +12,8 @@ project(":autocoder-core").projectDir = file("autocoder")
 
 include(":refcount-autocoder")
 
+include(":refcount-bytecode")
+
 include(":autocoder-test")
 
 include(":refcount-demo")
