@@ -73,21 +73,21 @@ public class RemoveRefs extends RefASTOperator {
     @Override
     public void endVisit(@Nonnull final MethodInvocation node) {
       final String methodName = node.getName().toString();
-      if (Arrays.asList("addRef", "freeRef", "addRef", "freeRefs", "wrapInterface").contains(methodName)) {
+      if (Arrays.asList("addRef", "freeRef", "freeRefs", "wrapInterface").contains(methodName)) {
         Expression subject;
-        if (Arrays.asList("addRef", "freeRefs", "wrapInterface").contains(methodName)) {
+        if (Arrays.asList("freeRefs", "wrapInterface").contains(methodName) || isRefUtil(node)) {
+          if (node.arguments().isEmpty()) {
+            warn(node, "No arguments in %s call. Cannot remove.", methodName);
+            return;
+          }
           subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
         } else {
-          if (isRefUtil(node)) {
-            subject = (Expression) copyIfAttached((ASTNode) node.arguments().get(0));
-          } else {
-            final Expression expression = node.getExpression();
-            if (null == expression) {
-              warn(node, "Naked method call. Cannot remove.");
-              return;
-            }
-            subject = copyIfAttached(expression);
+          final Expression expression = node.getExpression();
+          if (null == expression) {
+            warn(node, "Naked method call. Cannot remove.");
+            return;
           }
+          subject = copyIfAttached(expression);
         }
         debug(node, "Removing %s and replacing with %s", methodName, subject);
         //        replace(node, subject);
