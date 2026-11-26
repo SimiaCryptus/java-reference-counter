@@ -26,13 +26,11 @@ import com.simiacryptus.ref.ops.DistinctImports;
 import com.simiacryptus.ref.ops.FixVariableDeclarations;
 import com.simiacryptus.ref.ops.RemoveRefMethods;
 import com.simiacryptus.ref.ops.ReplaceTypes;
-import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "revertAPI")
-public class RevertAPI extends RefAutoCoderMojo {
+public abstract class RevertAPI extends RefAutoCoderTask {
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {

@@ -90,8 +90,17 @@ public class ProjectInfo {
 
   @Nonnull
   public File[] sourceFiles() {
+    if (sourcepathEntries != null && sourcepathEntries.length > 0) {
+      return Arrays.stream(sourcepathEntries)
+          .map(File::new)
+          .filter(File::exists)
+          .flatMap(dir -> FileUtils.listFiles(dir, new String[]{"java"}, true).stream())
+          .map(File::getAbsoluteFile)
+          .distinct()
+          .toArray(File[]::new);
+    }
     return FileUtils.listFiles(new File(projectRoot), new String[]{"java"}, true)
-        .stream().map(file -> file.getAbsoluteFile()).distinct().toArray(i -> new File[i]);
+        .stream().map(File::getAbsoluteFile).distinct().toArray(File[]::new);
   }
 
   @Nonnull

@@ -23,17 +23,24 @@ import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
-import org.apache.maven.plugins.annotations.Mojo;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "insert")
-public class Insert extends RefAutoCoderMojo {
+public abstract class Insert extends RefAutoCoderTask {
+  @Input
+  public abstract Property<Boolean> getModifyAPI();
+
+  public Insert() {
+    getModifyAPI().convention(getBoolean("modifyAPI", false));
+  }
+
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
-    return new Coder(projectInfo, getBoolean("modifyAPI", false));
+    return new Coder(projectInfo, getModifyAPI().get());
   }
 
   @RefIgnore
@@ -48,7 +55,7 @@ public class Insert extends RefAutoCoderMojo {
     @Override
     public void rewrite() {
       new Check.Coder(projectInfo).rewrite();
-      new Remove().getAutoCoder(projectInfo).rewrite();
+      new Remove.Coder(projectInfo, false).rewrite();
       if (shouldChangeAPI) {
         new ModifyAPI.Coder(projectInfo).rewrite();
       } else {

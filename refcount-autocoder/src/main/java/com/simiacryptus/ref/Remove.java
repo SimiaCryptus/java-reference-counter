@@ -25,17 +25,24 @@ import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.InlineRefs;
 import com.simiacryptus.ref.ops.InlineTempVars;
 import com.simiacryptus.ref.ops.RemoveRefs;
-import org.apache.maven.plugins.annotations.Mojo;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "remove")
-public class Remove extends RefAutoCoderMojo {
+public abstract class Remove extends RefAutoCoderTask {
+  @Input
+  public abstract Property<Boolean> getModifyAPI();
+
+  public Remove() {
+    getModifyAPI().convention(getBoolean("modifyAPI", false));
+  }
+
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {
-    return new Coder(projectInfo, getBoolean("modifyAPI", false));
+    return new Coder(projectInfo, getModifyAPI().get());
   }
 
   @RefIgnore

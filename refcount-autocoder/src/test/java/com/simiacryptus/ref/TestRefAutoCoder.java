@@ -21,10 +21,6 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -33,8 +29,9 @@ import java.io.IOException;
 @RefIgnore
 public class TestRefAutoCoder {
   @Nonnull
-  public static ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
-    return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
+  public static ProjectInfo getProjectInfo() throws IOException {
+    String demoDir = System.getProperty("demo.project.dir", new File("../demo").getCanonicalPath());
+    return SimpleGradleProject.load(demoDir).getProjectInfo();
   }
 
   @RefIgnore

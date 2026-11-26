@@ -26,15 +26,13 @@ import com.simiacryptus.ref.core.SymbolIndex;
 import com.simiacryptus.ref.core.ops.IndexSymbols;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.*;
-import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 @RefIgnore
-@Mojo(name = "verify")
-public class Verify extends RefAutoCoderMojo {
+public abstract class Verify extends RefAutoCoderTask {
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {

@@ -24,14 +24,12 @@ import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.AnnotateMethodCalls;
 import com.simiacryptus.ref.ops.VerifyMethodCalls;
-import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 @RefIgnore
-@Mojo(name = "update")
-public class Update extends RefAutoCoderMojo {
+public abstract class Update extends RefAutoCoderTask {
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {

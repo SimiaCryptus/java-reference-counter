@@ -21,10 +21,6 @@ package com.simiacryptus.ref;
 
 import com.simiacryptus.ref.core.PrintAST;
 import com.simiacryptus.ref.core.ProjectInfo;
-import org.apache.maven.project.DependencyResolutionException;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
@@ -33,13 +29,14 @@ import java.io.IOException;
 
 public class TestAutoCoder {
   @Nonnull
-  private ProjectInfo getProjectInfo() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException, DependencyResolutionException {
-    return SimpleMavenProject.load(new File("../demo").getCanonicalPath()).getProjectInfo();
+  private ProjectInfo getProjectInfo() throws IOException {
+    String demoDir = System.getProperty("demo.project.dir", new File("../demo").getCanonicalPath());
+    return SimpleGradleProject.load(demoDir).getProjectInfo();
   }
 
   @Test
-  public void print() throws ComponentLookupException, PlexusContainerException, ProjectBuildingException, DependencyResolutionException, IOException {
-    new PrintAST().getAutoCoder(TestAutoCoder.this.getProjectInfo()).rewrite();
+  public void print() throws IOException {
+    new PrintAST.Coder(getProjectInfo()).rewrite();
   }
 
 }

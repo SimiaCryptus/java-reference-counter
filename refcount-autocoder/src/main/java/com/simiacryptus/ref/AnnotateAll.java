@@ -23,13 +23,11 @@ import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.ProjectInfo;
 import com.simiacryptus.ref.lang.RefIgnore;
 import com.simiacryptus.ref.ops.AnnotateAllMethodParams;
-import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
 @RefIgnore
-@Mojo(name = "annotate")
-public class AnnotateAll extends RefAutoCoderMojo {
+public abstract class AnnotateAll extends RefAutoCoderTask {
   @Nonnull
   @Override
   protected AutoCoder getAutoCoder(ProjectInfo projectInfo) {

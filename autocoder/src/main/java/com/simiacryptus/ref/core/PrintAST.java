@@ -20,22 +20,25 @@
 package com.simiacryptus.ref.core;
 
 import com.simiacryptus.ref.core.ops.LogNodes;
-import org.apache.maven.plugins.annotations.Mojo;
 
 import javax.annotation.Nonnull;
 
-@Mojo(name = "printAST")
-public class PrintAST extends AutoCoderMojo {
+public abstract class PrintAST extends AutoCoderTask {
 
   @Nonnull
   @Override
   public AutoCoder getAutoCoder(ProjectInfo projectInfo) {
-    return new AutoCoder(projectInfo) {
-      @Override
-      public void rewrite() {
-        rewrite((projectInfo1, compilationUnit, file) -> new LogNodes(projectInfo1, compilationUnit, file));
-      }
-    };
+    return new Coder(projectInfo);
   }
 
+  public static class Coder extends AutoCoder {
+    public Coder(ProjectInfo projectInfo) {
+      super(projectInfo);
+    }
+
+    @Override
+    public void rewrite() {
+      rewrite((projectInfo1, compilationUnit, file) -> new LogNodes(projectInfo1, compilationUnit, file));
+    }
+  }
 }

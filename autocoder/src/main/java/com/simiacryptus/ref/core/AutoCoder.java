@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public abstract class AutoCoder {
-  protected static final Logger logger = LoggerFactory.getLogger(AutoCoderMojo.class);
+  protected static final Logger logger = LoggerFactory.getLogger(AutoCoder.class);
   protected final ProjectInfo projectInfo;
   private boolean parallel = Boolean.parseBoolean(System.getProperty("parallel", Boolean.toString(false)));
 
