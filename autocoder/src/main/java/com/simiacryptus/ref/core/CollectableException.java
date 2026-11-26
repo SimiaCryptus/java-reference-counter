@@ -29,7 +29,7 @@ public class CollectableException extends RuntimeException {
   private final String[] messages;
 
   public CollectableException(@Nonnull String... str) {
-    super(Arrays.stream(str).reduce((a, b) -> a + "\n" + b).get());
+    super(Arrays.stream(str).reduce((a, b) -> a + "\n\n" + b).orElse(""));
     this.messages = str;
   }
 

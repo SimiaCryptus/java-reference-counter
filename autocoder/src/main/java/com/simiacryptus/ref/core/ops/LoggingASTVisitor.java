@@ -19,6 +19,7 @@
 
 package com.simiacryptus.ref.core.ops;
 
+import com.simiacryptus.ref.core.AutoCoder;
 import com.simiacryptus.ref.core.CollectableException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -41,6 +42,7 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
   protected final File file;
   private final ArrayList<CollectableException> exceptions = new ArrayList<>();
   private boolean failAtEnd = false;
+  private String[] cachedLines = null;
 
   public LoggingASTVisitor(@Nonnull CompilationUnit compilationUnit, @Nonnull File file) {
     this.compilationUnit = compilationUnit;
@@ -86,9 +88,12 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
   }
 
   public final void fatal(@Nonnull ASTNode node, @Nonnull String formatString, Object... args) {
-    CollectableException collectableException = new CollectableException("(" + getLocation(node) + ") " + String.format(formatString, args));
+    String message = String.format(formatString, args);
+    String snippet = formatSnippet(node);
+    String fullMessage = getLocation(node) + " - " + message + (snippet.isEmpty() ? "" : "\n" + snippet);
+    CollectableException collectableException = new CollectableException(fullMessage);
     if (isFailAtEnd()) {
-      warn(1, node, formatString, args);
+      warnRaw(2, node, message + (snippet.isEmpty() ? "" : "\n" + snippet));
       exceptions.add(collectableException);
     } else {
       throw collectableException;
@@ -112,7 +117,66 @@ public abstract class LoggingASTVisitor extends ASTVisitor {
 
   @Nonnull
   protected final String getLocation(@Nonnull ASTNode node) {
-    return file.getName() + ":" + compilationUnit.getLineNumber(node.getStartPosition());
+    int startPos = node.getStartPosition();
+    int line = compilationUnit.getLineNumber(startPos);
+    int col = compilationUnit.getColumnNumber(startPos);
+    if (col >= 0) {
+      return file.getAbsolutePath() + ":" + line + ":" + (col + 1);
+    }
+    return file.getAbsolutePath() + ":" + line;
+  }
+
+  @Nonnull
+  protected final String formatSnippet(@Nonnull ASTNode node) {
+    int startPos = node.getStartPosition();
+    if (startPos < 0) return "";
+    int line = compilationUnit.getLineNumber(startPos);
+    if (line <= 0) return "";
+    String[] lines = getSourceLines();
+    if (lines.length == 0 || line > lines.length) return "";
+    int col = compilationUnit.getColumnNumber(startPos);
+    int contextBefore = 2;
+    int contextAfter = 2;
+    int fromLine = Math.max(1, line - contextBefore);
+    int toLine = Math.min(lines.length, line + contextAfter);
+    int width = Integer.toString(toLine).length();
+    StringBuilder sb = new StringBuilder();
+    for (int i = fromLine; i <= toLine; i++) {
+      String marker = (i == line) ? ">" : " ";
+      sb.append(String.format("  %s %" + width + "d | %s%n", marker, i, lines[i - 1]));
+      if (i == line && col >= 0) {
+        String lineText = lines[i - 1];
+        int endPos = startPos + Math.max(1, node.getLength());
+        int endLine = compilationUnit.getLineNumber(endPos - 1);
+        int highlightLen;
+        if (endLine == line) {
+          highlightLen = Math.max(1, Math.min(node.getLength(), Math.max(1, lineText.length() - col)));
+        } else {
+          highlightLen = Math.max(1, lineText.length() - col);
+        }
+        StringBuilder caret = new StringBuilder();
+        for (int c = 0; c < col; c++) {
+          caret.append(c < lineText.length() && lineText.charAt(c) == '\t' ? '\t' : ' ');
+        }
+        for (int c = 0; c < highlightLen; c++) {
+          caret.append('^');
+        }
+        sb.append(String.format("    %" + width + "s | %s%n", "", caret));
+      }
+    }
+    return sb.toString().stripTrailing();
+  }
+
+  @Nonnull
+  private String[] getSourceLines() {
+    if (cachedLines == null) {
+      if (file.exists()) {
+        cachedLines = AutoCoder.read(file).split("\\r?\\n", -1);
+      } else {
+        cachedLines = new String[0];
+      }
+    }
+    return cachedLines;
   }
 
   @Nonnull

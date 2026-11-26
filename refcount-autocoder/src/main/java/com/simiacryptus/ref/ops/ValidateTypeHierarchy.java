@@ -41,14 +41,16 @@ public class ValidateTypeHierarchy extends RefASTOperator {
       warn(node, "Cannot resolve type of %s", node.getName());
       return;
     }
+    if (skip(node, typeBinding)) return;
     if (!typeBinding.isTopLevel() && !Modifier.isStatic(typeBinding.getModifiers()) && isRefCounted(node, typeBinding)) {
-      fatal(node, "Non-static inner class cannot be Refcounted", node.getName());
+      fatal(node.getName(), "Non-static inner class '%s' cannot be Refcounted (make it static or annotate with @RefIgnore)", typeBinding.getQualifiedName());
     }
   }
 
   @Override
   public void endVisit(@Nonnull VariableDeclarationFragment declaration) {
     if (skip(declaration)) return;
+    if (skip(declaration, declaration.resolveBinding())) return;
     debug(declaration, "VariableDeclarationFragment: %s", declaration);
     final ITypeBinding declarationType = getTypeBinding(declaration);
     if (null == declarationType) {
@@ -63,9 +65,9 @@ public class ValidateTypeHierarchy extends RefASTOperator {
         if (!Modifier.isStatic(((FieldDeclaration) parent).getModifiers())) {
           final ASTNode fieldParent = parent.getParent();
           if (fieldParent instanceof TypeDeclaration) {
-            validateField(declaration, ((TypeDeclaration) fieldParent).resolveBinding());
+            validateField(declaration, declarationType, ((TypeDeclaration) fieldParent).resolveBinding());
           } else if (fieldParent instanceof AnonymousClassDeclaration) {
-            validateField(declaration, ((AnonymousClassDeclaration) fieldParent).resolveBinding());
+            validateField(declaration, declarationType, ((AnonymousClassDeclaration) fieldParent).resolveBinding());
           } else {
             fatal(declaration, "Cannot add freeRef for %s (FieldDeclaration) in %s : %s", declaration.getName(), fieldParent.getClass(), fieldParent.toString().trim());
           }
@@ -76,12 +78,13 @@ public class ValidateTypeHierarchy extends RefASTOperator {
     }
   }
 
-  private void validateField(@Nonnull VariableDeclarationFragment declaration, @Nullable ITypeBinding typeBinding) {
+  private void validateField(@Nonnull VariableDeclarationFragment declaration, @Nonnull ITypeBinding declarationType, @Nullable ITypeBinding typeBinding) {
     if (null == typeBinding) {
       warn(declaration, "Unresolved binding");
     } else {
       if (!isRefCounted(declaration, typeBinding)) {
-        fatal(declaration, "Unaccountable Reference: %s::%s", declaration.getName(), declaration.getName());
+        fatal(declaration, "Unaccountable Reference: field '%s' of ref-counted type '%s' in non-ref-counted class '%s'",
+            declaration.getName(), declarationType.getName(), typeBinding.getQualifiedName());
       }
     }
   }

@@ -99,6 +99,9 @@ public abstract class AutoCoderTask extends DefaultTask {
     if (getLogException().get()) {
       try {
         coder.rewrite();
+      } catch (CollectableException e) {
+        ERR.println(e.getMessage());
+        throw e;
       } catch (RuntimeException e) {
         e.printStackTrace(ERR);
         throw e;
