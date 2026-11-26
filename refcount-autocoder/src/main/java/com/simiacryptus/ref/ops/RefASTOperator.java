@@ -130,7 +130,13 @@ abstract class RefASTOperator extends ASTOperator {
     ITypeBinding expression = methodBinding.getReturnType();
     if (null == expression) expression = methodBinding.getDeclaringClass();
     if (expression.getTypeDeclaration().getQualifiedName().equals(Map.Entry.class.getCanonicalName())) return true;
-    return ASTUtil.findAnnotation(RefAware.class, methodBinding.getParameterAnnotations(index)).isPresent();
+    ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
+    if (parameterTypes.length == 0) return false;
+    int paramIndex = Math.min(index, parameterTypes.length - 1);
+    IAnnotationBinding[] paramAnnotations = methodBinding.getParameterAnnotations(paramIndex);
+    if (ASTUtil.findAnnotation(RefIgnore.class, paramAnnotations).isPresent()) return false;
+    if (ASTUtil.findAnnotation(RefAware.class, paramAnnotations).isPresent()) return true;
+    return isRefCounted(compilationUnit, parameterTypes[paramIndex]);
   }
 
   @Nonnull
@@ -234,19 +240,11 @@ abstract class RefASTOperator extends ASTOperator {
   @Nonnull
   protected final Statement newFreeRef(@Nonnull ASTNode node, @Nonnull ITypeBinding typeBinding) {
     if (typeBinding.isArray()) {
-      if (ASTUtil.derives(typeBinding.getElementType(), ReferenceCounting.class)) {
-        final MethodInvocation methodInvocation = ast.newMethodInvocation();
-        methodInvocation.setName(ast.newSimpleName("freeRefs"));
-        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, ReferenceCounting.class));
-        methodInvocation.arguments().add(copyIfAttached(node));
-        return ast.newExpressionStatement(methodInvocation);
-      } else {
-        final MethodInvocation methodInvocation = ast.newMethodInvocation();
-        methodInvocation.setName(ast.newSimpleName("freeRefs"));
-        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
-        methodInvocation.arguments().add(copyIfAttached(node));
-        return ast.newExpressionStatement(methodInvocation);
-      }
+      final MethodInvocation methodInvocation = ast.newMethodInvocation();
+      methodInvocation.setName(ast.newSimpleName("freeRefs"));
+      methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
+      methodInvocation.arguments().add(copyIfAttached(node));
+      return ast.newExpressionStatement(methodInvocation);
     } else if (ASTUtil.derives(typeBinding, ReferenceCounting.class)) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRef"));
@@ -266,7 +264,7 @@ abstract class RefASTOperator extends ASTOperator {
     if (typeBinding.isArray()) {
       final MethodInvocation methodInvocation = ast.newMethodInvocation();
       methodInvocation.setName(ast.newSimpleName("freeRefs"));
-      methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, ReferenceCounting.class));
+      methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
       methodInvocation.arguments().add(copyIfAttached(name));
       return methodInvocation;
     } else {
@@ -296,8 +294,12 @@ abstract class RefASTOperator extends ASTOperator {
     }
     if (type.isArray()) {
       if (null == getAddRefsMethod(type.getElementType())) {
-        warn(1, expression, "No AddRefs method defined for %s", expression);
-        return copyIfAttached(expression);
+        final MethodInvocation methodInvocation = ast.newMethodInvocation();
+        methodInvocation.setName(ast.newSimpleName("addRef"));
+        methodInvocation.setExpression(ASTUtil.newQualifiedName(ast, RefUtil.class));
+        methodInvocation.arguments().add(copyIfAttached(expression));
+        debug(1, expression, "AddRef for %s", expression);
+        return methodInvocation;
       } else {
         final String qualifiedName = type.getElementType().getQualifiedName();
         final MethodInvocation methodInvocation = ast.newMethodInvocation();

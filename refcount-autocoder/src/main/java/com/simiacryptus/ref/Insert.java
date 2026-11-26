@@ -43,6 +43,22 @@ public abstract class Insert extends RefAutoCoderTask {
     return new Coder(projectInfo, getModifyAPI().get());
   }
 
+  public static void main(String[] args) {
+    if (args.length < 3) {
+      throw new IllegalArgumentException("Usage: Insert <projectRoot> <sourceDirs> <classpath> [modifyAPI]");
+    }
+    String projectRoot = args[0];
+    String[] sources = args[1].isEmpty() ? new String[0] : args[1].split(java.io.File.pathSeparator);
+    String[] classpath = args[2].isEmpty() ? new String[0] : args[2].split(java.io.File.pathSeparator);
+    boolean modifyAPI = args.length >= 4 && Boolean.parseBoolean(args[3]);
+    boolean annotate = args.length >= 5 && Boolean.parseBoolean(args[4]);
+    ProjectInfo info = new ProjectInfo(projectRoot, sources, classpath);
+    if (annotate) {
+      new AnnotateAll.Coder(info).rewrite();
+    }
+    new Coder(info, modifyAPI).rewrite();
+  }
+
   @RefIgnore
   public static class Coder extends AutoCoder {
     private final boolean shouldChangeAPI;

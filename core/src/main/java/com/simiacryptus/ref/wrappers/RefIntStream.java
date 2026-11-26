@@ -331,12 +331,24 @@ public class RefIntStream implements IntStream {
   @Nonnull
   @Override
   public RefSpliterator.OfInt spliterator() {
-    return new RefSpliterator.OfInt(inner.spliterator()).track(new ReferenceCountingBase() {
-      @Override
-      protected void _free() {
-        RefIntStream.this.close();
+    java.util.concurrent.atomic.AtomicBoolean closing = new java.util.concurrent.atomic.AtomicBoolean(false);
+    java.util.concurrent.atomic.AtomicReference<RefSpliterator.OfInt> ref = new java.util.concurrent.atomic.AtomicReference<>();
+    inner.onClose(() -> {
+      RefSpliterator.OfInt s = ref.get();
+      if (closing.compareAndSet(false, true) && s != null && !s.isFreed()) {
+        s.freeRef();
       }
     });
+    RefSpliterator.OfInt spliterator = new RefSpliterator.OfInt(inner.spliterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        if (closing.compareAndSet(false, true)) {
+          RefIntStream.this.close();
+        }
+      }
+    });
+    ref.set(spliterator);
+    return spliterator;
   }
 
   @Override

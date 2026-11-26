@@ -310,12 +310,24 @@ public class RefDoubleStream implements DoubleStream {
   @Nonnull
   @Override
   public RefSpliterator.OfDouble spliterator() {
-    return new RefSpliterator.OfDouble(inner.spliterator()).track(new ReferenceCountingBase() {
-      @Override
-      protected void _free() {
-        RefDoubleStream.this.close();
+    java.util.concurrent.atomic.AtomicBoolean closing = new java.util.concurrent.atomic.AtomicBoolean(false);
+    java.util.concurrent.atomic.AtomicReference<RefSpliterator.OfDouble> ref = new java.util.concurrent.atomic.AtomicReference<>();
+    inner.onClose(() -> {
+      RefSpliterator.OfDouble s = ref.get();
+      if (closing.compareAndSet(false, true) && s != null && !s.isFreed()) {
+        s.freeRef();
       }
     });
+    RefSpliterator.OfDouble spliterator = new RefSpliterator.OfDouble(inner.spliterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        if (closing.compareAndSet(false, true)) {
+          RefDoubleStream.this.close();
+        }
+      }
+    });
+    ref.set(spliterator);
+    return spliterator;
   }
 
   @Override

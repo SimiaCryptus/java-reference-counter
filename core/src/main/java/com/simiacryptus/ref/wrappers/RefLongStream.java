@@ -318,12 +318,24 @@ public class RefLongStream implements LongStream {
   @Nonnull
   @Override
   public RefSpliterator.OfLong spliterator() {
-    return new RefSpliterator.OfLong(inner.spliterator()).track(new ReferenceCountingBase() {
-      @Override
-      protected void _free() {
-        RefLongStream.this.close();
+    java.util.concurrent.atomic.AtomicBoolean closing = new java.util.concurrent.atomic.AtomicBoolean(false);
+    java.util.concurrent.atomic.AtomicReference<RefSpliterator.OfLong> ref = new java.util.concurrent.atomic.AtomicReference<>();
+    inner.onClose(() -> {
+      RefSpliterator.OfLong s = ref.get();
+      if (closing.compareAndSet(false, true) && s != null && !s.isFreed()) {
+        s.freeRef();
       }
     });
+    RefSpliterator.OfLong spliterator = new RefSpliterator.OfLong(inner.spliterator()).track(new ReferenceCountingBase() {
+      @Override
+      protected void _free() {
+        if (closing.compareAndSet(false, true)) {
+          RefLongStream.this.close();
+        }
+      }
+    });
+    ref.set(spliterator);
+    return spliterator;
   }
 
   @Override
